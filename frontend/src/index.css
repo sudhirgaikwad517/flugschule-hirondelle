@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&family=PT+Sans+Narrow:wght@400;700&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --color-hirondelle-blue: #53a8c7;
+  --color-hirondelle-light: #6eb7d1;
+  --color-hirondelle-dark: #3a85a4;
+  
+  --color-luxury-gold: #C19B76;
+  --color-luxury-dark: #1A1F24;
+  --color-luxury-light: #FAF9F7;
+  --color-luxury-slate: #394553;
+
+  --font-sans: 'PT Sans', sans-serif;
+  --font-condensed: 'PT Sans Narrow', sans-serif;
+  
+  --font-luxury: "Cormorant Garamond", serif;
+  --font-luxurysans: "Jost", sans-serif;
+}
+
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: #333333;
+  background-color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6, .nav-item {
+  font-family: var(--font-condensed);
+}

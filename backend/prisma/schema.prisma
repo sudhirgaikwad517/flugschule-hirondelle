@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  INSTRUCTOR
+  CUSTOMER
+}
+
+model User {
+  id          String    @id @default(uuid())
+  email       String    @unique
+  username    String?
+  password    String
+  name        String
+  role        Role      @default(CUSTOMER)
+  phone       String?
+  address1    String?
+  location    String?
+  country     String?
+  postalCode  String?
+  weight      String?
+  birthDate   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  bookings  Booking[]
+  invoices  Invoice[]
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  WAITLIST
+}
+
+model Category {
+  id          String     @id @default(uuid())
+  title       String
+  alias       String     @unique
+  description String?    
+  parentId    String?
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  status      String     @default("PUBLISHED") // PUBLISHED, HIDDEN
+  accessLevel String     @default("PUBLIC")
+  tags        String?
+  note        String?    
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  events      Event[]
+}
+
+model Event {
+  id                   String        @id @default(uuid())
+  title                String
+  category             String?       // Keep for legacy
+  categoryId           String?
+  categoryRef          Category?     @relation(fields: [categoryId], references: [id])
+  description          String?
+  startDate            DateTime
+  endDate              DateTime?
+  registrationDeadline DateTime?
+  color                String?
+  imageUrl             String?
+  location             String?
+  organizer            String?       @default("Flugschule Hirondelle")
+  maxParticipants      Int?
+  capacity             Int
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  
+  tickets     EventTicket[]
+  bookings    Booking[]
+}
+
+model EventTicket {
+  id          String        @id @default(uuid())
+  eventId     String
+  name        String        // e.g., "Standard", "Inkl. Ausrüstung"
+  price       Float
+  description String?
+  capacity    Int           @default(20) // Default 20, can be overridden by admin
+  
+  event       Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  items       BookingItem[]
+}
+
+model Booking {
+  id              String        @id @default(uuid())
+  userId          String?
+  eventId         String
+  status          BookingStatus @default(PENDING)
+  totalPrice      Float         @default(0)
+  
+  customerDetails Json?
+  paymentMethod   String?
+  remarks         String?
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  user            User?         @relation(fields: [userId], references: [id])
+  event           Event         @relation(fields: [eventId], references: [id])
+  items           BookingItem[]
+}
+
+model BookingItem {
+  id         String       @id @default(uuid())
+  bookingId  String
+  ticketId   String
+  quantity   Int          @default(1)
+  
+  booking    Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  ticket     EventTicket  @relation(fields: [ticketId], references: [id])
+}
+
+model Product {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  stock       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Invoice {
+  id          String    @id @default(uuid())
+  userId      String
+  amount      Float
+  status      String    // PENDING, PAID, CANCELLED
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  user        User      @relation(fields: [userId], references: [id])
+}
+
+model Newsletter {
+  id          String    @id @default(uuid())
+  email       String    @unique
+  isActive    Boolean   @default(true)
+  subscribedAt DateTime @default(now())
+}
