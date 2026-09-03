@@ -119,7 +119,7 @@ export const Ausbildung = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="https://picsum.photos/id/1015/800/800" alt="Schnupperkurs" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/ausbildung-1.jpg" alt="Schnupperkurs" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -140,7 +140,7 @@ export const Ausbildung = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="https://picsum.photos/id/1016/800/800" alt="L-Schein" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/ausbildung-2.jpg" alt="L-Schein" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -161,7 +161,7 @@ export const Ausbildung = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="https://picsum.photos/id/1018/800/800" alt="A-Schein" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/ausbildung-3.jpg" alt="A-Schein" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -182,7 +182,7 @@ export const Ausbildung = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="https://picsum.photos/id/1036/800/800" alt="B-Schein" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/ausbildung-4.jpg" alt="B-Schein" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -203,7 +203,7 @@ export const Ausbildung = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="https://picsum.photos/id/1043/800/800" alt="Windenschein" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/ausbildung-5.jpg" alt="Windenschein" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -224,7 +224,7 @@ export const Ausbildung = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="https://picsum.photos/id/1044/800/800" alt="Tandemschein" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/ausbildung-6.jpg" alt="Tandemschein" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>

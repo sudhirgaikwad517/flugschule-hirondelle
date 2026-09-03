@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom';
 const TEAM_MEMBERS = [
   {
     name: "Alexander Schlink",
-    image: "https://picsum.photos/id/1025/400/400",
-    certificate: "https://picsum.photos/id/1026/400/600",
+    image: "/images/team/schlink.jpg",
+    certificate: "/images/team/certificate-alex.jpg",
     paragraphs: [
       "Alex ist Fluglehrer, DHV-Performance-Trainer und Inhaber der Flugschule. Er ist stellvertretender Ausbildungsleiter bei Hirondelle sowie als DHV-Prüfer tätig und kann Prüfungen zum A-Schein, B-Schein sowie Winde und Tandem abnehmen.",
       "Er ist euer Ansprechpartner für alle Anliegen: ob Aus- oder Fortbildung, Ausrüstung / Material sowie auch die Organisation und Durchführung der zahlreichen Touren und Reisen innerhalb Deutschlands und weltweit über die Grenzen hinweg.",
@@ -16,7 +16,7 @@ const TEAM_MEMBERS = [
   },
   {
     name: "Sarah Fuhrmann",
-    image: "https://picsum.photos/id/1027/400/400",
+    image: "/images/team/sarah.jpg",
     paragraphs: [
       "Sarah ist Fluglehrerin und Ausbildungsleiterin der Flugschule. Sie ist unsere Quotenfrau und das Küken im Team Hirondelle, was die fliegerische Karriere betrifft. Als sie Alex kennen lernte war sofort klar: \"Das muss ich auch mal probieren!\" Nach dem ersten Tandemflug in Bezau stand die Entscheidung zum Schnupperkurs und dann dem eigenen Schein. Bald wurden die Berge zu Sarah's neuer Bühne und die früheren Tanzschuhe endgültig an den Nagel gehängt.",
       "Arbeiten, wo andere Urlaub machen, dachte sie sich 2017, hat ihrem früheren Job den Rücken gekehrt, und engagiert sich seitdem Vollzeit in der Flugschule. Nach dem B-Schein kam 2018 die Ausbildung zur Windenführerin. Mit mittlerweile weit über 3.000 durchgeführten Windenschlepps - seit 2022 auf unserer Elektrowinde - und Unterstützung bei Grundkursen, Höhenflugschulungen und den weltweit durchgeführten Reisen hat sie immer mehr Erfahrung in der Gleitschirmausbildung gesammelt. 2022 hat sie daher die Ausbildung zur Fluglehrerin begonnen und diese Ende 2023 erfolgreich abgeschlossen. Seit 2024 ist sie außerdem die Ausbildungsleiterin der Flugschule.",
@@ -25,7 +25,7 @@ const TEAM_MEMBERS = [
   },
   {
     name: "Mathias „Tobi“ Leipner",
-    image: "https://picsum.photos/id/1028/400/400",
+    image: "/images/team/tobi.jpg",
     paragraphs: [
       "Schon als Kind hat sich Tobi fürs Fliegen und ferngesteuerte Modellflugzeuge interessiert. 2002 war es dann soweit und er ist beim Schnupperkurs im Allgäu mit dem Gleitschirm selbst das erste Mal abgehoben. Seit dieser Zeit hat ihn diese intensive Erfahrung nicht mehr losgelassen. Das Erlebnis und die Faszination, selbständig nur mit den Kräften der Natur stundenlang über weite Strecken durch die Luft zu segeln, bringen ihm Ruhe und lassen ihn zeitweise alles unter sich vergessen – es ist wie Meditation.",
       "In den Jahren folgten B-Schein, Tandemausbildung und der Fluglehrer. Seitdem freut er sich immer über die strahlenden Gesichter der Flugschüler, wenn diese ihre ersten Hüpfer am Übungshang gemacht haben.",
@@ -35,7 +35,7 @@ const TEAM_MEMBERS = [
   },
   {
     name: "Holger Grimm",
-    image: "https://picsum.photos/id/1029/400/400",
+    image: "/images/team/holger.jpg",
     paragraphs: [
       "Die Leidenschaft fürs Fliegen wurde Holger wohl in die Wiege gelegt. Anstatt des Traumberufs Luft- und Raumfahrttechniker wurde er dann aber doch Bürohengst. Doch Träume sterben nie und so hat er irgendwann nach dem B-Schein dann doch den Wunsch, Fluglehrer zu werden, in die Tat umgesetzt. Denn es gibt nichts Schöneres, als die Jubelschreie der Flugschüler/innen nach dem ersten Flug am Übungshang oder nach dem ersten \"richtigen\" Höhenflug zu erleben.",
       "Am Liebsten fliegt Holger in den Alpen oder in der Pfalz. Bei Flugreisen gilt in doppeltem Sinn: je weiter desto besser."
@@ -43,8 +43,8 @@ const TEAM_MEMBERS = [
   },
   {
     name: "Karl-Peter Armbrust",
-    image: "https://picsum.photos/id/1031/400/400",
-    certificate: "https://picsum.photos/id/1032/400/600",
+    image: "/images/team/karlpeter.jpg",
+    certificate: "/images/team/certificate-kpa.jpg",
     paragraphs: [
       "Irgendwann in den 90ern sah er bei einer langen Motorradtour durch Frankreich auf der Spitze des Puy de dome bei Clermont Ferrand eine Horde Kinder mit seltsamen Fluggeräten jauchzend in der Luft rumturnen – die Eltern kreidebleich daneben, die Lehrer auch ;-) Damals kam die Idee, das auch zu tun; Jahre später dann die Realisierung: 2002 A-Schein mit Startart Hang und Winde, 2004 B-Schein und Windenführer, 2005 Passagierberechtigung mit Startart Hang und Winde. Nach vielen Reisen kam die Entscheidung, das Ganze ernsthaft anzugehen und 2014 die Ausbildung zum Fluglehrerassistenten zu absolvieren. Mittlerweile ergänzt Karl-Peter als Fluglehrer, Performance Trainer und Windenfachlehrer das Team.",
       "Ach ja, Fliegen tut er auch noch gerne und zwar am Liebsten hier in Rheinland-Pfalz und dem Saarland – auch gerne ganz drüber weg ;-)"
@@ -52,7 +52,7 @@ const TEAM_MEMBERS = [
   },
   {
     name: "Markus Häcker – unser Tandem-Ass",
-    image: "https://picsum.photos/id/1033/400/400",
+    image: "/images/team/markus.jpg",
     paragraphs: [
       "Markus ist schon immer in luftigen Höhen zu finden. Anfangs über die Modellfliegerei mit 14 Jahren bei den Segelfliegern, zwischendurch im Leistungssport Hoch- und Stabhochsprung. 1986 begann er mit dem Drachenfliegen und ging nahtlos 1989 zu den Pionieren der Gleitschirmfliegerei über. Mit einer über 25-jährigen Gleitschirmerfahrung hat er alle Epochen der Schirmentwicklungen mitgemacht. In den letzten Jahren konzentriert er sich sehr stark auf die Tandemfliegerei.",
       "Seine Passagiere steigen immer mit einem breiten Grinsen im Gesicht aus dem Gurtzeug mit der Aussage: „super geil, das war nicht das letzte Mal\"!"
@@ -63,10 +63,10 @@ const TEAM_MEMBERS = [
 const SHOP_BRANDS = [
   { name: 'Ozone', img: 'https://picsum.photos/id/1035/200/100' },
   { name: 'Advance', img: 'https://picsum.photos/id/1036/200/100' },
-  { name: 'Niviuk', img: 'https://picsum.photos/id/1037/200/100' },
+  { name: 'Niviuk', img: '/images/brands/niviuk.png' },
   { name: 'Phi', img: 'https://picsum.photos/id/1038/200/100' },
-  { name: 'Independence', img: 'https://picsum.photos/id/1039/200/100' },
-  { name: 'Skyman', img: 'https://picsum.photos/id/1040/200/100' },
+  { name: 'Independence', img: '/images/brands/independence.png' },
+  { name: 'Skyman', img: '/images/brands/skyman.png' },
 ];
 
 export const Team = () => {

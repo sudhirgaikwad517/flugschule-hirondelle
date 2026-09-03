@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
 import { Check, Info, Play } from 'lucide-react';
 
 export const Windenschein = () => {
+  const [showVideo, setShowVideo] = useState(false);
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -10,7 +12,7 @@ export const Windenschein = () => {
 
       {/* Main Content Section */}
       <section className="py-16 md:py-24 px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
           
           {/* Left Column (Content) */}
           <div className="lg:col-span-8 space-y-12">
@@ -24,27 +26,39 @@ export const Windenschein = () => {
               </h1>
             </div>
 
-            {/* Featured Video Thumbnail */}
-            <div className="w-full h-[400px] overflow-hidden rounded-sm shadow-sm relative group cursor-pointer bg-black">
-              <img 
-                src="https://picsum.photos/id/1043/1000/600" 
-                alt="Windenschlepp Video" 
-                className="w-full h-full object-cover opacity-70 transition-transform duration-1000 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-20 h-14 bg-red-600 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110">
-                  <Play className="text-white w-8 h-8 fill-current" />
-                </div>
-              </div>
-              <div className="absolute top-4 left-4 right-4 text-white">
-                <h3 className="font-semibold text-lg drop-shadow-md">A-Schein Windenstarts - Paragliding lernen | Flugschule Hirondelle</h3>
-              </div>
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-16">
-                 <h2 className="font-luxury text-7xl text-white font-bold tracking-widest drop-shadow-2xl opacity-90">WINDE</h2>
-              </div>
-              <div className="absolute bottom-4 right-4 bg-black/60 px-3 py-1 rounded text-white text-xs font-medium flex items-center gap-2">
-                 <span>Watch on YouTube</span>
-              </div>
+            {/* Featured Video */}
+            <div className="w-full h-[400px] overflow-hidden rounded-sm shadow-sm relative group bg-black">
+              {showVideo ? (
+                <iframe
+                  className="w-full h-full"
+                  src="https://www.youtube.com/embed/KSdpddm3Rnw?autoplay=1"
+                  title="A-Schein Windenstarts - Paragliding lernen | Flugschule Hirondelle"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <button type="button" onClick={() => setShowVideo(true)} className="w-full h-full block cursor-pointer">
+                  <img
+                    src="/images/windenschein/hero.jpg"
+                    alt="Windenschlepp Video"
+                    className="w-full h-full object-cover opacity-70 transition-transform duration-1000 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-20 h-14 bg-red-600 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110">
+                      <Play className="text-white w-8 h-8 fill-current" />
+                    </div>
+                  </div>
+                  <div className="absolute top-4 left-4 right-4 text-white text-left">
+                    <h3 className="font-semibold text-lg drop-shadow-md">A-Schein Windenstarts - Paragliding lernen | Flugschule Hirondelle</h3>
+                  </div>
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-16">
+                     <h2 className="font-luxury text-7xl text-white font-bold tracking-widest drop-shadow-2xl opacity-90">WINDE</h2>
+                  </div>
+                  <div className="absolute bottom-4 right-4 bg-black/60 px-3 py-1 rounded text-white text-xs font-medium flex items-center gap-2">
+                     <span>Watch on YouTube</span>
+                  </div>
+                </button>
+              )}
             </div>
 
             {/* Content Blocks */}
@@ -104,7 +118,7 @@ export const Windenschein = () => {
               
               <div className="p-8">
                 <Link 
-                  to="/buchungskalender"
+                  to="/events?category=Windenschulung"
                   className="block w-full bg-[#53a8c7] hover:bg-[#4396b5] text-white text-center py-3 rounded-full text-lg font-semibold transition-colors mb-10 shadow-md"
                 >
                   Kurs buchen
@@ -195,7 +209,7 @@ export const Windenschein = () => {
               </div>
 
               <Link 
-                to="/buchungskalender" 
+                to="/events?category=Windenschulung" 
                 className="w-full block bg-luxury-dark hover:bg-luxury-gold text-white text-center py-4 text-sm font-semibold uppercase tracking-widest transition-colors"
               >
                 Termine &gt; Zum Kalender
@@ -211,7 +225,7 @@ export const Windenschein = () => {
                  Der Windenschein ist auch als Geschenk-Gutschein möglich
                </p>
                <div className="w-full h-[180px] rounded-sm overflow-hidden shadow-sm relative group cursor-pointer border border-gray-200">
-                  <img src="https://picsum.photos/id/1043/600/300" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
+                  <img src="/images/gutscheine/gutschein.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                   <div className="absolute bottom-4 left-4">
                      <p className="text-white font-luxury text-3xl font-bold italic opacity-90 drop-shadow-md tracking-wider">GUTSCHEIN</p>
@@ -228,11 +242,11 @@ export const Windenschein = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {[1043, 1053, 1063, 1073, 1083, 1093, 1103, 1011, 1021].map((id, index) => (
+                 {Array.from({ length: 9 }, (_, i) => i + 1).map((n, index) => (
                    <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
-                     <img 
-                       src={`https://picsum.photos/id/${id}/200/200`} 
-                       alt={`Impression ${index + 1}`} 
+                     <img
+                       src={`/images/windenschein/gallery-${n}.jpg`}
+                       alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
                    </div>
@@ -245,7 +259,7 @@ export const Windenschein = () => {
         </div>
 
         {/* Leistungen & Checkliste Grid (Full Width) */}
-        <div className="max-w-7xl mx-auto mt-16 lg:mt-24">
+        <div className="max-w-[1200px] mx-auto mt-16 lg:mt-24">
           <hr className="border-gray-100 mb-16" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24 mb-16">
             <div>

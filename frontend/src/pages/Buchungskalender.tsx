@@ -6,98 +6,11 @@ import { EventBookingModal } from '../components/events/EventBookingModal';
 import { EventDetailsView } from '../components/events/EventDetailsView';
 import { useParams, useNavigate } from 'react-router-dom';
 
-type Category = 
-  | 'ALLE ANZEIGEN'
-  | 'Schnupperkurs'
-  | 'Grundkurs'
-  | 'Höhenflugschulung (A-Schein)'
-  | 'Groundhandlingkurs'
-  | 'Reisen'
-  | 'Performance Training'
-  | 'Refresherkurs'
-  | 'Unbeschr. LF-Schein (B-Schein)'
-  | 'Windenschulung'
-  | 'Thermik- und Streckenseminar'
-  | 'Sonstiges'
-  | 'Rettungsgerätetraining';
+import { useEvents, categoryColors } from '../hooks/useEvents';
+import type { Category, CalendarEvent } from '../hooks/useEvents';
 
-const categoryColors: Record<Category, { bg: string, text: string }> = {
-  'ALLE ANZEIGEN': { bg: '#d1d5db', text: '#374151' }, // gray-300
-  'Schnupperkurs': { bg: '#8bc34a', text: '#ffffff' },
-  'Grundkurs': { bg: '#008000', text: '#ffffff' },
-  'Höhenflugschulung (A-Schein)': { bg: '#ffc107', text: '#000000' },
-  'Groundhandlingkurs': { bg: '#2980b9', text: '#ffffff' },
-  'Reisen': { bg: '#488ac7', text: '#ffffff' }, // Blue matching screenshots
-  'Performance Training': { bg: '#d35400', text: '#ffffff' },
-  'Refresherkurs': { bg: '#663399', text: '#ffffff' },
-  'Unbeschr. LF-Schein (B-Schein)': { bg: '#e67e22', text: '#ffffff' },
-  'Windenschulung': { bg: '#ffee00', text: '#000000' },
-  'Thermik- und Streckenseminar': { bg: '#28a745', text: '#ffffff' },
-  'Sonstiges': { bg: '#bdc3c7', text: '#374151' },
-  'Rettungsgerätetraining': { bg: '#5bc0de', text: '#ffffff' },
-};
 
-interface Ticket {
-  id: string;
-  name: string;
-  price: number;
-  description?: string;
-  capacity?: number;
-  bookedCount?: number;
-}
-
-interface CalendarEvent {
-  id: string;
-  title: string;
-  category: Category;
-  start: Date;
-  end: Date;
-  color?: string;
-  description?: string;
-  location?: string;
-  registrationDeadline?: string;
-  imageUrl?: string;
-  organizer?: string;
-  maxParticipants?: number;
-  tickets?: Ticket[];
-}
-
-// Fetch events hook
-const useEvents = () => {
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch('http://localhost:5555/api/events')
-      .then(res => res.json())
-      .then(data => {
-        const parsed = data.map((e: any) => ({
-          id: e.id,
-          title: e.title,
-          category: (e.category || 'Sonstiges') as Category,
-          start: new Date(e.startDate),
-          end: e.endDate ? new Date(e.endDate) : new Date(e.startDate),
-          color: e.color,
-          description: e.description,
-          location: e.location,
-          registrationDeadline: e.registrationDeadline,
-          imageUrl: e.imageUrl,
-          organizer: e.organizer,
-          maxParticipants: e.maxParticipants,
-          tickets: e.tickets
-        }));
-        setEvents(parsed);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
-  }, []);
-
-  return { events, loading };
-};
-
+const ALL_CATEGORIES = Object.keys(categoryColors).filter(c => c !== 'ALLE ANZEIGEN') as Category[];
 
 const germanDays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 const germanMonths = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
@@ -107,13 +20,46 @@ export const Buchungskalender = () => {
   const navigate = useNavigate();
   
   const { events, loading } = useEvents();
-  const [selectedCategory, setSelectedCategory] = useState<Category>('ALLE ANZEIGEN');
+  // Old Matukio's calendar shows all categories by default, with an
+  // "Alle anzeigen"/"Alle ausblenden" pair plus a per-category toggle -
+  // multiple categories can be shown/hidden independently at once, not a
+  // single-select filter.
+  const [hiddenCategories, setHiddenCategories] = useState<Set<Category>>(new Set());
+  const toggleCategory = (cat: Category) => {
+    setHiddenCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat);
+      else next.add(cat);
+      return next;
+    });
+  };
   const [activeYear, setActiveYear] = useState<number>(new Date().getFullYear());
   const [selectedEventForBooking, setSelectedEventForBooking] = useState<CalendarEvent | null>(null);
   const [selectedTicketQuantities, setSelectedTicketQuantities] = useState<Record<string, number>>({});
   const calendarRef = useRef<HTMLDivElement>(null);
 
   const selectedEventForDetails = eventId ? events.find(e => e.id === eventId) : null;
+
+  // "Zusätzliche Termine": other upcoming occurrences of the same recurring course
+  const additionalDates = selectedEventForDetails?.seriesId
+    ? events
+        .filter(e =>
+          e.seriesId === selectedEventForDetails.seriesId &&
+          e.id !== selectedEventForDetails.id &&
+          e.start > selectedEventForDetails.start
+        )
+        .sort((a, b) => a.start.getTime() - b.start.getTime())
+        .slice(0, 2)
+    : selectedEventForDetails?.eventNumber
+    ? events
+        .filter(e =>
+          e.eventNumber === selectedEventForDetails.eventNumber &&
+          e.id !== selectedEventForDetails.id &&
+          e.start > selectedEventForDetails.start
+        )
+        .sort((a, b) => a.start.getTime() - b.start.getTime())
+        .slice(0, 2)
+    : [];
 
   // Initialize tooltips
   useEffect(() => {
@@ -128,7 +74,7 @@ export const Buchungskalender = () => {
         appendTo: document.body,
       });
     }
-  }, [loading, events, selectedCategory, activeYear]);
+  }, [loading, events, hiddenCategories, activeYear]);
 
   // Generate calendar months for the active year
   const months = Array.from({ length: 12 }, (_, i) => {
@@ -143,8 +89,8 @@ export const Buchungskalender = () => {
   });
 
   const getFilteredEvents = () => {
-    if (selectedCategory === 'ALLE ANZEIGEN') return events;
-    return events.filter(e => e.category === selectedCategory);
+    if (hiddenCategories.size === 0) return events;
+    return events.filter(e => !hiddenCategories.has(e.category));
   };
 
   const filteredEvents = getFilteredEvents();
@@ -211,8 +157,10 @@ export const Buchungskalender = () => {
 
         {selectedEventForDetails ? (
           <div className="mt-8">
-            <EventDetailsView 
-              event={selectedEventForDetails} 
+            <EventDetailsView
+              event={selectedEventForDetails}
+              additionalDates={additionalDates}
+              onSelectAdditionalDate={(id) => navigate(`/buchungskalender/${id}`)}
               onBack={() => navigate('/buchungskalender')}
               onBook={(quantities) => {
                 const token = localStorage.getItem('token');
@@ -247,21 +195,28 @@ export const Buchungskalender = () => {
           {/* Filters */}
           <div className="w-full lg:w-1/2">
             <div className="w-full">
-              <button 
-                onClick={() => setSelectedCategory('ALLE ANZEIGEN')}
-                className={`w-full py-2.5 text-[10px] font-bold tracking-widest uppercase transition-opacity hover:opacity-90 mb-2 rounded-sm ${selectedCategory === 'ALLE ANZEIGEN' ? 'ring-2 ring-offset-2 ring-luxury-slate' : ''}`}
-                style={{ backgroundColor: categoryColors['ALLE ANZEIGEN'].bg, color: categoryColors['ALLE ANZEIGEN'].text }}
-              >
-                ALLE ANZEIGEN
-              </button>
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                <button
+                  onClick={() => setHiddenCategories(new Set())}
+                  className="w-full py-2 text-[10px] font-bold tracking-widest uppercase transition-opacity hover:opacity-90 rounded-sm bg-luxury-slate text-white"
+                >
+                  Alle anzeigen
+                </button>
+                <button
+                  onClick={() => setHiddenCategories(new Set(ALL_CATEGORIES))}
+                  className="w-full py-2 text-[10px] font-bold tracking-widest uppercase transition-opacity hover:opacity-90 rounded-sm bg-gray-300 text-gray-700"
+                >
+                  Alle ausblenden
+                </button>
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 {/* Column 1 */}
                 <div className="flex flex-col gap-2">
                   {['Schnupperkurs', 'Höhenflugschulung (A-Schein)', 'Reisen', 'Refresherkurs', 'Windenschulung', 'Sonstiges'].map(cat => (
-                    <button 
+                    <button
                       key={cat}
-                      onClick={() => setSelectedCategory(cat as Category)}
-                      className={`w-full py-2.5 px-2 text-[10px] font-bold tracking-widest uppercase truncate transition-opacity hover:opacity-90 rounded-sm ${selectedCategory === cat ? 'ring-2 ring-offset-2 ring-luxury-slate' : ''}`}
+                      onClick={() => toggleCategory(cat as Category)}
+                      className={`w-full py-2.5 px-2 text-[10px] font-bold tracking-widest uppercase truncate transition-all hover:opacity-90 rounded-sm ${hiddenCategories.has(cat as Category) ? 'opacity-30 line-through' : ''}`}
                       style={{ backgroundColor: categoryColors[cat as Category].bg, color: categoryColors[cat as Category].text }}
                     >
                       {cat}
@@ -271,10 +226,10 @@ export const Buchungskalender = () => {
                 {/* Column 2 */}
                 <div className="flex flex-col gap-2">
                   {['Grundkurs', 'Groundhandlingkurs', 'Performance Training', 'Unbeschr. LF-Schein (B-Schein)', 'Thermik- und Streckenseminar', 'Rettungsgerätetraining'].map(cat => (
-                    <button 
+                    <button
                       key={cat}
-                      onClick={() => setSelectedCategory(cat as Category)}
-                      className={`w-full py-2.5 px-2 text-[10px] font-bold tracking-widest uppercase truncate transition-opacity hover:opacity-90 rounded-sm ${selectedCategory === cat ? 'ring-2 ring-offset-2 ring-luxury-slate' : ''}`}
+                      onClick={() => toggleCategory(cat as Category)}
+                      className={`w-full py-2.5 px-2 text-[10px] font-bold tracking-widest uppercase truncate transition-all hover:opacity-90 rounded-sm ${hiddenCategories.has(cat as Category) ? 'opacity-30 line-through' : ''}`}
                       style={{ backgroundColor: categoryColors[cat as Category].bg, color: categoryColors[cat as Category].text }}
                     >
                       {cat}
@@ -383,7 +338,7 @@ export const Buchungskalender = () => {
                         onClick={() => navigate(`/buchungskalender/${item.event.id}`)}
                         data-tippy-content={`
                           <div class='p-5 text-left bg-white font-sans'>
-                            <h4 class='font-luxury text-2xl text-luxury-dark mb-1'>${item.event.title}</h4>
+                            <h4 class='font-luxury text-2xl text-luxury-dark mb-1'>${item.event.title}${item.event.cancelled ? " <span class='text-red-700 text-xs uppercase font-bold align-middle bg-red-100 px-2 py-1 rounded-sm'>Storniert</span>" : ''}</h4>
                             <div class='flex flex-col gap-1 mb-4 pb-4 border-b border-gray-100'>
                               <div class='flex items-center gap-2 text-[12px] text-gray-500 font-semibold'>
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path></svg>
@@ -407,15 +362,15 @@ export const Buchungskalender = () => {
                             </a>
                           </div>
                         `}
-                        className={`event-block rounded-sm px-1 py-[2px] m-[2px] shadow-sm cursor-pointer hover:opacity-90 transition-opacity z-20 ${isSingleDay ? 'flex items-center whitespace-nowrap overflow-hidden text-ellipsis h-[24px]' : 'block whitespace-normal break-words h-full min-h-[24px]'}`}
-                        style={{ 
+                        className={`event-block rounded-sm px-1 py-[2px] m-[2px] shadow-sm cursor-pointer hover:opacity-90 transition-opacity z-20 ${item.event.cancelled ? 'opacity-50' : ''} ${isSingleDay ? 'flex items-center whitespace-nowrap overflow-hidden text-ellipsis h-[24px]' : 'block whitespace-normal break-words h-full min-h-[24px]'}`}
+                        style={{
                           gridColumn: `${item.startDay} / ${item.endDay + 1}`,
                           gridRow: rIdx + 2,
                           backgroundColor: item.event.color || categoryColors[item.event.category]?.bg || '#bdc3c7',
-                          color: categoryColors[item.event.category]?.text || '#374151',
+                          color: item.event.calendarTextColor || categoryColors[item.event.category]?.text || '#374151',
                         }}
                       >
-                        <span className={`font-semibold leading-tight ${isSingleDay ? 'text-[11px] block text-center w-full' : 'text-[10px] block'}`}>
+                        <span className={`font-semibold leading-tight ${item.event.cancelled ? 'line-through' : ''} ${isSingleDay ? 'text-[11px] block text-center w-full' : 'text-[10px] block'}`}>
                           {displayText}
                         </span>
                       </div>

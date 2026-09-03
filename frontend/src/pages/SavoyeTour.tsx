@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
+import { EventComments } from '../components/common/EventComments';
 
 export const SavoyeTour = () => {
   return (
@@ -9,7 +10,7 @@ export const SavoyeTour = () => {
 
       {/* Main Content Section */}
       <section className="pt-16 md:pt-24 pb-8 md:pb-12 px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
           
           {/* Left Column (Content) */}
           <div className="lg:col-span-8 space-y-12">
@@ -26,8 +27,8 @@ export const SavoyeTour = () => {
             {/* Main Image */}
             <div className="w-full h-[400px] relative overflow-hidden rounded-sm shadow-sm">
               <img 
-                src="https://picsum.photos/id/1060/1000/600" 
-                alt="Savoyer Alpentour" 
+                src="/images/reisen/savoye.jpg"
+                alt="Savoyer Alpentour"
                 className="w-full h-full object-cover transition-transform duration-1000 hover:scale-105"
               />
             </div>
@@ -83,34 +84,6 @@ export const SavoyeTour = () => {
               </ul>
             </div>
 
-            {/* Kommentare Section (Moved inside Left Column) */}
-            <div className="mt-16 pt-8 border-t border-gray-200">
-              <h2 className="text-xl text-gray-700 mb-6 pb-3 border-b border-gray-200">
-                Kommentare (0)
-              </h2>
-
-              <div className="space-y-8">
-                {/* Comment Input */}
-                <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-gray-300 flex items-center justify-center text-white text-2xl shrink-0">
-                     <div className="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center overflow-hidden">
-                       <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"></path></svg>
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <textarea 
-                      className="w-full border border-gray-300 p-4 min-h-[100px] text-sm focus:outline-none focus:border-blue-500 rounded-sm"
-                      placeholder="Kommentar schreiben"
-                    ></textarea>
-                    <div className="text-center text-xs text-gray-400 mt-4">
-                      Kommentare powered by CComment
-                    </div>
-                  </div>
-                </div>
-                
-              </div>
-            </div>
-
           </div>
 
           {/* Right Column (Sidebar) */}
@@ -128,7 +101,7 @@ export const SavoyeTour = () => {
               <div className="absolute top-0 left-0 w-full h-1 bg-[#53a8c7] transform origin-left transition-transform duration-500 scale-x-0 group-hover:scale-x-100"></div>
               
               <Link 
-                to="/buchungskalender"
+                to="/events?category=Reisen"
                 className="block w-full bg-[#53a8c7] hover:bg-[#4396b5] text-white text-center py-3 rounded-full text-lg font-semibold transition-colors mb-8 shadow-md flex items-center justify-center gap-2"
               >
                 Reise buchen
@@ -149,9 +122,9 @@ export const SavoyeTour = () => {
                 </div>
               </div>
 
-              <div className="w-full bg-[#4a5f68] text-white text-center py-3 font-semibold shadow-md">
+              <Link to="/events?search=Savoye" className="block w-full bg-[#4a5f68] hover:bg-[#3d4f57] text-white text-center py-3 font-semibold shadow-md transition-colors">
                 Termin &gt; siehe Kalender
-              </div>
+              </Link>
             </div>
 
             {/* Voucher Box */}
@@ -163,7 +136,7 @@ export const SavoyeTour = () => {
                  Die Tour ist auch als Geschenk-Gutschein möglich
                </p>
                <div className="relative h-40 w-full rounded-sm overflow-hidden group cursor-pointer mb-4">
-                 <img src="https://picsum.photos/id/1018/600/300" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
+                 <img src="/images/gutscheine/gutschein.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
                  <div className="absolute right-0 top-0 bottom-0 w-16 bg-[#0088cc] flex items-center justify-center">
                    <div className="rotate-[-90deg] text-white font-bold tracking-widest whitespace-nowrap">Gutschein</div>
@@ -177,11 +150,11 @@ export const SavoyeTour = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-2 gap-1 bg-black p-1">
-                 {[1060, 1061, 1062, 1063, 1064, 1065, 1066, 1067, 1068, 1069].map((id, index) => (
+                 {Array.from({ length: 10 }, (_, i) => (i % 6) + 1).map((n, index) => (
                    <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-900">
-                     <img 
-                       src={`https://picsum.photos/id/${id}/200/200`} 
-                       alt={`Impression ${index + 1}`} 
+                     <img
+                       src={`/images/tour-savoye/gallery-${n}.jpg`}
+                       alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
                    </div>
@@ -191,6 +164,10 @@ export const SavoyeTour = () => {
 
           </div>
           
+        </div>
+
+        <div className="max-w-[1200px] mx-auto mt-12">
+          <EventComments pageSlug="savoye-tour" />
         </div>
       </section>
 

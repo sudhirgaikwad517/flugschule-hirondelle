@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { Banner } from '../components/common/Banner';
 
 export const ZweiJahresCheck = () => {
+  const [showVideo, setShowVideo] = useState(false);
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -8,7 +10,7 @@ export const ZweiJahresCheck = () => {
 
       {/* Main Content Section */}
       <section className="pt-16 md:pt-24 pb-8 md:pb-12 px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
           
           {/* Left Column (Content) */}
           <div className="lg:col-span-8 space-y-12">
@@ -22,26 +24,38 @@ export const ZweiJahresCheck = () => {
               </h1>
             </div>
 
-            {/* Video Placeholder */}
-            <div className="w-full h-[400px] relative overflow-hidden rounded-sm shadow-sm group cursor-pointer">
-              <img 
-                src="https://picsum.photos/id/1018/1000/600" 
-                alt="Gleitschirm Check Video" 
-                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/20 flex items-center justify-center transition-colors group-hover:bg-black/10">
-                <div className="w-16 h-16 bg-[#ff0000] rounded-xl flex items-center justify-center shadow-lg">
-                  <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                </div>
-              </div>
-              <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border border-white/40 flex items-center justify-center overflow-hidden">
-                    <img src="https://picsum.photos/id/1015/100/100" alt="Logo" className="w-full h-full object-cover" />
+            {/* Video */}
+            <div className="w-full h-[400px] relative overflow-hidden rounded-sm shadow-sm group bg-black">
+              {showVideo ? (
+                <iframe
+                  className="w-full h-full"
+                  src="https://www.youtube.com/embed/wZH9ouLjNG8?autoplay=1"
+                  title="Gleitschirm Check - So läuft ein Schirmcheck ab! | PART 1 - Flugschule Hirondelle"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <button type="button" onClick={() => setShowVideo(true)} className="w-full h-full block cursor-pointer">
+                  <img
+                    src="/images/service/check.jpg"
+                    alt="Gleitschirm Check Video"
+                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center transition-colors group-hover:bg-black/10">
+                    <div className="w-16 h-16 bg-[#ff0000] rounded-xl flex items-center justify-center shadow-lg">
+                      <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                    </div>
                   </div>
-                  <h3 className="text-white font-bold text-lg text-shadow-sm">Gleitschirm Check - So läuft ein Schirmcheck ab! | PART 1 - ...</h3>
-                </div>
-              </div>
+                  <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border border-white/40 flex items-center justify-center overflow-hidden">
+                        <img src="/logo.svg" alt="Logo" className="w-full h-full object-cover" />
+                      </div>
+                      <h3 className="text-white font-bold text-lg text-shadow-sm text-left">Gleitschirm Check - So läuft ein Schirmcheck ab! | PART 1 - ...</h3>
+                    </div>
+                  </div>
+                </button>
+              )}
             </div>
 
             {/* Content Blocks */}
@@ -100,11 +114,11 @@ export const ZweiJahresCheck = () => {
             {/* Impressions Gallery */}
             <div className="pt-8 pb-12">
                <div className="grid grid-cols-4 gap-1 bg-black p-1">
-                 {[1011, 1012, 1013, 1014, 1015, 1016, 1018, 1019].map((id, index) => (
+                 {Array.from({ length: 8 }, (_, i) => (i % 5) + 1).map((n, index) => (
                    <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-900">
-                     <img 
-                       src={`https://picsum.photos/id/${id}/200/200`} 
-                       alt={`Impression ${index + 1}`} 
+                     <img
+                       src={`/images/service-check/gallery-${n}.jpg`}
+                       alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
                    </div>

@@ -8,12 +8,40 @@ export const Footer = () => {
   const [newsletter, setNewsletter] = useState(false);
   const [tandemNewsletter, setTandemNewsletter] = useState(false);
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const [statusMsg, setStatusMsg] = useState('');
+
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email) return;
+    if (!newsletter && !tandemNewsletter) {
+      setStatusMsg('Bitte wählen Sie mindestens einen Newsletter aus.');
+      return;
+    }
+    try {
+      if (newsletter) {
+        await fetch('/api/newsletters/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, listType: 'GENERAL' })
+        });
+      }
+      if (tandemNewsletter) {
+        await fetch('/api/newsletters/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, listType: 'TANDEM' })
+        });
+      }
+      setStatusMsg('Erfolgreich abonniert!');
+      setEmail('');
+      setName('');
+    } catch (err) {
+      setStatusMsg('Fehler beim Abonnieren');
+    }
   };
 
   return (
-    <footer className="bg-[#111] text-white pt-24 pb-8 font-luxurysans">
+    <footer className="bg-[#111] text-white pt-24 pb-8 font-luxurysans print:hidden">
       <div className="container mx-auto px-8 max-w-[1400px]">
         
         {/* Main Footer Content */}
@@ -50,19 +78,19 @@ export const Footer = () => {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3 text-sm text-gray-400 font-light">
               <Link to="/" className="hover:text-luxury-gold transition-colors">Home</Link>
               <Link to="/ausbildung" className="hover:text-luxury-gold transition-colors">Ausbildung</Link>
-              <Link to="/infos#wetter" className="hover:text-luxury-gold transition-colors">Wetter</Link>
-              <Link to="/infos#team" className="hover:text-luxury-gold transition-colors">Team</Link>
+              <Link to="/infos/wetter" className="hover:text-luxury-gold transition-colors">Wetter</Link>
+              <Link to="/infos/team" className="hover:text-luxury-gold transition-colors">Team</Link>
               <Link to="/infos#kontakt" className="hover:text-luxury-gold transition-colors">Kontakt</Link>
               
               <Link to="/reisen" className="hover:text-luxury-gold transition-colors">Reisen</Link>
               <Link to="/shop" className="hover:text-luxury-gold transition-colors">Shop</Link>
-              <Link to="/infos#medien" className="hover:text-luxury-gold transition-colors">Medien</Link>
+              <Link to="/infos/medien" className="hover:text-luxury-gold transition-colors">Medien</Link>
               <Link to="/ausbildung#tandem" className="hover:text-luxury-gold transition-colors">Tandem</Link>
               <Link to="/impressum" className="hover:text-luxury-gold transition-colors">Impressum</Link>
               
-              <Link to="/kalender" className="hover:text-luxury-gold transition-colors">Kalender</Link>
-              <Link to="/service#checks" className="hover:text-luxury-gold transition-colors">Checks</Link>
-              <Link to="/infos#gelaende" className="hover:text-luxury-gold transition-colors">Gelände</Link>
+              <Link to="/buchungskalender" className="hover:text-luxury-gold transition-colors">Kalender</Link>
+              <Link to="/service#2-jahres-check" className="hover:text-luxury-gold transition-colors">Checks</Link>
+              <Link to="/infos/gelaende" className="hover:text-luxury-gold transition-colors">Gelände</Link>
               <Link to="/faq" className="hover:text-luxury-gold transition-colors">FAQ</Link>
               <Link to="/datenschutz" className="hover:text-luxury-gold transition-colors">Datenschutzerklärung</Link>
             </div>
@@ -114,10 +142,13 @@ export const Footer = () => {
                 <button type="submit" className="flex-1 bg-white/10 hover:bg-luxury-gold transition-colors text-white text-xs font-bold uppercase tracking-widest py-3 text-center">
                   Abonnieren
                 </button>
-                <button type="button" className="flex-1 bg-white/10 hover:bg-white/20 transition-colors text-white text-xs font-bold uppercase tracking-widest py-3 text-center">
-                  Abmelden
-                </button>
               </div>
+              
+              {statusMsg && (
+                <div className="mt-2 text-sm text-luxury-gold font-bold">
+                  {statusMsg}
+                </div>
+              )}
             </form>
           </div>
 

@@ -5,14 +5,62 @@ import {
   EditButton, 
   Edit, 
   Create, 
-  SimpleForm, 
   TextInput,
   SelectInput,
-  ReferenceInput
+  ReferenceInput,
+  useRecordContext,
+  TabbedForm,
+  FormTab,
+  TopToolbar,
+  CreateButton,
+  ExportButton,
+  SortButton,
+  FilterButton
 } from 'react-admin';
+import { RichTextInput } from 'ra-input-rich-text';
+import { Box, Chip, Typography } from '@mui/material';
+import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 
-// using standard TextInput for description if RichTextInput is not installed, but we will use RichTextInput if available.
-// If ra-input-rich-text is not installed, it will cause an error, so I'll just use TextInput with multiline for now to be safe.
+const StatusIconField = ({ source }: { source: string }) => {
+    const record = useRecordContext();
+    if (!record) return null;
+    const isPublished = record[source] === 'PUBLISHED';
+    return isPublished ? (
+        <CheckCircleOutlinedIcon color="success" />
+    ) : (
+        <CancelOutlinedIcon color="action" />
+    );
+};
+
+const TitleField = () => {
+    const record = useRecordContext();
+    if (!record) return null;
+    return (
+        <Box>
+            <Typography variant="body2" color="primary">{record.title}</Typography>
+            <Typography variant="caption" color="textSecondary">Alias: {record.alias}</Typography>
+        </Box>
+    );
+};
+
+const BadgeField = ({ source, color, label: _label }: { source: string, color: string, label: string }) => {
+    const record = useRecordContext();
+    if (!record) return null;
+    return (
+        <Chip 
+            label={record[source] || 0} 
+            sx={{ 
+                bgcolor: color, 
+                color: 'white', 
+                fontWeight: 'bold', 
+                borderRadius: '4px',
+                minWidth: '40px'
+            }} 
+            size="small"
+        />
+    );
+};
 
 const categoryFilters = [
   <TextInput source="q" label="Suche" alwaysOn />,
@@ -28,83 +76,124 @@ const categoryFilters = [
       { id: 'SPECIAL', name: 'Spezial' },
   ]} />,
   <TextInput source="tags" label="- Schlagwort wählen -" />,
+  <SelectInput source="maxLevels" label="- Max. Ebenen wählen -" choices={[
+      { id: '1', name: '1' },
+      { id: '2', name: '2' },
+      { id: '3', name: '3' },
+      { id: '4', name: '4' },
+      { id: '5', name: '5' },
+  ]} />,
   <ReferenceInput source="parentId" reference="categories">
       <SelectInput optionText="title" label="- Kategorie wählen -" emptyText="- Alle -" />
   </ReferenceInput>
 ];
 
+const CategoryListActions = () => (
+    <TopToolbar>
+        <FilterButton />
+        <SortButton fields={['id', 'title', 'status', 'accessLevel']} />
+        <CreateButton />
+        <ExportButton />
+    </TopToolbar>
+);
+
 export const CategoryList = () => (
-  <List filters={categoryFilters} exporter={false}>
+  <List filters={categoryFilters} actions={<CategoryListActions />} exporter={false} title="Kategorien" perPage={20}>
       <Datagrid rowClick="edit">
-          <TextField source="id" />
-          <TextField source="status" />
-          <TextField source="title" label="Title" />
-          <TextField source="alias" />
-          <TextField source="accessLevel" label="Access Level" />
+          <TextField source="id" label="ID" />
+          <StatusIconField source="status" />
+          <TitleField />
+          <BadgeField source="publishedCount" color="#4caf50" label="Veröffentlicht" />
+          <BadgeField source="hiddenCount" color="#f44336" label="Versteckt" />
+          <BadgeField source="archivedCount" color="#3f51b5" label="Archiviert" />
+          <BadgeField source="trashCount" color="#607d8b" label="Papierkorb" />
+          <TextField source="accessLevel" label="Zugriffsebene" />
           <EditButton />
       </Datagrid>
   </List>
 );
 
 export const CategoryEdit = () => (
-  <Edit>
-      <SimpleForm>
-          <TextInput source="id" disabled />
-          <TextInput source="title" label="Titel *" required fullWidth />
-          <TextInput source="alias" label="Alias" helperText="Leave empty to auto-generate" fullWidth />
-          
-          <TextInput source="description" label="Beschreibung" multiline fullWidth rows={5} />
-          
-          <ReferenceInput source="parentId" reference="categories">
-              <SelectInput optionText="title" label="Übergeordnete Kategorie (Parent Category)" fullWidth />
-          </ReferenceInput>
-          
-          <SelectInput source="status" label="Status" choices={[
-              { id: 'PUBLISHED', name: 'Veröffentlicht (Published)' },
-              { id: 'HIDDEN', name: 'Versteckt (Hidden)' },
-              { id: 'ARCHIVED', name: 'Archiviert (Archived)' },
-              { id: 'TRASH', name: 'Papierkorb (Trash)' },
-          ]} defaultValue="PUBLISHED" />
-          
-          <SelectInput source="accessLevel" label="Zugriffsebene (Access Level)" choices={[
-              { id: 'PUBLIC', name: 'Öffentlich (Public)' },
-              { id: 'REGISTERED', name: 'Registriert (Registered)' },
-              { id: 'SPECIAL', name: 'Spezial (Special)' },
-          ]} defaultValue="PUBLIC" />
-          
-          <TextInput source="tags" label="Schlagwörter (Tags)" fullWidth />
-          <TextInput source="note" label="Notiz (Note)" multiline fullWidth />
-      </SimpleForm>
+  <Edit title="Kategorie bearbeiten">
+      <TabbedForm>
+          <FormTab label="Kategorie">
+              <TextInput source="id" disabled />
+              <TextInput source="title" label="Titel *" required fullWidth />
+              <TextInput source="alias" label="Alias" helperText="Automatisch aus Titel generieren" fullWidth />
+              
+              <RichTextInput source="description" label="Beschreibung" />
+              
+              <ReferenceInput source="parentId" reference="categories">
+                  <SelectInput optionText="title" label="Übergeordnete Kategorie" fullWidth emptyText="- Kein übergeordnetes Element -" />
+              </ReferenceInput>
+              
+              <SelectInput source="status" label="Status" choices={[
+                  { id: 'PUBLISHED', name: 'Veröffentlicht' },
+                  { id: 'HIDDEN', name: 'Versteckt' },
+                  { id: 'ARCHIVED', name: 'Archiviert' },
+                  { id: 'TRASH', name: 'Papierkorb' },
+              ]} defaultValue="PUBLISHED" fullWidth />
+              
+              <SelectInput source="accessLevel" label="Zugriffsebene" choices={[
+                  { id: 'PUBLIC', name: 'Öffentlich' },
+                  { id: 'REGISTERED', name: 'Registriert' },
+                  { id: 'SPECIAL', name: 'Spezial' },
+              ]} defaultValue="PUBLIC" fullWidth />
+              
+              <TextInput source="tags" label="Schlagwörter" helperText="Schlagwort eingeben oder auswählen" fullWidth />
+              <TextInput source="note" label="Notiz" fullWidth />
+          </FormTab>
+          <FormTab label="Optionen">
+              <Typography>Weitere Optionen kommen hier.</Typography>
+          </FormTab>
+          <FormTab label="Veröffentlichung">
+              <Typography>Einstellungen zur Veröffentlichung kommen hier.</Typography>
+          </FormTab>
+          <FormTab label="Berechtigungen">
+              <Typography>Zugriffsberechtigungen kommen hier.</Typography>
+          </FormTab>
+      </TabbedForm>
   </Edit>
 );
 
 export const CategoryCreate = () => (
-  <Create>
-      <SimpleForm>
-          <TextInput source="title" label="Titel *" required fullWidth />
-          <TextInput source="alias" label="Alias" helperText="Leave empty to auto-generate from title" fullWidth />
-          
-          <TextInput source="description" label="Beschreibung" multiline fullWidth rows={5} />
-          
-          <ReferenceInput source="parentId" reference="categories">
-              <SelectInput optionText="title" label="Übergeordnete Kategorie" fullWidth />
-          </ReferenceInput>
-          
-          <SelectInput source="status" label="Status" choices={[
-              { id: 'PUBLISHED', name: 'Veröffentlicht (Published)' },
-              { id: 'HIDDEN', name: 'Versteckt (Hidden)' },
-              { id: 'ARCHIVED', name: 'Archiviert (Archived)' },
-              { id: 'TRASH', name: 'Papierkorb (Trash)' },
-          ]} defaultValue="PUBLISHED" />
-          
-          <SelectInput source="accessLevel" label="Zugriffsebene" choices={[
-              { id: 'PUBLIC', name: 'Öffentlich (Public)' },
-              { id: 'REGISTERED', name: 'Registriert (Registered)' },
-              { id: 'SPECIAL', name: 'Spezial (Special)' },
-          ]} defaultValue="PUBLIC" />
-          
-          <TextInput source="tags" label="Schlagwörter (Tags)" fullWidth />
-          <TextInput source="note" label="Notiz (Note)" multiline fullWidth />
-      </SimpleForm>
+  <Create title="Neue Kategorie">
+      <TabbedForm>
+          <FormTab label="Kategorie">
+              <TextInput source="title" label="Titel *" required fullWidth />
+              <TextInput source="alias" label="Alias" helperText="Automatisch aus Titel generieren" fullWidth />
+              
+              <RichTextInput source="description" label="Beschreibung" />
+              
+              <ReferenceInput source="parentId" reference="categories">
+                  <SelectInput optionText="title" label="Übergeordnete Kategorie" fullWidth emptyText="- Kein übergeordnetes Element -" />
+              </ReferenceInput>
+              
+              <SelectInput source="status" label="Status" choices={[
+                  { id: 'PUBLISHED', name: 'Veröffentlicht' },
+                  { id: 'HIDDEN', name: 'Versteckt' },
+                  { id: 'ARCHIVED', name: 'Archiviert' },
+                  { id: 'TRASH', name: 'Papierkorb' },
+              ]} defaultValue="PUBLISHED" fullWidth />
+              
+              <SelectInput source="accessLevel" label="Zugriffsebene" choices={[
+                  { id: 'PUBLIC', name: 'Öffentlich' },
+                  { id: 'REGISTERED', name: 'Registriert' },
+                  { id: 'SPECIAL', name: 'Spezial' },
+              ]} defaultValue="PUBLIC" fullWidth />
+              
+              <TextInput source="tags" label="Schlagwörter" helperText="Schlagwort eingeben oder auswählen" fullWidth />
+              <TextInput source="note" label="Notiz" fullWidth />
+          </FormTab>
+          <FormTab label="Optionen">
+              <Typography>Weitere Optionen kommen hier.</Typography>
+          </FormTab>
+          <FormTab label="Veröffentlichung">
+              <Typography>Einstellungen zur Veröffentlichung kommen hier.</Typography>
+          </FormTab>
+          <FormTab label="Berechtigungen">
+              <Typography>Zugriffsberechtigungen kommen hier.</Typography>
+          </FormTab>
+      </TabbedForm>
   </Create>
 );

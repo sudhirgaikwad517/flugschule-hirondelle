@@ -44,15 +44,15 @@ export const Reisen = () => {
                 <Link to="/reisen/brasilien-tour" className="px-6 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
                   WEITERLESEN
                 </Link>
-                <button className="px-6 py-3 bg-transparent border border-gray-300 text-gray-400 hover:border-luxury-gold hover:text-luxury-gold transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
+                <Link to="/reisen/brasilien-tour#comments" className="px-6 py-3 bg-transparent border border-gray-300 text-gray-400 hover:border-luxury-gold hover:text-luxury-gold transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
                   KOMMENTAR (1)
-                </button>
+                </Link>
               </div>
             </div>
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="https://picsum.photos/id/1015/800/800" alt="Brasilien Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/reisen/brasilien.jpg" alt="Brasilien Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -69,15 +69,15 @@ export const Reisen = () => {
                 <Link to="/reisen/kolumbien-tour" className="px-6 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
                   WEITERLESEN
                 </Link>
-                <button className="px-6 py-3 bg-transparent border border-gray-300 text-gray-400 hover:border-luxury-gold hover:text-luxury-gold transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
+                <Link to="/reisen/kolumbien-tour#comments" className="px-6 py-3 bg-transparent border border-gray-300 text-gray-400 hover:border-luxury-gold hover:text-luxury-gold transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
                   KOMMENTAR (0)
-                </button>
+                </Link>
               </div>
             </div>
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="https://picsum.photos/id/1016/800/800" alt="Kolumbien Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/reisen/kolumbien.jpg" alt="Kolumbien Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -94,15 +94,15 @@ export const Reisen = () => {
                 <Link to="/reisen/suedafrika-tour" className="px-6 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
                   WEITERLESEN
                 </Link>
-                <button className="px-6 py-3 bg-transparent border border-gray-300 text-gray-400 hover:border-luxury-gold hover:text-luxury-gold transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
+                <Link to="/reisen/suedafrika-tour#comments" className="px-6 py-3 bg-transparent border border-gray-300 text-gray-400 hover:border-luxury-gold hover:text-luxury-gold transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
                   KOMMENTAR (0)
-                </button>
+                </Link>
               </div>
             </div>
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="https://picsum.photos/id/1018/800/800" alt="Südafrika Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/reisen/suedafrika.jpg" alt="Südafrika Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -119,15 +119,15 @@ export const Reisen = () => {
                 <Link to="/reisen/bassano-tour" className="px-6 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
                   WEITERLESEN
                 </Link>
-                <button className="px-6 py-3 bg-transparent border border-gray-300 text-gray-400 hover:border-luxury-gold hover:text-luxury-gold transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
+                <Link to="/reisen/bassano-tour#comments" className="px-6 py-3 bg-transparent border border-gray-300 text-gray-400 hover:border-luxury-gold hover:text-luxury-gold transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
                   KOMMENTAR (3)
-                </button>
+                </Link>
               </div>
             </div>
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="https://picsum.photos/id/1036/800/800" alt="Bassano Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/reisen/bassano.jpg" alt="Bassano Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -144,15 +144,15 @@ export const Reisen = () => {
                 <Link to="/reisen/slowenien-tour" className="px-6 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
                   WEITERLESEN
                 </Link>
-                <button className="px-6 py-3 bg-transparent border border-gray-300 text-gray-400 hover:border-luxury-gold hover:text-luxury-gold transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
+                <Link to="/reisen/slowenien-tour#comments" className="px-6 py-3 bg-transparent border border-gray-300 text-gray-400 hover:border-luxury-gold hover:text-luxury-gold transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
                   KOMMENTAR (0)
-                </button>
+                </Link>
               </div>
             </div>
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="https://picsum.photos/id/1043/800/800" alt="Slowenien Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/reisen/slowenien.jpg" alt="Slowenien Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -169,15 +169,15 @@ export const Reisen = () => {
                 <Link to="/reisen/griechenland-tour" className="px-6 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
                   WEITERLESEN
                 </Link>
-                <button className="px-6 py-3 bg-transparent border border-gray-300 text-gray-400 hover:border-luxury-gold hover:text-luxury-gold transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
+                <Link to="/reisen/griechenland-tour#comments" className="px-6 py-3 bg-transparent border border-gray-300 text-gray-400 hover:border-luxury-gold hover:text-luxury-gold transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
                   KOMMENTAR (0)
-                </button>
+                </Link>
               </div>
             </div>
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="https://picsum.photos/id/1044/800/800" alt="Griechenland Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/reisen/griechenland.jpg" alt="Griechenland Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -194,15 +194,15 @@ export const Reisen = () => {
                 <Link to="/reisen/bergamo-tour" className="px-6 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
                   WEITERLESEN
                 </Link>
-                <button className="px-6 py-3 bg-transparent border border-gray-300 text-gray-400 hover:border-luxury-gold hover:text-luxury-gold transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
+                <Link to="/reisen/bergamo-tour#comments" className="px-6 py-3 bg-transparent border border-gray-300 text-gray-400 hover:border-luxury-gold hover:text-luxury-gold transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
                   KOMMENTAR (4)
-                </button>
+                </Link>
               </div>
             </div>
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="https://picsum.photos/id/1053/800/800" alt="Bergamo Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/reisen/bergamo.jpg" alt="Bergamo Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -219,15 +219,15 @@ export const Reisen = () => {
                 <Link to="/reisen/savoye-tour" className="px-6 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
                   WEITERLESEN
                 </Link>
-                <button className="px-6 py-3 bg-transparent border border-gray-300 text-gray-400 hover:border-luxury-gold hover:text-luxury-gold transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
+                <Link to="/reisen/savoye-tour#comments" className="px-6 py-3 bg-transparent border border-gray-300 text-gray-400 hover:border-luxury-gold hover:text-luxury-gold transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
                   KOMMENTAR (0)
-                </button>
+                </Link>
               </div>
             </div>
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="https://picsum.photos/id/1060/800/800" alt="Savoyer Alpentour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/reisen/savoye.jpg" alt="Savoyer Alpentour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -244,15 +244,15 @@ export const Reisen = () => {
                 <Link to="/reisen/vogesen-tour" className="px-6 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
                   WEITERLESEN
                 </Link>
-                <button className="px-6 py-3 bg-transparent border border-gray-300 text-gray-400 hover:border-luxury-gold hover:text-luxury-gold transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
+                <Link to="/reisen/vogesen-tour#comments" className="px-6 py-3 bg-transparent border border-gray-300 text-gray-400 hover:border-luxury-gold hover:text-luxury-gold transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
                   KOMMENTAR (0)
-                </button>
+                </Link>
               </div>
             </div>
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="https://picsum.photos/id/1069/800/800" alt="Vogesen Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/reisen/vogesen.jpg" alt="Vogesen Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -269,15 +269,15 @@ export const Reisen = () => {
                 <Link to="/reisen/pfalz-tour" className="px-6 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
                   WEITERLESEN
                 </Link>
-                <button className="px-6 py-3 bg-transparent border border-gray-300 text-gray-400 hover:border-luxury-gold hover:text-luxury-gold transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
+                <Link to="/reisen/pfalz-tour#comments" className="px-6 py-3 bg-transparent border border-gray-300 text-gray-400 hover:border-luxury-gold hover:text-luxury-gold transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center">
                   KOMMENTAR (6)
-                </button>
+                </Link>
               </div>
             </div>
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="https://picsum.photos/id/1070/800/800" alt="Pfalz Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/reisen/pfalz.jpg" alt="Pfalz Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>

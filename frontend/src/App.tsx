@@ -1,6 +1,11 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
 import { Home } from './pages/Home';
+import { News } from './pages/News';
+import { NewsDetail } from './pages/NewsDetail';
+import { Downloads } from './pages/Downloads';
+import { Partner } from './pages/Partner';
+import { Search } from './pages/Search';
 import { Events } from './pages/Events';
 import { Ausbildung } from './pages/Ausbildung';
 import { Performance } from './pages/Performance';
@@ -45,7 +50,20 @@ import { Medien } from './pages/Medien';
 import { Gruppenevents } from './pages/Gruppenevents';
 import { Gutscheine } from './pages/Gutscheine';
 import { Versicherungen } from './pages/Versicherungen';
+import { LegalPage } from './pages/LegalPage';
+import { FAQ } from './pages/FAQ';
+import { RatingPage } from './pages/RatingPage';
+import { LocationDetail } from './pages/LocationDetail';
+import { Locations } from './pages/Locations';
+import { OrganizerDetail } from './pages/OrganizerDetail';
+import { Organizers } from './pages/Organizers';
 import { AdminApp } from './admin/AdminApp';
+import { ErrorBoundary } from './pages/ErrorBoundary';
+import { BookingSuccess } from './pages/BookingSuccess';
+import { BookingCancel } from './pages/BookingCancel';
+import { Abmelden } from './pages/Abmelden';
+import { TrackingStoppen } from './pages/TrackingStoppen';
+import { Bestaetigen } from './pages/Bestaetigen';
 
 function App() {
   return (
@@ -54,7 +72,16 @@ function App() {
         <Route path="/admin/*" element={<AdminApp />} />
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
-          <Route path="events" element={<Events />} />
+          <Route path="news" element={<News />} />
+          <Route path="news/:slug" element={<NewsDetail />} />
+          <Route path="downloads" element={<Downloads />} />
+          <Route path="partner" element={<Partner />} />
+          <Route path="search" element={<Search />} />
+          <Route path="events" element={
+            <ErrorBoundary>
+              <Events />
+            </ErrorBoundary>
+          } />
           <Route path="ausbildung" element={<Ausbildung />} />
           <Route path="ausbildung/schnupperkurs" element={<Schnupperkurs />} />
           <Route path="ausbildung/l-schein" element={<LSchein />} />
@@ -96,9 +123,24 @@ function App() {
           <Route path="infos/gruppenevents" element={<Gruppenevents />} />
           <Route path="infos/gutscheine" element={<Gutscheine />} />
           <Route path="infos/versicherungen" element={<Versicherungen />} />
+          <Route path="agb" element={<LegalPage slug="agb" />} />
+          <Route path="widerrufsbelehrung" element={<LegalPage slug="widerruf" />} />
+          <Route path="faq" element={<FAQ />} />
+          <Route path="datenschutz" element={<LegalPage slug="datenschutz" />} />
+          <Route path="impressum" element={<LegalPage slug="impressum" />} />
+          <Route path="bewertung/:bookingId" element={<RatingPage />} />
+          <Route path="veranstaltungsorte" element={<Locations />} />
+          <Route path="veranstaltungsort/:id" element={<LocationDetail />} />
+          <Route path="veranstalter" element={<Organizers />} />
+          <Route path="veranstalter/:id" element={<OrganizerDetail />} />
           <Route path="shop" element={<Shop />} />
           <Route path="anmeldung" element={<Anmeldung />} />
           <Route path="profil" element={<Profil />} />
+          <Route path="booking-success" element={<BookingSuccess />} />
+          <Route path="booking-cancel" element={<BookingCancel />} />
+          <Route path="newsletter/abmelden" element={<Abmelden />} />
+          <Route path="newsletter/tracking-stoppen" element={<TrackingStoppen />} />
+          <Route path="newsletter/bestaetigen" element={<Bestaetigen />} />
           {/* Future Routes */}
         </Route>
       </Routes>

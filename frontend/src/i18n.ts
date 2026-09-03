@@ -134,9 +134,10 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
+    lng: 'de', // Always load in German first; a language switcher can call i18n.changeLanguage() later
     fallbackLng: 'de',
     interpolation: {
-      escapeValue: false 
+      escapeValue: false
     }
   });
 

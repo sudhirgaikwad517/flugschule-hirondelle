@@ -9,7 +9,7 @@ export const ReparaturService = () => {
 
       {/* Main Content Section */}
       <section className="pt-16 md:pt-24 pb-8 md:pb-12 px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
           
           {/* Left Column (Content) */}
           <div className="lg:col-span-8 space-y-12">
@@ -26,8 +26,8 @@ export const ReparaturService = () => {
             {/* Main Image */}
             <div className="w-full h-[400px] relative overflow-hidden rounded-sm shadow-sm group cursor-pointer">
               <img 
-                src="https://picsum.photos/id/1043/1000/600" 
-                alt="Reparatur-Service" 
+                src="/images/service/reparatur.jpg"
+                alt="Reparatur-Service"
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
               />
             </div>
@@ -37,8 +37,8 @@ export const ReparaturService = () => {
               <div className="md:w-1/3 flex-shrink-0">
                 <div className="w-full h-[250px] relative overflow-hidden rounded-sm shadow-sm group cursor-pointer">
                   <img 
-                    src="https://picsum.photos/id/1050/400/500" 
-                    alt="Werkstatt" 
+                    src="/images/service/reparatur.jpg"
+                    alt="Werkstatt"
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                   />
                 </div>

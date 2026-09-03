@@ -15,7 +15,7 @@ import {
   useRefresh
 } from 'react-admin';
 import { useState, useEffect } from 'react';
-import { Table, TableBody, TableCell, TableRow, Paper, Typography, Box, Grid, Card, CardContent, FormControl, InputLabel, Select, MenuItem, Button } from '@mui/material';
+import { Table, TableBody, TableCell, TableRow, Paper, Typography, Box, Grid, Card, CardContent, FormControl, InputLabel, Select, MenuItem, Button, TextField as MuiTextField, Divider } from '@mui/material';
 
 export const BookingList = () => (
   <List>
@@ -47,24 +47,32 @@ const AdminActions = () => {
     const refresh = useRefresh();
     const [update, { isLoading }] = useUpdate();
     const [status, setStatus] = useState('PENDING');
+    const [details, setDetails] = useState<any>({});
 
     useEffect(() => {
-        if (record) setStatus(record.status);
+        if (record) {
+            setStatus(record.status);
+            setDetails(record.customerDetails || {});
+        }
     }, [record]);
 
     const handleSave = () => {
         if (!record) return;
         update(
             'bookings',
-            { id: record.id, data: { status }, previousData: record },
+            { id: record.id, data: { status, customerDetails: details }, previousData: record },
             {
                 onSuccess: () => {
-                    notify('Status erfolgreich aktualisiert!', { type: 'success' });
+                    notify('Buchung erfolgreich aktualisiert!', { type: 'success' });
                     refresh();
                 },
                 onError: (error: any) => notify(`Fehler: ${error.message}`, { type: 'error' })
             }
         );
+    };
+
+    const setField = (field: string) => (e: any) => {
+        setDetails((prev: any) => ({ ...prev, [field]: e.target.value }));
     };
 
     if (!record) return null;
@@ -73,7 +81,7 @@ const AdminActions = () => {
         <Card elevation={1} sx={{ mt: { xs: 2, md: 0 } }}>
             <CardContent>
                 <Typography variant="h6" gutterBottom>Verwaltung (Status)</Typography>
-                <Typography variant="body2" color="textSecondary" paragraph>
+                <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
                     Hier können Sie den Status der Buchung anpassen, z.B. wenn eine Zahlung per Banküberweisung eingegangen ist.
                 </Typography>
                 
@@ -92,12 +100,23 @@ const AdminActions = () => {
                     </Select>
                 </FormControl>
 
-                <Box mt={2}>
-                    <Button 
-                        variant="contained" 
-                        color="primary" 
-                        onClick={handleSave} 
-                        disabled={isLoading || status === record.status}
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="subtitle2" gutterBottom>Kundendetails bearbeiten</Typography>
+                <MuiTextField fullWidth margin="dense" size="small" label="Vorname" value={details.firstName || ''} onChange={setField('firstName')} />
+                <MuiTextField fullWidth margin="dense" size="small" label="Nachname" value={details.lastName || ''} onChange={setField('lastName')} />
+                <MuiTextField fullWidth margin="dense" size="small" label="E-Mail" value={details.email || ''} onChange={setField('email')} />
+                <MuiTextField fullWidth margin="dense" size="small" label="Telefon" value={details.phone || ''} onChange={setField('phone')} />
+                <MuiTextField fullWidth margin="dense" size="small" label="Straße" value={details.street || ''} onChange={setField('street')} />
+                <MuiTextField fullWidth margin="dense" size="small" label="PLZ" value={details.zip || ''} onChange={setField('zip')} />
+                <MuiTextField fullWidth margin="dense" size="small" label="Stadt" value={details.city || ''} onChange={setField('city')} />
+                <MuiTextField fullWidth margin="dense" size="small" label="Land" value={details.country || ''} onChange={setField('country')} />
+
+                <Box sx={{ mt: 2 }}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleSave}
+                        disabled={isLoading}
                         fullWidth
                     >
                         Speichern
@@ -116,7 +135,7 @@ const CustomBookingDetails = () => {
         <Box sx={{ p: 3, width: '100%' }}>
             <Typography variant="h6" gutterBottom>Buchungsdetails</Typography>
             <Grid container spacing={3}>
-                <Grid item xs={12} sm={8}>
+                <Grid size={{ xs: 12, sm: 8 }}>
                     <Paper elevation={1}>
                         <Table sx={{ tableLayout: 'fixed' }}>
                             <TableBody>
@@ -218,7 +237,7 @@ const CustomBookingDetails = () => {
                         </Table>
                     </Paper>
                 </Grid>
-                <Grid item xs={12} sm={4}>
+                <Grid size={{ xs: 12, sm: 4 }}>
                     <AdminActions />
                 </Grid>
             </Grid>

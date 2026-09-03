@@ -38,3 +38,13 @@ body {
 h1, h2, h3, h4, h5, h6, .nav-item {
   font-family: var(--font-condensed);
 }
+
+/* Fix for long unbroken strings in React Admin TextAreas and RichText editors */
+.MuiInputBase-inputMultiline,
+.ProseMirror,
+.tiptap {
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  word-break: break-all !important;
+  white-space: pre-wrap !important;
+}

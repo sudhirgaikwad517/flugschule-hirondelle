@@ -1,8 +1,34 @@
 import { Car, Laptop, Sun, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
+import { useState, useEffect } from 'react';
 
 export const Home = () => {
+  const [media, setMedia] = useState<any>(null);
+
+  useEffect(() => {
+    fetch(`/api/pagemedia/public/home`)
+      .then(res => {
+        if (!res.ok) throw new Error('Not found');
+        return res.json();
+      })
+      .then(data => setMedia(data))
+      .catch(err => console.error('Error fetching home media:', err));
+  }, []);
+
+  const getImage = (index: number, fallbackSrc: string) => {
+    if (media?.galleryImages && media.galleryImages[index]) {
+      return media.galleryImages[index];
+    }
+    return fallbackSrc;
+  };
+
+  const getSquareImage = (index: number, fallbackSrc: string) => {
+    if (media?.galleryImages && media.galleryImages[index]) {
+      return media.galleryImages[index];
+    }
+    return fallbackSrc;
+  };
   return (
     <div className="w-full bg-white font-luxurysans">
       
@@ -24,15 +50,15 @@ export const Home = () => {
       {/* 3. HORIZONTAL IMAGE GALLERY */}
       <section className="w-full flex overflow-hidden h-[400px] md:h-[600px] relative">
         <div className="w-1/3 h-full overflow-hidden relative group">
-          <img src="https://picsum.photos/id/1036/800/800" alt="Gallery 1" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+          <img src={getSquareImage(0, '/images/ausbildung-6.jpg')} alt="Gallery 1" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
           <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-500"></div>
         </div>
         <div className="w-1/3 h-full overflow-hidden relative group">
-          <img src="https://picsum.photos/id/1044/800/800" alt="Gallery 2" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+          <img src={getSquareImage(1, '/images/ausbildung-5.jpg')} alt="Gallery 2" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
           <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-500"></div>
         </div>
         <div className="w-1/3 h-full overflow-hidden relative group">
-          <img src="https://picsum.photos/id/1050/800/800" alt="Gallery 3" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+          <img src={getSquareImage(2, '/images/ausbildung-4.jpg')} alt="Gallery 3" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
           <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-500"></div>
         </div>
         
@@ -49,7 +75,7 @@ export const Home = () => {
 
       {/* 4. EXPERIENCES CARDS (LUXURY THEME) */}
       <section className="py-24 bg-[#FAF9F7] px-4">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-[1200px] mx-auto">
           <div className="text-center mb-16">
             <p className="text-luxury-gold uppercase tracking-[0.2em] text-xs font-semibold mb-4">
               ERLEBEN SIE ULTIMATIVE FLUGERLEBNISSE
@@ -63,7 +89,7 @@ export const Home = () => {
             <div className="relative h-[550px] group overflow-hidden bg-white shadow-sm cursor-pointer">
               <div 
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{ backgroundImage: 'url("https://picsum.photos/id/1069/600/800")' }}
+                style={{ backgroundImage: `url("${getImage(3, '/images/ausbildung-1.jpg')}")` }}
               ></div>
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-dark/90 via-luxury-dark/20 to-transparent"></div>
               
@@ -90,7 +116,7 @@ export const Home = () => {
             <div className="relative h-[550px] group overflow-hidden bg-white shadow-sm cursor-pointer">
               <div 
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{ backgroundImage: 'url("https://picsum.photos/id/1015/600/800")' }}
+                style={{ backgroundImage: `url("${getImage(4, '/images/ausbildung-2.jpg')}")` }}
               ></div>
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-dark/90 via-luxury-dark/20 to-transparent"></div>
               <div className="absolute inset-4 border border-luxury-gold/50 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold"></div>
@@ -114,7 +140,7 @@ export const Home = () => {
             <div className="relative h-[550px] group overflow-hidden bg-white shadow-sm cursor-pointer">
               <div 
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{ backgroundImage: 'url("https://picsum.photos/id/1016/600/800")' }}
+                style={{ backgroundImage: `url("${getImage(5, '/images/ausbildung-3.jpg')}")` }}
               ></div>
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-dark/90 via-luxury-dark/20 to-transparent"></div>
               <div className="absolute inset-4 border border-luxury-gold/50 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold"></div>
@@ -138,7 +164,7 @@ export const Home = () => {
             <div className="relative h-[550px] group overflow-hidden bg-white shadow-sm cursor-pointer">
               <div 
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{ backgroundImage: 'url("https://picsum.photos/id/1019/600/800")' }}
+                style={{ backgroundImage: `url("${getImage(6, '/images/ausbildung-4.jpg')}")` }}
               ></div>
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-dark/90 via-luxury-dark/20 to-transparent"></div>
               <div className="absolute inset-4 border border-luxury-gold/50 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold"></div>
@@ -164,7 +190,7 @@ export const Home = () => {
 
       {/* 5. PROMO CARDS (From Old Website) */}
       <section className="pt-8 pb-24 bg-white px-4 relative z-30 border-t border-gray-100">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-[1200px] mx-auto">
           
           <div className="text-center mb-16">
             <p className="text-luxury-gold uppercase tracking-[0.2em] text-xs font-semibold mb-4">
@@ -179,7 +205,7 @@ export const Home = () => {
             <div className="relative h-[400px] group overflow-hidden bg-white shadow-xl cursor-pointer">
               <div 
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{ backgroundImage: 'url("https://picsum.photos/id/1069/600/800")' }}
+                style={{ backgroundImage: `url("${getImage(7, '/images/ausbildung-5.jpg')}")` }}
               ></div>
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-dark/90 via-luxury-dark/40 to-black/20"></div>
               <div className="absolute inset-4 border border-white/20 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
@@ -203,7 +229,7 @@ export const Home = () => {
             <div className="relative h-[400px] group overflow-hidden bg-white shadow-xl cursor-pointer">
               <div 
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{ backgroundImage: 'url("https://picsum.photos/id/1015/600/800")' }}
+                style={{ backgroundImage: `url("${getImage(8, '/images/ausbildung-6.jpg')}")` }}
               ></div>
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-dark/90 via-luxury-dark/40 to-black/20"></div>
               <div className="absolute inset-4 border border-white/20 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
@@ -227,7 +253,7 @@ export const Home = () => {
             <div className="relative h-[400px] group overflow-hidden bg-white shadow-xl cursor-pointer">
               <div 
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{ backgroundImage: 'url("https://picsum.photos/id/1016/600/800")' }}
+                style={{ backgroundImage: `url("${getImage(9, '/images/ausbildung-1.jpg')}")` }}
               ></div>
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-dark/90 via-luxury-dark/40 to-black/20"></div>
               <div className="absolute inset-4 border border-white/20 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
@@ -253,7 +279,7 @@ export const Home = () => {
 
       {/* 3. NEWS & HOCH HINAUS (CONTENT FROM OLD SITE) */}
       <section className="pt-8 pb-24 bg-white px-4 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-16">
+        <div className="max-w-[1200px] mx-auto flex flex-col lg:flex-row gap-16">
           
           {/* Left: NEWS */}
           <div className="w-full lg:w-5/12 flex flex-col">
@@ -267,7 +293,7 @@ export const Home = () => {
             <div className="w-full overflow-hidden h-[500px] flex items-start justify-start">
                {/* Facebook Page Plugin Iframe */}
                <iframe 
-                  src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Ffacebook&tabs=timeline&height=500&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true&appId" 
+                  src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Ffshirondelle&tabs=timeline&height=500&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true"
                   width="100%" 
                   height="100%" 
                   style={{ border: 'none', overflow: 'hidden', maxWidth: '100%', minWidth: '280px' }} 
@@ -301,31 +327,31 @@ export const Home = () => {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-y-12 gap-x-6">
               <div className="flex flex-col items-center group cursor-pointer">
                 <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
-                  <img src="https://picsum.photos/id/1005/150/150" className="w-full h-full rounded-full object-cover" alt="Alex" />
+                  <img src="/images/team/schlink.jpg" className="w-full h-full rounded-full object-cover" alt="Alex" />
                 </div>
                 <span className="font-luxury text-lg text-luxury-dark tracking-wide">Alex</span>
               </div>
               <div className="flex flex-col items-center group cursor-pointer">
                 <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
-                  <img src="https://picsum.photos/id/1011/150/150" className="w-full h-full rounded-full object-cover" alt="Sarah" />
+                  <img src="/images/team/sarah.jpg" className="w-full h-full rounded-full object-cover" alt="Sarah" />
                 </div>
                 <span className="font-luxury text-lg text-luxury-dark tracking-wide">Sarah</span>
               </div>
               <div className="flex flex-col items-center group cursor-pointer">
                 <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
-                  <img src="https://picsum.photos/id/1012/150/150" className="w-full h-full rounded-full object-cover" alt="Tobi" />
+                  <img src="/images/team/tobi.jpg" className="w-full h-full rounded-full object-cover" alt="Tobi" />
                 </div>
                 <span className="font-luxury text-lg text-luxury-dark tracking-wide">Tobi</span>
               </div>
               <div className="flex flex-col items-center group cursor-pointer md:col-start-1 md:ml-12 lg:ml-16">
                 <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
-                  <img src="https://picsum.photos/id/1025/150/150" className="w-full h-full rounded-full object-cover" alt="Holger" />
+                  <img src="/images/team/holger.jpg" className="w-full h-full rounded-full object-cover" alt="Holger" />
                 </div>
                 <span className="font-luxury text-lg text-luxury-dark tracking-wide">Holger</span>
               </div>
               <div className="flex flex-col items-center group cursor-pointer md:col-start-2 md:mr-12 lg:mr-16">
                 <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
-                  <img src="https://picsum.photos/id/1027/150/150" className="w-full h-full rounded-full object-cover" alt="Markus" />
+                  <img src="/images/team/markus.jpg" className="w-full h-full rounded-full object-cover" alt="Markus" />
                 </div>
                 <span className="font-luxury text-lg text-luxury-dark tracking-wide">Markus</span>
               </div>
@@ -337,7 +363,7 @@ export const Home = () => {
 
       {/* 5. THE ESSENTIALS (SERVICES) */}
       <section className="pt-8 pb-24 bg-white px-4">
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-16">
+        <div className="max-w-[1200px] mx-auto flex flex-col lg:flex-row gap-16">
           
           {/* Left: Text & Icons */}
           <div className="w-full lg:w-1/2">
@@ -397,14 +423,14 @@ export const Home = () => {
           <div className="w-full lg:w-1/2 flex gap-4 h-[600px]">
             <div className="w-1/2 h-full pt-12">
               <img 
-                src="https://picsum.photos/id/1043/600/800" 
+                src={getImage(10, '/images/ausbildung-2.jpg')}
                 alt="Essential 1" 
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="w-1/2 h-full pb-12">
               <img 
-                src="https://picsum.photos/id/1055/600/800" 
+                src={getImage(11, '/images/ausbildung-3.jpg')}
                 alt="Essential 2" 
                 className="w-full h-full object-cover"
               />

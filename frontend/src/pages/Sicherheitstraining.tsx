@@ -1,8 +1,28 @@
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
 import { Check } from 'lucide-react';
 
+interface PageMedia {
+  headerImageUrl: string | null;
+  contentMediaType: 'IMAGE' | 'VIDEO';
+  contentImageUrl: string | null;
+  contentYoutubeUrl: string | null;
+  galleryImages: string | null;
+}
+
 export const Sicherheitstraining = () => {
+  const [media, setMedia] = useState<PageMedia | null>(null);
+
+  useEffect(() => {
+    fetch('/api/pagemedia/public/sicherheitstraining')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.error) setMedia(data);
+      })
+      .catch(console.error);
+  }, []);
+
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -10,7 +30,7 @@ export const Sicherheitstraining = () => {
 
       {/* Main Content Section */}
       <section className="py-16 md:py-24 px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
           
           {/* Left Column (Content) */}
           <div className="lg:col-span-8 space-y-12">
@@ -22,13 +42,24 @@ export const Sicherheitstraining = () => {
               <div className="w-full h-px bg-[#53a8c7]/30"></div>
             </div>
 
-            {/* Featured Image */}
-            <div className="w-full h-[400px] overflow-hidden rounded-sm shadow-sm group">
-              <img 
-                src="https://picsum.photos/id/1054/1000/600" 
-                alt="Sicherheitstraining Gardasee" 
-                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-              />
+            {/* Featured Image or Video Slot */}
+            <div className="w-full min-h-[400px] overflow-hidden rounded-sm shadow-sm group">
+              {media?.contentMediaType === 'VIDEO' && media?.contentYoutubeUrl ? (
+                <iframe
+                  className="w-full h-[400px]"
+                  src={media.contentYoutubeUrl}
+                  title="Sicherheitstraining Video"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              ) : (
+                <img 
+                  src={media?.contentImageUrl || "https://picsum.photos/id/1054/1000/600"} 
+                  alt="Sicherheitstraining Gardasee" 
+                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                />
+              )}
             </div>
 
             {/* Content Blocks (Top Part) */}
@@ -94,7 +125,7 @@ export const Sicherheitstraining = () => {
               
               <div className="p-8">
                 <Link 
-                  to="/buchungskalender"
+                  to="/events?category=Performance%20Training"
                   className="block w-full bg-[#53a8c7] hover:bg-[#4396b5] text-white text-center py-3 rounded-full text-lg font-semibold transition-colors mb-10 shadow-md flex items-center justify-center gap-2"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
@@ -122,7 +153,7 @@ export const Sicherheitstraining = () => {
               </div>
 
               <Link 
-                to="/buchungskalender" 
+                to="/events?category=Performance%20Training" 
                 className="w-full block bg-[#394553] hover:bg-luxury-gold text-white text-center py-4 px-2 text-sm font-semibold transition-colors leading-relaxed"
               >
                 Termin siehe Kalender
@@ -138,7 +169,7 @@ export const Sicherheitstraining = () => {
                  Das Sicherheitstraining ist auch als Geschenk-Gutschein möglich.
                </p>
                <div className="w-full h-[180px] rounded-sm overflow-hidden shadow-sm relative group cursor-pointer border border-gray-200">
-                  <img src="https://picsum.photos/id/1043/600/300" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
+                  <img src="/images/gutscheine/gutschein.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                   <div className="absolute bottom-4 left-4">
                      <p className="text-white font-luxury text-3xl font-bold italic opacity-90 drop-shadow-md tracking-wider">GUTSCHEIN</p>
@@ -150,29 +181,31 @@ export const Sicherheitstraining = () => {
             </div>
 
             {/* Impressions Gallery */}
-            <div>
-               <h3 className="font-luxury text-2xl text-[#53a8c7] mb-6 uppercase tracking-wider border-b border-gray-200 pb-4">
-                 Impressionen
-               </h3>
-               <div className="grid grid-cols-2 gap-2">
-                 {[1054, 1064, 1074, 1084, 1094, 1104].map((id, index) => (
-                   <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
-                     <img 
-                       src={`https://picsum.photos/id/${id}/300/300`} 
-                       alt={`Impression ${index + 1}`} 
-                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                     />
-                   </div>
-                 ))}
-               </div>
-            </div>
+            {media?.galleryImages && Array.isArray(media.galleryImages) && media.galleryImages.length > 0 && (
+              <div>
+                 <h3 className="font-luxury text-2xl text-[#53a8c7] mb-6 uppercase tracking-wider border-b border-gray-200 pb-4">
+                   Impressionen
+                 </h3>
+                 <div className="grid grid-cols-2 gap-2">
+                   {media.galleryImages.map((img: string, index: number) => (
+                     <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
+                       <img 
+                         src={img} 
+                         alt={`Impression ${index + 1}`} 
+                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                       />
+                     </div>
+                   ))}
+                 </div>
+              </div>
+            )}
 
           </div>
 
         </div>
 
         {/* Bottom Full-Width Content (To avoid empty right space) */}
-        <div className="max-w-7xl mx-auto mt-16 lg:mt-24">
+        <div className="max-w-[1200px] mx-auto mt-16 lg:mt-24">
           <hr className="border-gray-100 mb-16" />
           
           <div className="space-y-16 text-gray-600 font-light leading-relaxed text-justify">
@@ -216,7 +249,7 @@ export const Sicherheitstraining = () => {
                 Das Team bei den exclusiven Sicherheitstrainings besteht aus dem Trainingsleiter, einem erfahrenen Startleiter und einem Kameramann für die Videoaufzeichnungen. Wir arbeiten mit mind. zwei Fluglehrern, einem am Startplatz und dem Trainingsleiter direkt am See, so dass dieser im Falle einer Wasserlandung schnell mit dem einsatzbereiten Rettungsboot in kürzester Zeit bei dir ist. Der Fluglehrer am Startplatz steht für alle noch offenen Fragen zur Verfügung, gibt dir wertvolle Tipps beim Start und sorgt für einen reibungslosen und stressfreien Ablauf am Startplatz. Nach dem Start begleitet er dich über Funk, bis der Fluglehrer am See übernimmt und du die im Vorfeld vereinbarten Flugfiguren beginnen kannst. Die Übungen werden von unserem Kameramann auf Video aufgenommen. Während deiner Flüge bekommst du in der Luft über Funk Hilfen und Anweisungen zu deinen Übungen und sofortige Korrekturen bei eventuellen Fehlern. Da immer nur ein Teilnehmer Übungen durchführt, kann auf das Flugkönnen jedes Einzelnen genauestens eingegangen werden.
               </p>
               <div className="flex items-center gap-6 bg-gray-50 p-6 rounded-sm border border-gray-100 shadow-sm inline-flex">
-                <img src="https://picsum.photos/id/1005/100/100" alt="Alex Schlink" className="w-20 h-20 rounded-full object-cover border-2 border-luxury-gold/30" />
+                <img src="/images/team/schlink.jpg" alt="Alex Schlink" className="w-20 h-20 rounded-full object-cover border-2 border-luxury-gold/30" />
                 <p className="font-medium text-[15px] text-luxury-dark text-left">Startleiter: Alex, Performance-Trainer<br/>und Ausbildungsleiter der Flugschule Hirondelle</p>
               </div>
             </div>

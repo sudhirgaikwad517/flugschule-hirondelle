@@ -54,7 +54,7 @@ export const Performance = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="https://picsum.photos/id/1025/800/800" alt="Sicherheitstraining Gardasee" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/performance/sicherheitstraining.jpg" alt="Sicherheitstraining Gardasee" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -75,7 +75,7 @@ export const Performance = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="https://picsum.photos/id/1042/800/800" alt="Rettungsgerätetraining" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/performance/rettungsgeraetetraining.jpg" alt="Rettungsgerätetraining" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -96,7 +96,7 @@ export const Performance = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="https://picsum.photos/id/1054/800/800" alt="Refresherkurs" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/performance/refresher.jpg" alt="Refresherkurs" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -117,7 +117,7 @@ export const Performance = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="https://picsum.photos/id/1068/800/800" alt="Groundhandling Kurs" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/performance/groundhandling.jpg" alt="Groundhandling Kurs" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>

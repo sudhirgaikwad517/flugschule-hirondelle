@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-const BANNER_SLIDES = [
+interface BannerSlide {
+  image: string;
+  text?: string;
+  linkUrl?: string;
+}
+
+const BANNER_SLIDES: BannerSlide[] = [
   {
     image: 'https://picsum.photos/id/1018/1920/1080',
     text: 'Über den Zuckerrohrfeldern in Kolumbien'
@@ -38,13 +44,41 @@ const BANNER_SLIDES = [
 
 export const Banner = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [slides, setSlides] = useState(BANNER_SLIDES);
+
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const res = await fetch('/api/banners/public');
+        if (res.ok) {
+          const data = await res.json();
+          const topBanners = data.filter((b: any) => b.position === 'home_top');
+          
+          if (topBanners.length > 0) {
+            const dynamicSlides = topBanners.map((b: any) => ({
+              image: b.imageUrl,
+              text: b.title,
+              linkUrl: b.linkUrl
+            }));
+            
+            // Mix static and dynamic, or just replace
+            // Replacing if dynamic exists is usually preferred for CMS control
+            setSlides(dynamicSlides);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch banners', err);
+      }
+    };
+    fetchBanners();
+  }, []);
 
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % BANNER_SLIDES.length);
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
   };
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + BANNER_SLIDES.length) % BANNER_SLIDES.length);
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
   };
 
   // Auto-play functionality
@@ -53,15 +87,17 @@ export const Banner = () => {
       nextSlide();
     }, 6000);
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
 
-  const currentSlideData = BANNER_SLIDES[currentSlide];
+  const currentSlideData = slides[currentSlide] || slides[0];
+
+  if (!currentSlideData) return null;
 
   return (
     <section className="relative w-full h-[calc(100vh-80px)] min-h-[500px] md:min-h-[600px] flex flex-col items-center justify-center text-center text-white overflow-hidden group">
       
       {/* Background Images */}
-      {BANNER_SLIDES.map((slide, index) => (
+      {slides.map((slide, index) => (
         <div 
           key={index}
           className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ease-in-out ${
@@ -91,9 +127,15 @@ export const Banner = () => {
               </div>
               
               {/* Italic Text */}
-              <p className="text-white text-xl md:text-[24px] lg:text-[28px] italic font-semibold tracking-wide drop-shadow-sm text-left leading-tight truncate">
-                {currentSlideData.text}
-              </p>
+              {currentSlideData.linkUrl ? (
+                <a href={currentSlideData.linkUrl} target="_blank" rel="noopener noreferrer" className="text-white text-xl md:text-[24px] lg:text-[28px] italic font-semibold tracking-wide drop-shadow-sm text-left leading-tight truncate hover:underline">
+                  {currentSlideData.text}
+                </a>
+              ) : (
+                <p className="text-white text-xl md:text-[24px] lg:text-[28px] italic font-semibold tracking-wide drop-shadow-sm text-left leading-tight truncate">
+                  {currentSlideData.text}
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -118,7 +160,7 @@ export const Banner = () => {
 
       {/* Slide Indicators */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex gap-2.5">
-        {BANNER_SLIDES.map((_, index) => (
+        {slides.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}

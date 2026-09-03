@@ -10,7 +10,7 @@ export const Schnupperkurs = () => {
 
       {/* Main Content Section */}
       <section className="py-16 md:py-24 px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
           
           {/* Left Column (Content) */}
           <div className="lg:col-span-8 space-y-12">
@@ -27,8 +27,8 @@ export const Schnupperkurs = () => {
             {/* Featured Image */}
             <div className="w-full h-[400px] overflow-hidden rounded-sm shadow-sm group">
               <img 
-                src="https://picsum.photos/id/1015/1000/600" 
-                alt="Schnupperkurs" 
+                src="/images/schnupperkurs/hero.jpg"
+                alt="Schnupperkurs"
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
               />
             </div>
@@ -75,7 +75,7 @@ export const Schnupperkurs = () => {
               <div className="absolute top-0 left-0 w-full h-1 bg-luxury-gold transform origin-left transition-transform duration-500 scale-x-0 group-hover:scale-x-100"></div>
               
               <Link 
-                to="/buchungskalender"
+                to="/events?category=Schnupperkurs"
                 className="block w-full bg-[#53a8c7] hover:bg-[#4396b5] text-white text-center py-3 rounded-full text-lg font-semibold transition-colors mb-8 shadow-md"
               >
                 Kurs buchen
@@ -104,10 +104,10 @@ export const Schnupperkurs = () => {
               </div>
 
               <Link 
-                to="/buchungskalender" 
+                to="/events?category=Schnupperkurs" 
                 className="w-full block bg-luxury-dark hover:bg-luxury-gold text-white text-center py-4 text-sm font-semibold uppercase tracking-widest transition-colors"
               >
-                Termine &gt; Siehe Kalender
+                Termine &gt; Siehe Liste
               </Link>
             </div>
 
@@ -135,11 +135,11 @@ export const Schnupperkurs = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {[1018, 1036, 1043, 1044, 1050, 1060, 1070, 1080, 1015].map((id, index) => (
+                 {Array.from({ length: 9 }, (_, i) => i + 1).map((n, index) => (
                    <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
-                     <img 
-                       src={`https://picsum.photos/id/${id}/200/200`} 
-                       alt={`Impression ${index + 1}`} 
+                     <img
+                       src={`/images/schnupperkurs/gallery-${n}.jpg`}
+                       alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
                    </div>
@@ -152,7 +152,7 @@ export const Schnupperkurs = () => {
         </div>
 
         {/* Leistungen & Checkliste Grid (Full Width) */}
-        <div className="max-w-7xl mx-auto mt-16 lg:mt-24">
+        <div className="max-w-[1200px] mx-auto mt-16 lg:mt-24">
           <hr className="border-gray-100 mb-16" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24">
             <div>

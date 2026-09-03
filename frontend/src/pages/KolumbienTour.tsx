@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
 import { Check, Gift } from 'lucide-react';
+import { EventComments } from '../components/common/EventComments';
 
 export const KolumbienTour = () => {
   return (
@@ -10,7 +11,7 @@ export const KolumbienTour = () => {
 
       {/* Main Content Section */}
       <section className="py-16 md:py-24 px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
           
           {/* Left Column (Content) */}
           <div className="lg:col-span-8 space-y-12">
@@ -27,8 +28,8 @@ export const KolumbienTour = () => {
             {/* Main Image */}
             <div className="w-full h-[400px] relative overflow-hidden rounded-sm shadow-sm">
               <img 
-                src="https://picsum.photos/id/1016/1000/600" 
-                alt="Kolumbien-Tour" 
+                src="/images/reisen/kolumbien.jpg"
+                alt="Kolumbien-Tour"
                 className="w-full h-full object-cover transition-transform duration-1000 hover:scale-105"
               />
             </div>
@@ -149,7 +150,7 @@ export const KolumbienTour = () => {
               <div className="absolute top-0 left-0 w-full h-1 bg-[#53a8c7] transform origin-left transition-transform duration-500 scale-x-0 group-hover:scale-x-100"></div>
               
               <Link 
-                to="/buchungskalender"
+                to="/events?category=Reisen"
                 className="block w-full bg-[#53a8c7] hover:bg-[#4396b5] text-white text-center py-3 rounded-full text-lg font-semibold transition-colors mb-8 shadow-md flex items-center justify-center gap-2"
               >
                 Reise buchen
@@ -170,9 +171,9 @@ export const KolumbienTour = () => {
                 </div>
               </div>
 
-              <div className="w-full bg-[#4a5f68] text-white text-center py-3 font-semibold shadow-md">
+              <Link to="/events?search=Kolumbien" className="block w-full bg-[#4a5f68] hover:bg-[#3d4f57] text-white text-center py-3 font-semibold shadow-md transition-colors">
                 Termin: siehe Kalender
-              </div>
+              </Link>
             </div>
 
             {/* Voucher Box */}
@@ -184,7 +185,7 @@ export const KolumbienTour = () => {
                  Die Tour ist auch als Geschenk-Gutschein möglich
                </p>
                <div className="relative h-40 w-full rounded-sm overflow-hidden group cursor-pointer mb-4">
-                 <img src="https://picsum.photos/id/1018/600/300" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
+                 <img src="/images/gutscheine/gutschein.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
                  <div className="absolute right-0 top-0 bottom-0 w-16 bg-[#0088cc] flex items-center justify-center">
                    <div className="rotate-[-90deg] text-white font-bold tracking-widest whitespace-nowrap">Gutschein</div>
@@ -198,11 +199,11 @@ export const KolumbienTour = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-2 gap-1 bg-black p-1">
-                 {[1015, 1025, 1035, 1045, 1055, 1065, 1075, 1085, 1011, 1012, 1013, 1014, 1016, 1018, 1019, 1020, 1021, 1022].map((id, index) => (
+                 {Array.from({ length: 18 }, (_, i) => (i % 5) + 1).map((n, index) => (
                    <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-900">
-                     <img 
-                       src={`https://picsum.photos/id/${id}/200/200`} 
-                       alt={`Impression ${index + 1}`} 
+                     <img
+                       src={`/images/tour-kolumbien/gallery-${n}.png`}
+                       alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
                    </div>
@@ -212,6 +213,10 @@ export const KolumbienTour = () => {
 
           </div>
 
+        </div>
+
+        <div className="max-w-[1200px] mx-auto mt-12">
+          <EventComments pageSlug="kolumbien-tour" />
         </div>
       </section>
 

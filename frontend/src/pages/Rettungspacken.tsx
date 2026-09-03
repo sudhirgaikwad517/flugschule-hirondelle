@@ -9,7 +9,7 @@ export const Rettungspacken = () => {
 
       {/* Main Content Section */}
       <section className="pt-16 md:pt-24 pb-8 md:pb-12 px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
           
           {/* Left Column (Content) */}
           <div className="lg:col-span-8 space-y-12">
@@ -26,8 +26,8 @@ export const Rettungspacken = () => {
             {/* Main Image */}
             <div className="w-full h-[400px] relative overflow-hidden rounded-sm shadow-sm group cursor-pointer">
               <img 
-                src="https://picsum.photos/id/1025/1000/600" 
-                alt="Rettungsgeräte-Packservice" 
+                src="/images/service/rettungspackservice.png"
+                alt="Rettungsgeräte-Packservice"
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
               />
             </div>
@@ -99,9 +99,9 @@ export const Rettungspacken = () => {
                 </div>
               </div>
 
-              <button className="w-full bg-[#4a5f68] hover:bg-[#394a51] text-white text-center py-3 font-semibold shadow-md rounded-sm transition-colors">
-                Zum Pack-Formular
-              </button>
+              <Link to="/service/service-auftrag" className="w-full block bg-[#4a5f68] hover:bg-[#394a51] text-white text-center py-3 font-semibold shadow-md rounded-sm transition-colors">
+                Zum Check
+              </Link>
             </div>
 
             {/* Pack-Auftrag Info */}

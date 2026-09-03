@@ -10,7 +10,7 @@ export const ASchein = () => {
 
       {/* Main Content Section */}
       <section className="py-16 md:py-24 px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
           
           {/* Left Column (Content) */}
           <div className="lg:col-span-8 space-y-12">
@@ -27,8 +27,8 @@ export const ASchein = () => {
             {/* Featured Image */}
             <div className="w-full h-[400px] overflow-hidden rounded-sm shadow-sm group">
               <img 
-                src="https://picsum.photos/id/1018/1000/600" 
-                alt="A-Schein Höhenflugkurs" 
+                src="/images/a-schein/hero.jpg"
+                alt="A-Schein Höhenflugkurs"
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
               />
             </div>
@@ -70,7 +70,7 @@ export const ASchein = () => {
               <div>
                 <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Organisatorisches...</h3>
                 <p>
-                  Die Termine zur Höhenflugschulung findet ihr in unserem <Link to="/buchungskalender" className="text-luxury-gold hover:underline font-medium">Kalender</Link>. Bitte meldet euch hierüber an. Ort und genaue Uhrzeit der Kurstermine erfahrt ihr dann wie gewohnt vorab per Schulungs-Newsletter. Die Ausbildung zum Höhenflugausweis erfolgt wie gewohnt für jeden Piloten zeitoffen.
+                  Die Termine zur Höhenflugschulung findet ihr in unserem <Link to="/events?category=H%C3%B6henflugschulung%20(A-Schein)" className="text-luxury-gold hover:underline font-medium">Kalender</Link>. Bitte meldet euch hierüber an. Ort und genaue Uhrzeit der Kurstermine erfahrt ihr dann wie gewohnt vorab per Schulungs-Newsletter. Die Ausbildung zum Höhenflugausweis erfolgt wie gewohnt für jeden Piloten zeitoffen.
                 </p>
               </div>
 
@@ -101,7 +101,7 @@ export const ASchein = () => {
               
               <div className="p-8">
                 <Link 
-                  to="/buchungskalender"
+                  to="/events?category=H%C3%B6henflugschulung%20(A-Schein)"
                   className="block w-full bg-[#53a8c7] hover:bg-[#4396b5] text-white text-center py-3 rounded-full text-lg font-semibold transition-colors mb-10 shadow-md"
                 >
                   Kurs buchen
@@ -206,10 +206,10 @@ export const ASchein = () => {
               </div>
 
               <Link 
-                to="/buchungskalender" 
+                to="/events?category=H%C3%B6henflugschulung%20(A-Schein)" 
                 className="w-full block bg-luxury-dark hover:bg-luxury-gold text-white text-center py-4 text-sm font-semibold uppercase tracking-widest transition-colors"
               >
-                Termine Höhenflugschulungen &gt; Siehe Kalender
+                Termine Höhenflugschulungen &gt; Siehe Liste
               </Link>
             </div>
 
@@ -222,7 +222,7 @@ export const ASchein = () => {
                  Der A-Schein ist auch als Geschenk-Gutschein möglich
                </p>
                <div className="w-full h-[180px] rounded-sm overflow-hidden shadow-sm relative group cursor-pointer border border-gray-200">
-                  <img src="https://picsum.photos/id/1018/600/300" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
+                  <img src="/images/gutscheine/gutschein.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                   <div className="absolute bottom-4 left-4">
                      <p className="text-white font-luxury text-3xl font-bold italic opacity-90 drop-shadow-md tracking-wider">GUTSCHEIN</p>
@@ -239,11 +239,11 @@ export const ASchein = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {[1018, 1028, 1038, 1048, 1058, 1068, 1078, 1088, 1098, 1108, 1118, 1011].map((id, index) => (
+                 {Array.from({ length: 12 }, (_, i) => i + 1).map((n, index) => (
                    <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
-                     <img 
-                       src={`https://picsum.photos/id/${id}/200/200`} 
-                       alt={`Impression ${index + 1}`} 
+                     <img
+                       src={`/images/a-schein/gallery-${n}.jpg`}
+                       alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
                    </div>
@@ -256,7 +256,7 @@ export const ASchein = () => {
         </div>
 
         {/* Leistungen & Checkliste Grid (Full Width) */}
-        <div className="max-w-7xl mx-auto mt-16 lg:mt-24">
+        <div className="max-w-[1200px] mx-auto mt-16 lg:mt-24">
           <hr className="border-gray-100 mb-16" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24">
             <div>

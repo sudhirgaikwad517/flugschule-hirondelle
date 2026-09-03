@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
 import { Check, Gift, Play } from 'lucide-react';
 
 export const Groundhandling = () => {
+  const [showVideo, setShowVideo] = useState(false);
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -10,7 +12,7 @@ export const Groundhandling = () => {
 
       {/* Main Content Section */}
       <section className="py-16 md:py-24 px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
           
           {/* Left Column (Content) */}
           <div className="lg:col-span-8 space-y-12">
@@ -24,27 +26,39 @@ export const Groundhandling = () => {
               </h1>
             </div>
 
-            {/* Video Box */}
-            <div className="w-full h-[400px] relative overflow-hidden rounded-sm shadow-sm group cursor-pointer bg-luxury-dark">
-              <img 
-                src="https://picsum.photos/id/1063/1000/600" 
-                alt="Groundhandling & Rückwärts aufziehen" 
-                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-80"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-16 h-12 bg-red-600 rounded-lg flex items-center justify-center group-hover:bg-red-700 transition-colors shadow-lg">
-                  <Play className="w-6 h-6 text-white fill-white" />
-                </div>
-              </div>
-              <div className="absolute top-4 left-4 right-4 flex items-center gap-4">
-                 <div className="w-10 h-10 rounded-full border border-white/50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-1">
-                   <img src="/google.png" className="w-full h-full object-contain brightness-0 invert" alt="Logo" />
-                 </div>
-                 <div>
-                    <h3 className="text-white font-semibold text-lg drop-shadow-md">Groundhandling & Rückwärts aufziehen - So geht's!</h3>
-                    <p className="text-white/80 text-sm drop-shadow-md">Flugschule Hirondelle</p>
-                 </div>
-              </div>
+            {/* Video */}
+            <div className="w-full h-[400px] relative overflow-hidden rounded-sm shadow-sm group bg-luxury-dark">
+              {showVideo ? (
+                <iframe
+                  className="w-full h-full"
+                  src="https://www.youtube.com/embed/qh9ORewDogc?autoplay=1"
+                  title="Groundhandling & Rückwärts aufziehen - So geht's! | Flugschule Hirondelle"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <button type="button" onClick={() => setShowVideo(true)} className="w-full h-full block cursor-pointer">
+                  <img
+                    src="/images/groundhandling/hero.jpg"
+                    alt="Groundhandling & Rückwärts aufziehen"
+                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-80"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-16 h-12 bg-red-600 rounded-lg flex items-center justify-center group-hover:bg-red-700 transition-colors shadow-lg">
+                      <Play className="w-6 h-6 text-white fill-white" />
+                    </div>
+                  </div>
+                  <div className="absolute top-4 left-4 right-4 flex items-center gap-4 text-left">
+                     <div className="w-10 h-10 rounded-full border border-white/50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-1">
+                       <img src="/google.png" className="w-full h-full object-contain brightness-0 invert" alt="Logo" />
+                     </div>
+                     <div>
+                        <h3 className="text-white font-semibold text-lg drop-shadow-md">Groundhandling & Rückwärts aufziehen - So geht's!</h3>
+                        <p className="text-white/80 text-sm drop-shadow-md">Flugschule Hirondelle</p>
+                     </div>
+                  </div>
+                </button>
+              )}
             </div>
 
             {/* Content Blocks */}
@@ -123,7 +137,7 @@ export const Groundhandling = () => {
               </div>
 
               <Link 
-                to="/buchungskalender" 
+                to="/events?category=Groundhandlingkurs" 
                 className="w-full block bg-luxury-dark hover:bg-luxury-gold text-white text-center py-4 px-2 text-xs font-semibold transition-colors shadow-md leading-relaxed"
               >
                 Termine werden über den Newsletter bekannt gegeben –<br/>meldet euch am Newsletter an
@@ -139,7 +153,7 @@ export const Groundhandling = () => {
                  Du suchst ein außergewöhnliches Geschenk? Warum nicht einmal einen Gutschein für einen Groundhandling-Kurs verschenken!
                </p>
                <div className="relative h-40 w-full rounded-sm overflow-hidden group cursor-pointer mb-4">
-                 <img src="https://picsum.photos/id/1018/600/300" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
+                 <img src="/images/gutscheine/gutschein.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
                  <div className="absolute right-0 top-0 bottom-0 w-16 bg-[#0088cc] flex items-center justify-center">
                    <div className="rotate-[-90deg] text-white font-bold tracking-widest whitespace-nowrap">Gutschein</div>
@@ -161,11 +175,11 @@ export const Groundhandling = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {[1015, 1025, 1035, 1045, 1055, 1065, 1075, 1085, 1011, 1012, 1013, 1014].map((id, index) => (
+                 {Array.from({ length: 12 }, (_, i) => i + 1).map((n, index) => (
                    <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
-                     <img 
-                       src={`https://picsum.photos/id/${id}/200/200`} 
-                       alt={`Impression ${index + 1}`} 
+                     <img
+                       src={`/images/groundhandling/gallery-${n}.jpg`}
+                       alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
                    </div>

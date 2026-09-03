@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
 import { Play } from 'lucide-react';
+import { EventComments } from '../components/common/EventComments';
 
 export const GriechenlandTour = () => {
+  const [showVideo, setShowVideo] = useState(false);
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -10,7 +13,7 @@ export const GriechenlandTour = () => {
 
       {/* Main Content Section */}
       <section className="py-16 md:py-24 px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
           
           {/* Left Column (Content) */}
           <div className="lg:col-span-8 space-y-12">
@@ -24,27 +27,39 @@ export const GriechenlandTour = () => {
               </h1>
             </div>
 
-            {/* Video Box */}
-            <div className="w-full h-[400px] relative overflow-hidden rounded-sm shadow-sm group cursor-pointer bg-luxury-dark">
-              <img 
-                src="https://picsum.photos/id/1044/1000/600" 
-                alt="Griechenland Tour 2018" 
-                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-80"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-16 h-12 bg-red-600 rounded-lg flex items-center justify-center group-hover:bg-red-700 transition-colors shadow-lg">
-                  <Play className="w-6 h-6 text-white fill-white" />
-                </div>
-              </div>
-              <div className="absolute top-4 left-4 right-4 flex items-center gap-4">
-                 <div className="w-10 h-10 rounded-full border border-white/50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-1">
-                   <img src="/google.png" className="w-full h-full object-contain brightness-0 invert" alt="Logo" />
-                 </div>
-                 <div>
-                    <h3 className="text-white font-semibold text-lg drop-shadow-md">Griechenland Tour 2018 - Gleitschirmfliegen lernen | Flugschule...</h3>
-                    <p className="text-white/80 text-sm drop-shadow-md">Flugschule Hirondelle, Weinheim</p>
-                 </div>
-              </div>
+            {/* Video */}
+            <div className="w-full h-[400px] relative overflow-hidden rounded-sm shadow-sm group bg-luxury-dark">
+              {showVideo ? (
+                <iframe
+                  className="w-full h-full"
+                  src="https://www.youtube.com/embed/TW9W8u_MjUM?autoplay=1"
+                  title="Griechenland Tour 2018 - Gleitschirmfliegen lernen | Flugschule Hirondelle"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <button type="button" onClick={() => setShowVideo(true)} className="w-full h-full block cursor-pointer">
+                  <img
+                    src="/images/reisen/griechenland.jpg"
+                    alt="Griechenland Tour 2018"
+                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-80"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-16 h-12 bg-red-600 rounded-lg flex items-center justify-center group-hover:bg-red-700 transition-colors shadow-lg">
+                      <Play className="w-6 h-6 text-white fill-white" />
+                    </div>
+                  </div>
+                  <div className="absolute top-4 left-4 right-4 flex items-center gap-4 text-left">
+                     <div className="w-10 h-10 rounded-full border border-white/50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-1">
+                       <img src="/google.png" className="w-full h-full object-contain brightness-0 invert" alt="Logo" />
+                     </div>
+                     <div>
+                        <h3 className="text-white font-semibold text-lg drop-shadow-md">Griechenland Tour 2018 - Gleitschirmfliegen lernen | Flugschule...</h3>
+                        <p className="text-white/80 text-sm drop-shadow-md">Flugschule Hirondelle, Weinheim</p>
+                     </div>
+                  </div>
+                </button>
+              )}
             </div>
 
             {/* Content Blocks */}
@@ -128,7 +143,7 @@ export const GriechenlandTour = () => {
               <div className="absolute top-0 left-0 w-full h-1 bg-[#53a8c7] transform origin-left transition-transform duration-500 scale-x-0 group-hover:scale-x-100"></div>
               
               <Link 
-                to="/buchungskalender"
+                to="/events?category=Reisen"
                 className="block w-full bg-[#53a8c7] hover:bg-[#4396b5] text-white text-center py-3 rounded-full text-lg font-semibold transition-colors mb-8 shadow-md flex items-center justify-center gap-2"
               >
                 Reise buchen
@@ -149,9 +164,9 @@ export const GriechenlandTour = () => {
                 </div>
               </div>
 
-              <div className="w-full bg-[#4a5f68] text-white text-center py-3 font-semibold shadow-md">
+              <Link to="/events?search=Griechenland" className="block w-full bg-[#4a5f68] hover:bg-[#3d4f57] text-white text-center py-3 font-semibold shadow-md transition-colors">
                 Termin &gt; siehe Kalender
-              </div>
+              </Link>
             </div>
 
             {/* Voucher Box */}
@@ -163,7 +178,7 @@ export const GriechenlandTour = () => {
                  Die Tour ist auch als Geschenk-Gutschein möglich
                </p>
                <div className="relative h-40 w-full rounded-sm overflow-hidden group cursor-pointer mb-4">
-                 <img src="https://picsum.photos/id/1018/600/300" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
+                 <img src="/images/gutscheine/gutschein.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
                  <div className="absolute right-0 top-0 bottom-0 w-16 bg-[#0088cc] flex items-center justify-center">
                    <div className="rotate-[-90deg] text-white font-bold tracking-widest whitespace-nowrap">Gutschein</div>
@@ -177,11 +192,11 @@ export const GriechenlandTour = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-2 gap-1 bg-black p-1">
-                 {[1044, 1025, 1035, 1045, 1055, 1065, 1075, 1085, 1011, 1012, 1013, 1014, 1015, 1016, 1017, 1018].map((id, index) => (
+                 {Array.from({ length: 16 }, (_, i) => (i % 15) + 1).map((n, index) => (
                    <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-900">
-                     <img 
-                       src={`https://picsum.photos/id/${id}/200/200`} 
-                       alt={`Impression ${index + 1}`} 
+                     <img
+                       src={`/images/tour-griechenland/gallery-${n}.jpg`}
+                       alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
                    </div>
@@ -191,6 +206,10 @@ export const GriechenlandTour = () => {
 
           </div>
           
+        </div>
+
+        <div className="max-w-[1200px] mx-auto mt-12">
+          <EventComments pageSlug="griechenland-tour" />
         </div>
       </section>
 

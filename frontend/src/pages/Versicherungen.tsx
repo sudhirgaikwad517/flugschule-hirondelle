@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
 
 export const Versicherungen = () => {
@@ -30,7 +31,7 @@ export const Versicherungen = () => {
                   Ihr freut euch seit Wochen auf den Kurs und könnt aufgrund Krankheit nicht teilnehmen? Wir wollen euch eine gute Ausbildung ermöglichen und setzen daher in unseren Schulungen auf kleinere Gruppen, um eine individuelle Betreuung zu gewährleisten. Daher sind unsere Plätze limitiert und oft ausgebucht, und wir können euch bei kurzfristigen Absagen kein Geld nachlassen oder gar zurück erstatten.
                 </p>
                 <p>
-                  Seit Coronoa haben wir immer wieder und deutlich verstärkt mit kurzfristigen Absagen und Stornos zu kämpfen. Bitte beachtet deshalb, dass eine Teilnahme bei unseren Kursen und Reisen verbindlich ist, mit eurer Kursbuchung bestätigt ihr unsere <a href="#" className="text-[#53a8c7] font-medium hover:text-luxury-gold transition-colors">AGB</a> mit den Stornobedingungen. Hier ein Auszug:
+                  Seit Coronoa haben wir immer wieder und deutlich verstärkt mit kurzfristigen Absagen und Stornos zu kämpfen. Bitte beachtet deshalb, dass eine Teilnahme bei unseren Kursen und Reisen verbindlich ist, mit eurer Kursbuchung bestätigt ihr unsere <Link to="/agb" className="text-[#53a8c7] font-medium hover:text-luxury-gold transition-colors">AGB</Link> mit den Stornobedingungen. Hier ein Auszug:
                 </p>
               </div>
 
@@ -61,7 +62,7 @@ export const Versicherungen = () => {
 
               <div className="space-y-6 text-[15px] text-gray-600 font-light leading-relaxed mb-10">
                 <p>
-                  Hier findet ihr die <a href="#" className="text-[#53a8c7] font-medium hover:text-luxury-gold transition-colors">AGB</a> in voller Länge.
+                  Hier findet ihr die <Link to="/agb" className="text-[#53a8c7] font-medium hover:text-luxury-gold transition-colors">AGB</Link> in voller Länge.
                 </p>
                 <p>
                   Wir wollen euch aber nicht im Regen stehen lassen und arbeiten mit einer Versicherung zusammen, über die ihr euch für den Fall der Fälle absichern könnt.

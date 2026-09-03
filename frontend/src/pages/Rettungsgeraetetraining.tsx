@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
 import { Check, Gift, Play } from 'lucide-react';
 
 export const Rettungsgeraetetraining = () => {
+  const [showVideo, setShowVideo] = useState(false);
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -10,7 +12,7 @@ export const Rettungsgeraetetraining = () => {
 
       {/* Main Content Section */}
       <section className="py-16 md:py-24 px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
           
           {/* Left Column (Content) */}
           <div className="lg:col-span-8 space-y-12">
@@ -24,27 +26,39 @@ export const Rettungsgeraetetraining = () => {
               </h1>
             </div>
 
-            {/* Video Box */}
-            <div className="w-full h-[400px] relative overflow-hidden rounded-sm shadow-sm group cursor-pointer bg-luxury-dark">
-              <img 
-                src="https://picsum.photos/id/1025/1000/600" 
-                alt="Rettungsgeräte packen & werfen (Seminar)" 
-                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-80"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-16 h-12 bg-red-600 rounded-lg flex items-center justify-center group-hover:bg-red-700 transition-colors shadow-lg">
-                  <Play className="w-6 h-6 text-white fill-white" />
-                </div>
-              </div>
-              <div className="absolute top-4 left-4 right-4 flex items-center gap-4">
-                 <div className="w-10 h-10 rounded-full border border-white/50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-1">
-                   <img src="/google.png" className="w-full h-full object-contain brightness-0 invert" alt="Logo" />
-                 </div>
-                 <div>
-                    <h3 className="text-white font-semibold text-lg drop-shadow-md">Rettungsgeräte packen & werfen (Seminar) - Paragliding lernen</h3>
-                    <p className="text-white/80 text-sm drop-shadow-md">Flugschule Hirondelle</p>
-                 </div>
-              </div>
+            {/* Video */}
+            <div className="w-full h-[400px] relative overflow-hidden rounded-sm shadow-sm group bg-luxury-dark">
+              {showVideo ? (
+                <iframe
+                  className="w-full h-full"
+                  src="https://www.youtube.com/embed/8KKXgu00pUw?autoplay=1"
+                  title="Rettungsgeräte packen & werfen (Seminar) - Paragliding lernen | Flugschule Hirondelle"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <button type="button" onClick={() => setShowVideo(true)} className="w-full h-full block cursor-pointer">
+                  <img
+                    src="/images/rettungsgeraete/hero.jpg"
+                    alt="Rettungsgeräte packen & werfen (Seminar)"
+                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-80"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-16 h-12 bg-red-600 rounded-lg flex items-center justify-center group-hover:bg-red-700 transition-colors shadow-lg">
+                      <Play className="w-6 h-6 text-white fill-white" />
+                    </div>
+                  </div>
+                  <div className="absolute top-4 left-4 right-4 flex items-center gap-4 text-left">
+                     <div className="w-10 h-10 rounded-full border border-white/50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-1">
+                       <img src="/google.png" className="w-full h-full object-contain brightness-0 invert" alt="Logo" />
+                     </div>
+                     <div>
+                        <h3 className="text-white font-semibold text-lg drop-shadow-md">Rettungsgeräte packen & werfen (Seminar) - Paragliding lernen</h3>
+                        <p className="text-white/80 text-sm drop-shadow-md">Flugschule Hirondelle</p>
+                     </div>
+                  </div>
+                </button>
+              )}
             </div>
 
             {/* Content Blocks */}
@@ -87,7 +101,7 @@ export const Rettungsgeraetetraining = () => {
               </div>
 
               <Link 
-                to="/buchungskalender"
+                to="/events?category=Rettungsger%C3%A4tetraining"
                 className="block w-full bg-[#53a8c7] hover:bg-[#4396b5] text-white text-center py-3 rounded-full text-lg font-semibold transition-colors mb-8 shadow-md"
               >
                 Kurs buchen
@@ -103,10 +117,10 @@ export const Rettungsgeraetetraining = () => {
               </div>
 
               <Link 
-                to="/buchungskalender" 
+                to="/events?category=Rettungsger%C3%A4tetraining" 
                 className="w-full block bg-luxury-dark hover:bg-luxury-gold text-white text-center py-4 text-sm font-semibold uppercase tracking-widest transition-colors"
               >
-                Termine &gt; Siehe Kalender
+                Termine &gt; Siehe Liste
               </Link>
             </div>
 
@@ -119,7 +133,7 @@ export const Rettungsgeraetetraining = () => {
                  Dieses Seminar ist auch als Geschenk-Gutschein möglich
                </p>
                <div className="relative h-40 w-full rounded-sm overflow-hidden group cursor-pointer mb-4">
-                 <img src="https://picsum.photos/id/1018/600/300" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
+                 <img src="/images/gutscheine/gutschein.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
                  <div className="absolute right-0 top-0 bottom-0 w-16 bg-[#0088cc] flex items-center justify-center">
                    <div className="rotate-[-90deg] text-white font-bold tracking-widest whitespace-nowrap">Gutschein</div>
@@ -141,11 +155,11 @@ export const Rettungsgeraetetraining = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {[1015, 1025, 1035, 1045, 1055, 1065, 1075, 1085, 1011, 1012, 1013, 1014].map((id, index) => (
+                 {Array.from({ length: 12 }, (_, i) => i + 1).map((n, index) => (
                    <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
-                     <img 
-                       src={`https://picsum.photos/id/${id}/200/200`} 
-                       alt={`Impression ${index + 1}`} 
+                     <img
+                       src={`/images/rettungsgeraete/gallery-${n}.jpg`}
+                       alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
                    </div>
@@ -160,7 +174,7 @@ export const Rettungsgeraetetraining = () => {
 
       {/* Full Width Bottom Section (Leistungen & Checkliste) */}
       <section className="py-16 bg-[#FAF9F7] px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12">
+        <div className="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-12">
           
           <div>
             <h3 className="font-luxury text-3xl text-luxury-dark mb-6 uppercase tracking-wider border-b border-luxury-gold/30 pb-4 text-left">Unsere Leistungen</h3>

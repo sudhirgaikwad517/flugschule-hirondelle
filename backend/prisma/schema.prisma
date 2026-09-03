@@ -6,31 +6,512 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id         String      @id @default(uuid())
+  email      String      @unique
+  password   String
+  name       String
+  role       Role        @default(CUSTOMER)
+  phone      String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  address1   String?
+  birthDate  String?
+  country    String?
+  location   String?
+  postalCode String?
+  username   String?
+  weight     String?
+  bookings   Booking[]
+  Comment    Comment[]
+  invoices   Invoice[]
+  Organizer  Organizer[]
+}
+
+model Category {
+  id          String     @id @default(uuid())
+  title       String
+  alias       String     @unique
+  description String?
+  parentId    String?
+  status      String     @default("PUBLISHED")
+  accessLevel String     @default("PUBLIC")
+  tags        String?
+  note        String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  events      Event[]
+}
+
+model Event {
+  id                   String        @id @default(uuid())
+  title                String
+  category             String?
+  description          String?
+  startDate            DateTime
+  endDate              DateTime?
+  location             String?
+  capacity             Int           @default(20)
+  color                String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  imageUrl             String?
+  maxParticipants      Int?
+  organizer            String?       @default("Flugschule Hirondelle")
+  registrationDeadline DateTime?
+  categoryId           String?
+  alias                String?       @unique
+  bookableFor          String?       @default("public")
+  bookingType          String?       @default("limited")
+  currency             String?       @default("EUR")
+  eventType            String?       @default("paid")
+  feePerPerson         Float?        @default(0)
+  googleMapsAddress    String?
+  isHotEvent           Boolean       @default(false)
+  isTopEvent           Boolean       @default(false)
+  leadSpeaker          String?
+  locationType         String?       @default("custom")
+  maxBookablePerPerson Int?          @default(1)
+  metaDescription      String?
+  metaKeywords         String?
+  minParticipants      Int?          @default(0)
+  onExceed             String?       @default("waitlist")
+  paymentProcessing    Boolean       @default(true)
+  published            Boolean       @default(true)
+  shortDescription     String?
+  tags                 String?
+  targetGroup          String?
+  taxRate              String?
+  tieredFees           Boolean       @default(false)
+  calendarBgColor      String?       @default("#3a87ac")
+  calendarTextColor    String?       @default("#ffffff")
+  customBookingEmail   String?
+  customCertificate    String?
+  eventNumber          String?
+  titleOverride        String?
+  organizerId          String?
+  locationId           String?
+  eventTieredFees      Json?
+  seriesId             String?       // groups every date-occurrence generated together (single add or batch-recurring)
+  cancelled            Boolean       @default(false) // distinct from `published` - a cancelled date stays visible but not bookable
+  bookings             Booking[]
+  Comment              Comment[]
+  categoryRef          Category?     @relation(fields: [categoryId], references: [id])
+  Location             Location?     @relation(fields: [locationId], references: [id])
+  Organizer            Organizer?    @relation(fields: [organizerId], references: [id])
+  tickets              EventTicket[]
+  Voucher              Voucher[]
+
+  @@index([seriesId])
+}
+
+model EventTicket {
+  id          String        @id @default(uuid())
+  eventId     String
+  name        String
+  price       Float
+  description String?
+  capacity    Int           @default(20)
+  items       BookingItem[]
+  event       Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model Booking {
+  id              String        @id @default(uuid())
+  userId          String?
+  eventId         String
+  status          BookingStatus @default(PENDING)
+  totalPrice      Float         @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  customerDetails Json?
+  paymentMethod   String?
+  remarks         String?
+  rating          Int?
+  ratingComment   String?
+  event           Event         @relation(fields: [eventId], references: [id])
+  user            User?         @relation(fields: [userId], references: [id])
+  items           BookingItem[]
+}
+
+model BookingItem {
+  id        String      @id @default(uuid())
+  bookingId String
+  ticketId  String
+  quantity  Int         @default(1)
+  booking   Booking     @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  ticket    EventTicket @relation(fields: [ticketId], references: [id])
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  stock       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Invoice {
+  id        String   @id @default(uuid())
+  userId    String
+  amount    Float
+  status    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Newsletter {
+  id           String   @id @default(uuid())
+  email        String
+  name         String?
+  isActive     Boolean  @default(true)
+  isConfirmed  Boolean  @default(true)
+  subscribedAt DateTime @default(now())
+  listType     String   @default("GENERAL") // Kept for legacy support or to store the code
+  language     String   @default("German")
+  trackStatus  Boolean  @default(true)
+  confirmToken String?  @unique // used for double opt-in confirmation links
+
+  @@unique([email, listType])
+}
+
+model NewsletterList {
+  id          String   @id @default(uuid())
+  name        String
+  code        String?  @unique // matches Newsletter.listType, e.g. "GENERAL"
+  description String?
+  color       String?  @default("#0ea5e9")
+  visible     Boolean  @default(true)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AdBanner {
+  id        String   @id @default(uuid())
+  title     String
+  imageUrl  String
+  linkUrl   String?
+  position  String   @default("home_top")
+  published Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BookingFormConfig {
+  id        String   @id @default("default")
+  steps     Json
+  updatedAt DateTime @updatedAt
+}
+
+model Comment {
+  id            String    @id @default(uuid())
+  eventId       String?
+  userId        String?
+  name          String?
+  email         String?   @unique
+  content       String
+  isApproved    Boolean   @default(false)
+  parentId      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  pageSlug      String?
+  Event         Event?    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  Comment       Comment?  @relation("CommentToComment", fields: [parentId], references: [id])
+  other_Comment Comment[] @relation("CommentToComment")
+  user          User?     @relation(fields: [userId], references: [id])
+}
+
+model Currency {
+  id             String   @id @default(uuid())
+  description    String
+  symbol         String
+  paymentCode    String
+  symbolPosition String   @default("Rechts")
+  decimalChar    String   @default(",")
+  published      Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model CustomField {
+  id           String   @id @default(uuid())
+  title        String
+  position     String?  @default("Veranstaltungsuebersicht")
+  slug         String   @unique
+  whenToShow   String   @default("all")
+  categoryIds  String?
+  fieldType    String   @default("text")
+  options      String?
+  defaultValue String?
+  allowEmpty   Boolean  @default(false)
+  addFilter    Boolean  @default(false)
+  showLabel    Boolean  @default(true)
+  order        Int      @default(0)
+  published    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model DownloadCategory {
+  id           String         @id @default(uuid())
+  title        String
+  description  String?
+  published    Boolean        @default(true)
+  order        Int            @default(0)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  DownloadFile DownloadFile[]
+}
+
+model DownloadFile {
+  id               String           @id @default(uuid())
+  categoryId       String
+  title            String
+  description      String?
+  fileUrl          String
+  fileSize         Int?
+  published        Boolean          @default(true)
+  order            Int              @default(0)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  DownloadCategory DownloadCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+}
+
+model EcwidConfig {
+  id                            String   @id @default("default")
+  storeId                       String   @default("35710010")
+  displaySearchBoxAboveProducts Boolean  @default(true)
+  displayHorizontalCategories   Boolean  @default(true)
+  productsPerRowGrid            Int      @default(3)
+  productsPerPageGrid           Int      @default(20)
+  seoFriendlyUrls               Boolean  @default(true)
+  categoryShownByDefault        String   @default("Store root category")
+  customerSingleSignOn          Boolean  @default(false)
+  updatedAt                     DateTime @updatedAt
+}
+
+model Location {
+  id            String   @id @default(uuid())
+  title         String
+  name          String?
+  googleMapsUrl String?
+  latitude      Float?
+  longitude     Float?
+  phone         String?
+  email         String?
+  website       String?
+  imageUrl      String?
+  description   String?
+  comments      String?
+  published     Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  Event         Event[]
+}
+
+model News {
+  id        String   @id @default(uuid())
+  title     String
+  slug      String   @unique
+  content   String
+  imageUrl  String?
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model NewsletterCampaign {
+  id              String    @id @default(uuid())
+  subject         String
+  name            String?
+  previewLine     String?
+  body            String
+  status          String    @default("DRAFT")
+  design          String?   // JSON string of the drag-and-drop design state
+  sentAt          DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  targetList      String    @default("GENERAL")
+  recipientsCount Int       @default(0)
+  opensCount      Int       @default(0)
+  clicksCount     Int       @default(0)
+  visible         Boolean   @default(true)
+  fromName        String?
+  fromEmail       String?
+  replyToName     String?
+  replyToEmail    String?
+  attachments     String?
+  keywords        String?
+  bcc             String?
+  bounceEmail     String?
+  trackingEnabled Boolean   @default(true)
+}
+
+model NewsletterTemplate {
+  id           String   @id @default(uuid())
+  name         String
+  body         String
+  design       String?  // JSON string of the drag-and-drop design state
+  thumbnailUrl String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model NewsletterQueue {
+  id              String   @id @default(uuid())
+  campaignId      String
+  subscriberEmail String
+  status          String   @default("PENDING") // PENDING, PROCESSING, FAILED, SENT
+  scheduledAt     DateTime
+  sentAt          DateTime?
+  errorLog        String?
+  retryCount      Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([status, scheduledAt])
+}
+
+model NewsletterTrackingEvent {
+  id              String   @id @default(uuid())
+  campaignId      String
+  subscriberEmail String
+  type            String   // OPEN or CLICK
+  url             String?  // original destination, only set for CLICK
+  createdAt       DateTime @default(now())
+
+  @@index([campaignId, type])
+  @@index([subscriberEmail])
+}
+
+model NewsletterConfig {
+  id        String   @id @default("default")
+  smtpHost  String?
+  smtpPort  String?
+  smtpUser  String?
+  smtpPass  String?
+  fromEmail String?
+  fromName  String?
+  updatedAt DateTime @updatedAt
+
+  // Warteschlange (Queue / sending rate)
+  queueBatchSize    Int @default(50)  // emails sent per cron tick
+  queuePauseSeconds Int @default(0)   // pause between individual sends, in seconds
+  queueMaxRetries   Int @default(2)   // max retry attempts for a failed send
+
+  // Abonnement (Subscription)
+  requireConfirmation Boolean @default(false) // double opt-in
+  unsubscribeTitle    String?
+  unsubscribeColor    String  @default("#00a4ff")
+
+  // Datenschutz (GDPR)
+  gdprExportEnabled Boolean @default(true)
+  gdprDeleteEnabled Boolean @default(true)
+}
+
+model Organizer {
+  id          String   @id @default(uuid())
+  userId      String?
+  name        String
+  email         String?
+  website     String?
+  phone       String?
+  imageUrl    String?
+  description String?
+  comments    String?
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Event       Event[]
+  user        User?    @relation(fields: [userId], references: [id])
+}
+
+model TaxRate {
+  id        String   @id @default(uuid())
+  title     String
+  value     Float
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TemplatesConfig {
+  id           String   @id @default("default")
+  emails       Json
+  invoices     Json?
+  tickets      Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  listViews    Json?
+  certificates Json?
+  csvXml       Json?
+}
+
+model TieredFee {
+  id               String    @id @default(uuid())
+  title            String
+  value            Float
+  isPercentage     Boolean   @default(false)
+  isDiscount       Boolean   @default(false)
+  groupRequirement String?   @default("public")
+  validFrom        DateTime?
+  validUntil       DateTime?
+  published        Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model Voucher {
+  id           String    @id @default(uuid())
+  code         String    @unique
+  value        Float
+  limit        Int       @default(0)
+  usedCount    Int       @default(0)
+  isPercentage Boolean   @default(false)
+  validFrom    DateTime?
+  validUntil   DateTime?
+  published    Boolean   @default(true)
+  eventId      String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  Event        Event?    @relation(fields: [eventId], references: [id])
+}
+
+model WebLink {
+  id              String          @id @default(uuid())
+  categoryId      String
+  title           String
+  url             String
+  description     String?
+  published       Boolean         @default(true)
+  order           Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  WebLinkCategory WebLinkCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+}
+
+model WebLinkCategory {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  published   Boolean   @default(true)
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  links       WebLink[]
+}
+
 enum Role {
   ADMIN
   INSTRUCTOR
   CUSTOMER
-}
-
-model User {
-  id          String    @id @default(uuid())
-  email       String    @unique
-  username    String?
-  password    String
-  name        String
-  role        Role      @default(CUSTOMER)
-  phone       String?
-  address1    String?
-  location    String?
-  country     String?
-  postalCode  String?
-  weight      String?
-  birthDate   String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
-  bookings  Booking[]
-  invoices  Invoice[]
 }
 
 enum BookingStatus {
@@ -41,113 +522,52 @@ enum BookingStatus {
   WAITLIST
 }
 
-model Category {
-  id          String     @id @default(uuid())
-  title       String
-  alias       String     @unique
-  description String?    
-  parentId    String?
-  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children    Category[] @relation("CategoryHierarchy")
-  status      String     @default("PUBLISHED") // PUBLISHED, HIDDEN
-  accessLevel String     @default("PUBLIC")
-  tags        String?
-  note        String?    
-  
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  
-  events      Event[]
+model PageMedia {
+  id                String   @id @default(uuid())
+  slug              String   @unique
+  headerImageUrl    String?
+  contentMediaType  String   @default("IMAGE") // IMAGE or VIDEO
+  contentImageUrl   String?
+  contentYoutubeUrl String?
+  galleryImages     String? // JSON string
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
-model Event {
-  id                   String        @id @default(uuid())
-  title                String
-  category             String?       // Keep for legacy
-  categoryId           String?
-  categoryRef          Category?     @relation(fields: [categoryId], references: [id])
-  description          String?
-  startDate            DateTime
-  endDate              DateTime?
-  registrationDeadline DateTime?
-  color                String?
-  imageUrl             String?
-  location             String?
-  organizer            String?       @default("Flugschule Hirondelle")
-  maxParticipants      Int?
-  capacity             Int
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
-  
-  tickets     EventTicket[]
-  bookings    Booking[]
+// Admin-editable static legal text pages (Matukio's agb_text/revoke_text
+// config fields) - slug is "agb" or "widerruf".
+model LegalPage {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model EventTicket {
-  id          String        @id @default(uuid())
-  eventId     String
-  name        String        // e.g., "Standard", "Inkl. Ausrüstung"
-  price       Float
-  description String?
-  capacity    Int           @default(20) // Default 20, can be overridden by admin
-  
-  event       Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  items       BookingItem[]
+model ServiceOrder {
+  id                String   @id @default(uuid())
+  name              String
+  strasse           String
+  plz               String
+  ort               String
+  handy             String
+  email             String
+
+  gleitschirm_check Boolean  @default(false)
+  gs_hersteller     String?
+  gs_typ            String?
+  gs_farbe          String?
+  gs_anmerkung      String?
+
+  rettung_packen    Boolean  @default(false)
+  ret_hersteller    String?
+  ret_alter         String?
+
+  sonstiges         String?
+  abgabe            String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
-model Booking {
-  id              String        @id @default(uuid())
-  userId          String?
-  eventId         String
-  status          BookingStatus @default(PENDING)
-  totalPrice      Float         @default(0)
-  
-  customerDetails Json?
-  paymentMethod   String?
-  remarks         String?
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
-  user            User?         @relation(fields: [userId], references: [id])
-  event           Event         @relation(fields: [eventId], references: [id])
-  items           BookingItem[]
-}
-
-model BookingItem {
-  id         String       @id @default(uuid())
-  bookingId  String
-  ticketId   String
-  quantity   Int          @default(1)
-  
-  booking    Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  ticket     EventTicket  @relation(fields: [ticketId], references: [id])
-}
-
-model Product {
-  id          String    @id @default(uuid())
-  name        String
-  description String?
-  price       Float
-  stock       Int       @default(0)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-}
-
-model Invoice {
-  id          String    @id @default(uuid())
-  userId      String
-  amount      Float
-  status      String    // PENDING, PAID, CANCELLED
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
-  user        User      @relation(fields: [userId], references: [id])
-}
-
-model Newsletter {
-  id          String    @id @default(uuid())
-  email       String    @unique
-  isActive    Boolean   @default(true)
-  subscribedAt DateTime @default(now())
-}

@@ -58,7 +58,7 @@ export const Anmeldung = () => {
         ? { email, password } 
         : { name, username, email, password, address1, location: locationStr, country, postalCode, phone, weight, birthDate };
       
-      const res = await fetch(`http://localhost:5555${endpoint}`, {
+      const res = await fetch(`${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

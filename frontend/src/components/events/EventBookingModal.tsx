@@ -35,6 +35,15 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
     paymentMethod: 'Bitte auswählen'
   });
 
+  const [customFields, setCustomFields] = useState<any[]>([]);
+  const [dynamicFormData, setDynamicFormData] = useState<Record<string, any>>({});
+  const [participants, setParticipants] = useState<any[]>([]);
+
+  const [voucherCode, setVoucherCode] = useState('');
+  const [voucherDiscount, setVoucherDiscount] = useState<{ amount: number, isPercentage: boolean } | null>(null);
+  const [voucherMessage, setVoucherMessage] = useState<{ type: 'error' | 'success', text: string } | null>(null);
+  const [validatingVoucher, setValidatingVoucher] = useState(false);
+
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -42,12 +51,23 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
       
       // Calculate initial price to see if it's free
       let initialPrice = 0;
+      let totalQty = 0;
       if (event?.tickets) {
         Object.entries(initialQuantities).forEach(([ticketId, qty]) => {
           const ticket = event.tickets.find((t: Ticket) => t.id === ticketId);
           initialPrice += (ticket ? ticket.price * qty : 0);
+          totalQty += qty;
         });
       }
+
+      // Initialize participants array (if totalQty > 1, create empty objects for additional participants)
+      const initialParticipants = Array.from({ length: Math.max(0, totalQty - 1) }).map(() => ({
+        salutation: 'Bitte wählen',
+        fullName: '',
+        birthDate: '',
+        sizeWeight: '',
+      }));
+      setParticipants(initialParticipants);
 
       setFormData({
         salutation: 'Bitte wählen',
@@ -62,6 +82,38 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
         remarks: '',
         paymentMethod: initialPrice === 0 ? 'Kostenlos' : 'Bitte auswählen'
       });
+      setDynamicFormData({});
+      setVoucherCode('');
+      setVoucherDiscount(null);
+      setVoucherMessage(null);
+
+      // Fetch custom fields
+      fetch('/api/customFields/public')
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            // Filter fields relevant to this event category
+            const relevantFields = data.filter(field => {
+              if (field.whenToShow === 'none') return false;
+              if (field.categoryIds) {
+                const cats = field.categoryIds.split(',').map((c: string) => c.trim().toLowerCase());
+                if (event?.category && !cats.includes(event.category.toLowerCase())) {
+                  return false;
+                }
+              }
+              return true;
+            });
+            setCustomFields(relevantFields);
+            
+            // Initialize dynamic form data with default values
+            const initialDynamicData: Record<string, any> = {};
+            relevantFields.forEach(field => {
+              initialDynamicData[field.slug] = field.defaultValue || (field.fieldType === 'checkbox' ? false : '');
+            });
+            setDynamicFormData(initialDynamicData);
+          }
+        })
+        .catch(err => console.error("Failed to load custom fields", err));
     }
   }, [isOpen, event, initialQuantities]);
 
@@ -77,6 +129,69 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Preview only - the server independently recomputes this from scratch and
+  // never trusts what the client sends, this is just so the customer sees the
+  // discount before submitting.
+  const applicableTieredFee = React.useMemo(() => {
+    if (!event.tieredFees || !Array.isArray(event.eventTieredFees)) return null;
+    const now = new Date();
+    return event.eventTieredFees.find((fee: any) => {
+      if (!fee || !fee.isDiscount) return false;
+      if (fee.validFrom && now < new Date(fee.validFrom)) return false;
+      if (fee.validUntil && now > new Date(fee.validUntil)) return false;
+      return true;
+    }) || null;
+  }, [event.tieredFees, event.eventTieredFees]);
+
+  const priceAfterTieredFee = applicableTieredFee ? Math.max(0,
+    applicableTieredFee.isPercentage
+      ? totalPrice * (1 - Number(applicableTieredFee.value) / 100)
+      : totalPrice - Number(applicableTieredFee.value)
+  ) : totalPrice;
+
+  const finalPrice = Math.max(0, voucherDiscount ? (
+    voucherDiscount.isPercentage
+      ? priceAfterTieredFee * (1 - voucherDiscount.amount / 100)
+      : priceAfterTieredFee - voucherDiscount.amount
+  ) : priceAfterTieredFee);
+
+  const handleValidateVoucher = async () => {
+    if (!voucherCode.trim()) {
+      setVoucherMessage({ type: 'error', text: 'Bitte geben Sie einen Gutscheincode ein.' });
+      return;
+    }
+    
+    setValidatingVoucher(true);
+    setVoucherMessage(null);
+
+    try {
+      const res = await fetch('/api/vouchers/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: voucherCode.trim(), eventId: event.id })
+      });
+      const data = await res.json();
+      
+      if (res.ok && data.valid) {
+        setVoucherDiscount({ amount: data.value, isPercentage: data.isPercentage });
+        setVoucherMessage({ type: 'success', text: `Gutschein erfolgreich angewendet!` });
+        
+        // Auto select 'Gutschein' as payment method if the total becomes 0
+        if (!data.isPercentage && data.value >= totalPrice) {
+            setFormData(prev => ({ ...prev, paymentMethod: 'Gutschein' }));
+        }
+      } else {
+        setVoucherDiscount(null);
+        setVoucherMessage({ type: 'error', text: data.message || 'Ungültiger Gutschein' });
+      }
+    } catch (error) {
+      setVoucherDiscount(null);
+      setVoucherMessage({ type: 'error', text: 'Fehler bei der Überprüfung des Gutscheins.' });
+    } finally {
+      setValidatingVoucher(false);
+    }
   };
 
   const handleNextStep = (e: React.FormEvent) => {
@@ -107,7 +222,8 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
       const payload = {
         eventId: event.id,
         items,
-        totalPrice,
+        totalPrice: finalPrice,
+        voucherCode: voucherDiscount ? voucherCode : undefined,
         customerDetails: {
           salutation: formData.salutation,
           fullName: formData.fullName,
@@ -117,13 +233,15 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
           email: formData.email,
           street: formData.street,
           zip: formData.zip,
-          city: formData.city
+          city: formData.city,
+          additionalParticipants: participants,
+          customFields: dynamicFormData
         },
         paymentMethod: formData.paymentMethod,
         remarks: formData.remarks
       };
 
-      const res = await fetch('http://localhost:5555/api/bookings', {
+      const res = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -134,11 +252,33 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
 
       if (res.ok) {
         const data = await res.json();
+        
+        if (formData.paymentMethod === 'Stripe' || formData.paymentMethod === 'PayPal') {
+          try {
+            const paymentRes = await fetch('/api/payments/create-session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ bookingId: data.id, paymentMethod: formData.paymentMethod })
+            });
+            const paymentData = await paymentRes.json();
+            if (paymentData.url) {
+              window.location.href = paymentData.url;
+              return; // Halt further execution, as we are redirecting
+            } else {
+              alert('Fehler bei der Zahlungseinleitung: ' + paymentData.message);
+            }
+          } catch (err) {
+            console.error(err);
+            alert('Netzwerkfehler bei der Zahlungseinleitung.');
+          }
+        }
+
         setBookingId(data.id.split('-')[0].toUpperCase()); // Shortened display ID
         setBookingStatus(data.status);
         setStep(4);
       } else {
-        alert("Fehler bei der Buchung. Bitte versuchen Sie es später erneut.");
+        const errData = await res.json();
+        alert("Fehler bei der Buchung: " + (errData.message || "Bitte versuchen Sie es später erneut."));
       }
     } catch (error) {
       alert("Fehler bei der Buchung. Bitte überprüfen Sie Ihre Verbindung.");
@@ -267,6 +407,119 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
                   </div>
                 </div>
 
+                {participants.length > 0 && (
+                  <div className="border-t border-gray-200 pt-6 mt-2 space-y-6">
+                    <h3 className="font-luxury text-xl text-luxury-dark mb-4">Weitere Teilnehmer</h3>
+                    {participants.map((p, index) => (
+                      <div key={index} className="p-4 bg-gray-50 border border-gray-200 rounded-sm space-y-4">
+                        <h4 className="font-semibold text-gray-700">Teilnehmer {index + 2}</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">Anrede *</label>
+                            <select 
+                              value={p.salutation} 
+                              onChange={(e) => {
+                                const newP = [...participants];
+                                newP[index].salutation = e.target.value;
+                                setParticipants(newP);
+                              }}
+                              className="w-full p-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-luxury-gold bg-white"
+                              required
+                            >
+                              <option value="Bitte wählen">Bitte wählen</option>
+                              <option value="Herr">Herr</option>
+                              <option value="Frau">Frau</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">Vorname Nachname *</label>
+                            <input type="text" value={p.fullName} onChange={(e) => {
+                                const newP = [...participants];
+                                newP[index].fullName = e.target.value;
+                                setParticipants(newP);
+                              }} required className="w-full p-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-luxury-gold" />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">Geburtsdatum *</label>
+                            <input type="text" placeholder="TT.MM.JJJJ" value={p.birthDate} onChange={(e) => {
+                                const newP = [...participants];
+                                newP[index].birthDate = e.target.value;
+                                setParticipants(newP);
+                              }} required className="w-full p-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-luxury-gold" />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">Größe (cm) / Gewicht (kg) *</label>
+                            <input type="text" value={p.sizeWeight} onChange={(e) => {
+                                const newP = [...participants];
+                                newP[index].sizeWeight = e.target.value;
+                                setParticipants(newP);
+                              }} required className="w-full p-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-luxury-gold" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {customFields.length > 0 && (
+                  <div className="border-t border-gray-200 pt-6 mt-2 space-y-6">
+                    <h3 className="font-luxury text-xl text-luxury-dark mb-4">Zusätzliche Angaben</h3>
+                    {customFields.map((field) => (
+                      <div key={field.id}>
+                        {field.fieldType === 'checkbox' ? (
+                          <label className="flex items-start gap-2 cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              checked={dynamicFormData[field.slug] || false}
+                              onChange={(e) => setDynamicFormData(prev => ({ ...prev, [field.slug]: e.target.checked }))}
+                              required={!field.allowEmpty}
+                              className="mt-1"
+                            />
+                            <span className="text-sm text-gray-700 font-semibold">{field.title} {field.allowEmpty ? '' : '*'}</span>
+                          </label>
+                        ) : field.fieldType === 'textarea' ? (
+                          <>
+                            {field.showLabel && <label className="block text-sm font-semibold text-gray-700 mb-1">{field.title} {!field.allowEmpty && '*'}</label>}
+                            <textarea 
+                              value={dynamicFormData[field.slug] || ''} 
+                              onChange={(e) => setDynamicFormData(prev => ({ ...prev, [field.slug]: e.target.value }))}
+                              required={!field.allowEmpty} 
+                              rows={3}
+                              className="w-full p-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-luxury-gold resize-none" 
+                            />
+                          </>
+                        ) : field.fieldType === 'select' ? (
+                          <>
+                            {field.showLabel && <label className="block text-sm font-semibold text-gray-700 mb-1">{field.title} {!field.allowEmpty && '*'}</label>}
+                            <select 
+                              value={dynamicFormData[field.slug] || ''} 
+                              onChange={(e) => setDynamicFormData(prev => ({ ...prev, [field.slug]: e.target.value }))}
+                              required={!field.allowEmpty}
+                              className="w-full p-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-luxury-gold bg-white"
+                            >
+                              <option value="">Bitte wählen</option>
+                              {field.options?.split(',').map((opt: string) => (
+                                <option key={opt.trim()} value={opt.trim()}>{opt.trim()}</option>
+                              ))}
+                            </select>
+                          </>
+                        ) : (
+                          <>
+                            {field.showLabel && <label className="block text-sm font-semibold text-gray-700 mb-1">{field.title} {!field.allowEmpty && '*'}</label>}
+                            <input 
+                              type={field.fieldType || 'text'} 
+                              value={dynamicFormData[field.slug] || ''} 
+                              onChange={(e) => setDynamicFormData(prev => ({ ...prev, [field.slug]: e.target.value }))}
+                              required={!field.allowEmpty} 
+                              className="w-full p-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-luxury-gold" 
+                            />
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <div className="border-t border-gray-200 pt-6 mt-2">
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Bemerkung / Gutscheincode</label>
                   <textarea name="remarks" value={formData.remarks} onChange={handleInputChange} rows={4} className="w-full p-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-luxury-gold resize-none" />
@@ -303,6 +556,8 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
                     ) : (
                       <>
                         <option value="Bitte auswählen">Bitte auswählen</option>
+                        <option value="Stripe">Kreditkarte (Stripe)</option>
+                        <option value="PayPal">PayPal</option>
                         <option value="Gutschein">Gutschein</option>
                         <option value="Überweisung">Überweisung</option>
                         <option value="Barzahlung">Barzahlung vor Ort</option>
@@ -311,7 +566,44 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
                   </select>
                 </div>
 
-                <div className="border-t border-gray-200 pt-8">
+                <div className="border-t border-gray-200 pt-8 mt-8">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Gutscheincode</label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      value={voucherCode} 
+                      onChange={(e) => setVoucherCode(e.target.value)} 
+                      placeholder="Code eingeben"
+                      className="flex-1 p-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-luxury-gold" 
+                      disabled={validatingVoucher || voucherDiscount !== null}
+                    />
+                    {voucherDiscount ? (
+                      <button 
+                        type="button"
+                        onClick={() => { setVoucherCode(''); setVoucherDiscount(null); setVoucherMessage(null); }}
+                        className="px-4 py-2 bg-red-100 text-red-600 rounded-sm font-semibold hover:bg-red-200"
+                      >
+                        Entfernen
+                      </button>
+                    ) : (
+                      <button 
+                        type="button"
+                        onClick={handleValidateVoucher}
+                        disabled={validatingVoucher || !voucherCode.trim()}
+                        className="px-4 py-2 bg-luxury-gold text-white rounded-sm font-semibold hover:bg-[#aa883e] disabled:opacity-50"
+                      >
+                        {validatingVoucher ? 'Prüfen...' : 'Einlösen'}
+                      </button>
+                    )}
+                  </div>
+                  {voucherMessage && (
+                    <p className={`text-sm mt-2 font-semibold ${voucherMessage.type === 'error' ? 'text-red-600' : 'text-green-600'}`}>
+                      {voucherMessage.text}
+                    </p>
+                  )}
+                </div>
+
+                <div className="border-t border-gray-200 pt-8 mt-8">
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Anzahl</label>
                   <input 
                     type="text" 
@@ -327,7 +619,17 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
 
               <div className="mt-12 flex justify-end">
                 <div className="text-right w-full">
-                  <p className="text-gray-600 mb-4">Gesamtpreis: € {totalPrice.toFixed(2)}</p>
+                  {applicableTieredFee && (
+                    <p className="text-sm text-green-600 mb-1">
+                      {applicableTieredFee.title || 'Rabatt'}: - {applicableTieredFee.isPercentage ? `${applicableTieredFee.value}%` : `€ ${Number(applicableTieredFee.value).toFixed(2)}`}
+                    </p>
+                  )}
+                  {voucherDiscount && (
+                    <p className="text-sm text-green-600 mb-1">
+                      Gutschein: - {voucherDiscount.isPercentage ? `${voucherDiscount.amount}%` : `€ ${voucherDiscount.amount.toFixed(2)}`}
+                    </p>
+                  )}
+                  <p className="text-gray-600 mb-4 font-bold text-lg">Gesamtpreis: € {finalPrice.toFixed(2)}</p>
                   <div className="flex justify-end gap-4 border-t border-gray-200 pt-4">
                     <button 
                       type="button"
@@ -401,10 +703,23 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
                       <div className="text-gray-600">{totalTickets}</div>
                       <div className="text-gray-600 text-right">€ {totalPrice.toFixed(2)}</div>
                     </div>
-                    
-                    <div className="grid grid-cols-[1fr_auto] gap-y-4 text-sm">
+
+                    {applicableTieredFee && (
+                      <div className="grid grid-cols-[1fr_auto] gap-y-1 text-sm text-green-600 mt-2">
+                        <div>{applicableTieredFee.title || 'Rabatt'}</div>
+                        <div className="text-right">- {applicableTieredFee.isPercentage ? `${applicableTieredFee.value}%` : `€ ${Number(applicableTieredFee.value).toFixed(2)}`}</div>
+                      </div>
+                    )}
+                    {voucherDiscount && (
+                      <div className="grid grid-cols-[1fr_auto] gap-y-1 text-sm text-green-600 mt-2">
+                        <div>Gutschein</div>
+                        <div className="text-right">- {voucherDiscount.isPercentage ? `${voucherDiscount.amount}%` : `€ ${voucherDiscount.amount.toFixed(2)}`}</div>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-[1fr_auto] gap-y-4 text-sm mt-4">
                       <div className="font-semibold text-gray-700 text-right">Gesamt</div>
-                      <div className="font-semibold text-gray-700 text-right w-24">€ {totalPrice.toFixed(2)}</div>
+                      <div className="font-semibold text-gray-700 text-right w-24">€ {finalPrice.toFixed(2)}</div>
                     </div>
                   </div>
                 </div>
@@ -418,8 +733,12 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
                   >
                     <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${agbAccepted ? 'translate-x-6' : 'translate-x-1'}`} />
                   </button>
-                  <span className="text-sm text-[#5bc0de] font-semibold cursor-pointer" onClick={() => setAgbAccepted(!agbAccepted)}>
-                    Ich akzeptiere die AGB.
+                  <span className="text-sm font-semibold">
+                    <span className="text-gray-600 cursor-pointer" onClick={() => setAgbAccepted(!agbAccepted)}>Ich akzeptiere die </span>
+                    <a href="/agb" target="_blank" rel="noopener noreferrer" className="text-[#5bc0de] hover:underline">AGB</a>
+                    <span className="text-gray-600 cursor-pointer" onClick={() => setAgbAccepted(!agbAccepted)}> und </span>
+                    <a href="/widerrufsbelehrung" target="_blank" rel="noopener noreferrer" className="text-[#5bc0de] hover:underline">Widerrufsbelehrung</a>
+                    <span className="text-gray-600 cursor-pointer" onClick={() => setAgbAccepted(!agbAccepted)}>.</span>
                   </span>
                 </div>
               </div>
@@ -484,7 +803,7 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
                   <div>{bookingStatus === 'WAITLIST' ? 'Buchung auf Warteliste' : 'Buchung bestätigt'}</div>
                   
                   <div className="text-gray-500">Ihre Gebühren</div>
-                  <div>€ {totalPrice.toFixed(2)}</div>
+                  <div>€ {finalPrice.toFixed(2)}</div>
                   
                   <div className="text-gray-500">Zahlungsmethode</div>
                   <div>{formData.paymentMethod}</div>

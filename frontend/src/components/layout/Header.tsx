@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Menu, X, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Menu, X, ChevronDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 
 export const Header = () => {
   const location = useLocation();
@@ -21,6 +21,18 @@ export const Header = () => {
   const [reisenIndex, setReisenIndex] = useState(0);
   const [user, setUser] = useState<any>(null);
   const reisenTours = ['Brasilien', 'Kolumbien', 'Südafrika', 'Bassano', 'Griechenland', 'Slowenien', 'Bergamo', 'Savoye', 'Vogesen', 'Pfalz'];
+  const reisenImages: Record<string, string> = {
+    Brasilien: '/images/reisen/brasilien.jpg',
+    Kolumbien: '/images/reisen/kolumbien.jpg',
+    Südafrika: '/images/reisen/suedafrika.jpg',
+    Bassano: '/images/reisen/bassano.jpg',
+    Griechenland: '/images/reisen/griechenland.jpg',
+    Slowenien: '/images/reisen/slowenien.jpg',
+    Bergamo: '/images/reisen/bergamo.jpg',
+    Savoye: '/images/reisen/savoye.jpg',
+    Vogesen: '/images/reisen/vogesen.jpg',
+    Pfalz: '/images/reisen/pfalz.jpg'
+  };
 
   const toggleMobileMenu = (menu: string) => {
     if (expandedMobileMenu === menu) setExpandedMobileMenu(null);
@@ -74,7 +86,7 @@ export const Header = () => {
   };
 
   return (
-    <header className="w-full fixed top-0 left-0 z-50 font-luxurysans bg-[#f4f5f6] shadow-sm">
+    <header className="w-full fixed top-0 left-0 z-50 font-luxurysans bg-[#f4f5f6] shadow-sm print:hidden">
 
 
 
@@ -131,7 +143,7 @@ export const Header = () => {
                     </div>
                     <div className="flex-1 flex gap-4">
                       <div className="relative flex-1 h-[300px] overflow-hidden group/card cursor-pointer">
-                        <img src="https://picsum.photos/id/1018/400/600" className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-105" alt="Tandem" />
+                        <img src="/images/tandemschein/hero.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-105" alt="Tandem" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
                         <div className="absolute bottom-6 left-6 right-6">
                           <p className="text-white text-[10px] uppercase tracking-widest font-bold mb-1">ERLEBNIS</p>
@@ -139,7 +151,7 @@ export const Header = () => {
                         </div>
                       </div>
                       <div className="relative flex-1 h-[300px] overflow-hidden group/card cursor-pointer">
-                        <img src="https://picsum.photos/id/1036/400/600" className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-105" alt="Performance" />
+                        <img src="/images/performance/sicherheitstraining.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-105" alt="Performance" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
                         <div className="absolute bottom-6 left-6 right-6">
                           <p className="text-white text-[10px] uppercase tracking-widest font-bold mb-1">TRAINING</p>
@@ -188,7 +200,7 @@ export const Header = () => {
                             className="block flex-none w-[calc(20%-12.8px)] text-center group/tour cursor-pointer"
                           >
                             <div className="w-full h-[200px] overflow-hidden mb-4">
-                              <img src={`https://picsum.photos/id/${1040 + idx}/400/400`} alt={tour} className="w-full h-full object-cover transition-transform duration-700 group-hover/tour:scale-110" />
+                              <img src={reisenImages[tour]} alt={tour} className="w-full h-full object-cover transition-transform duration-700 group-hover/tour:scale-110" />
                             </div>
                             <h5 className="font-luxury text-white text-xl">{tour}</h5>
                           </Link>
@@ -233,15 +245,16 @@ export const Header = () => {
                 <Link to="/infos" className={getNavClass('/infos')}>
                   INFOS <ChevronDown className="w-3 h-3" />
                 </Link>
-                <div className="absolute top-[80px] right-0 w-64 bg-[#111] border-t border-white/10 hidden group-hover:block px-0 py-4 shadow-2xl">
+                <div className="absolute top-[80px] left-0 w-64 bg-[#111] border-t border-white/10 hidden group-hover:block px-0 py-4 shadow-2xl">
                   <ul className="flex flex-col">
+                    <li><Link to="/news" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Aktuelles (News)</Link></li>
                     <li><Link to="/infos#kontakt" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Kontakt & Anfahrt</Link></li>
                     <li><Link to="/infos/team" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Team</Link></li>
                     <li><Link to="/infos/gelaende" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Gelände</Link></li>
                     <li><Link to="/infos/wetter" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Wetter</Link></li>
                     <li><Link to="/infos/medien" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Medien</Link></li>
-                    <li><Link to="/infos#downloads" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Downloads</Link></li>
-                    <li><Link to="/infos/gruppenevents" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Gruppenevents</Link></li>
+                    <li><Link to="/downloads" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Downloads</Link></li>
+                    <li><Link to="/partner" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Partner & Links</Link></li>
                     <li><Link to="/infos/gutscheine" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Gutscheine</Link></li>
                     <li><Link to="/infos/versicherungen" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Versicherungen</Link></li>
                   </ul>
@@ -265,10 +278,14 @@ export const Header = () => {
                   </div>
                 </div>
               ) : (
-                <Link to="/anmeldung" className="border border-[#394553] text-[#394553] text-[11px] uppercase tracking-[0.15em] font-semibold px-4 py-2 hover:bg-[#394553] hover:text-white transition-all ml-2 rounded-sm">
-                  LOGIN
+                <Link to="/anmeldung" className={getNavClass('/anmeldung')}>
+                  KONTO
                 </Link>
               )}
+
+              <Link to="/search" className="text-gray-800 hover:text-hirondelle-blue hover:bg-black/5 p-2 rounded-full transition-colors ml-2">
+                <Search className="w-5 h-5" />
+              </Link>
 
             </div>
 
@@ -394,15 +411,16 @@ export const Header = () => {
                   </button>
                   <div className={`overflow-hidden transition-all duration-300 ${expandedMobileMenu === 'infos' ? 'max-h-[600px] mt-2 mb-2 opacity-100' : 'max-h-0 opacity-0'}`}>
                     <div className="flex flex-col space-y-4 pl-4 py-2">
+                      <Link to="/news" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Aktuelles (News)</Link>
                       <Link to="/infos#kontakt" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Kontakt & Anfahrt</Link>
-                      <Link to="/infos#team" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Team</Link>
-                      <Link to="/infos#gelaende" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Gelände</Link>
-                      <Link to="/infos#wetter" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Wetter</Link>
-                      <Link to="/infos#medien" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Medien</Link>
-                      <Link to="/infos#downloads" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Downloads</Link>
-                      <Link to="/infos#gruppenevents" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Gruppenevents</Link>
-                      <Link to="/infos#gutscheine" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Gutscheine</Link>
-                      <Link to="/infos#versicherungen" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Versicherungen</Link>
+                      <Link to="/infos/team" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Team</Link>
+                      <Link to="/infos/gelaende" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Gelände</Link>
+                      <Link to="/infos/wetter" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Wetter</Link>
+                      <Link to="/infos/medien" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Medien</Link>
+                      <Link to="/downloads" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Downloads</Link>
+                      <Link to="/partner" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Partner & Links</Link>
+                      <Link to="/infos/gutscheine" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Gutscheine</Link>
+                      <Link to="/infos/versicherungen" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Versicherungen</Link>
                     </div>
                   </div>
                 </div>

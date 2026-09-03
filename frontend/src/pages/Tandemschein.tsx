@@ -10,7 +10,7 @@ export const Tandemschein = () => {
 
       {/* Main Content Section */}
       <section className="py-16 md:py-24 px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
           
           {/* Left Column (Content) */}
           <div className="lg:col-span-8 space-y-12">
@@ -27,8 +27,8 @@ export const Tandemschein = () => {
             {/* Featured Image */}
             <div className="w-full h-[400px] overflow-hidden rounded-sm shadow-sm group">
               <img 
-                src="https://picsum.photos/id/1044/1000/600" 
-                alt="Tandemschein" 
+                src="/images/tandemschein/hero.jpg"
+                alt="Tandemschein"
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
               />
             </div>
@@ -123,7 +123,7 @@ export const Tandemschein = () => {
               
               <div className="p-8">
                 <Link 
-                  to="/buchungskalender"
+                  to="/events?category=Sonstiges"
                   className="block w-full bg-[#53a8c7] hover:bg-[#4396b5] text-white text-center py-3 rounded-full text-lg font-semibold transition-colors mb-10 shadow-md"
                 >
                   Kurs buchen
@@ -162,7 +162,7 @@ export const Tandemschein = () => {
               </div>
 
               <Link 
-                to="/buchungskalender" 
+                to="/events?category=Sonstiges" 
                 className="w-full block bg-luxury-dark hover:bg-luxury-gold text-white text-center py-4 px-2 text-sm font-semibold uppercase tracking-widest transition-colors leading-relaxed"
               >
                 Termine (im Rahmen der Höhenflugschulung):<br/>siehe Kalender
@@ -178,7 +178,7 @@ export const Tandemschein = () => {
                  Der Tandemschein ist auch als Geschenk-Gutschein möglich
                </p>
                <div className="w-full h-[180px] rounded-sm overflow-hidden shadow-sm relative group cursor-pointer border border-gray-200">
-                  <img src="https://picsum.photos/id/1044/600/300" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
+                  <img src="/images/gutscheine/gutschein.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                   <div className="absolute bottom-4 left-4">
                      <p className="text-white font-luxury text-3xl font-bold italic opacity-90 drop-shadow-md tracking-wider">GUTSCHEIN</p>
@@ -195,11 +195,11 @@ export const Tandemschein = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-2 gap-2">
-                 {[1044, 1054, 1064, 1074].map((id, index) => (
+                 {Array.from({ length: 4 }, (_, i) => i + 1).map((n, index) => (
                    <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
-                     <img 
-                       src={`https://picsum.photos/id/${id}/300/300`} 
-                       alt={`Impression ${index + 1}`} 
+                     <img
+                       src={`/images/tandemschein/gallery-${n}.jpg`}
+                       alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
                    </div>

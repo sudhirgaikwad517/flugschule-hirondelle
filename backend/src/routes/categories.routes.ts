@@ -20,12 +20,17 @@ router.get('/', async (req, res) => {
 
     const skip = _start ? Number(_start) : 0;
     const take = _end ? Number(_end) - skip : 100;
-    const orderBy = _sort ? { [String(_sort)]: _order === 'DESC' ? 'desc' : 'asc' } : { id: 'asc' };
+    const orderBy: any = _sort ? { [String(_sort)]: _order === 'DESC' ? 'desc' : 'asc' } : { id: 'asc' };
 
     const [categories, total] = await Promise.all([
       prisma.category.findMany({
         where: whereClause,
-        include: { parent: true },
+        include: { 
+          parent: true,
+          events: {
+            select: { published: true }
+          }
+        },
         skip,
         take,
         orderBy
@@ -33,9 +38,22 @@ router.get('/', async (req, res) => {
       prisma.category.count({ where: whereClause })
     ]);
 
-    res.set('Content-Range', `categories ${skip}-${skip + categories.length}/${total}`);
+    const parsedCategories = categories.map(cat => {
+      const { events, ...rest } = cat as any;
+      const publishedCount = events.filter((e: any) => e.published).length;
+      const hiddenCount = events.filter((e: any) => !e.published).length;
+      return {
+        ...rest,
+        publishedCount,
+        hiddenCount,
+        archivedCount: 0,
+        trashCount: 0
+      };
+    });
+
+    res.set('Content-Range', `categories ${skip}-${skip + parsedCategories.length}/${total}`);
     res.set('Access-Control-Expose-Headers', 'Content-Range');
-    res.json(categories);
+    res.json(parsedCategories);
   } catch (error) {
     res.status(500).json({ message: 'Internal server error' });
   }
@@ -45,10 +63,26 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const category = await prisma.category.findUnique({
-      where: { id: req.params.id as string }
+      where: { id: req.params.id as string },
+      include: {
+        events: {
+          select: { published: true }
+        }
+      }
     });
     if (!category) return res.status(404).json({ message: 'Not found' });
-    res.json(category);
+    
+    const { events, ...rest } = category;
+    const publishedCount = events.filter(e => e.published).length;
+    const hiddenCount = events.filter(e => !e.published).length;
+    
+    res.json({
+      ...rest,
+      publishedCount,
+      hiddenCount,
+      archivedCount: 0,
+      trashCount: 0
+    });
   } catch (error) {
     res.status(500).json({ message: 'Internal server error' });
   }

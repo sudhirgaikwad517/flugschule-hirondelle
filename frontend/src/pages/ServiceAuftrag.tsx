@@ -36,7 +36,32 @@ export const ServiceAuftrag = () => {
 
           {/* Form Container */}
           <div className="w-full">
-            <form className="bg-white p-8 md:p-12 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-xl border border-gray-100 relative overflow-hidden">
+            <form 
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const form = e.target as HTMLFormElement;
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+
+                try {
+                  const res = await fetch('/api/serviceorders/public', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                  });
+                  const json = await res.json();
+                  if (res.ok) {
+                    alert('Service-Auftrag erfolgreich gesendet!');
+                    form.reset();
+                  } else {
+                    alert(json.message || 'Fehler beim Senden');
+                  }
+                } catch (err) {
+                  alert('Netzwerkfehler. Bitte später erneut versuchen.');
+                }
+              }}
+              className="bg-white p-8 md:p-12 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-xl border border-gray-100 relative overflow-hidden"
+            >
               {/* Decorative top bar */}
               <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#53a8c7] to-[#C19B76]"></div>
 
@@ -45,29 +70,29 @@ export const ServiceAuftrag = () => {
               <div className="space-y-6">
                 {/* Personal Data Fields */}
                 {[
-                  { id: 'name', label: 'Name' },
-                  { id: 'strasse', label: 'Straße' },
-                  { id: 'plz', label: 'PLZ' },
-                  { id: 'ort', label: 'Ort' },
-                  { id: 'handy', label: 'Handynr.' },
-                  { id: 'email', label: 'E-Mail', type: 'email' },
+                  { id: 'name', label: 'Name', required: true },
+                  { id: 'strasse', label: 'Straße', required: true },
+                  { id: 'plz', label: 'PLZ', required: true },
+                  { id: 'ort', label: 'Ort', required: true },
+                  { id: 'handy', label: 'Handynr.', required: true },
+                  { id: 'email', label: 'E-Mail', type: 'email', required: true },
                 ].map((field) => (
                   <div key={field.id} className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8 group">
                     <label htmlFor={field.id} className="md:w-1/3 text-sm text-gray-700 font-medium group-focus-within:text-[#53a8c7] transition-colors">
-                      {field.label} <span className="text-[#cc0000]">*</span>
+                      {field.label} {field.required && <span className="text-[#cc0000]">*</span>}
                     </label>
                     <div className="md:w-2/3">
                       <input
                         type={field.type || 'text'}
                         id={field.id}
-                        required
-                        className="w-full bg-white border border-gray-300 px-5 py-3 text-[15px] focus:outline-none focus:border-[#53a8c7] focus:ring-2 focus:ring-[#53a8c7]/20 transition-all rounded-md"
+                        name={field.id}
+                        required={field.required}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:border-[#53a8c7] focus:ring-1 focus:ring-[#53a8c7] outline-none transition-all bg-gray-50/50 hover:bg-gray-50 focus:bg-white text-[15px]"
                       />
                     </div>
                   </div>
                 ))}
               </div>
-
               <div className="h-px w-full bg-gradient-to-r from-transparent via-gray-200 to-transparent my-12"></div>
 
               {/* Gleitschirm-Check Section */}
@@ -76,7 +101,7 @@ export const ServiceAuftrag = () => {
                   <div className="md:w-1/3"></div>
                   <div className="md:w-2/3 flex items-center gap-3">
                     <div className="relative flex items-center justify-center w-5 h-5">
-                      <input type="checkbox" id="gleitschirm_check" className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded cursor-pointer checked:bg-[#53a8c7] checked:border-[#53a8c7] transition-all" />
+                      <input type="checkbox" id="gleitschirm_check" name="gleitschirm_check" className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded cursor-pointer checked:bg-[#53a8c7] checked:border-[#53a8c7] transition-all" />
                       <svg className="absolute w-3 h-3 text-white pointer-events-none opacity-0 peer-checked:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"></path></svg>
                     </div>
                     <label htmlFor="gleitschirm_check" className="text-[15px] text-gray-800 font-medium cursor-pointer">Gleitschirm-Check</label>
@@ -85,10 +110,19 @@ export const ServiceAuftrag = () => {
 
                 <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8 group">
                   <label htmlFor="gs_hersteller" className="md:w-1/3 text-sm text-gray-700 font-medium group-focus-within:text-[#53a8c7] transition-colors">
-                    Hersteller / Typ des Gleitschirms
+                    Hersteller des Gleitschirms
                   </label>
                   <div className="md:w-2/3">
-                    <input type="text" id="gs_hersteller" className="w-full bg-white border border-gray-300 px-5 py-3 text-[15px] focus:outline-none focus:border-[#53a8c7] focus:ring-2 focus:ring-[#53a8c7]/20 transition-all rounded-md" />
+                    <input type="text" id="gs_hersteller" name="gs_hersteller" className="w-full bg-white border border-gray-300 px-5 py-3 text-[15px] focus:outline-none focus:border-[#53a8c7] focus:ring-2 focus:ring-[#53a8c7]/20 transition-all rounded-md" />
+                  </div>
+                </div>
+
+                <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8 group">
+                  <label htmlFor="gs_typ" className="md:w-1/3 text-sm text-gray-700 font-medium group-focus-within:text-[#53a8c7] transition-colors">
+                    Typ / Name des Gleitschirms
+                  </label>
+                  <div className="md:w-2/3">
+                    <input type="text" id="gs_typ" name="gs_typ" className="w-full bg-white border border-gray-300 px-5 py-3 text-[15px] focus:outline-none focus:border-[#53a8c7] focus:ring-2 focus:ring-[#53a8c7]/20 transition-all rounded-md" />
                   </div>
                 </div>
 
@@ -97,7 +131,7 @@ export const ServiceAuftrag = () => {
                     Farbe des Gleitschirms
                   </label>
                   <div className="md:w-2/3">
-                    <input type="text" id="gs_farbe" className="w-full bg-white border border-gray-300 px-5 py-3 text-[15px] focus:outline-none focus:border-[#53a8c7] focus:ring-2 focus:ring-[#53a8c7]/20 transition-all rounded-md" />
+                    <input type="text" id="gs_farbe" name="gs_farbe" className="w-full bg-white border border-gray-300 px-5 py-3 text-[15px] focus:outline-none focus:border-[#53a8c7] focus:ring-2 focus:ring-[#53a8c7]/20 transition-all rounded-md" />
                   </div>
                 </div>
 
@@ -108,6 +142,7 @@ export const ServiceAuftrag = () => {
                   <div className="md:w-2/3">
                     <textarea 
                       id="gs_anmerkung" 
+                      name="gs_anmerkung"
                       rows={3}
                       placeholder="z. B. Leine defekt, bitte austauschen / Loch im Obersegel etc."
                       className="w-full bg-white border border-gray-300 px-5 py-3 text-[15px] focus:outline-none focus:border-[#53a8c7] focus:ring-2 focus:ring-[#53a8c7]/20 transition-all rounded-md resize-y placeholder:text-gray-400"
@@ -124,7 +159,7 @@ export const ServiceAuftrag = () => {
                   <div className="md:w-1/3"></div>
                   <div className="md:w-2/3 flex items-center gap-3">
                     <div className="relative flex items-center justify-center w-5 h-5">
-                      <input type="checkbox" id="rettung_packen" className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded cursor-pointer checked:bg-[#53a8c7] checked:border-[#53a8c7] transition-all" />
+                      <input type="checkbox" id="rettung_packen" name="rettung_packen" className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded cursor-pointer checked:bg-[#53a8c7] checked:border-[#53a8c7] transition-all" />
                       <svg className="absolute w-3 h-3 text-white pointer-events-none opacity-0 peer-checked:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"></path></svg>
                     </div>
                     <label htmlFor="rettung_packen" className="text-[15px] text-gray-800 font-medium cursor-pointer">Rettung packen</label>
@@ -139,6 +174,7 @@ export const ServiceAuftrag = () => {
                     <input 
                       type="text" 
                       id="ret_hersteller" 
+                      name="ret_hersteller"
                       placeholder="Wir packen alle Standardretter vom Typ Rund- bzw. Kreuzkappen. Retter, die nicht bei uns gekauft wurden bitte ggf. vorab abklären."
                       className="w-full bg-white border border-gray-300 px-5 py-3 text-[15px] focus:outline-none focus:border-[#53a8c7] focus:ring-2 focus:ring-[#53a8c7]/20 transition-all rounded-md placeholder:text-gray-400 placeholder:text-sm" 
                     />
@@ -153,6 +189,7 @@ export const ServiceAuftrag = () => {
                     <input 
                       type="text" 
                       id="ret_alter" 
+                      name="ret_alter"
                       placeholder="ca. in Jahren"
                       className="w-full bg-white border border-gray-300 px-5 py-3 text-[15px] focus:outline-none focus:border-[#53a8c7] focus:ring-2 focus:ring-[#53a8c7]/20 transition-all rounded-md placeholder:text-gray-400" 
                     />
@@ -169,7 +206,7 @@ export const ServiceAuftrag = () => {
                     Sonstiges
                   </label>
                   <div className="md:w-2/3">
-                    <input type="text" id="sonstiges" className="w-full bg-white border border-gray-300 px-5 py-3 text-[15px] focus:outline-none focus:border-[#53a8c7] focus:ring-2 focus:ring-[#53a8c7]/20 transition-all rounded-md" />
+                    <input type="text" id="sonstiges" name="sonstiges" className="w-full bg-white border border-gray-300 px-5 py-3 text-[15px] focus:outline-none focus:border-[#53a8c7] focus:ring-2 focus:ring-[#53a8c7]/20 transition-all rounded-md" />
                   </div>
                 </div>
 
@@ -202,7 +239,7 @@ export const ServiceAuftrag = () => {
                 <button type="reset" className="w-full sm:w-auto px-10 py-3.5 bg-white border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 font-semibold rounded-md transition-all shadow-sm text-sm uppercase tracking-wide">
                   Zurücksetzen
                 </button>
-                <button type="button" className="w-full sm:w-auto px-10 py-3.5 bg-[#53a8c7] hover:bg-[#4396b5] text-white font-semibold rounded-md transition-all shadow-md hover:shadow-lg text-sm uppercase tracking-wide">
+                <button type="submit" className="w-full sm:w-auto px-10 py-3.5 bg-[#53a8c7] hover:bg-[#4396b5] text-white font-semibold rounded-md transition-all shadow-md hover:shadow-lg text-sm uppercase tracking-wide">
                   Auftrag absenden
                 </button>
               </div>
