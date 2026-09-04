@@ -27,6 +27,13 @@ html, body {
   padding: 0;
 }
 
+/* The admin panel (react-admin) has wide data tables/toolbars that legitimately
+   need to scroll horizontally - the public-site clipping above would otherwise
+   hide that content with no way to reach it. */
+body.admin-root {
+  overflow-x: auto;
+}
+
 body {
   font-family: var(--font-sans);
   color: #333333;

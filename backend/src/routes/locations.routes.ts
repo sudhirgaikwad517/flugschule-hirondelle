@@ -45,8 +45,8 @@ router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
     let whereClause: any = {};
     if (q) {
       whereClause.OR = [
-        { title: { contains: String(q), mode: 'insensitive' } },
-        { name: { contains: String(q), mode: 'insensitive' } }
+        { title: { contains: String(q) } },
+        { name: { contains: String(q) } }
       ];
     }
 

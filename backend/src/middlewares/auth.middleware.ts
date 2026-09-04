@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'hirondelle-super-secret-key';
+import { JWT_SECRET } from '../utils/config';
 
 export interface AuthRequest extends Request {
   user?: { id: number; role: string };

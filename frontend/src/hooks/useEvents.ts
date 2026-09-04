@@ -78,7 +78,7 @@ export const useEvents = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/events?published=true&_end=1000')
+    fetch('/api/events?published=true&_end=10000')
       .then(res => res.json())
       .then(data => {
         const parsed = data.map((e: any) => ({

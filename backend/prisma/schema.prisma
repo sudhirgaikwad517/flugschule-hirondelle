@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
 }
 
 model User {
@@ -22,6 +22,7 @@ model User {
   postalCode String?
   username   String?
   weight     String?
+  blocked    Boolean     @default(false)
   bookings   Booking[]
   Comment    Comment[]
   invoices   Invoice[]
@@ -32,12 +33,12 @@ model Category {
   id          String     @id @default(uuid())
   title       String
   alias       String     @unique
-  description String?
+  description String?    @db.Text
   parentId    String?
   status      String     @default("PUBLISHED")
   accessLevel String     @default("PUBLIC")
   tags        String?
-  note        String?
+  note        String?    @db.Text
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
   parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
@@ -49,10 +50,10 @@ model Event {
   id                   String        @id @default(uuid())
   title                String
   category             String?
-  description          String?
+  description          String?       @db.Text
   startDate            DateTime
   endDate              DateTime?
-  location             String?
+  location             String?       @db.Text
   capacity             Int           @default(20)
   color                String?
   createdAt            DateTime      @default(now())
@@ -68,21 +69,21 @@ model Event {
   currency             String?       @default("EUR")
   eventType            String?       @default("paid")
   feePerPerson         Float?        @default(0)
-  googleMapsAddress    String?
+  googleMapsAddress    String?       @db.Text
   isHotEvent           Boolean       @default(false)
   isTopEvent           Boolean       @default(false)
   leadSpeaker          String?
   locationType         String?       @default("custom")
   maxBookablePerPerson Int?          @default(1)
-  metaDescription      String?
-  metaKeywords         String?
+  metaDescription      String?       @db.Text
+  metaKeywords         String?       @db.Text
   minParticipants      Int?          @default(0)
   onExceed             String?       @default("waitlist")
   paymentProcessing    Boolean       @default(true)
   published            Boolean       @default(true)
-  shortDescription     String?
+  shortDescription     String?       @db.Text
   tags                 String?
-  targetGroup          String?
+  targetGroup          String?       @db.Text
   taxRate              String?
   tieredFees           Boolean       @default(false)
   calendarBgColor      String?       @default("#3a87ac")
@@ -112,7 +113,7 @@ model EventTicket {
   eventId     String
   name        String
   price       Float
-  description String?
+  description String?       @db.Text
   capacity    Int           @default(20)
   items       BookingItem[]
   event       Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
@@ -128,9 +129,9 @@ model Booking {
   updatedAt       DateTime      @updatedAt
   customerDetails Json?
   paymentMethod   String?
-  remarks         String?
+  remarks         String?       @db.Text
   rating          Int?
-  ratingComment   String?
+  ratingComment   String?       @db.Text
   event           Event         @relation(fields: [eventId], references: [id])
   user            User?         @relation(fields: [userId], references: [id])
   items           BookingItem[]
@@ -148,7 +149,7 @@ model BookingItem {
 model Product {
   id          String   @id @default(uuid())
   name        String
-  description String?
+  description String?  @db.Text
   price       Float
   stock       Int      @default(0)
   createdAt   DateTime @default(now())
@@ -216,7 +217,7 @@ model Comment {
   userId        String?
   name          String?
   email         String?   @unique
-  content       String
+  content       String    @db.Text
   isApproved    Boolean   @default(false)
   parentId      String?
   createdAt     DateTime  @default(now())
@@ -248,8 +249,8 @@ model CustomField {
   whenToShow   String   @default("all")
   categoryIds  String?
   fieldType    String   @default("text")
-  options      String?
-  defaultValue String?
+  options      String?  @db.Text
+  defaultValue String?  @db.Text
   allowEmpty   Boolean  @default(false)
   addFilter    Boolean  @default(false)
   showLabel    Boolean  @default(true)
@@ -262,7 +263,7 @@ model CustomField {
 model DownloadCategory {
   id           String         @id @default(uuid())
   title        String
-  description  String?
+  description  String?        @db.Text
   published    Boolean        @default(true)
   order        Int            @default(0)
   createdAt    DateTime       @default(now())
@@ -274,7 +275,7 @@ model DownloadFile {
   id               String           @id @default(uuid())
   categoryId       String
   title            String
-  description      String?
+  description      String?          @db.Text
   fileUrl          String
   fileSize         Int?
   published        Boolean          @default(true)
@@ -308,8 +309,8 @@ model Location {
   email         String?
   website       String?
   imageUrl      String?
-  description   String?
-  comments      String?
+  description   String?  @db.Text
+  comments      String?  @db.Text
   published     Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -320,7 +321,7 @@ model News {
   id        String   @id @default(uuid())
   title     String
   slug      String   @unique
-  content   String
+  content   String   @db.Text
   imageUrl  String?
   published Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -332,9 +333,9 @@ model NewsletterCampaign {
   subject         String
   name            String?
   previewLine     String?
-  body            String
+  body            String    @db.LongText
   status          String    @default("DRAFT")
-  design          String?   // JSON string of the drag-and-drop design state
+  design          String?   @db.LongText // JSON string of the drag-and-drop design state
   sentAt          DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -347,8 +348,8 @@ model NewsletterCampaign {
   fromEmail       String?
   replyToName     String?
   replyToEmail    String?
-  attachments     String?
-  keywords        String?
+  attachments     String?   @db.Text
+  keywords        String?   @db.Text
   bcc             String?
   bounceEmail     String?
   trackingEnabled Boolean   @default(true)
@@ -357,8 +358,8 @@ model NewsletterCampaign {
 model NewsletterTemplate {
   id           String   @id @default(uuid())
   name         String
-  body         String
-  design       String?  // JSON string of the drag-and-drop design state
+  body         String   @db.LongText
+  design       String?  @db.LongText // JSON string of the drag-and-drop design state
   thumbnailUrl String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -371,7 +372,7 @@ model NewsletterQueue {
   status          String   @default("PENDING") // PENDING, PROCESSING, FAILED, SENT
   scheduledAt     DateTime
   sentAt          DateTime?
-  errorLog        String?
+  errorLog        String?  @db.Text
   retryCount      Int      @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -424,8 +425,8 @@ model Organizer {
   website     String?
   phone       String?
   imageUrl    String?
-  description String?
-  comments    String?
+  description String?  @db.Text
+  comments    String?  @db.Text
   published   Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -489,7 +490,7 @@ model WebLink {
   categoryId      String
   title           String
   url             String
-  description     String?
+  description     String?         @db.Text
   published       Boolean         @default(true)
   order           Int             @default(0)
   createdAt       DateTime        @default(now())
@@ -500,7 +501,7 @@ model WebLink {
 model WebLinkCategory {
   id          String    @id @default(uuid())
   title       String
-  description String?
+  description String?   @db.Text
   published   Boolean   @default(true)
   order       Int       @default(0)
   createdAt   DateTime  @default(now())
@@ -529,7 +530,7 @@ model PageMedia {
   contentMediaType  String   @default("IMAGE") // IMAGE or VIDEO
   contentImageUrl   String?
   contentYoutubeUrl String?
-  galleryImages     String? // JSON string
+  galleryImages     String? @db.Text // JSON string
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
@@ -540,9 +541,33 @@ model LegalPage {
   id        String   @id @default(uuid())
   slug      String   @unique
   title     String
-  content   String
+  content   String   @db.LongText
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// PayPal credentials - clientSecret is stored encrypted at rest (see
+// utils/crypto.ts) and is never sent back to the browser in plaintext.
+model PaymentConfig {
+  id                 String   @id @default("default")
+  environment        String   @default("sandbox") // "sandbox" or "live"
+  paypalClientId     String?
+  paypalClientSecret String?  @db.Text
+  updatedAt          DateTime @updatedAt
+}
+
+model CookieConsentConfig {
+  id                  String   @id @default("default")
+  enabled             Boolean  @default(true)
+  title               String   @default("Hinweis zum Datenschutz")
+  bodyText            String   @db.Text
+  privacyLinkText     String?  @default("Lesen Sie unsere Datenschutzrichtlinie.")
+  privacyLinkUrl      String?  @default("/datenschutz")
+  acceptButtonText    String   @default("Akzeptieren")
+  declineButtonText   String   @default("Ablehnen")
+  settingsButtonText  String   @default("Cookie-Einstellungen")
+  settingsUrl         String?
+  updatedAt           DateTime @updatedAt
 }
 
 model ServiceOrder {
@@ -558,14 +583,14 @@ model ServiceOrder {
   gs_hersteller     String?
   gs_typ            String?
   gs_farbe          String?
-  gs_anmerkung      String?
+  gs_anmerkung      String?  @db.Text
 
   rettung_packen    Boolean  @default(false)
   ret_hersteller    String?
   ret_alter         String?
 
-  sonstiges         String?
-  abgabe            String?
+  sonstiges         String?  @db.Text
+  abgabe            String?  @db.Text
 
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt

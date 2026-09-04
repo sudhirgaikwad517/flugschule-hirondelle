@@ -77,7 +77,7 @@ router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
 
     let whereClause: any = {};
     if (q) {
-      whereClause.name = { contains: String(q), mode: 'insensitive' };
+      whereClause.name = { contains: String(q) };
     }
 
     const skip = _start ? Number(_start) : 0;

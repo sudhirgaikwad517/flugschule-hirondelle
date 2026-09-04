@@ -45,7 +45,7 @@ router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
 
     let whereClause: any = {};
     if (q) {
-      whereClause.code = { contains: String(q), mode: 'insensitive' };
+      whereClause.code = { contains: String(q) };
     }
     if (published !== undefined) whereClause.published = published === 'true';
 

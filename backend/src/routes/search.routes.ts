@@ -11,7 +11,7 @@ router.get('/public', async (req, res) => {
       return res.json({ events: [], news: [], downloads: [] });
     }
 
-    const searchQuery = { contains: q, mode: 'insensitive' as const };
+    const searchQuery = { contains: q };
 
     const [events, news, downloads] = await Promise.all([
       prisma.event.findMany({

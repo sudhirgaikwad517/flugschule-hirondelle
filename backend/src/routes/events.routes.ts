@@ -32,13 +32,13 @@ router.get('/', async (req, res) => {
         whereClause.id = idMatch[1].trim();
       } else {
         whereClause.OR = [
-          { title: { contains: qStr, mode: 'insensitive' } },
-          { shortDescription: { contains: qStr, mode: 'insensitive' } },
-          { description: { contains: qStr, mode: 'insensitive' } },
-          { location: { contains: qStr, mode: 'insensitive' } },
-          { leadSpeaker: { contains: qStr, mode: 'insensitive' } },
-          { targetGroup: { contains: qStr, mode: 'insensitive' } },
-          { eventNumber: { contains: qStr, mode: 'insensitive' } }
+          { title: { contains: qStr } },
+          { shortDescription: { contains: qStr } },
+          { description: { contains: qStr } },
+          { location: { contains: qStr } },
+          { leadSpeaker: { contains: qStr } },
+          { targetGroup: { contains: qStr } },
+          { eventNumber: { contains: qStr } }
         ];
       }
     }

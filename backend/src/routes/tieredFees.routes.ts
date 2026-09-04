@@ -10,7 +10,7 @@ router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
 
     let whereClause: any = {};
     if (q) {
-      whereClause.title = { contains: String(q), mode: 'insensitive' };
+      whereClause.title = { contains: String(q) };
     }
 
     const skip = _start ? Number(_start) : 0;

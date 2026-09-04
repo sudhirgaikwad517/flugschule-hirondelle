@@ -23,12 +23,14 @@ import BadgeIcon from '@mui/icons-material/Badge';
 import BookOnlineIcon from '@mui/icons-material/BookOnline';
 import CommentIcon from '@mui/icons-material/Comment';
 import ArticleIcon from '@mui/icons-material/Article';
+import CookieIcon from '@mui/icons-material/Cookie';
 import FolderIcon from '@mui/icons-material/Folder';
 import DownloadIcon from '@mui/icons-material/Download';
 import LinkIcon from '@mui/icons-material/Link';
 import ViewCarouselIcon from '@mui/icons-material/ViewCarousel';
 import PermMediaIcon from '@mui/icons-material/PermMedia';
 import AssignmentIcon from '@mui/icons-material/Assignment';
+import PaymentIcon from '@mui/icons-material/Payment';
 
 // A fully custom sidebar (plain MUI + react-router NavLink, no react-admin
 // <Menu>/<MenuItemLink>) - same approach already used successfully in the
@@ -67,6 +69,7 @@ const EVENT_ITEMS: Item[] = [
     { label: 'Veranstalter', to: '/admin/organizers', icon: <BadgeIcon fontSize="small" /> },
     { label: 'Kategorien', to: '/admin/categories', icon: <CategoryIcon fontSize="small" /> },
     { label: 'Buchungen', to: '/admin/bookings', icon: <BookOnlineIcon fontSize="small" /> },
+    { label: 'PayPal-Einstellungen', to: '/admin/payment-config', icon: <PaymentIcon fontSize="small" /> },
 ];
 
 const BOTTOM_ITEMS: Item[] = [
@@ -82,6 +85,7 @@ const BOTTOM_ITEMS: Item[] = [
     { label: 'Service Aufträge', to: '/admin/serviceorders', icon: <AssignmentIcon fontSize="small" /> },
     { label: 'Rechtliche Seiten', to: '/admin/legalPages', icon: <ArticleIcon fontSize="small" /> },
     { label: 'Ecwid Settings', to: '/admin/ecwid-config', icon: <StorefrontIcon fontSize="small" /> },
+    { label: 'Cookie-Hinweis', to: '/admin/cookie-consent', icon: <CookieIcon fontSize="small" /> },
 ];
 
 // Inline `style` for color (not just `sx`) so nothing in the app's global

@@ -3,6 +3,8 @@ import { prisma } from '../utils/prisma';
 import { authenticateJWT, authorizeAdmin, AuthRequest } from '../middlewares/auth.middleware';
 import { sendBookingConfirmationEmail, sendCancellationEmail } from '../services/mailer.service';
 import { calculateBookingPrice } from '../utils/bookingPrice';
+import { JWT_SECRET } from '../utils/config';
+import jwt from 'jsonwebtoken';
 
 const router = Router();
 
@@ -148,14 +150,32 @@ router.get('/:id/ticket', authenticateJWT, async (req: any, res) => {
 
 router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    const bookings = await prisma.booking.findMany({ 
-      include: { 
-        user: true, 
-        event: true,
-        items: { include: { ticket: true } }
-      } 
-    });
-    res.set('Content-Range', `bookings 0-${bookings.length}/${bookings.length}`);
+    const { _sort, _order, _start, _end, status, eventId } = req.query;
+
+    const whereClause: any = {};
+    if (status) whereClause.status = status;
+    if (eventId) whereClause.eventId = eventId;
+
+    const skip = _start ? Number(_start) : 0;
+    const take = _end ? Number(_end) - skip : 100;
+    const orderBy: any = _sort ? { [String(_sort)]: _order === 'DESC' ? 'desc' : 'asc' } : { createdAt: 'desc' };
+
+    const [bookings, total] = await Promise.all([
+      prisma.booking.findMany({
+        where: whereClause,
+        include: {
+          user: true,
+          event: true,
+          items: { include: { ticket: true } }
+        },
+        skip,
+        take,
+        orderBy
+      }),
+      prisma.booking.count({ where: whereClause })
+    ]);
+
+    res.set('Content-Range', `bookings ${skip}-${skip + bookings.length}/${total}`);
     res.set('Access-Control-Expose-Headers', 'Content-Range');
     res.json(bookings);
   } catch (error) {
@@ -187,7 +207,7 @@ router.post('/', async (req: any, res) => {
     if (authHeader) {
       const token = authHeader.split(' ')[1];
       try {
-        const decoded = require('jsonwebtoken').verify(token, process.env.JWT_SECRET || 'hirondelle-super-secret-key');
+        const decoded = jwt.verify(token, JWT_SECRET);
         req.user = decoded;
       } catch (err) {
         // Ignore invalid token, treat as guest

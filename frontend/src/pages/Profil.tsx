@@ -1,7 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
-import { Download, Calendar, Pencil, X } from 'lucide-react';
+import { Download, Calendar, Pencil, X, User as UserIcon, Lock } from 'lucide-react';
+
+const ACCOUNT_FIELDS = [
+  { key: 'name', label: 'Name' },
+  { key: 'phone', label: 'Telefon / Mobil' },
+  { key: 'address1', label: 'Adresse (Straße, Nr.)' },
+  { key: 'location', label: 'Ort' },
+  { key: 'postalCode', label: 'PLZ' },
+  { key: 'country', label: 'Land' },
+  { key: 'birthDate', label: 'Geburtsdatum' },
+  { key: 'weight', label: 'Gewicht (kg)' },
+];
 
 export const Profil = () => {
   const navigate = useNavigate();
@@ -12,6 +23,17 @@ export const Profil = () => {
   const [editForm, setEditForm] = useState<any>({});
   const [saving, setSaving] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+
+  const [account, setAccount] = useState<any>(null);
+  const [accountForm, setAccountForm] = useState<any>({});
+  const [accountLoading, setAccountLoading] = useState(true);
+  const [accountSaving, setAccountSaving] = useState(false);
+  const [accountMessage, setAccountMessage] = useState<string | null>(null);
+
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState<{ text: string; error?: boolean } | null>(null);
 
   const token = localStorage.getItem('token');
 
@@ -31,6 +53,69 @@ export const Profil = () => {
       });
   };
 
+  const loadAccount = () => {
+    setAccountLoading(true);
+    fetch('/api/auth/me', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        setAccount(data);
+        setAccountForm(data);
+        setAccountLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setAccountLoading(false);
+      });
+  };
+
+  const saveAccount = async () => {
+    setAccountSaving(true);
+    setAccountMessage(null);
+    try {
+      const res = await fetch('/api/auth/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(accountForm)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Fehler beim Speichern');
+      setAccount(data);
+      setAccountForm(data);
+      setAccountMessage('Ihre Daten wurden gespeichert.');
+    } catch (error: any) {
+      setAccountMessage(error.message || 'Fehler beim Speichern der Daten.');
+    } finally {
+      setAccountSaving(false);
+    }
+  };
+
+  const savePassword = async () => {
+    setPasswordMessage(null);
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordMessage({ text: 'Die neuen Passwörter stimmen nicht überein.', error: true });
+      return;
+    }
+    setPasswordSaving(true);
+    try {
+      const res = await fetch('/api/auth/me/password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Fehler beim Ändern des Passworts');
+      setPasswordMessage({ text: 'Passwort erfolgreich geändert.' });
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setShowPasswordForm(false);
+    } catch (error: any) {
+      setPasswordMessage({ text: error.message || 'Fehler beim Ändern des Passworts.', error: true });
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
+
   useEffect(() => {
     if (!token) {
       setIsAuthenticated(false);
@@ -38,6 +123,7 @@ export const Profil = () => {
       return;
     }
     loadBookings();
+    loadAccount();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
@@ -138,6 +224,97 @@ export const Profil = () => {
             MEIN PROFIL
           </h1>
           <div className="w-24 h-px bg-luxury-gold mx-auto"></div>
+        </div>
+
+        <div className="bg-white border border-gray-100 p-8 md:p-12 rounded-sm shadow-xl w-full max-w-4xl mb-10">
+          <h2 className="text-2xl font-luxury text-gray-800 mb-6 flex items-center gap-2">
+            <UserIcon className="w-6 h-6 text-luxury-gold" /> Meine Kontodaten
+          </h2>
+
+          {accountLoading ? (
+            <p className="text-gray-600 py-4">Lade Kontodaten...</p>
+          ) : (
+            <>
+              <div className="mb-4">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">E-Mail</label>
+                <input
+                  className="w-full border border-gray-200 bg-gray-50 rounded-sm px-3 py-2 text-sm text-gray-500"
+                  value={account?.email || ''}
+                  disabled
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                {ACCOUNT_FIELDS.map(f => (
+                  <div key={f.key}>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{f.label}</label>
+                    <input
+                      className="w-full border border-gray-300 rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-luxury-gold"
+                      value={accountForm[f.key] || ''}
+                      onChange={e => setAccountForm({ ...accountForm, [f.key]: e.target.value })}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {accountMessage && (
+                <p className="text-sm mb-4 text-luxury-gold font-semibold">{accountMessage}</p>
+              )}
+
+              <div className="flex flex-wrap items-center gap-4">
+                <button
+                  onClick={saveAccount}
+                  disabled={accountSaving}
+                  className="px-6 py-2.5 bg-luxury-gold hover:bg-[#aa883e] text-white rounded-sm text-sm font-semibold disabled:opacity-50 transition-colors"
+                >
+                  {accountSaving ? 'Speichere...' : 'Daten speichern'}
+                </button>
+                <button
+                  onClick={() => setShowPasswordForm(v => !v)}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-sm text-sm font-semibold transition-colors"
+                >
+                  <Lock className="w-4 h-4" /> Passwort ändern
+                </button>
+              </div>
+
+              {showPasswordForm && (
+                <div className="mt-6 pt-6 border-t border-gray-100 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <input
+                    type="password"
+                    placeholder="Aktuelles Passwort"
+                    className="border border-gray-300 rounded-sm px-3 py-2 text-sm"
+                    value={passwordForm.currentPassword}
+                    onChange={e => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                  />
+                  <input
+                    type="password"
+                    placeholder="Neues Passwort"
+                    className="border border-gray-300 rounded-sm px-3 py-2 text-sm"
+                    value={passwordForm.newPassword}
+                    onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                  />
+                  <input
+                    type="password"
+                    placeholder="Neues Passwort bestätigen"
+                    className="border border-gray-300 rounded-sm px-3 py-2 text-sm"
+                    value={passwordForm.confirmPassword}
+                    onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                  />
+                  <div className="md:col-span-3 flex items-center gap-4">
+                    <button
+                      onClick={savePassword}
+                      disabled={passwordSaving}
+                      className="px-6 py-2.5 bg-luxury-dark hover:bg-luxury-gold text-white rounded-sm text-sm font-semibold disabled:opacity-50 transition-colors"
+                    >
+                      {passwordSaving ? 'Speichere...' : 'Passwort speichern'}
+                    </button>
+                    {passwordMessage && (
+                      <p className={`text-sm font-semibold ${passwordMessage.error ? 'text-red-600' : 'text-luxury-gold'}`}>{passwordMessage.text}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         <div className="bg-white border border-gray-100 p-8 md:p-12 rounded-sm shadow-xl w-full max-w-4xl">

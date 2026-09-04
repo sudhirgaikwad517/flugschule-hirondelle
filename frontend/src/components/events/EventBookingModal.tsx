@@ -253,7 +253,7 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
       if (res.ok) {
         const data = await res.json();
         
-        if (formData.paymentMethod === 'Stripe' || formData.paymentMethod === 'PayPal') {
+        if (formData.paymentMethod === 'PayPal') {
           try {
             const paymentRes = await fetch('/api/payments/create-session', {
               method: 'POST',
@@ -556,7 +556,6 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
                     ) : (
                       <>
                         <option value="Bitte auswählen">Bitte auswählen</option>
-                        <option value="Stripe">Kreditkarte (Stripe)</option>
                         <option value="PayPal">PayPal</option>
                         <option value="Gutschein">Gutschein</option>
                         <option value="Überweisung">Überweisung</option>

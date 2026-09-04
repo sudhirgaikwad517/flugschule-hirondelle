@@ -11,11 +11,11 @@ router.get('/', async (req, res) => {
 
     let whereClause: any = {};
     if (q) {
-      whereClause.title = { contains: String(q), mode: 'insensitive' };
+      whereClause.title = { contains: String(q) };
     }
     if (status) whereClause.status = status;
     if (accessLevel) whereClause.accessLevel = accessLevel;
-    if (tags) whereClause.tags = { contains: String(tags), mode: 'insensitive' };
+    if (tags) whereClause.tags = { contains: String(tags) };
     if (parentId) whereClause.parentId = parentId;
 
     const skip = _start ? Number(_start) : 0;

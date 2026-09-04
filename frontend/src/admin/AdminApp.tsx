@@ -1,4 +1,5 @@
-import { Admin, Resource, ListGuesser, fetchUtils, CustomRoutes, defaultTheme } from 'react-admin';
+import { useEffect } from 'react';
+import { Admin, Resource, fetchUtils, CustomRoutes, defaultTheme } from 'react-admin';
 import { Route, Navigate } from 'react-router-dom';
 import simpleRestProvider from 'ra-data-simple-rest';
 import polyglotI18nProvider from 'ra-i18n-polyglot';
@@ -40,7 +41,10 @@ import { CustomLayout } from './CustomLayout';
 import { EventsDashboard } from './EventsDashboard';
 import { Import } from './Import';
 import { EcwidConfigPage } from './EcwidConfigPage';
+import { CookieConsentConfigPage } from './CookieConsentConfigPage';
+import { PaymentConfigPage } from './PaymentConfigPage';
 import { LegalPageList, LegalPageEdit } from './LegalPages';
+import { UserList, UserEdit, UserCreate } from './Users';
 
 const i18nProvider = polyglotI18nProvider(() => germanMessages, 'de');
 
@@ -95,9 +99,15 @@ const lightTheme = {
 };
 
 // We will add custom resources here as we build them on the backend
-export const AdminApp = () => (
+export const AdminApp = () => {
+    useEffect(() => {
+        document.body.classList.add('admin-root');
+        return () => document.body.classList.remove('admin-root');
+    }, []);
+
+    return (
     <Admin basename="/admin" theme={lightTheme} layout={CustomLayout} authProvider={authProvider} dataProvider={dataProvider} i18nProvider={i18nProvider}>
-        <Resource name="users" options={{ label: 'Benutzer' }} list={ListGuesser} />
+        <Resource name="users" options={{ label: 'Benutzer' }} list={UserList} edit={UserEdit} create={UserCreate} />
         <Resource name="events" options={{ label: 'Veranstaltungen' }} list={EventList} edit={EventEdit} create={EventCreate} />
         <Resource name="customFields" options={{ label: 'Benutzerdefinierte Felder' }} list={CustomFieldList} edit={CustomFieldEdit} create={CustomFieldCreate} />
         <Resource name="locations" options={{ label: 'Veranstaltungsorte' }} list={LocationList} edit={LocationEdit} create={LocationCreate} />
@@ -115,6 +125,8 @@ export const AdminApp = () => (
             <Route path="/templates" element={<TemplatesBuilder />} />
             <Route path="/import" element={<Import />} />
             <Route path="/ecwid-config" element={<EcwidConfigPage />} />
+            <Route path="/cookie-consent" element={<CookieConsentConfigPage />} />
+            <Route path="/payment-config" element={<PaymentConfigPage />} />
             {/* Redirect old newsletter routes */}
             <Route path="/newsletters/*" element={<Navigate to="/acymailing/dashboard" replace />} />
             <Route path="/newslettercampaigns/*" element={<Navigate to="/acymailing/dashboard" replace />} />
@@ -145,4 +157,5 @@ export const AdminApp = () => (
         <Resource name="serviceorders" options={{ label: 'Service Aufträge' }} list={ServiceOrderList} show={ServiceOrderShow} />
         <Resource name="legalPages" options={{ label: 'Rechtliche Seiten' }} list={LegalPageList} edit={LegalPageEdit} />
     </Admin>
-);
+    );
+};

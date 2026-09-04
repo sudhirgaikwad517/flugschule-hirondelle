@@ -37,7 +37,8 @@ export const BookingSuccess: React.FC = () => {
         setLoading(false);
       });
     } else {
-      // Stripe handles webhook, but we assume success if they landed here
+      // Non-PayPal completions (Gutschein, Überweisung, Barzahlung, etc.) land
+      // here directly - the booking was already confirmed server-side.
       setLoading(false);
     }
   }, [location]);
