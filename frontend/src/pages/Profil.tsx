@@ -357,9 +357,9 @@ export const Profil = () => {
                           <span className="font-semibold">Gesamtpreis:</span> {booking.totalPrice.toFixed(2)} €
                         </p>
 
-                        {(customer.firstName || customer.email) && (
+                        {(customer.fullName || customer.name || customer.email) && (
                           <p className="text-gray-500 text-sm mt-2">
-                            <span className="font-semibold">Kontakt:</span> {customer.firstName} {customer.lastName}
+                            <span className="font-semibold">Kontakt:</span> {customer.fullName || customer.name}
                             {customer.email ? ` · ${customer.email}` : ''}
                             {customer.phone ? ` · ${customer.phone}` : ''}
                           </p>
@@ -420,8 +420,17 @@ export const Profil = () => {
             </div>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
-                <input className="border border-gray-300 rounded-sm px-3 py-2 text-sm" placeholder="Vorname" value={editForm.firstName || ''} onChange={e => setEditForm({ ...editForm, firstName: e.target.value })} />
-                <input className="border border-gray-300 rounded-sm px-3 py-2 text-sm" placeholder="Nachname" value={editForm.lastName || ''} onChange={e => setEditForm({ ...editForm, lastName: e.target.value })} />
+                <select className="border border-gray-300 rounded-sm px-3 py-2 text-sm" value={editForm.salutation || 'Bitte wählen'} onChange={e => setEditForm({ ...editForm, salutation: e.target.value })}>
+                  <option>Bitte wählen</option>
+                  <option>Herr</option>
+                  <option>Frau</option>
+                  <option>Divers</option>
+                </select>
+                <input className="border border-gray-300 rounded-sm px-3 py-2 text-sm" placeholder="Name" value={editForm.fullName || ''} onChange={e => setEditForm({ ...editForm, fullName: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <input type="date" className="border border-gray-300 rounded-sm px-3 py-2 text-sm" placeholder="Geburtsdatum" value={editForm.birthDate ? String(editForm.birthDate).slice(0, 10) : ''} onChange={e => setEditForm({ ...editForm, birthDate: e.target.value })} />
+                <input className="border border-gray-300 rounded-sm px-3 py-2 text-sm" placeholder="Größe/Gewicht" value={editForm.sizeWeight || ''} onChange={e => setEditForm({ ...editForm, sizeWeight: e.target.value })} />
               </div>
               <input className="w-full border border-gray-300 rounded-sm px-3 py-2 text-sm" placeholder="E-Mail" value={editForm.email || ''} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
               <input className="w-full border border-gray-300 rounded-sm px-3 py-2 text-sm" placeholder="Telefon" value={editForm.phone || ''} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} />
