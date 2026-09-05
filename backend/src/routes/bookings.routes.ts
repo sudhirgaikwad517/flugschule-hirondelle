@@ -13,6 +13,14 @@ const router = Router();
 
 import { generateInvoicePDF, generateTicketPDF, generateNameTagPDF, generateCertificatePDF } from '../services/pdf.service';
 
+// Temporary diagnostic marker - confirms whether the running process is
+// actually executing this exact file. Remove once the production deploy
+// mystery (blank customerName/shortId columns) is resolved.
+router.get('/__debug_version', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json({ marker: 'BOOKINGS_ROUTES_V3_CUSTOMERNAME_FIX', builtAt: '2026-09-06T00:00:00Z', time: new Date().toISOString() });
+});
+
 router.get('/my-bookings', authenticateJWT, async (req: any, res) => {
   try {
     const bookings = await prisma.booking.findMany({
