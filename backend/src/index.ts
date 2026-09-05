@@ -60,6 +60,13 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Flugschule Hirondelle API is running' });
 });
 
+// Temporary deploy-verification marker - remove once the production
+// stale-response investigation is resolved.
+app.get('/api/__deploy_check', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json({ ok: true, commit: 'f72d9bb-or-later', time: new Date().toISOString() });
+});
+
 // Auth routes
 app.use('/api/auth', authRoutes);
 
