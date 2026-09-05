@@ -32,6 +32,10 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import DownloadIcon from '@mui/icons-material/Download';
 import PrintIcon from '@mui/icons-material/Print';
 import BadgeIcon from '@mui/icons-material/Badge';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+
+const salutationChoices = ['Bitte wählen', 'Herr', 'Frau', 'Divers'];
 
 const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem('auth')}` });
 
@@ -311,6 +315,38 @@ const NameTagButton = () => {
     );
 };
 
+// Editor for one participant row (the main booker, or one of the co-travelers
+// in additionalParticipants) - matches the fields the real 3-step booking
+// form (EventBookingModal) actually collects: salutation, a single fullName
+// (not split first/last), birthDate, sizeWeight.
+const ParticipantFields = ({ value, onChange, label }: { value: any; onChange: (v: any) => void; label?: string }) => {
+    const setField = (field: string) => (e: any) => onChange({ ...value, [field]: e.target.value });
+    return (
+        <Box sx={{ mb: 1 }}>
+            {label && <Typography variant="caption" color="textSecondary">{label}</Typography>}
+            <Grid container spacing={1}>
+                <Grid size={{ xs: 4 }}>
+                    <FormControl fullWidth margin="dense" size="small">
+                        <InputLabel>Anrede</InputLabel>
+                        <Select value={value.salutation || 'Bitte wählen'} label="Anrede" onChange={setField('salutation')}>
+                            {salutationChoices.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+                        </Select>
+                    </FormControl>
+                </Grid>
+                <Grid size={{ xs: 8 }}>
+                    <MuiTextField fullWidth margin="dense" size="small" label="Name" value={value.fullName || ''} onChange={setField('fullName')} />
+                </Grid>
+                <Grid size={{ xs: 6 }}>
+                    <MuiTextField fullWidth margin="dense" size="small" label="Geburtsdatum" type="date" InputLabelProps={{ shrink: true }} value={value.birthDate ? String(value.birthDate).slice(0, 10) : ''} onChange={setField('birthDate')} />
+                </Grid>
+                <Grid size={{ xs: 6 }}>
+                    <MuiTextField fullWidth margin="dense" size="small" label="Größe/Gewicht" value={value.sizeWeight || ''} onChange={setField('sizeWeight')} />
+                </Grid>
+            </Grid>
+        </Box>
+    );
+};
+
 const AdminActions = () => {
     const record = useRecordContext();
     const notify = useNotify();
@@ -318,21 +354,36 @@ const AdminActions = () => {
     const [update, { isLoading }] = useUpdate();
     const [status, setStatus] = useState('PENDING');
     const [details, setDetails] = useState<any>({});
+    const [participants, setParticipants] = useState<any[]>([]);
+    const [customFields, setCustomFields] = useState<Array<{ key: string; value: string }>>([]);
     const [adminComment, setAdminComment] = useState('');
 
     useEffect(() => {
         if (record) {
             setStatus(record.status);
-            setDetails(record.customerDetails || {});
+            const d = record.customerDetails || {};
+            setDetails(d);
+            setParticipants(Array.isArray(d.additionalParticipants) ? d.additionalParticipants : []);
+            const cf = d.customFields && typeof d.customFields === 'object' ? d.customFields : {};
+            setCustomFields(Object.entries(cf).map(([key, value]) => ({ key, value: String(value ?? '') })));
             setAdminComment(record.adminComment || '');
         }
     }, [record]);
 
     const handleSave = () => {
         if (!record) return;
+        const customFieldsObj: Record<string, string> = {};
+        for (const { key, value } of customFields) {
+            if (key.trim()) customFieldsObj[key.trim()] = value;
+        }
+        const customerDetails = {
+            ...details,
+            additionalParticipants: participants,
+            customFields: customFieldsObj,
+        };
         update(
             'bookings',
-            { id: record.id, data: { status, customerDetails: details, adminComment }, previousData: record },
+            { id: record.id, data: { status, customerDetails, adminComment }, previousData: record },
             {
                 onSuccess: () => {
                     notify('Buchung erfolgreich aktualisiert!', { type: 'success' });
@@ -346,6 +397,15 @@ const AdminActions = () => {
     const setField = (field: string) => (e: any) => {
         setDetails((prev: any) => ({ ...prev, [field]: e.target.value }));
     };
+
+    const addParticipant = () => setParticipants((prev) => [...prev, { salutation: 'Bitte wählen', fullName: '', birthDate: '', sizeWeight: '' }]);
+    const removeParticipant = (idx: number) => setParticipants((prev) => prev.filter((_, i) => i !== idx));
+    const updateParticipant = (idx: number, v: any) => setParticipants((prev) => prev.map((p, i) => (i === idx ? v : p)));
+
+    const addCustomField = () => setCustomFields((prev) => [...prev, { key: '', value: '' }]);
+    const removeCustomField = (idx: number) => setCustomFields((prev) => prev.filter((_, i) => i !== idx));
+    const updateCustomField = (idx: number, field: 'key' | 'value', v: string) =>
+        setCustomFields((prev) => prev.map((cf, i) => (i === idx ? { ...cf, [field]: v } : cf)));
 
     if (!record) return null;
 
@@ -380,15 +440,51 @@ const AdminActions = () => {
                 <NameTagButton />
 
                 <Divider sx={{ my: 2 }} />
-                <Typography variant="subtitle2" gutterBottom>Kundendetails bearbeiten</Typography>
-                <MuiTextField fullWidth margin="dense" size="small" label="Vorname" value={details.firstName || ''} onChange={setField('firstName')} />
-                <MuiTextField fullWidth margin="dense" size="small" label="Nachname" value={details.lastName || ''} onChange={setField('lastName')} />
+                <Typography variant="subtitle2" gutterBottom>Kundendetails bearbeiten (Hauptbucher)</Typography>
+                <ParticipantFields value={details} onChange={setDetails} />
                 <MuiTextField fullWidth margin="dense" size="small" label="E-Mail" value={details.email || ''} onChange={setField('email')} />
                 <MuiTextField fullWidth margin="dense" size="small" label="Telefon" value={details.phone || ''} onChange={setField('phone')} />
                 <MuiTextField fullWidth margin="dense" size="small" label="Straße" value={details.street || ''} onChange={setField('street')} />
                 <MuiTextField fullWidth margin="dense" size="small" label="PLZ" value={details.zip || ''} onChange={setField('zip')} />
                 <MuiTextField fullWidth margin="dense" size="small" label="Stadt" value={details.city || ''} onChange={setField('city')} />
-                <MuiTextField fullWidth margin="dense" size="small" label="Land" value={details.country || ''} onChange={setField('country')} />
+                <MuiTextField fullWidth margin="dense" size="small" label="Land (optional)" value={details.country || ''} onChange={setField('country')} />
+
+                <Divider sx={{ my: 2 }} />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="subtitle2" gutterBottom>Weitere Teilnehmer</Typography>
+                    <Tooltip title="Teilnehmer hinzufügen">
+                        <IconButton size="small" onClick={addParticipant}><AddIcon fontSize="small" /></IconButton>
+                    </Tooltip>
+                </Box>
+                {participants.length === 0 && (
+                    <Typography variant="body2" color="textSecondary">Keine weiteren Teilnehmer.</Typography>
+                )}
+                {participants.map((p, idx) => (
+                    <Box key={idx} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, border: '1px solid #eee', borderRadius: 1, p: 1, mb: 1 }}>
+                        <Box sx={{ flexGrow: 1 }}>
+                            <ParticipantFields value={p} onChange={(v) => updateParticipant(idx, v)} label={`Teilnehmer ${idx + 2}`} />
+                        </Box>
+                        <IconButton size="small" onClick={() => removeParticipant(idx)}><DeleteIcon fontSize="small" /></IconButton>
+                    </Box>
+                ))}
+
+                <Divider sx={{ my: 2 }} />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="subtitle2" gutterBottom>Zusätzliche Formularfelder</Typography>
+                    <Tooltip title="Feld hinzufügen">
+                        <IconButton size="small" onClick={addCustomField}><AddIcon fontSize="small" /></IconButton>
+                    </Tooltip>
+                </Box>
+                {customFields.length === 0 && (
+                    <Typography variant="body2" color="textSecondary">Keine zusätzlichen Felder.</Typography>
+                )}
+                {customFields.map((cf, idx) => (
+                    <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <MuiTextField margin="dense" size="small" label="Feldname" value={cf.key} onChange={(e) => updateCustomField(idx, 'key', e.target.value)} sx={{ flex: 1 }} />
+                        <MuiTextField margin="dense" size="small" label="Wert" value={cf.value} onChange={(e) => updateCustomField(idx, 'value', e.target.value)} sx={{ flex: 1 }} />
+                        <IconButton size="small" onClick={() => removeCustomField(idx)}><DeleteIcon fontSize="small" /></IconButton>
+                    </Box>
+                ))}
 
                 <Box sx={{ mt: 2 }}>
                     <Button
@@ -498,13 +594,47 @@ const CustomBookingDetails = () => {
 
                         {record.customerDetails && (
                             <TableRow>
-                                <TableCell component="th" scope="row" style={{ fontWeight: 'bold' }}>Kundendetails (Rechnungsadresse)</TableCell>
+                                <TableCell component="th" scope="row" style={{ fontWeight: 'bold' }}>Hauptbucher</TableCell>
                                 <TableCell>
-                                    {record.customerDetails.firstName} {record.customerDetails.lastName}<br />
+                                    {record.customerDetails.salutation && record.customerDetails.salutation !== 'Bitte wählen' ? `${record.customerDetails.salutation} ` : ''}
+                                    {record.customerDetails.fullName || `${record.customerDetails.firstName || ''} ${record.customerDetails.lastName || ''}`.trim() || record.customerDetails.name}<br />
+                                    {record.customerDetails.birthDate && <>Geburtsdatum: {new Date(record.customerDetails.birthDate).toLocaleDateString('de-DE')}<br /></>}
+                                    {record.customerDetails.sizeWeight && <>Größe/Gewicht: {record.customerDetails.sizeWeight}<br /></>}
                                     {record.customerDetails.street}<br />
                                     {record.customerDetails.zip} {record.customerDetails.city}<br />
-                                    {record.customerDetails.country}<br />
+                                    {record.customerDetails.country && <>{record.customerDetails.country}<br /></>}
+                                    E-Mail: {record.customerDetails.email}<br />
                                     Tel: {record.customerDetails.phone}
+                                </TableCell>
+                            </TableRow>
+                        )}
+
+                        {Array.isArray(record.customerDetails?.additionalParticipants) && record.customerDetails.additionalParticipants.length > 0 && (
+                            <TableRow>
+                                <TableCell component="th" scope="row" style={{ fontWeight: 'bold' }}>Weitere Teilnehmer</TableCell>
+                                <TableCell>
+                                    <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                                        {record.customerDetails.additionalParticipants.map((p: any, idx: number) => (
+                                            <li key={idx}>
+                                                {p.salutation && p.salutation !== 'Bitte wählen' ? `${p.salutation} ` : ''}{p.fullName}
+                                                {p.birthDate ? ` — geb. ${new Date(p.birthDate).toLocaleDateString('de-DE')}` : ''}
+                                                {p.sizeWeight ? ` — ${p.sizeWeight}` : ''}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </TableCell>
+                            </TableRow>
+                        )}
+
+                        {record.customerDetails?.customFields && typeof record.customerDetails.customFields === 'object' && Object.keys(record.customerDetails.customFields).length > 0 && (
+                            <TableRow>
+                                <TableCell component="th" scope="row" style={{ fontWeight: 'bold' }}>Zusätzliche Formularfelder</TableCell>
+                                <TableCell>
+                                    <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                                        {Object.entries(record.customerDetails.customFields).map(([key, value]: [string, any]) => (
+                                            <li key={key}><strong>{key}:</strong> {String(value)}</li>
+                                        ))}
+                                    </ul>
                                 </TableCell>
                             </TableRow>
                         )}

@@ -846,12 +846,21 @@ router.put('/:id/my-details', authenticateJWT, async (req: any, res) => {
     if (booking.userId !== req.user.id) return res.status(403).json({ message: 'Nicht erlaubt' });
     if (booking.status === 'CANCELLED') return res.status(400).json({ message: 'Stornierte Buchungen können nicht bearbeitet werden' });
 
-    const allowedFields = ['firstName', 'lastName', 'email', 'phone', 'street', 'zip', 'city', 'country'];
+    // Matches the real shape the 3-step booking form (EventBookingModal)
+    // actually saves - a single fullName, not firstName/lastName - plus the
+    // co-participant list and any per-event custom form fields.
+    const allowedFields = ['salutation', 'fullName', 'birthDate', 'sizeWeight', 'email', 'phone', 'street', 'zip', 'city', 'country'];
     const incoming = req.body || {};
     const currentDetails = (booking.customerDetails as any) || {};
     const newDetails = { ...currentDetails };
     for (const field of allowedFields) {
       if (incoming[field] !== undefined) newDetails[field] = incoming[field];
+    }
+    if (Array.isArray(incoming.additionalParticipants)) {
+      newDetails.additionalParticipants = incoming.additionalParticipants;
+    }
+    if (incoming.customFields && typeof incoming.customFields === 'object') {
+      newDetails.customFields = { ...(currentDetails.customFields || {}), ...incoming.customFields };
     }
 
     const updated = await prisma.booking.update({
