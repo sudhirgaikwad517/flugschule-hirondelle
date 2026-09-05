@@ -4,6 +4,31 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '../utils/prisma';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { JWT_SECRET } from '../utils/config';
+import { createOtp, verifyAndConsumeOtp } from '../utils/otp';
+import { getNewsletterTransporter } from '../utils/newsletterTransporter';
+
+async function sendOtpEmail(email: string, code: string, purpose: 'LOGIN' | 'PASSWORD_RESET') {
+  const { transporter, config } = await getNewsletterTransporter();
+  const fromName = config?.fromName || 'Flugschule Hirondelle';
+  const fromEmail = config?.fromEmail || 'no-reply@fs-hirondelle.de';
+  const subject = purpose === 'LOGIN' ? 'Ihr Anmeldecode' : 'Ihr Code zum Zurücksetzen des Passworts';
+  const intro = purpose === 'LOGIN'
+    ? 'mit folgendem Code können Sie sich anmelden:'
+    : 'mit folgendem Code können Sie Ihr Passwort zurücksetzen:';
+
+  await transporter.sendMail({
+    from: `"${fromName}" <${fromEmail}>`,
+    to: email,
+    subject,
+    html: `
+      <p>Hallo,</p>
+      <p>${intro}</p>
+      <p style="font-size: 28px; font-weight: bold; letter-spacing: 4px;">${code}</p>
+      <p>Dieser Code ist 10 Minuten gültig. Falls Sie diese Anfrage nicht gestellt haben, können Sie diese E-Mail ignorieren.</p>
+      <p>Mit freundlichen Grüßen,<br/>Ihr Team der Flugschule Hirondelle</p>
+    `,
+  });
+}
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -140,6 +165,105 @@ export const changeMyPassword = async (req: AuthRequest, res: Response) => {
     const passwordHash = await bcrypt.hash(newPassword, 10);
     await prisma.user.update({ where: { id: user.id }, data: { password: passwordHash } });
     res.json({ message: 'Passwort erfolgreich geändert' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// --- Email OTP: passwordless login ---
+
+export const requestLoginOtp = async (req: Request, res: Response) => {
+  const { email } = req.body;
+  if (!email) {
+    res.status(400).json({ message: 'E-Mail-Adresse ist erforderlich' });
+    return;
+  }
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    // Same response whether or not the account exists, to avoid leaking
+    // which emails are registered.
+    if (user && !user.blocked) {
+      const code = await createOtp(email, 'LOGIN');
+      await sendOtpEmail(email, code, 'LOGIN');
+    }
+    res.json({ message: 'Falls ein Konto mit dieser E-Mail existiert, wurde ein Code gesendet.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const loginWithOtp = async (req: Request, res: Response) => {
+  const { email, code } = req.body;
+  if (!email || !code) {
+    res.status(400).json({ message: 'E-Mail und Code sind erforderlich' });
+    return;
+  }
+  try {
+    const valid = await verifyAndConsumeOtp(email, code, 'LOGIN');
+    if (!valid) {
+      res.status(401).json({ message: 'Der Code ist ungültig oder abgelaufen.' });
+      return;
+    }
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || user.blocked) {
+      res.status(401).json({ message: 'Anmeldung nicht möglich.' });
+      return;
+    }
+    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
+    res.json({
+      message: 'Login successful',
+      token,
+      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// --- Email OTP: forgot password ---
+
+export const requestPasswordResetOtp = async (req: Request, res: Response) => {
+  const { email } = req.body;
+  if (!email) {
+    res.status(400).json({ message: 'E-Mail-Adresse ist erforderlich' });
+    return;
+  }
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (user) {
+      const code = await createOtp(email, 'PASSWORD_RESET');
+      await sendOtpEmail(email, code, 'PASSWORD_RESET');
+    }
+    res.json({ message: 'Falls ein Konto mit dieser E-Mail existiert, wurde ein Code gesendet.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const resetPasswordWithOtp = async (req: Request, res: Response) => {
+  const { email, code, newPassword } = req.body;
+  if (!email || !code || !newPassword) {
+    res.status(400).json({ message: 'E-Mail, Code und neues Passwort sind erforderlich' });
+    return;
+  }
+  try {
+    const valid = await verifyAndConsumeOtp(email, code, 'PASSWORD_RESET');
+    if (!valid) {
+      res.status(401).json({ message: 'Der Code ist ungültig oder abgelaufen.' });
+      return;
+    }
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      res.status(404).json({ message: 'Benutzer nicht gefunden' });
+      return;
+    }
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({ where: { id: user.id }, data: { password: passwordHash } });
+    res.json({ message: 'Passwort erfolgreich zurückgesetzt.' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });

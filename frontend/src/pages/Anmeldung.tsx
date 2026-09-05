@@ -5,7 +5,6 @@ import { KeyRound } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export const Anmeldung = () => {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -22,7 +21,118 @@ export const Anmeldung = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
+
+  // 'login' | 'register' | 'forgot' | 'otp-login'
+  const [authView, setAuthView] = useState<'login' | 'register' | 'forgot' | 'otp-login'>('login');
+  const [otpEmail, setOtpEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [otpNewPassword, setOtpNewPassword] = useState('');
+  const [otpConfirmPassword, setOtpConfirmPassword] = useState('');
+  const [otpCodeSent, setOtpCodeSent] = useState(false);
+  const [otpMessage, setOtpMessage] = useState('');
+  const [otpError, setOtpError] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+
+  const isLogin = authView !== 'register';
+
+  const resetOtpState = () => {
+    setOtpEmail('');
+    setOtpCode('');
+    setOtpNewPassword('');
+    setOtpConfirmPassword('');
+    setOtpCodeSent(false);
+    setOtpMessage('');
+    setOtpError('');
+  };
+
+  const switchAuthView = (view: 'login' | 'register' | 'forgot' | 'otp-login') => {
+    resetOtpState();
+    setErrorMsg('');
+    setAuthView(view);
+  };
+
+  const handleRequestOtp = async () => {
+    if (!otpEmail) {
+      setOtpError('Bitte geben Sie Ihre E-Mail-Adresse ein.');
+      return;
+    }
+    setOtpError('');
+    setOtpLoading(true);
+    try {
+      const endpoint = authView === 'forgot' ? '/api/auth/password-reset/request' : '/api/auth/login-otp/request';
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: otpEmail }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Fehler beim Senden des Codes.');
+      setOtpMessage(data.message);
+      setOtpCodeSent(true);
+    } catch (err: any) {
+      setOtpError(err.message || 'Ein Fehler ist aufgetreten.');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleVerifyOtpLogin = async () => {
+    if (!otpCode) {
+      setOtpError('Bitte geben Sie den Code ein.');
+      return;
+    }
+    setOtpError('');
+    setOtpLoading(true);
+    try {
+      const res = await fetch('/api/auth/login-otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: otpEmail, code: otpCode }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Anmeldung fehlgeschlagen.');
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      window.dispatchEvent(new Event('auth-change'));
+      navigate(redirectUrl);
+    } catch (err: any) {
+      setOtpError(err.message || 'Ein Fehler ist aufgetreten.');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleConfirmPasswordReset = async () => {
+    if (!otpCode || !otpNewPassword || !otpConfirmPassword) {
+      setOtpError('Bitte füllen Sie alle Felder aus.');
+      return;
+    }
+    if (otpNewPassword !== otpConfirmPassword) {
+      setOtpError('Die Passwörter stimmen nicht überein.');
+      return;
+    }
+    setOtpError('');
+    setOtpLoading(true);
+    try {
+      const res = await fetch('/api/auth/password-reset/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: otpEmail, code: otpCode, newPassword: otpNewPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Zurücksetzen fehlgeschlagen.');
+      setOtpMessage('Passwort erfolgreich zurückgesetzt. Sie können sich jetzt anmelden.');
+      setOtpCode('');
+      setOtpNewPassword('');
+      setOtpConfirmPassword('');
+      setOtpCodeSent(false);
+    } catch (err: any) {
+      setOtpError(err.message || 'Ein Fehler ist aufgetreten.');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectUrl = searchParams.get('redirect') || '/';
@@ -89,13 +199,15 @@ export const Anmeldung = () => {
         {/* Main Title */}
         <div className="text-center mb-12 mt-8 w-full">
           <h1 className="font-luxury text-4xl md:text-5xl lg:text-6xl text-luxury-dark mb-6 tracking-wide uppercase">
-            {isLogin ? 'LOGIN' : 'REGISTRIEREN'}
+            {authView === 'forgot' ? 'PASSWORT VERGESSEN' : authView === 'otp-login' ? 'ANMELDUNG PER CODE' : (isLogin ? 'LOGIN' : 'REGISTRIEREN')}
           </h1>
           <div className="w-24 h-px bg-luxury-gold mx-auto"></div>
         </div>
 
-        <div className={`w-full flex flex-col gap-8 ${isLogin ? 'max-w-2xl' : ''}`}>
-          
+        <div className={`w-full flex flex-col gap-8 ${(authView === 'login' || authView === 'forgot' || authView === 'otp-login') ? 'max-w-2xl' : ''}`}>
+
+          {(authView === 'login' || authView === 'register') && (
+          <>
           {/* Login Form Box */}
           <div className="bg-white border border-gray-100 p-8 md:p-12 rounded-sm shadow-xl">
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -269,24 +381,124 @@ export const Anmeldung = () => {
 
           {/* Additional Links Box */}
           <div className="bg-white border border-gray-100 p-8 rounded-sm shadow-sm flex flex-col gap-4 items-center">
-            <a href="#" className="text-[13px] text-gray-500 font-light hover:text-luxury-gold transition-colors text-center">
+            <button
+              type="button"
+              onClick={() => switchAuthView('forgot')}
+              className="text-[13px] text-gray-500 font-light hover:text-luxury-gold transition-colors text-center"
+            >
               Passwort vergessen?
-            </a>
+            </button>
             <div className="w-12 h-px bg-gray-200"></div>
-            <a href="#" className="text-[13px] text-gray-500 font-light hover:text-luxury-gold transition-colors text-center">
-              E-Mail Adresse vergessen?
-            </a>
+            <button
+              type="button"
+              onClick={() => switchAuthView('otp-login')}
+              className="text-[13px] text-gray-500 font-light hover:text-luxury-gold transition-colors text-center"
+            >
+              Anmeldung per E-Mail-Code
+            </button>
             <div className="w-12 h-px bg-gray-200"></div>
-            <button 
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setErrorMsg('');
-              }}
+            <button
+              type="button"
+              onClick={() => switchAuthView(isLogin ? 'register' : 'login')}
               className="text-[13px] text-luxury-gold font-semibold hover:text-luxury-dark transition-colors text-center uppercase tracking-widest"
             >
               {isLogin ? 'Noch kein Benutzerkonto erstellt? Registrieren' : 'Bereits registriert? Login'}
             </button>
           </div>
+          </>
+          )}
+
+          {(authView === 'forgot' || authView === 'otp-login') && (
+            <div className="bg-white border border-gray-100 p-8 md:p-12 rounded-sm shadow-xl flex flex-col gap-6">
+              <p className="text-[15px] text-gray-600 font-light">
+                {authView === 'forgot'
+                  ? 'Geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen Code, mit dem Sie ein neues Passwort festlegen können.'
+                  : 'Geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen Code, mit dem Sie sich ohne Passwort anmelden können.'}
+              </p>
+
+              {otpError && (
+                <div className="bg-red-50 text-red-500 p-4 rounded-sm text-sm border border-red-200">{otpError}</div>
+              )}
+              {otpMessage && (
+                <div className="bg-green-50 text-green-700 p-4 rounded-sm text-sm border border-green-200">{otpMessage}</div>
+              )}
+
+              <div className="flex flex-col gap-2">
+                <label className="text-[13px] text-gray-500 uppercase tracking-widest font-semibold">E-Mail Adresse *</label>
+                <input
+                  type="email"
+                  value={otpEmail}
+                  disabled={otpCodeSent}
+                  onChange={(e) => setOtpEmail(e.target.value)}
+                  className="w-full border-b bg-transparent py-3 text-[15px] font-light text-gray-800 outline-none transition-colors border-gray-300 focus:border-luxury-gold disabled:opacity-60"
+                />
+              </div>
+
+              {!otpCodeSent ? (
+                <button
+                  type="button"
+                  onClick={handleRequestOtp}
+                  disabled={otpLoading}
+                  className="w-full sm:w-auto px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center disabled:opacity-50"
+                >
+                  {otpLoading ? 'SENDE...' : 'CODE SENDEN'}
+                </button>
+              ) : (
+                <>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[13px] text-gray-500 uppercase tracking-widest font-semibold">Code aus der E-Mail *</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value)}
+                      className="w-full border-b bg-transparent py-3 text-[15px] font-light text-gray-800 outline-none transition-colors border-gray-300 focus:border-luxury-gold tracking-[0.3em]"
+                    />
+                  </div>
+
+                  {authView === 'forgot' && (
+                    <>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[13px] text-gray-500 uppercase tracking-widest font-semibold">Neues Passwort *</label>
+                        <input
+                          type="password"
+                          value={otpNewPassword}
+                          onChange={(e) => setOtpNewPassword(e.target.value)}
+                          className="w-full border-b bg-transparent py-3 text-[15px] font-light text-gray-800 outline-none transition-colors border-gray-300 focus:border-luxury-gold"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[13px] text-gray-500 uppercase tracking-widest font-semibold">Neues Passwort bestätigen *</label>
+                        <input
+                          type="password"
+                          value={otpConfirmPassword}
+                          onChange={(e) => setOtpConfirmPassword(e.target.value)}
+                          className="w-full border-b bg-transparent py-3 text-[15px] font-light text-gray-800 outline-none transition-colors border-gray-300 focus:border-luxury-gold"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={authView === 'forgot' ? handleConfirmPasswordReset : handleVerifyOtpLogin}
+                    disabled={otpLoading}
+                    className="w-full sm:w-auto px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm text-center disabled:opacity-50"
+                  >
+                    {otpLoading ? 'BITTE WARTEN...' : (authView === 'forgot' ? 'PASSWORT ZURÜCKSETZEN' : 'ANMELDEN')}
+                  </button>
+                </>
+              )}
+
+              <button
+                type="button"
+                onClick={() => switchAuthView('login')}
+                className="text-[13px] text-luxury-gold font-semibold hover:text-luxury-dark transition-colors text-center uppercase tracking-widest mt-2"
+              >
+                Zurück zum Login
+              </button>
+            </div>
+          )}
 
         </div>
       </div>

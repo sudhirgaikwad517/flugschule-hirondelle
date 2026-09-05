@@ -548,6 +548,18 @@ model LegalPage {
 
 // PayPal credentials - clientSecret is stored encrypted at rest (see
 // utils/crypto.ts) and is never sent back to the browser in plaintext.
+model OtpCode {
+  id        String    @id @default(uuid())
+  email     String
+  codeHash  String
+  purpose   String // 'LOGIN' or 'PASSWORD_RESET'
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([email, purpose])
+}
+
 model PaymentConfig {
   id                 String   @id @default("default")
   environment        String   @default("sandbox") // "sandbox" or "live"
