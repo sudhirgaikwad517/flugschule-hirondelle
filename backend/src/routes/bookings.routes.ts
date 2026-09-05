@@ -232,6 +232,7 @@ function serializeBookingForList(b: any) {
 }
 
 router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
+  res.set('Cache-Control', 'no-store');
   try {
     const { _sort, _order, _start, _end } = req.query;
 
