@@ -47,6 +47,14 @@ const PORT = process.env.PORT || 5555;
 
 app.set('query parser', raQueryParser);
 
+// Temporary diagnostic - logs every incoming request so we can confirm
+// whether this exact process instance is the one actually handling
+// production traffic. Remove once the stale-response investigation is done.
+app.use((req, res, next) => {
+  console.log(`[REQ] ${req.method} ${req.path} @ ${new Date().toISOString()}`);
+  next();
+});
+
 app.use(cors({
   exposedHeaders: ['Content-Range']
 }));
