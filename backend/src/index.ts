@@ -65,7 +65,7 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')
 
 // Basic health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Flugschule Hirondelle API is running' });
+  res.json({ status: 'ok', message: 'Flugschule Hirondelle API is running', pid: process.pid });
 });
 
 // Temporary deploy-verification marker - remove once the production
