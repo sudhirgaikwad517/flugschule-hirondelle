@@ -105,7 +105,10 @@ app.use('/api/newsletterlists', newsletterListsRoutes);
 if (process.env.NODE_ENV === 'production') {
   const frontendDist = path.join(process.cwd(), '..', 'frontend', 'dist');
   app.use(express.static(frontendDist));
-  app.get('*', (req, res) => {
+  // Express 5's router (path-to-regexp v6+) no longer accepts a bare '*'
+  // wildcard route pattern - a path-less middleware matches every remaining
+  // request just as well, without touching that parser at all.
+  app.use((req, res) => {
     res.sendFile(path.join(frontendDist, 'index.html'));
   });
 }
