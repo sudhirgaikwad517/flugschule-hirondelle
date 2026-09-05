@@ -72,10 +72,10 @@ const BookingFilter = (props: any) => (
     <Filter {...props}>
         <TextInput label="Suche (Name, E-Mail, id:123)" source="q" alwaysOn />
         <SelectInput label="Status" source="status" choices={statusChoices} alwaysOn />
-        <ReferenceInput label="Event" source="eventId" reference="events" perPage={500} sort={{ field: 'startDate', order: 'DESC' }}>
+        <ReferenceInput label="Event" source="eventId" reference="events" perPage={500} sort={{ field: 'startDate', order: 'DESC' }} alwaysOn>
             <SelectInput optionText="title" emptyText="Alle Events" />
         </ReferenceInput>
-        <SelectInput label="Zeitraum" source="time" choices={timeChoices} />
+        <SelectInput label="Zeitraum" source="time" choices={timeChoices} alwaysOn />
     </Filter>
 );
 
@@ -119,15 +119,21 @@ const ComposeDialog = ({ open, title, onClose, onSend, defaultSubject }: {
     );
 };
 
-// --- Bulk action toolbar (mirrors the old Matukio admin toolbar) ---
-const BookingBulkActions = () => {
-    const { selectedIds, filterValues, data } = useListContext();
+// --- Always-visible admin toolbar (mirrors the old Matukio toolbar, which
+// shows every button permanently rather than only after a row is selected -
+// buttons that need selected rows just warn if none are checked yet) ---
+const BookingListActions = () => {
+    const { selectedIds, filterValues } = useListContext();
     const notify = useNotify();
     const refresh = useRefresh();
     const [rejectOpen, setRejectOpen] = useState(false);
     const [contactOpen, setContactOpen] = useState(false);
 
     const run = async (path: string, body: any, successMsg?: string) => {
+        if (!selectedIds || selectedIds.length === 0) {
+            notify('Bitte wählen Sie zuerst mindestens eine Buchung aus.', { type: 'warning' });
+            return;
+        }
         try {
             const result = await postBulk(path, body);
             notify(successMsg || result.message || 'Erledigt', { type: 'success' });
@@ -137,18 +143,44 @@ const BookingBulkActions = () => {
         }
     };
 
+    const openCompose = (setter: (v: boolean) => void) => {
+        if (!selectedIds || selectedIds.length === 0) {
+            notify('Bitte wählen Sie zuerst mindestens eine Buchung aus.', { type: 'warning' });
+            return;
+        }
+        setter(true);
+    };
+
     const isTrashView = filterValues?.status === 'deleted';
 
+    const openExport = (path: string) => {
+        const qs = new URLSearchParams();
+        if (filterValues?.eventId) qs.set('eventId', filterValues.eventId);
+        if (filterValues?.status) qs.set('status', filterValues.status);
+        if (filterValues?.q) qs.set('q', filterValues.q);
+        if (filterValues?.time) qs.set('time', filterValues.time);
+        fetch(`/api/bookings${path}?${qs.toString()}`, { headers: authHeaders() })
+            .then(async (res) => {
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                window.open(url, '_blank');
+            });
+    };
+
     return (
-        <>
+        <TopToolbar sx={{ flexWrap: 'wrap', gap: 0.5 }}>
             <RaButton label="Aktivieren" onClick={() => run('/bulk/activate', { ids: selectedIds })}><CheckCircleIcon /></RaButton>
             <RaButton label="Ausstehend" onClick={() => run('/bulk/pending', { ids: selectedIds })}><CancelIcon /></RaButton>
-            <RaButton label="Ablehnen" onClick={() => setRejectOpen(true)} />
+            <RaButton label="Ablehnen" onClick={() => openCompose(setRejectOpen)} />
             {!isTrashView && (
                 <RaButton label="Papierkorb" onClick={() => run('/bulk/wastebasket', { ids: selectedIds })} />
             )}
             {isTrashView && (
                 <RaButton label="Papierkorb leeren" onClick={() => {
+                    if (!selectedIds || selectedIds.length === 0) {
+                        notify('Bitte wählen Sie zuerst mindestens eine Buchung aus.', { type: 'warning' });
+                        return;
+                    }
                     if (window.confirm('Diese Buchungen werden endgültig gelöscht. Fortfahren?')) {
                         run('/bulk/empty-trash', { ids: selectedIds });
                     }
@@ -157,7 +189,16 @@ const BookingBulkActions = () => {
             <RaButton label="Zertifikat ausstellen" onClick={() => run('/bulk/certificate', { ids: selectedIds, issue: true })} />
             <RaButton label="Zertifikat widerrufen" onClick={() => run('/bulk/certificate', { ids: selectedIds, issue: false })} />
             <RaButton label="Eingecheckt" onClick={() => run('/bulk/checkin', { ids: selectedIds })} />
-            <RaButton label="Kontaktieren" onClick={() => setContactOpen(true)} />
+            <RaButton label="Kontaktieren" onClick={() => openCompose(setContactOpen)} />
+            <Tooltip title="Teilnehmerliste drucken">
+                <IconButton onClick={() => openExport('/export/participant-list')}><PrintIcon /></IconButton>
+            </Tooltip>
+            <Tooltip title="Unterschriftenliste drucken">
+                <IconButton onClick={() => openExport('/export/signature-list')}><PrintIcon fontSize="small" /></IconButton>
+            </Tooltip>
+            <Tooltip title="Als CSV exportieren">
+                <IconButton onClick={() => openExport('/export/csv')}><DownloadIcon /></IconButton>
+            </Tooltip>
 
             <ComposeDialog
                 open={rejectOpen}
@@ -173,45 +214,6 @@ const BookingBulkActions = () => {
                 onClose={() => setContactOpen(false)}
                 onSend={(subject, message) => run('/bulk/contact', { ids: selectedIds, subject, message })}
             />
-        </>
-    );
-};
-
-// --- List-level export actions (operate on the current filter, matching
-// Matukio's CSV/participant-list/signature-list, which work off the filtered
-// view rather than a row selection) ---
-const BookingListActions = () => {
-    const { filterValues } = useListContext();
-
-    const openExport = (path: string) => {
-        const qs = new URLSearchParams();
-        if (filterValues?.eventId) qs.set('eventId', filterValues.eventId);
-        if (filterValues?.status) qs.set('status', filterValues.status);
-        if (filterValues?.q) qs.set('q', filterValues.q);
-        if (filterValues?.time) qs.set('time', filterValues.time);
-        const token = localStorage.getItem('auth');
-        // These are simple GETs behind auth middleware - open with the token
-        // appended isn't supported server-side, so we fetch and open a blob
-        // instead of navigating directly.
-        fetch(`/api/bookings${path}?${qs.toString()}`, { headers: authHeaders() })
-            .then(async (res) => {
-                const blob = await res.blob();
-                const url = URL.createObjectURL(blob);
-                window.open(url, '_blank');
-            });
-    };
-
-    return (
-        <TopToolbar>
-            <Tooltip title="Teilnehmerliste drucken">
-                <IconButton onClick={() => openExport('/export/participant-list')}><PrintIcon /></IconButton>
-            </Tooltip>
-            <Tooltip title="Unterschriftenliste drucken">
-                <IconButton onClick={() => openExport('/export/signature-list')}><PrintIcon fontSize="small" /></IconButton>
-            </Tooltip>
-            <Tooltip title="Als CSV exportieren">
-                <IconButton onClick={() => openExport('/export/csv')}><DownloadIcon /></IconButton>
-            </Tooltip>
         </TopToolbar>
     );
 };
@@ -266,7 +268,7 @@ const StatusChip = () => {
 
 export const BookingList = () => (
     <List filters={<BookingFilter />} actions={<BookingListActions />} filterDefaultValues={{ status: 'activeandpending' }} sort={{ field: 'createdAt', order: 'DESC' }}>
-        <Datagrid rowClick="show" bulkActionButtons={<BookingBulkActions />} sx={{ overflowX: 'auto' }}>
+        <Datagrid rowClick="show" bulkActionButtons={false} sx={{ overflowX: 'auto' }}>
             <TextField source="shortId" label="ID" />
             <TextField source="customerName" label="Name" />
             <TextField source="customerEmail" label="E-Mail" />
