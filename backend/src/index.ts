@@ -139,8 +139,11 @@ startCronJobs();
 startNewsletterCron();
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+const httpServer = app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}, pid ${process.pid}`);
+});
+httpServer.on('error', (err) => {
+  console.error('LISTEN ERROR:', err);
 });
 
 // Trigger restart 4
