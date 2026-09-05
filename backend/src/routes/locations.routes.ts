@@ -40,10 +40,12 @@ router.get('/public/:id', async (req, res) => {
 
 router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    const { _sort, _order, _start, _end, q } = req.query;
+    const { _sort, _order, _start, _end, q, ids } = req.query;
 
     let whereClause: any = {};
-    if (q) {
+    if (ids) {
+      whereClause.id = { in: String(ids).split(',') };
+    } else if (q) {
       whereClause.OR = [
         { title: { contains: String(q) } },
         { name: { contains: String(q) } }

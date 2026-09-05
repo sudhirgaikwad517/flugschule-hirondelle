@@ -132,6 +132,10 @@ model Booking {
   remarks         String?       @db.Text
   rating          Int?
   ratingComment   String?       @db.Text
+  paid            Boolean       @default(false)
+  certificated    Boolean       @default(false)
+  checkedIn       Boolean       @default(false)
+  adminComment    String?       @db.Text // internal admin-only note, distinct from customer-facing `remarks`
   event           Event         @relation(fields: [eventId], references: [id])
   user            User?         @relation(fields: [userId], references: [id])
   items           BookingItem[]

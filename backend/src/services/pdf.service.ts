@@ -2,6 +2,7 @@ import PDFDocument from 'pdfkit';
 import { prisma } from '../utils/prisma';
 import fs from 'fs';
 import path from 'path';
+import { resolveBookingCustomer } from '../utils/bookingCustomer';
 
 const uploadsDir = path.join(__dirname, '../../uploads');
 
@@ -147,6 +148,40 @@ export async function generateTicketPDF(bookingId: string): Promise<Buffer> {
     // Barcode Placeholder
     doc.rect(400, 100, 100, 100).stroke();
     doc.fontSize(8).text('Scan Me', 430, 145);
+
+    doc.end();
+  });
+}
+
+// Matukio's "Name tag (PDF)" - one small badge per booking, printed/cut out
+// for the participant to wear at the event.
+export async function generateNameTagPDF(bookingId: string): Promise<Buffer> {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { event: true, user: true },
+  });
+
+  if (!booking) throw new Error('Booking not found');
+  const { name } = resolveBookingCustomer(booking);
+
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 0, size: [283, 170] }); // ~ 100mm x 60mm badge
+    const buffers: Buffer[] = [];
+    doc.on('data', buffers.push.bind(buffers));
+    doc.on('end', () => resolve(Buffer.concat(buffers)));
+    doc.on('error', reject);
+
+    doc.rect(0, 0, doc.page.width, 40).fill('#ab8942');
+    doc.fillColor('white').fontSize(11).font('Helvetica-Bold').text('Flugschule Hirondelle', 15, 14);
+
+    doc.fillColor('black');
+    doc.fontSize(20).font('Helvetica-Bold').text(name, 15, 60, { width: 253, align: 'center' });
+
+    doc.fontSize(11).font('Helvetica').text(booking.event.title, 15, 100, { width: 253, align: 'center' });
+    doc.fontSize(9).fillColor('#666').text(
+      new Date(booking.event.startDate).toLocaleDateString('de-DE'),
+      15, 125, { width: 253, align: 'center' }
+    );
 
     doc.end();
   });

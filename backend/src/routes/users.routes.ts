@@ -13,10 +13,12 @@ const SAFE_SELECT = {
 
 router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    const { _sort, _order, _start, _end, q, role, blocked } = req.query;
+    const { _sort, _order, _start, _end, q, role, blocked, ids } = req.query;
 
     const whereClause: any = {};
-    if (q) {
+    if (ids) {
+      whereClause.id = { in: String(ids).split(',') };
+    } else if (q) {
       const qStr = String(q);
       whereClause.OR = [
         { name: { contains: qStr } },

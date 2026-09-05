@@ -40,9 +40,12 @@ import serviceOrdersRoutes from './routes/serviceorders.routes';
 import trackRoutes from './routes/track.routes';
 import path from 'path';
 import 'dotenv/config'; // loads .env variables
+import { raQueryParser } from './middlewares/raCompat.middleware';
 
 const app = express();
 const PORT = process.env.PORT || 5555;
+
+app.set('query parser', raQueryParser);
 
 app.use(cors({
   exposedHeaders: ['Content-Range']

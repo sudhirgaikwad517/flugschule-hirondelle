@@ -26,14 +26,15 @@ router.get('/weblinks/public', async (req, res) => {
 // Admin routes for WebLinkCategories
 router.get('/weblinkcategories', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    const { _sort, _order, _start, _end } = req.query;
+    const { _sort, _order, _start, _end, ids } = req.query;
+    const whereClause: any = ids ? { id: { in: String(ids).split(',') } } : {};
     const skip = _start ? Number(_start) : 0;
     const take = _end ? Number(_end) - skip : 100;
     const orderBy: any = _sort ? { [_sort as string]: _order ? (_order as string).toLowerCase() : 'asc' } : { order: 'asc' };
 
     const [categories, total] = await Promise.all([
-      prisma.webLinkCategory.findMany({ skip, take, orderBy }),
-      prisma.webLinkCategory.count()
+      prisma.webLinkCategory.findMany({ where: whereClause, skip, take, orderBy }),
+      prisma.webLinkCategory.count({ where: whereClause })
     ]);
     res.set('Content-Range', `weblinkcategories ${skip}-${skip + categories.length}/${total}`);
     res.json(categories);

@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 import { prisma } from '../utils/prisma';
 import { generateInvoicePDF, generateTicketPDF } from './pdf.service';
 import { getNewsletterTransporter } from '../utils/newsletterTransporter';
+import { resolveBookingCustomer } from '../utils/bookingCustomer';
 
 export async function sendBookingConfirmationEmail(bookingId: string) {
   try {
@@ -46,10 +47,8 @@ export async function sendBookingConfirmationEmail(bookingId: string) {
     }
 
     // Prepare placeholders
-    const customer = booking.customerDetails as any;
-    const customerName = customer ? `${customer.firstName} ${customer.lastName}` : (booking.user ? booking.user.name : 'Kunde');
-    const customerEmail = customer ? customer.email : (booking.user ? booking.user.email : null);
-    
+    const { name: customerName, email: customerEmail } = resolveBookingCustomer(booking);
+
     if (!customerEmail) {
       console.error('Customer email missing');
       return;
@@ -145,9 +144,7 @@ export async function sendCancellationEmail(bookingId: string, templateKey: 'use
           };
     }
 
-    const customer = booking.customerDetails as any;
-    const customerName = customer ? `${customer.firstName} ${customer.lastName}` : (booking.user ? booking.user.name : 'Kunde');
-    const customerEmail = customer ? customer.email : (booking.user ? booking.user.email : null);
+    const { name: customerName, email: customerEmail } = resolveBookingCustomer(booking);
 
     if (!customerEmail) {
       console.error('Customer email missing for cancellation mailer');

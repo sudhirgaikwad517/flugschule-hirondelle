@@ -7,10 +7,12 @@ const router = Router();
 // GET all categories
 router.get('/', async (req, res) => {
   try {
-    const { _sort, _order, _start, _end, q, status, accessLevel, tags, parentId } = req.query;
+    const { _sort, _order, _start, _end, q, status, accessLevel, tags, parentId, ids } = req.query;
 
     let whereClause: any = {};
-    if (q) {
+    if (ids) {
+      whereClause.id = { in: String(ids).split(',') };
+    } else if (q) {
       whereClause.title = { contains: String(q) };
     }
     if (status) whereClause.status = status;

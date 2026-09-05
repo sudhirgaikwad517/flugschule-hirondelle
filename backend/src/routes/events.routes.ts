@@ -22,10 +22,12 @@ function buildTicketsCreate(tickets: any[] | undefined) {
 // Allow public access to GET events for the frontend calendar
 router.get('/', async (req, res) => {
   try {
-    const { _sort, _order, _start, _end, q, categoryId, locationId, organizerId, published, cancelled } = req.query;
+    const { _sort, _order, _start, _end, q, categoryId, locationId, organizerId, published, cancelled, ids } = req.query;
 
     let whereClause: any = {};
-    if (q) {
+    if (ids) {
+      whereClause.id = { in: String(ids).split(',') };
+    } else if (q) {
       const qStr = String(q);
       const idMatch = qStr.match(/^id:(.+)$/i);
       if (idMatch) {
