@@ -7,10 +7,11 @@ import { JWT_SECRET } from '../utils/config';
 import jwt from 'jsonwebtoken';
 import { resolveBookingCustomer } from '../utils/bookingCustomer';
 import { getNewsletterTransporter } from '../utils/newsletterTransporter';
+import { buildBookingPlaceholders, renderMatTokens, parseCsvTemplateTokens, friendlyColumnName, htmlTemplateToLines } from '../utils/matukioTemplates';
 
 const router = Router();
 
-import { generateInvoicePDF, generateTicketPDF, generateNameTagPDF } from '../services/pdf.service';
+import { generateInvoicePDF, generateTicketPDF, generateNameTagPDF, generateCertificatePDF } from '../services/pdf.service';
 
 router.get('/my-bookings', authenticateJWT, async (req: any, res) => {
   try {
@@ -352,6 +353,31 @@ router.post('/bulk/certificate', authenticateJWT, authorizeAdmin, async (req, re
   try {
     const { ids, issue } = req.body as { ids: string[]; issue: boolean };
     await prisma.booking.updateMany({ where: { id: { in: ids } }, data: { certificated: !!issue } });
+
+    if (issue) {
+      const templatesConfig = await prisma.templatesConfig.findUnique({ where: { id: 'default' } });
+      const cert = templatesConfig?.certificates as any;
+      if (cert?.emailSubject && cert?.emailBody) {
+        const bookings = await prisma.booking.findMany({ where: { id: { in: ids } }, include: { event: true, user: true } });
+        const { transporter, config: mailConfig } = await getNewsletterTransporter();
+        for (const booking of bookings) {
+          const { email } = resolveBookingCustomer(booking);
+          if (!email) continue;
+          const placeholders = buildBookingPlaceholders(booking);
+          const subject = renderMatTokens(cert.emailSubject, placeholders);
+          const html = renderMatTokens(cert.emailBody, placeholders);
+          const pdfBuffer = await generateCertificatePDF(booking.id).catch(() => null);
+          await transporter.sendMail({
+            from: mailConfig?.fromEmail ? `"${mailConfig.fromName || 'Flugschule Hirondelle'}" <${mailConfig.fromEmail}>` : '"Flugschule Hirondelle" <info@fs-hirondelle.de>',
+            to: email,
+            subject,
+            html,
+            attachments: pdfBuffer ? [{ filename: `Zertifikat_${placeholders.MAT_BOOKING_NUMBER}.pdf`, content: pdfBuffer, contentType: 'application/pdf' }] : undefined,
+          }).catch(console.error);
+        }
+      }
+    }
+
     res.json({ message: issue ? `${ids.length} Zertifikat(e) ausgestellt.` : `${ids.length} Zertifikat(e) widerrufen.` });
   } catch (error) {
     console.error(error);
@@ -431,24 +457,41 @@ router.get('/export/csv', authenticateJWT, authorizeAdmin, async (req, res) => {
       orderBy: { createdAt: 'desc' },
     });
 
-    const header = ['ID', 'Name', 'E-Mail', 'Event', 'Buchungsdatum', 'Plätze', 'Bezahlt', 'Status', 'Gesamtpreis'];
-    const rows = bookings.map((b) => {
-      const { name, email } = resolveBookingCustomer(b);
-      const seats = b.items.reduce((s, i) => s + i.quantity, 0);
-      return [
-        b.id,
-        name,
-        email || '',
-        b.event.title,
-        new Date(b.createdAt).toLocaleString('de-DE'),
-        String(seats),
-        b.paid ? 'Ja' : 'Nein',
-        b.status,
-        b.totalPrice.toFixed(2),
-      ];
-    });
+    const templatesConfig = await prisma.templatesConfig.findUnique({ where: { id: 'default' } });
+    const csvTemplate = (templatesConfig?.csvXml as any)?.csvTemplate as string | undefined;
 
     const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    let header: string[];
+    let rows: string[][];
+
+    if (csvTemplate && csvTemplate.trim()) {
+      // Admin-configured template (Vorlagen > CSV und XML): a single row of
+      // MAT_* tokens, e.g. "MAT_BOOKING_NAME;MAT_BOOKING_EMAIL;MAT_EVENT_TITLE".
+      const tokens = parseCsvTemplateTokens(csvTemplate);
+      header = tokens.map(friendlyColumnName);
+      rows = bookings.map((b) => {
+        const placeholders = buildBookingPlaceholders(b);
+        return tokens.map((t) => placeholders[t] ?? t);
+      });
+    } else {
+      header = ['ID', 'Name', 'E-Mail', 'Event', 'Buchungsdatum', 'Plätze', 'Bezahlt', 'Status', 'Gesamtpreis'];
+      rows = bookings.map((b) => {
+        const { name, email } = resolveBookingCustomer(b);
+        const seats = b.items.reduce((s, i) => s + i.quantity, 0);
+        return [
+          b.id,
+          name,
+          email || '',
+          b.event.title,
+          new Date(b.createdAt).toLocaleString('de-DE'),
+          String(seats),
+          b.paid ? 'Ja' : 'Nein',
+          b.status,
+          b.totalPrice.toFixed(2),
+        ];
+      });
+    }
+
     const csv = [header, ...rows].map((r) => r.map(escape).join(';')).join('\r\n');
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
@@ -460,7 +503,7 @@ router.get('/export/csv', authenticateJWT, authorizeAdmin, async (req, res) => {
   }
 });
 
-function renderPrintList(title: string, bookings: any[], withSignatureColumn: boolean) {
+function renderPrintList(title: string, bookings: any[], withSignatureColumn: boolean, tableOnly = false) {
   const rows = bookings.map((b) => {
     const { name, email } = resolveBookingCustomer(b);
     const seats = b.items.reduce((s: number, i: any) => s + i.quantity, 0);
@@ -475,24 +518,46 @@ function renderPrintList(title: string, bookings: any[], withSignatureColumn: bo
       </tr>`;
   }).join('');
 
+  const table = `
+  <style>
+    table.mat-print-list { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    table.mat-print-list th, table.mat-print-list td { border: 1px solid #999; padding: 6px 10px; text-align: left; font-size: 13px; }
+    table.mat-print-list .sig-cell { width: 160px; }
+  </style>
+  <table class="mat-print-list">
+    <thead><tr><th>Name</th><th>E-Mail</th><th>Event</th><th>Datum</th><th>Plätze</th>${withSignatureColumn ? '<th>Unterschrift</th>' : ''}</tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+
+  if (tableOnly) return table;
+
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>${title}</title>
 <style>
   body { font-family: Arial, sans-serif; margin: 24px; }
   h1 { font-size: 18px; }
-  table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-  th, td { border: 1px solid #999; padding: 6px 10px; text-align: left; font-size: 13px; }
-  .sig-cell { width: 160px; }
   @media print { body { margin: 0; } }
 </style>
 </head><body>
   <h1>${title}</h1>
-  <table>
-    <thead><tr><th>Name</th><th>E-Mail</th><th>Event</th><th>Datum</th><th>Plätze</th>${withSignatureColumn ? '<th>Unterschrift</th>' : ''}</tr></thead>
-    <tbody>${rows}</tbody>
-  </table>
+  ${table}
   <script>window.onload = () => window.print();</script>
 </body></html>`;
+}
+
+// If the admin configured a template (Vorlagen > Listen-Ansichten), it's a
+// full-page HTML document with a ##COM_MATUKIO_..._LIST## marker showing
+// where the generated table should be inserted - giving the admin control
+// over branding/styling/print layout while the row data itself stays
+// reliable/consistent. Falls back to the built-in fixed layout if no
+// template is set, or the marker isn't present in it.
+function renderWithTemplate(template: string | undefined, marker: string, title: string, bookings: any[], withSignatureColumn: boolean) {
+  const generatedTable = renderPrintList(title, bookings, withSignatureColumn, true);
+  if (template && template.trim()) {
+    const withTable = template.includes(marker) ? template.replace(marker, generatedTable) : template + generatedTable;
+    return withTable.includes('<html') ? withTable : `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title></head><body>${withTable}<script>window.onload=()=>window.print();</script></body></html>`;
+  }
+  return renderPrintList(title, bookings, withSignatureColumn, false);
 }
 
 router.get('/export/participant-list', authenticateJWT, authorizeAdmin, async (req, res) => {
@@ -503,7 +568,9 @@ router.get('/export/participant-list', authenticateJWT, authorizeAdmin, async (r
       include: { event: true, user: true, items: { include: { ticket: true } } },
       orderBy: { createdAt: 'desc' },
     });
-    res.send(renderPrintList('Teilnehmerliste', bookings, false));
+    const templatesConfig = await prisma.templatesConfig.findUnique({ where: { id: 'default' } });
+    const template = (templatesConfig?.listViews as any)?.participantList as string | undefined;
+    res.send(renderWithTemplate(template, '##COM_MATUKIO_PARTICIPANTS_LIST##', 'Teilnehmerliste', bookings, false));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });
@@ -518,7 +585,9 @@ router.get('/export/signature-list', authenticateJWT, authorizeAdmin, async (req
       include: { event: true, user: true, items: { include: { ticket: true } } },
       orderBy: { createdAt: 'desc' },
     });
-    res.send(renderPrintList('Unterschriftenliste', bookings, true));
+    const templatesConfig = await prisma.templatesConfig.findUnique({ where: { id: 'default' } });
+    const template = (templatesConfig?.listViews as any)?.signatureList as string | undefined;
+    res.send(renderWithTemplate(template, '##COM_MATUKIO_SIGNATURE_LIST##', 'Unterschriftenliste', bookings, true));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });

@@ -3,6 +3,7 @@ import { prisma } from '../utils/prisma';
 import fs from 'fs';
 import path from 'path';
 import { resolveBookingCustomer } from '../utils/bookingCustomer';
+import { buildBookingPlaceholders, renderMatTokens, htmlTemplateToLines } from '../utils/matukioTemplates';
 
 const uploadsDir = path.join(__dirname, '../../uploads');
 
@@ -154,7 +155,11 @@ export async function generateTicketPDF(bookingId: string): Promise<Buffer> {
 }
 
 // Matukio's "Name tag (PDF)" - one small badge per booking, printed/cut out
-// for the participant to wear at the event.
+// for the participant to wear at the event. Uses the admin's template
+// (Vorlagen > Ticket und Namensschild) if configured - PDFKit draws text
+// imperatively rather than rendering HTML/CSS, so an HTML template is
+// reduced to its text lines with placeholders substituted; the admin's
+// wording is fully respected even though exact HTML styling isn't.
 export async function generateNameTagPDF(bookingId: string): Promise<Buffer> {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
@@ -163,6 +168,9 @@ export async function generateNameTagPDF(bookingId: string): Promise<Buffer> {
 
   if (!booking) throw new Error('Booking not found');
   const { name } = resolveBookingCustomer(booking);
+
+  const templatesConfig = await prisma.templatesConfig.findUnique({ where: { id: 'default' } });
+  const template = (templatesConfig?.tickets as any)?.nametagTemplate as string | undefined;
 
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 0, size: [283, 170] }); // ~ 100mm x 60mm badge
@@ -173,15 +181,61 @@ export async function generateNameTagPDF(bookingId: string): Promise<Buffer> {
 
     doc.rect(0, 0, doc.page.width, 40).fill('#ab8942');
     doc.fillColor('white').fontSize(11).font('Helvetica-Bold').text('Flugschule Hirondelle', 15, 14);
-
     doc.fillColor('black');
-    doc.fontSize(20).font('Helvetica-Bold').text(name, 15, 60, { width: 253, align: 'center' });
 
-    doc.fontSize(11).font('Helvetica').text(booking.event.title, 15, 100, { width: 253, align: 'center' });
-    doc.fontSize(9).fillColor('#666').text(
-      new Date(booking.event.startDate).toLocaleDateString('de-DE'),
-      15, 125, { width: 253, align: 'center' }
-    );
+    if (template && template.trim()) {
+      const rendered = renderMatTokens(template, buildBookingPlaceholders(booking));
+      const lines = htmlTemplateToLines(rendered);
+      doc.fontSize(13).font('Helvetica');
+      let y = 55;
+      for (const line of lines) {
+        doc.text(line, 15, y, { width: 253, align: 'center' });
+        y += 18;
+      }
+    } else {
+      doc.fontSize(20).font('Helvetica-Bold').text(name, 15, 60, { width: 253, align: 'center' });
+      doc.fontSize(11).font('Helvetica').text(booking.event.title, 15, 100, { width: 253, align: 'center' });
+      doc.fontSize(9).fillColor('#666').text(
+        new Date(booking.event.startDate).toLocaleDateString('de-DE'),
+        15, 125, { width: 253, align: 'center' }
+      );
+    }
+
+    doc.end();
+  });
+}
+
+// Matukio's certificate PDF (Vorlagen > Zertifikat erteilen). No hardcoded
+// fallback design - a certificate's exact wording/legal text matters, so if
+// the admin hasn't configured a template yet, callers should treat this as
+// "not available" rather than receive a generic placeholder document.
+export async function generateCertificatePDF(bookingId: string): Promise<Buffer | null> {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { event: true, user: true },
+  });
+  if (!booking) throw new Error('Booking not found');
+
+  const templatesConfig = await prisma.templatesConfig.findUnique({ where: { id: 'default' } });
+  const template = (templatesConfig?.certificates as any)?.pdfTemplate as string | undefined;
+  if (!template || !template.trim()) return null;
+
+  const rendered = renderMatTokens(template, buildBookingPlaceholders(booking));
+  const lines = htmlTemplateToLines(rendered);
+
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 60, size: 'A4', layout: 'landscape' });
+    const buffers: Buffer[] = [];
+    doc.on('data', buffers.push.bind(buffers));
+    doc.on('end', () => resolve(Buffer.concat(buffers)));
+    doc.on('error', reject);
+
+    doc.fontSize(14).font('Helvetica');
+    let y = 80;
+    for (const line of lines) {
+      doc.text(line, 60, y, { width: doc.page.width - 120, align: 'center' });
+      y += 24;
+    }
 
     doc.end();
   });
