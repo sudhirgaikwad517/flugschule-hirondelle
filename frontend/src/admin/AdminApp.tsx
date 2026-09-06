@@ -6,6 +6,7 @@ import polyglotI18nProvider from 'ra-i18n-polyglot';
 // @ts-ignore
 import germanMessages from 'ra-language-german';
 import { authProvider } from './authProvider';
+import { AdminLoginPage } from './LoginPage';
 import { EventList, EventEdit, EventCreate } from './Events';
 import { AcyDashboard } from './AcyMailing/Stubs';
 import { AcyConfiguration } from './AcyMailing/Configuration';
@@ -106,7 +107,7 @@ export const AdminApp = () => {
     }, []);
 
     return (
-    <Admin basename="/admin" theme={lightTheme} layout={CustomLayout} authProvider={authProvider} dataProvider={dataProvider} i18nProvider={i18nProvider}>
+    <Admin basename="/admin" theme={lightTheme} layout={CustomLayout} loginPage={AdminLoginPage} authProvider={authProvider} dataProvider={dataProvider} i18nProvider={i18nProvider}>
         <Resource name="users" options={{ label: 'Benutzer' }} list={UserList} edit={UserEdit} create={UserCreate} />
         <Resource name="events" options={{ label: 'Veranstaltungen' }} list={EventList} edit={EventEdit} create={EventCreate} />
         <Resource name="customFields" options={{ label: 'Benutzerdefinierte Felder' }} list={CustomFieldList} edit={CustomFieldEdit} create={CustomFieldCreate} />

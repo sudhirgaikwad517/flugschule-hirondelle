@@ -47,14 +47,6 @@ const PORT = process.env.PORT || 5555;
 
 app.set('query parser', raQueryParser);
 
-// Temporary diagnostic - logs every incoming request so we can confirm
-// whether this exact process instance is the one actually handling
-// production traffic. Remove once the stale-response investigation is done.
-app.use((req, res, next) => {
-  console.log(`[REQ] ${req.method} ${req.path} @ ${new Date().toISOString()}`);
-  next();
-});
-
 app.use(cors({
   exposedHeaders: ['Content-Range']
 }));
@@ -65,14 +57,7 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')
 
 // Basic health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Flugschule Hirondelle API is running', pid: process.pid });
-});
-
-// Temporary deploy-verification marker - remove once the production
-// stale-response investigation is resolved.
-app.get('/api/__deploy_check', (req, res) => {
-  res.set('Cache-Control', 'no-store');
-  res.json({ ok: true, commit: 'f72d9bb-or-later', time: new Date().toISOString() });
+  res.json({ status: 'ok', message: 'Flugschule Hirondelle API is running' });
 });
 
 // Auth routes
@@ -140,12 +125,8 @@ startNewsletterCron();
 
 // Start server
 const httpServer = app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}, pid ${process.pid}`);
+  console.log(`Server is running on port ${PORT}`);
 });
 httpServer.on('error', (err) => {
   console.error('LISTEN ERROR:', err);
 });
-
-// Trigger restart 4
-
-// Trigger restart 5
