@@ -158,21 +158,6 @@ export const Banner = () => {
         <ChevronRight className="w-10 h-10 md:w-12 md:h-12 stroke-[1.5]" />
       </button>
 
-      {/* Slide Indicators */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex gap-2.5">
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentSlide(index)}
-            className={`transition-all rounded-full border border-white/50 ${
-              index === currentSlide 
-                ? 'w-3 h-3 bg-white border-white scale-110' 
-                : 'w-2.5 h-2.5 bg-transparent hover:bg-white/50'
-            }`}
-            aria-label={`Gehe zu Bild ${index + 1}`}
-          />
-        ))}
-      </div>
     </section>
   );
 };

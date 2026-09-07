@@ -41,7 +41,7 @@ export const Footer = () => {
   };
 
   return (
-    <footer className="bg-[#111] text-white pt-24 pb-8 font-luxurysans print:hidden">
+    <footer className="bg-[#16A3E3] text-white pt-24 pb-8 font-luxurysans print:hidden">
       <div className="container mx-auto px-8 max-w-[1400px]">
         
         {/* Main Footer Content */}
@@ -49,14 +49,14 @@ export const Footer = () => {
           
           {/* Left: Branding & Kontakt */}
           <div className="w-full md:w-1/3">
-            <div className="bg-white px-8 py-3 rounded-2xl inline-flex items-center justify-center mb-8 shadow-md">
-              <img src="/logo.svg" alt="Flugschule Hirondelle" className="h-14 w-56 object-contain" />
+            <div className="inline-flex items-center justify-center mb-8">
+              <img src="/logo.svg" alt="Flugschule Hirondelle" className="h-14 w-56 object-contain brightness-0 invert" />
             </div>
-            <p className="text-sm text-gray-400 leading-relaxed font-light mb-8 max-w-sm">
+            <p className="text-sm text-white/80 leading-relaxed font-light mb-8 max-w-sm">
               Die 1988 gegründete Flugschule Hirondelle ist eine der führenden Gleitschirmschulen im Herzen Deutschlands. Wir bieten moderne Ausbildung und exklusiven Zugang zu den besten Fluggebieten, um Sie in einer idyllischen Umgebung unter unberührtem Himmel in ein wahres Flugerlebnis eintauchen zu lassen.
             </p>
             <h3 className="font-luxury text-xl mb-4 text-white/80">Kontakt</h3>
-            <div className="text-sm text-gray-400 leading-relaxed font-light space-y-1 mb-8">
+            <div className="text-sm text-white/80 leading-relaxed font-light space-y-1 mb-8">
               <p>E-Mail: info@flugschule-hirondelle.de</p>
               <p>Tel: +49 6201 12345</p>
               <p>Fax: +49 6201 12346</p>
@@ -75,7 +75,7 @@ export const Footer = () => {
 
           {/* Center: Quick Links (Matching exactly the original right section) */}
           <div className="w-full md:w-1/3">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3 text-sm text-gray-400 font-light">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3 text-sm text-white/80 font-light">
               <Link to="/" className="hover:text-luxury-gold transition-colors">Home</Link>
               <Link to="/ausbildung" className="hover:text-luxury-gold transition-colors">Ausbildung</Link>
               <Link to="/infos/wetter" className="hover:text-luxury-gold transition-colors">Wetter</Link>
@@ -100,11 +100,11 @@ export const Footer = () => {
           <div className="w-full md:w-1/3">
             <form onSubmit={handleSubscribe} className="space-y-4">
               <div className="flex flex-col gap-2 mb-4">
-                <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-400 font-light hover:text-white transition-colors">
+                <label className="flex items-center gap-2 cursor-pointer text-sm text-white/80 font-light hover:text-white transition-colors">
                   <input type="checkbox" checked={newsletter} onChange={(e) => setNewsletter(e.target.checked)} className="w-3 h-3 bg-transparent border-white/40" />
                   Newsletter
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-400 font-light hover:text-white transition-colors">
+                <label className="flex items-center gap-2 cursor-pointer text-sm text-white/80 font-light hover:text-white transition-colors">
                   <input type="checkbox" checked={tandemNewsletter} onChange={(e) => setTandemNewsletter(e.target.checked)} className="w-3 h-3 bg-transparent border-white/40" />
                   Tandemflüge Newsletter
                 </label>
@@ -133,7 +133,7 @@ export const Footer = () => {
 
               <div className="flex items-start gap-3 mt-6">
                 <input type="checkbox" id="privacy" className="w-4 h-4 mt-1 bg-transparent border-white/40" required />
-                <label htmlFor="privacy" className="text-xs text-gray-400 font-light leading-snug">
+                <label htmlFor="privacy" className="text-xs text-white/80 font-light leading-snug">
                   Ich akzeptiere die <Link to="/agb" className="font-bold underline hover:text-white transition-colors">Allgemeinen Geschäftsbedingungen</Link> und die <Link to="/datenschutz" className="font-bold underline hover:text-white transition-colors">Datenschutzerklärung</Link>
                 </label>
               </div>
@@ -155,13 +155,13 @@ export const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-[11px] uppercase tracking-widest font-semibold text-white/60">
+        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-[11px] uppercase tracking-widest font-semibold text-white/70">
           <div className="flex gap-6 mb-4 md:mb-0">
             <Link to="/datenschutz" className="hover:text-white transition-colors">DATENSCHUTZ</Link>
             <Link to="/impressum" className="hover:text-white transition-colors">IMPRESSUM</Link>
             <Link to="/agb" className="hover:text-white transition-colors">AGB</Link>
           </div>
-          <div className="normal-case tracking-normal font-light text-sm text-gray-500">
+          <div className="normal-case tracking-normal font-light text-sm text-white/70">
             &copy; Copyright Flugschule Hirondelle. Alle Rechte vorbehalten.
           </div>
         </div>

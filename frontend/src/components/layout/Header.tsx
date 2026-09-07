@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Menu, X, ChevronDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { Menu, X, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const Header = () => {
   const location = useLocation();
@@ -8,7 +8,7 @@ export const Header = () => {
 
   const getNavClass = (path: string) => {
     const isActive = path === '/' ? pathname === '/' : pathname.startsWith(path);
-    return `text-[10.5px] uppercase tracking-widest font-semibold flex items-center gap-1 transition-colors pl-2.5 pr-[14px] py-1.5 rounded-md ${
+    return `text-[11.5px] uppercase tracking-widest font-semibold flex items-center gap-1 transition-colors pl-2.5 pr-[14px] py-1.5 rounded-md ${
       isActive 
         ? 'bg-hirondelle-blue/10 text-hirondelle-blue' 
         : 'text-gray-800 hover:text-hirondelle-blue hover:bg-black/5'
@@ -282,10 +282,6 @@ export const Header = () => {
                   KONTO
                 </Link>
               )}
-
-              <Link to="/search" className="text-gray-800 hover:text-hirondelle-blue hover:bg-black/5 p-2 rounded-full transition-colors ml-2">
-                <Search className="w-5 h-5" />
-              </Link>
 
             </div>
 

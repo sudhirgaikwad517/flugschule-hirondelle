@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 
 export const Home = () => {
   const [media, setMedia] = useState<any>(null);
+  const [galleryIndex, setGalleryIndex] = useState(0);
 
   useEffect(() => {
     fetch(`/api/pagemedia/public/home`)
@@ -41,36 +42,66 @@ export const Home = () => {
           <p className="text-luxury-gold uppercase tracking-[0.2em] text-xs font-semibold mb-8">
             LEIDENSCHAFT FÜRS FLIEGEN TRIFFT AUF PROFESSIONELLE AUSBILDUNG
           </p>
-          <p className="font-luxury text-3xl md:text-5xl text-luxury-dark leading-[1.4] mx-auto">
-            Die Flugschule Hirondelle im Herzen der Region ist ein Meisterstück der Fliegerei und bietet moderne Ausbildung mit unvergleichlichen Fluggebieten und erfahrenen Fluglehrern.
+          <p className="font-luxury font-bold text-3xl md:text-5xl text-luxury-dark leading-[1.4] mx-auto">
+            Die Flugschule Hirondelle bietet moderne Ausbildung mit unvergleichlichen Fluggebieten und erfahrenen Fluglehrern.
           </p>
         </div>
       </section>
 
-      {/* 3. HORIZONTAL IMAGE GALLERY */}
-      <section className="w-full flex overflow-hidden h-[400px] md:h-[600px] relative">
-        <div className="w-1/3 h-full overflow-hidden relative group">
-          <img src={getSquareImage(0, '/images/ausbildung-6.jpg')} alt="Gallery 1" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
-          <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-500"></div>
-        </div>
-        <div className="w-1/3 h-full overflow-hidden relative group">
-          <img src={getSquareImage(1, '/images/ausbildung-5.jpg')} alt="Gallery 2" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
-          <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-500"></div>
-        </div>
-        <div className="w-1/3 h-full overflow-hidden relative group">
-          <img src={getSquareImage(2, '/images/ausbildung-4.jpg')} alt="Gallery 3" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
-          <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-500"></div>
-        </div>
-        
-        {/* Navigation Arrows (Decorative) */}
-        <div className="absolute inset-0 flex items-center justify-between px-8 pointer-events-none">
-          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg pointer-events-auto cursor-pointer hover:bg-gray-50">
-            <ChevronLeft className="w-5 h-5 text-luxury-dark" />
-          </div>
-          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg pointer-events-auto cursor-pointer hover:bg-gray-50">
-            <ChevronRight className="w-5 h-5 text-luxury-dark" />
-          </div>
-        </div>
+      {/* 3. IMAGE GALLERY - 3-across on desktop, one-at-a-time carousel on mobile */}
+      <section className="w-full overflow-hidden relative">
+        {(() => {
+          const galleryImages = [
+            getSquareImage(0, '/images/ausbildung-6.jpg'),
+            getSquareImage(1, '/images/ausbildung-5.jpg'),
+            getSquareImage(2, '/images/ausbildung-4.jpg'),
+          ];
+          const prevGallery = () => setGalleryIndex((i) => (i - 1 + galleryImages.length) % galleryImages.length);
+          const nextGallery = () => setGalleryIndex((i) => (i + 1) % galleryImages.length);
+          return (
+            <>
+              {/* Desktop / tablet: 3 images side by side */}
+              <div className="hidden md:flex h-[600px] relative">
+                {galleryImages.map((src, i) => (
+                  <div key={i} className="w-1/3 h-full overflow-hidden relative group">
+                    <img src={src} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+                    <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-500"></div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Mobile: one image at a time, swipe-style carousel */}
+              <div className="md:hidden h-[400px] relative">
+                {galleryImages.map((src, i) => (
+                  <div
+                    key={i}
+                    className={`absolute inset-0 transition-opacity duration-500 ${i === galleryIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                  >
+                    <img src={src} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover" />
+                  </div>
+                ))}
+                <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
+                  <button onClick={prevGallery} className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg pointer-events-auto" aria-label="Vorheriges Bild">
+                    <ChevronLeft className="w-5 h-5 text-luxury-dark" />
+                  </button>
+                  <button onClick={nextGallery} className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg pointer-events-auto" aria-label="Nächstes Bild">
+                    <ChevronRight className="w-5 h-5 text-luxury-dark" />
+                  </button>
+                </div>
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                  {galleryImages.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setGalleryIndex(i)}
+                      className={`w-2 h-2 rounded-full transition-colors ${i === galleryIndex ? 'bg-white' : 'bg-white/50'}`}
+                      aria-label={`Gehe zu Bild ${i + 1}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </>
+          );
+        })()}
       </section>
 
       {/* 4. EXPERIENCES CARDS (LUXURY THEME) */}
@@ -323,37 +354,41 @@ export const Home = () => {
               </p>
             </div>
 
-            {/* Team Members */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-y-12 gap-x-6">
-              <div className="flex flex-col items-center group cursor-pointer">
-                <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
-                  <img src="/images/team/schlink.jpg" className="w-full h-full rounded-full object-cover" alt="Alex" />
+            {/* Team Members - top row: Alex & Sarah, bottom row: the rest */}
+            <div className="flex flex-col gap-y-12">
+              <div className="flex justify-center gap-x-10 sm:gap-x-16">
+                <div className="flex flex-col items-center group cursor-pointer">
+                  <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
+                    <img src="/images/team/schlink.jpg" className="w-full h-full rounded-full object-cover" alt="Alex" />
+                  </div>
+                  <span className="font-luxury text-lg text-luxury-dark tracking-wide">Alex</span>
                 </div>
-                <span className="font-luxury text-lg text-luxury-dark tracking-wide">Alex</span>
+                <div className="flex flex-col items-center group cursor-pointer">
+                  <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
+                    <img src="/images/team/sarah.jpg" className="w-full h-full rounded-full object-cover" alt="Sarah" />
+                  </div>
+                  <span className="font-luxury text-lg text-luxury-dark tracking-wide">Sarah</span>
+                </div>
               </div>
-              <div className="flex flex-col items-center group cursor-pointer">
-                <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
-                  <img src="/images/team/sarah.jpg" className="w-full h-full rounded-full object-cover" alt="Sarah" />
+              <div className="flex flex-wrap justify-center gap-x-6 sm:gap-x-10 gap-y-10">
+                <div className="flex flex-col items-center group cursor-pointer">
+                  <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
+                    <img src="/images/team/tobi.jpg" className="w-full h-full rounded-full object-cover" alt="Tobi" />
+                  </div>
+                  <span className="font-luxury text-lg text-luxury-dark tracking-wide">Tobi</span>
                 </div>
-                <span className="font-luxury text-lg text-luxury-dark tracking-wide">Sarah</span>
-              </div>
-              <div className="flex flex-col items-center group cursor-pointer">
-                <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
-                  <img src="/images/team/tobi.jpg" className="w-full h-full rounded-full object-cover" alt="Tobi" />
+                <div className="flex flex-col items-center group cursor-pointer">
+                  <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
+                    <img src="/images/team/holger.jpg" className="w-full h-full rounded-full object-cover" alt="Holger" />
+                  </div>
+                  <span className="font-luxury text-lg text-luxury-dark tracking-wide">Holger</span>
                 </div>
-                <span className="font-luxury text-lg text-luxury-dark tracking-wide">Tobi</span>
-              </div>
-              <div className="flex flex-col items-center group cursor-pointer md:col-start-1 md:ml-12 lg:ml-16">
-                <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
-                  <img src="/images/team/holger.jpg" className="w-full h-full rounded-full object-cover" alt="Holger" />
+                <div className="flex flex-col items-center group cursor-pointer">
+                  <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
+                    <img src="/images/team/markus.jpg" className="w-full h-full rounded-full object-cover" alt="Markus" />
+                  </div>
+                  <span className="font-luxury text-lg text-luxury-dark tracking-wide">Markus</span>
                 </div>
-                <span className="font-luxury text-lg text-luxury-dark tracking-wide">Holger</span>
-              </div>
-              <div className="flex flex-col items-center group cursor-pointer md:col-start-2 md:mr-12 lg:mr-16">
-                <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
-                  <img src="/images/team/markus.jpg" className="w-full h-full rounded-full object-cover" alt="Markus" />
-                </div>
-                <span className="font-luxury text-lg text-luxury-dark tracking-wide">Markus</span>
               </div>
             </div>
 
