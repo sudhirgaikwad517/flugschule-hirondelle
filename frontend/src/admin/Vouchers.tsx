@@ -84,6 +84,7 @@ const VoucherFilter = (props: any) => (
                 { id: 'false', name: 'Versteckt' }
             ]}
             alwaysOn
+            emptyText="Alle"
         />
     </Filter>
 );

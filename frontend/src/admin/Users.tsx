@@ -25,7 +25,7 @@ const roleChoices = [
 const UserFilter = (props: any) => (
     <Filter {...props}>
         <TextInput label="Suche" source="q" alwaysOn placeholder="Name, E-Mail, Benutzername" />
-        <SelectInput label="Rolle" source="role" choices={roleChoices} alwaysOn />
+        <SelectInput label="Rolle" source="role" choices={roleChoices} alwaysOn emptyText="Alle" />
         <BooleanInput label="Gesperrt" source="blocked" alwaysOn />
     </Filter>
 );

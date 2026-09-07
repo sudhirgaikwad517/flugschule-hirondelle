@@ -10,6 +10,7 @@ import { Box, Typography } from '@mui/material';
 export const CustomAppBar = (props: any) => (
     <AppBar
         {...props}
+        position="fixed"
         color="inherit"
         elevation={0}
         sx={{

@@ -64,19 +64,19 @@ const BadgeField = ({ source, color, label: _label }: { source: string, color: s
 
 const categoryFilters = [
   <TextInput source="q" label="Suche" alwaysOn />,
-  <SelectInput source="status" label="- Status wählen -" choices={[
+  <SelectInput source="status" label="- Status wählen -" emptyText="- Alle -" choices={[
       { id: 'PUBLISHED', name: 'Veröffentlicht' },
       { id: 'HIDDEN', name: 'Versteckt' },
       { id: 'ARCHIVED', name: 'Archiviert' },
       { id: 'TRASH', name: 'Papierkorb' },
   ]} />,
-  <SelectInput source="accessLevel" label="- Zugriffsebene wählen -" choices={[
+  <SelectInput source="accessLevel" label="- Zugriffsebene wählen -" emptyText="- Alle -" choices={[
       { id: 'PUBLIC', name: 'Öffentlich' },
       { id: 'REGISTERED', name: 'Registriert' },
       { id: 'SPECIAL', name: 'Spezial' },
   ]} />,
   <TextInput source="tags" label="- Schlagwort wählen -" />,
-  <SelectInput source="maxLevels" label="- Max. Ebenen wählen -" choices={[
+  <SelectInput source="maxLevels" label="- Max. Ebenen wählen -" emptyText="- Alle -" choices={[
       { id: '1', name: '1' },
       { id: '2', name: '2' },
       { id: '3', name: '3' },

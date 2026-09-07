@@ -75,11 +75,11 @@ const timeChoices = [
 const BookingFilter = (props: any) => (
     <Filter {...props}>
         <TextInput label="Suche (Name, E-Mail, id:123)" source="q" alwaysOn />
-        <SelectInput label="Status" source="status" choices={statusChoices} alwaysOn />
+        <SelectInput label="Status" source="status" choices={statusChoices} alwaysOn emptyText="Alle" />
         <ReferenceInput label="Event" source="eventId" reference="events" perPage={500} sort={{ field: 'startDate', order: 'DESC' }} alwaysOn>
             <SelectInput optionText="title" emptyText="Alle Events" />
         </ReferenceInput>
-        <SelectInput label="Zeitraum" source="time" choices={timeChoices} alwaysOn />
+        <SelectInput label="Zeitraum" source="time" choices={timeChoices} alwaysOn emptyText="Alle Zeiten" />
     </Filter>
 );
 

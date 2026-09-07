@@ -43,10 +43,14 @@ body.admin-root .RaLayout-root {
 }
 body.admin-root .RaLayout-contentWithSidebar {
   min-width: 0;
-  overflow-x: hidden;
 }
 body.admin-root #main-content {
   min-width: 0;
+}
+/* This is the actual Card react-admin wraps each <List>'s content in - the
+   real scroll boundary needs to live here (not further up the tree), or the
+   overflow gets clipped away with nowhere to scroll to. */
+body.admin-root .RaList-content {
   overflow-x: auto;
 }
 

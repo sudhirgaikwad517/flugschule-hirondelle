@@ -178,15 +178,16 @@ const EventFilter = (props: any) => (
                 { id: 'false', name: 'Versteckt' }
             ]}
             alwaysOn
+            emptyText="Alle"
         />
         <ReferenceInput label="Alle Veranstaltungsorte" source="locationId" reference="locations" alwaysOn>
-            <SelectInput optionText="title" />
+            <SelectInput optionText="title" emptyText="Alle Veranstaltungsorte" />
         </ReferenceInput>
         <ReferenceInput label="Alle Veranstalter" source="organizerId" reference="organizers" alwaysOn>
-            <SelectInput optionText="name" />
+            <SelectInput optionText="name" emptyText="Alle Veranstalter" />
         </ReferenceInput>
         <ReferenceInput label="Alle Kategorien" source="categoryId" reference="categories" alwaysOn>
-            <SelectInput optionText="title" />
+            <SelectInput optionText="title" emptyText="Alle Kategorien" />
         </ReferenceInput>
         <SelectInput
             label="Storniert"
@@ -196,6 +197,7 @@ const EventFilter = (props: any) => (
                 { id: 'false', name: 'Nicht storniert' }
             ]}
             alwaysOn
+            emptyText="Alle"
         />
     </Filter>
 );
