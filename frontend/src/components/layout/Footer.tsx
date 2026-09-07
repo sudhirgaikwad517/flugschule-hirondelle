@@ -41,11 +41,11 @@ export const Footer = () => {
   };
 
   return (
-    <footer className="bg-[#16A3E3] text-white pt-24 pb-8 font-luxurysans print:hidden">
+    <footer className="bg-[#16A3E3] text-white pt-16 pb-8 font-luxurysans print:hidden">
       <div className="container mx-auto px-8 max-w-[1400px]">
-        
+
         {/* Main Footer Content */}
-        <div className="flex flex-col md:flex-row justify-between gap-12 mb-24">
+        <div className="flex flex-col md:flex-row justify-between gap-12 mb-12">
           
           {/* Left: Branding & Kontakt */}
           <div className="w-full md:w-1/3">
