@@ -195,6 +195,7 @@ const EventFilter = (props: any) => (
                 { id: 'true', name: 'Storniert' },
                 { id: 'false', name: 'Nicht storniert' }
             ]}
+            alwaysOn
         />
     </Filter>
 );
