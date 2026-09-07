@@ -21,6 +21,7 @@
 
 html, body {
   overflow-x: hidden;
+  overflow-y: visible;
   max-width: 100%;
   width: 100%;
   margin: 0;
@@ -49,28 +50,40 @@ body.admin-root #main-content {
 }
 /* This is the actual Card react-admin wraps each <List>'s content in - the
    real scroll boundary needs to live here (not further up the tree), or the
-   overflow gets clipped away with nowhere to scroll to. */
+   overflow gets clipped away with nowhere to scroll to. react-admin's
+   Datagrid renders a bare <table>, not a MUI TableContainer, so nothing
+   provides this automatically. */
 body.admin-root .RaList-content {
   overflow-x: auto;
+  max-width: 100%;
 }
 
-/* react-admin's built-in "pin the sidebar via an inner position:fixed div"
-   trick isn't holding here (the sidebar visibly scrolls away with the page).
-   Force reliable sticky positioning instead - it stays pinned to the
-   viewport as the page scrolls, with its own internal scrollbar if the menu
-   is taller than the visible space below the header. */
+/* CustomAppBar.tsx locks the admin header to exactly 64px - react-admin's
+   own appFrame margin-top assumes its shorter stock app bar, so it under-
+   compensates here and lets content/filter rows render under the fixed
+   header. 64px is the exact clearance; the sidebar sits flush against it. */
+body.admin-root .RaLayout-appFrame {
+  margin-top: 64px !important;
+}
+
+/* react-admin pins the sidebar via an inner position:fixed div with no
+   declared top/left, which only *resolves* to a fixed viewport position
+   once at render time in this layout instead of actually staying pinned
+   while the page scrolls - so the sidebar was visibly scrolling away with
+   the page. Sticky with an explicit top offset (matching the header
+   clearance above) is deterministic regardless of that. */
 body.admin-root .RaSidebar-fixed {
   position: sticky !important;
-  top: 80px !important;
-  height: calc(100vh - 80px) !important;
+  top: 64px !important;
+  height: calc(100vh - 64px) !important;
   overflow-y: auto !important;
 }
 
-/* CustomAppBar.tsx locks the admin header to a fixed 64px height - match that
-   here (react-admin's own default spacing assumes its stock, shorter app bar)
-   plus a bit of extra breathing room between the header and each tab's content. */
-body.admin-root .RaLayout-appFrame {
-  margin-top: 80px !important;
+/* The visible breathing room the user actually asked for: only between the
+   header and each tab's own content, not the sidebar (which stays flush
+   against the header per the fix above). */
+body.admin-root #main-content > * {
+  padding-top: 20px;
 }
 
 body {
