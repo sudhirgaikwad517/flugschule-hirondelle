@@ -54,6 +54,18 @@ body.admin-root .RaList-content {
   overflow-x: auto;
 }
 
+/* react-admin's built-in "pin the sidebar via an inner position:fixed div"
+   trick isn't holding here (the sidebar visibly scrolls away with the page).
+   Force reliable sticky positioning instead - it stays pinned to the
+   viewport as the page scrolls, with its own internal scrollbar if the menu
+   is taller than the visible space below the header. */
+body.admin-root .RaSidebar-fixed {
+  position: sticky !important;
+  top: 80px !important;
+  height: calc(100vh - 80px) !important;
+  overflow-y: auto !important;
+}
+
 /* CustomAppBar.tsx locks the admin header to a fixed 64px height - match that
    here (react-admin's own default spacing assumes its stock, shorter app bar)
    plus a bit of extra breathing room between the header and each tab's content. */
