@@ -41,22 +41,22 @@ export const Footer = () => {
   };
 
   return (
-    <footer className="bg-[#16A3E3] text-white pt-16 pb-8 font-luxurysans print:hidden">
+    <footer className="bg-[#16A3E3] text-white pt-12 pb-6 font-luxurysans print:hidden">
       <div className="container mx-auto px-8 max-w-[1400px]">
 
         {/* Main Footer Content */}
-        <div className="flex flex-col md:flex-row justify-between gap-12 mb-12">
+        <div className="flex flex-col md:flex-row justify-between gap-12 mb-8">
           
           {/* Left: Branding & Kontakt */}
           <div className="w-full md:w-1/3">
-            <div className="inline-flex items-center justify-center mb-8">
+            <div className="inline-flex items-center justify-center mb-5">
               <img src="/logo.svg" alt="Flugschule Hirondelle" className="h-14 w-56 object-contain brightness-0 invert" />
             </div>
-            <p className="text-sm text-white/80 leading-relaxed font-light mb-8 max-w-sm">
+            <p className="text-sm text-white/80 leading-relaxed font-light mb-5 max-w-sm">
               Die 1988 gegründete Flugschule Hirondelle ist eine der führenden Gleitschirmschulen im Herzen Deutschlands. Wir bieten moderne Ausbildung und exklusiven Zugang zu den besten Fluggebieten, um Sie in einer idyllischen Umgebung unter unberührtem Himmel in ein wahres Flugerlebnis eintauchen zu lassen.
             </p>
-            <h3 className="font-luxury text-xl mb-4 text-white/80">Kontakt</h3>
-            <div className="text-sm text-white/80 leading-relaxed font-light space-y-1 mb-8">
+            <h3 className="font-luxury text-xl mb-3 text-white/80">Kontakt</h3>
+            <div className="text-sm text-white/80 leading-relaxed font-light space-y-1 mb-5">
               <p>E-Mail: info@flugschule-hirondelle.de</p>
               <p>Tel: +49 6201 12345</p>
               <p>Fax: +49 6201 12346</p>
@@ -155,7 +155,7 @@ export const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-[11px] uppercase tracking-widest font-semibold text-white/70">
+        <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row justify-between items-center text-[11px] uppercase tracking-widest font-semibold text-white/70">
           <div className="flex gap-6 mb-4 md:mb-0">
             <Link to="/datenschutz" className="hover:text-white transition-colors">DATENSCHUTZ</Link>
             <Link to="/impressum" className="hover:text-white transition-colors">IMPRESSUM</Link>
