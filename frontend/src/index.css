@@ -28,10 +28,33 @@ html, body {
 }
 
 /* The admin panel (react-admin) has wide data tables/toolbars that legitimately
-   need to scroll horizontally - the public-site clipping above would otherwise
-   hide that content with no way to reach it. */
+   overflow horizontally sometimes. Scrolling the whole body (as before) dragged
+   the fixed app bar and the sidebar along with it, since react-admin's sidebar
+   is a normal flex sibling, not independently pinned like the app bar is.
+   Instead: keep the page itself non-scrolling horizontally, let react-admin's
+   own layout stay locked to the viewport width, and scope the horizontal
+   scrollbar to just the content area (#main-content) so only the table/page
+   content scrolls while the header and sidebar stay put. */
 body.admin-root {
+  overflow-x: hidden;
+}
+body.admin-root .RaLayout-root {
+  min-width: 0;
+}
+body.admin-root .RaLayout-contentWithSidebar {
+  min-width: 0;
+  overflow-x: hidden;
+}
+body.admin-root #main-content {
+  min-width: 0;
   overflow-x: auto;
+}
+
+/* CustomAppBar.tsx locks the admin header to a fixed 64px height - match that
+   here (react-admin's own default spacing assumes its stock, shorter app bar)
+   plus a bit of extra breathing room between the header and each tab's content. */
+body.admin-root .RaLayout-appFrame {
+  margin-top: 80px !important;
 }
 
 body {
