@@ -13,6 +13,9 @@ router.get('/dashboard', authenticateJWT, authorizeAdmin, async (req, res) => {
         let rangeEnd: Date;
         if (req.query.from) {
             rangeStart = new Date(String(req.query.from));
+            if (isNaN(rangeStart.getTime())) {
+                return res.status(400).json({ error: 'Invalid "from" date' });
+            }
             rangeStart.setHours(0, 0, 0, 0);
         } else {
             const days = Math.max(1, Math.min(730, Number(req.query.days) || 30));
@@ -22,13 +25,35 @@ router.get('/dashboard', authenticateJWT, authorizeAdmin, async (req, res) => {
         }
         if (req.query.to) {
             rangeEnd = new Date(String(req.query.to));
+            if (isNaN(rangeEnd.getTime())) {
+                return res.status(400).json({ error: 'Invalid "to" date' });
+            }
             rangeEnd.setHours(23, 59, 59, 999);
         } else {
             rangeEnd = new Date();
             rangeEnd.setHours(23, 59, 59, 999);
         }
         if (rangeStart > rangeEnd) [rangeStart, rangeEnd] = [rangeEnd, rangeStart];
-        const numDays = Math.min(730, Math.round((rangeEnd.getTime() - rangeStart.getTime()) / 86400000));
+
+        // Day-count for the history buckets, based on pure calendar dates
+        // (not the raw ms difference, which always includes rangeEnd's
+        // 23:59:59.999 time-of-day and previously rounded up to one extra
+        // day - e.g. the default "last 30 days" produced 32 buckets with
+        // the last one dated tomorrow).
+        const startMidnight = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), rangeStart.getDate());
+        const endMidnight = new Date(rangeEnd.getFullYear(), rangeEnd.getMonth(), rangeEnd.getDate());
+        const numDays = Math.min(730, Math.round((endMidnight.getTime() - startMidnight.getTime()) / 86400000));
+
+        // The 730-day cap above only bounded the display/history length -
+        // an explicit from/to further apart than that still hit the Prisma
+        // queries below with their full, unclamped span (an expensive
+        // full-range scan on a large table). Clamp rangeStart itself so the
+        // actual queried window can never exceed what's ever displayed.
+        const maxSpanMs = 730 * 86400000;
+        if (rangeEnd.getTime() - rangeStart.getTime() > maxSpanMs) {
+            rangeStart = new Date(rangeEnd.getTime() - maxSpanMs);
+            rangeStart.setHours(0, 0, 0, 0);
+        }
 
         // Fetch all relevant data for the selected range
         const bookings = await prisma.booking.findMany({

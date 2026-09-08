@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useRecordContext, useRefresh } from 'react-admin';
+import { useRecordContext, useRefresh, useNotify } from 'react-admin';
 import { useNavigate } from 'react-router-dom';
 import { Box, Table, TableHead, TableRow, TableCell, TableBody, IconButton, Tooltip, Chip, Typography, CircularProgress, Button } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
@@ -29,6 +29,7 @@ function authHeaders() {
 export const EventRowExpand = () => {
     const record = useRecordContext();
     const refresh = useRefresh();
+    const notify = useNotify();
     const navigate = useNavigate();
     const [dates, setDates] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -62,15 +63,27 @@ export const EventRowExpand = () => {
     }
 
     const togglePublish = async (id: string) => {
-        await fetch(`${API}/events/${id}/toggle-publish`, { method: 'PATCH', headers: authHeaders() });
-        load();
-        refresh();
+        try {
+            const res = await fetch(`${API}/events/${id}/toggle-publish`, { method: 'PATCH', headers: authHeaders() });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            load();
+            refresh();
+        } catch (err) {
+            console.error(err);
+            notify('Fehler beim Ändern des Veröffentlichungsstatus', { type: 'error' });
+        }
     };
 
     const toggleCancel = async (id: string) => {
-        await fetch(`${API}/events/${id}/toggle-cancel`, { method: 'PATCH', headers: authHeaders() });
-        load();
-        refresh();
+        try {
+            const res = await fetch(`${API}/events/${id}/toggle-cancel`, { method: 'PATCH', headers: authHeaders() });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            load();
+            refresh();
+        } catch (err) {
+            console.error(err);
+            notify('Fehler beim Ändern des Stornierungsstatus', { type: 'error' });
+        }
     };
 
     return (

@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import { prisma } from '../utils/prisma';
 import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware';
+import { voucherValidateRateLimit } from '../middlewares/rateLimit.middleware';
 
 const router = Router();
 
 // Public endpoint to validate a voucher
-router.post('/validate', async (req, res) => {
+router.post('/validate', voucherValidateRateLimit, async (req, res) => {
   try {
     const { code, eventId } = req.body;
     if (!code) return res.status(400).json({ valid: false, message: 'Kein Code angegeben' });

@@ -10,6 +10,7 @@ import {
     FormControlLabel,
     Button,
     Grid,
+    Alert,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 
@@ -30,12 +31,17 @@ export const CookieConsentConfigPage = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [config, setConfig] = useState(DEFAULTS);
+    const [loadError, setLoadError] = useState(false);
 
-    useEffect(() => {
+    const load = () => {
+        setLoadError(false);
         fetch('/api/cookie-consent-config', {
             headers: { Authorization: `Bearer ${localStorage.getItem('auth')}` },
         })
-            .then((res) => res.json())
+            .then((res) => {
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res.json();
+            })
             .then((data) => {
                 setConfig({ ...DEFAULTS, ...data });
                 setLoading(false);
@@ -43,9 +49,16 @@ export const CookieConsentConfigPage = () => {
             .catch((err) => {
                 console.error(err);
                 notify('Fehler beim Laden der Cookie-Einstellungen', { type: 'error' });
+                // Don't fall through to the editable form on a failed load
+                // (e.g. an expired token) - it would otherwise silently show
+                // the default cookie-banner copy in place of the real saved
+                // config, and a save from there would overwrite it.
+                setLoadError(true);
                 setLoading(false);
             });
-    }, [notify]);
+    };
+
+    useEffect(load, [notify]);
 
     const handleSave = () => {
         setSaving(true);
@@ -73,6 +86,16 @@ export const CookieConsentConfigPage = () => {
     };
 
     if (loading) return <Box sx={{ p: 3 }}><Typography>Lade...</Typography></Box>;
+
+    if (loadError) {
+        return (
+            <Box sx={{ p: 3 }}>
+                <Alert severity="error" action={<Button color="inherit" size="small" onClick={load}>Erneut versuchen</Button>}>
+                    Cookie-Einstellungen konnten nicht geladen werden. Bitte laden Sie die Seite neu, bevor Sie speichern.
+                </Alert>
+            </Box>
+        );
+    }
 
     return (
         <Card sx={{ mt: 2, mb: 4, borderRadius: 2 }}>

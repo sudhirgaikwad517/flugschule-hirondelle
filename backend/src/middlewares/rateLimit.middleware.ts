@@ -28,3 +28,26 @@ export const otpVerifyRateLimit = rateLimit({
   legacyHeaders: false,
   message: { message: 'Zu viele Versuche. Bitte fordern Sie einen neuen Code an.' },
 });
+
+// Public voucher code validation: no login required, so nothing else stops
+// someone from scripting through codes to find valid ones and read back
+// their discount value.
+export const voucherValidateRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Zu viele Anfragen. Bitte versuchen Sie es später erneut.' },
+});
+
+// Unauthenticated-by-design endpoints that use a booking's own UUID as the
+// access token (rating-info/rate) - a generous limit, since a real customer
+// only hits these once or twice, but enough to stop someone scripting
+// through IDs.
+export const publicLookupRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Zu viele Anfragen. Bitte versuchen Sie es später erneut.' },
+});

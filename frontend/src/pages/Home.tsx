@@ -1,11 +1,8 @@
-import { Car, Laptop, Sun, ChevronRight, ChevronLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
 import { useState, useEffect } from 'react';
 
 export const Home = () => {
   const [media, setMedia] = useState<any>(null);
-  const [galleryIndex, setGalleryIndex] = useState(0);
 
   useEffect(() => {
     fetch(`/api/pagemedia/public/home`)
@@ -24,12 +21,6 @@ export const Home = () => {
     return fallbackSrc;
   };
 
-  const getSquareImage = (index: number, fallbackSrc: string) => {
-    if (media?.galleryImages && media.galleryImages[index]) {
-      return media.galleryImages[index];
-    }
-    return fallbackSrc;
-  };
   return (
     <div className="w-full bg-white font-luxurysans">
 

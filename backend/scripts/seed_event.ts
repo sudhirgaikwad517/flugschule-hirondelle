@@ -1,4 +1,4 @@
-import { prisma } from './src/utils/prisma';
+import { prisma } from '../src/utils/prisma';
 
 async function main() {
   const event = await prisma.event.create({

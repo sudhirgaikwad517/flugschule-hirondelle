@@ -37,14 +37,37 @@ export const Profil = () => {
 
   const token = localStorage.getItem('token');
 
+  // A 401/403 here (expired/invalid token) previously fell through to
+  // res.json() unchecked, setting `bookings`/`account` to the error body
+  // (e.g. { message: '...' }) instead of an array/object shaped like real
+  // data - `bookings.map(...)` further down then threw (bookings.map is not
+  // a function), blanking the whole page with no ErrorBoundary on this
+  // route to catch it. Redirect to login instead, same as the initial
+  // `!token` guard below already does.
+  const handleAuthFailure = (status: number) => {
+    if (status === 401 || status === 403) {
+      localStorage.removeItem('token');
+      navigate('/anmeldung', { replace: true });
+      return true;
+    }
+    return false;
+  };
+
   const loadBookings = () => {
     setLoading(true);
     fetch('/api/bookings/my-bookings', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          if (handleAuthFailure(res.status)) return null;
+          throw new Error(`HTTP ${res.status}`);
+        }
+        return res.json();
+      })
       .then(data => {
-        setBookings(data);
+        if (data === null) return;
+        setBookings(Array.isArray(data) ? data : []);
         setLoading(false);
       })
       .catch(err => {
@@ -58,8 +81,15 @@ export const Profil = () => {
     fetch('/api/auth/me', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          if (handleAuthFailure(res.status)) return null;
+          throw new Error(`HTTP ${res.status}`);
+        }
+        return res.json();
+      })
       .then(data => {
+        if (data === null) return;
         setAccount(data);
         setAccountForm(data);
         setAccountLoading(false);

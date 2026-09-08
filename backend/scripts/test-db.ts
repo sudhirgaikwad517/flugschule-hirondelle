@@ -1,4 +1,4 @@
-import { prisma } from './src/utils/prisma';
+import { prisma } from '../src/utils/prisma';
 async function main() {
   const count = await prisma.newsletter.count();
   console.log('Subscriber count:', count);

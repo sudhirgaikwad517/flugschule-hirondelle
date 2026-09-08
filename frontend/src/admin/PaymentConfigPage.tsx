@@ -21,12 +21,17 @@ export const PaymentConfigPage = () => {
     const [paypalClientId, setPaypalClientId] = useState('');
     const [paypalClientSecret, setPaypalClientSecret] = useState('');
     const [hasSecret, setHasSecret] = useState(false);
+    const [loadError, setLoadError] = useState(false);
 
     const load = () => {
+        setLoadError(false);
         fetch('/api/payment-config', {
             headers: { Authorization: `Bearer ${localStorage.getItem('auth')}` },
         })
-            .then((res) => res.json())
+            .then((res) => {
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res.json();
+            })
             .then((data) => {
                 setEnvironment(data.environment || 'sandbox');
                 setPaypalClientId(data.paypalClientId || '');
@@ -36,6 +41,13 @@ export const PaymentConfigPage = () => {
             .catch((err) => {
                 console.error(err);
                 notify('Fehler beim Laden der PayPal-Einstellungen', { type: 'error' });
+                // Deliberately don't fall through to the normal form here: a
+                // failed load (e.g. an expired token) previously still
+                // rendered the editable form with blank/default values with
+                // no visible error, so an admin who didn't notice and hit
+                // "Speichern" would overwrite the real, live PayPal
+                // credentials with sandbox/blank ones.
+                setLoadError(true);
                 setLoading(false);
             });
     };
@@ -70,6 +82,16 @@ export const PaymentConfigPage = () => {
     };
 
     if (loading) return <Box sx={{ p: 3 }}><Typography>Lade...</Typography></Box>;
+
+    if (loadError) {
+        return (
+            <Box sx={{ p: 3 }}>
+                <Alert severity="error" action={<Button color="inherit" size="small" onClick={load}>Erneut versuchen</Button>}>
+                    PayPal-Einstellungen konnten nicht geladen werden. Bitte laden Sie die Seite neu, bevor Sie speichern - sonst könnten die echten, gespeicherten Zugangsdaten überschrieben werden.
+                </Alert>
+            </Box>
+        );
+    }
 
     return (
         <Card sx={{ mt: 2, mb: 4, borderRadius: 2 }}>

@@ -1,4 +1,4 @@
-import { prisma } from './src/utils/prisma';
+import { prisma } from '../src/utils/prisma';
 
 // Matches hiron_acym_list exactly: id 1, 2, 8 (id 13 "Test Liste" was inactive/unused, skipped)
 const LISTS = [

@@ -1,5 +1,5 @@
-import { prisma } from './src/utils/prisma';
-import { sendBookingConfirmationEmail } from './src/services/mailer.service';
+import { prisma } from '../src/utils/prisma';
+import { sendBookingConfirmationEmail } from '../src/services/mailer.service';
 
 async function main() {
   const latestBooking = await prisma.booking.findFirst({

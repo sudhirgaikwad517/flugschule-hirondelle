@@ -1,4 +1,4 @@
-import { prisma } from './src/utils/prisma';
+import { prisma } from '../src/utils/prisma';
 
 const categories = [
   { title: "Schnupperkurs", alias: "schnupperkurs", status: "PUBLISHED" },

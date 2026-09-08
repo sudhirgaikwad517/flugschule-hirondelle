@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, Typography, Grid, CircularProgress, Box, FormControl, InputLabel, Select, MenuItem, TextField } from '@mui/material';
 import { Title, useDataProvider } from 'react-admin';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -26,8 +26,18 @@ export const EventsDashboard = () => {
         return toDateInputValue(d);
     });
     const [customTo, setCustomTo] = useState(() => toDateInputValue(new Date()));
+    const [rangeSwapped, setRangeSwapped] = useState(false);
+
+    // Guards against out-of-order responses: if the admin flips the range
+    // dropdown quickly, an older/slower request could otherwise resolve
+    // after a newer one and silently overwrite it with stale data.
+    const abortRef = useRef<AbortController | null>(null);
 
     useEffect(() => {
+        const controller = new AbortController();
+        abortRef.current?.abort();
+        abortRef.current = controller;
+
         const fetchStats = async () => {
             setLoading(true);
             setError(false);
@@ -40,26 +50,44 @@ export const EventsDashboard = () => {
                     qs.set('days', preset);
                 }
                 const response = await fetch(`/api/stats/dashboard?${qs.toString()}`, {
-                    headers: { Authorization: `Bearer ${localStorage.getItem('auth')}` }
+                    headers: { Authorization: `Bearer ${localStorage.getItem('auth')}` },
+                    signal: controller.signal,
                 });
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const json = await response.json();
                 setData(json);
-            } catch (err) {
+                setRangeSwapped(preset === 'custom' && customFrom > customTo);
+            } catch (err: any) {
+                if (err?.name === 'AbortError') return;
                 console.error("Failed to fetch dashboard stats", err);
                 setError(true);
             } finally {
-                setLoading(false);
+                if (!controller.signal.aborted) setLoading(false);
             }
         };
         fetchStats();
+        return () => controller.abort();
     }, [dataProvider, preset, customFrom, customTo]);
+
+    const handlePresetChange = (value: string) => {
+        if (value === 'custom' && preset !== 'custom') {
+            // Seed the custom range from whatever preset was active, instead
+            // of showing stale from/to values (or the initial 30-day
+            // default) that don't match what was just being viewed.
+            const days = Number(preset) || 30;
+            const from = new Date();
+            from.setDate(from.getDate() - days);
+            setCustomFrom(toDateInputValue(from));
+            setCustomTo(toDateInputValue(new Date()));
+        }
+        setPreset(value);
+    };
 
     const filterBar = (
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center', mb: 3, mt: 1 }}>
             <FormControl size="small" sx={{ minWidth: 200 }}>
                 <InputLabel>Zeitraum</InputLabel>
-                <Select value={preset} label="Zeitraum" onChange={(e) => setPreset(e.target.value)}>
+                <Select value={preset} label="Zeitraum" onChange={(e) => handlePresetChange(e.target.value)}>
                     {RANGE_PRESETS.map((p) => <MenuItem key={p.id} value={p.id}>{p.label}</MenuItem>)}
                 </Select>
             </FormControl>
@@ -73,6 +101,11 @@ export const EventsDashboard = () => {
                         size="small" label="Bis" type="date" InputLabelProps={{ shrink: true }}
                         value={customTo} onChange={(e) => setCustomTo(e.target.value)}
                     />
+                    {rangeSwapped && (
+                        <Typography variant="caption" color="text.secondary">
+                            "Von" lag nach "Bis" - Zeitraum wurde automatisch getauscht.
+                        </Typography>
+                    )}
                 </>
             )}
         </Box>

@@ -224,13 +224,25 @@ export const EventDatesManager = () => {
     };
 
     const togglePublish = async (id: string) => {
-        await fetch(`${API}/events/${id}/toggle-publish`, { method: 'PATCH', headers: authHeaders() });
-        loadDates();
+        try {
+            const res = await fetch(`${API}/events/${id}/toggle-publish`, { method: 'PATCH', headers: authHeaders() });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            loadDates();
+        } catch (err) {
+            console.error(err);
+            notify('Fehler beim Ändern des Veröffentlichungsstatus', { type: 'error' });
+        }
     };
 
     const toggleCancel = async (id: string) => {
-        await fetch(`${API}/events/${id}/toggle-cancel`, { method: 'PATCH', headers: authHeaders() });
-        loadDates();
+        try {
+            const res = await fetch(`${API}/events/${id}/toggle-cancel`, { method: 'PATCH', headers: authHeaders() });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            loadDates();
+        } catch (err) {
+            console.error(err);
+            notify('Fehler beim Ändern des Stornierungsstatus', { type: 'error' });
+        }
     };
 
     const deleteDate = async (id: string) => {

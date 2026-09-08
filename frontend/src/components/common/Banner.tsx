@@ -51,6 +51,13 @@ const BANNER_SLIDES: BannerSlide[] = [
 export const Banner = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slides, setSlides] = useState(BANNER_SLIDES);
+  // The curated default slides are all known 1920x1080 (16:9), so a corner
+  // zoom/pan never crops the actual subject out of frame - but admin-
+  // uploaded CMS banners can be any aspect ratio (e.g. a portrait photo),
+  // where anchoring bg-cover to a corner risks cropping the subject. Only
+  // apply the corner pan to the curated defaults; CMS slides get a safe
+  // center anchor instead.
+  const [isDynamic, setIsDynamic] = useState(false);
 
   useEffect(() => {
     const fetchBanners = async () => {
@@ -59,16 +66,17 @@ export const Banner = () => {
         if (res.ok) {
           const data = await res.json();
           const topBanners = data.filter((b: any) => b.position === 'home_top');
-          
+
           if (topBanners.length > 0) {
             const dynamicSlides = topBanners.map((b: any) => ({
               image: b.imageUrl,
               text: b.title,
               linkUrl: b.linkUrl
             }));
-            
+
             // Mix static and dynamic, or just replace
             // Replacing if dynamic exists is usually preferred for CMS control
+            setIsDynamic(true);
             setSlides(dynamicSlides);
           }
         }
@@ -78,6 +86,15 @@ export const Banner = () => {
     };
     fetchBanners();
   }, []);
+
+  // If the CMS fetch above replaces `slides` with a shorter array than
+  // whatever the user (or the 7s autoplay) had already scrolled to,
+  // `currentSlide` can end up pointing past the end - every slide's
+  // `index === currentSlide` check then fails at once, so the banner shows
+  // no image at all until the next click or autoplay tick self-heals it.
+  useEffect(() => {
+    if (currentSlide >= slides.length) setCurrentSlide(0);
+  }, [slides, currentSlide]);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % slides.length);
@@ -111,7 +128,7 @@ export const Banner = () => {
           center-zoom, which is what actually gives it that diagonal
           "Ken Burns" motion instead of just growing in place. */}
       {slides.map((slide, index) => {
-        const origin = KENBURNS_ORIGINS[index % KENBURNS_ORIGINS.length];
+        const origin = isDynamic ? 'center center' : KENBURNS_ORIGINS[index % KENBURNS_ORIGINS.length];
         return (
           <div
             key={index}

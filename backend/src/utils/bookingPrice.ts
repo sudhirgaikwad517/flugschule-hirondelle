@@ -62,11 +62,16 @@ export async function calculateBookingPrice(
   let baseTotal = 0;
   if (items && items.length > 0) {
     const ticketIds = items.map(i => i.ticketId);
-    const tickets = await prisma.eventTicket.findMany({ where: { id: { in: ticketIds } } });
+    // Scoped to this eventId so a ticket belonging to a different event never
+    // contributes to this event's price (createBookingAtomic separately
+    // rejects the whole request outright if that happens - this is just
+    // defense in depth for this function's own authoritative role).
+    const tickets = await prisma.eventTicket.findMany({ where: { id: { in: ticketIds }, eventId } });
     const ticketMap = new Map(tickets.map(t => [t.id, t]));
     for (const item of items) {
       const ticket = ticketMap.get(item.ticketId);
-      if (ticket) baseTotal += ticket.price * Number(item.quantity || 0);
+      const quantity = Number(item.quantity);
+      if (ticket && Number.isInteger(quantity) && quantity > 0) baseTotal += ticket.price * quantity;
     }
   }
 

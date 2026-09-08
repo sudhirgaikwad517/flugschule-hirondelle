@@ -1,5 +1,5 @@
 import mysql from 'mysql2/promise';
-import { prisma } from './src/utils/prisma';
+import { prisma } from '../src/utils/prisma';
 
 // Scope of this migration (per explicit request):
 //  - Newsletter subscribers: ALL real lists (excludes the disabled "Test Liste")
@@ -303,7 +303,14 @@ async function migrateEventsAndBookings(
 
     // Tiered events: wipe and rebuild bookings+tickets each run so ticket tiers and
     // per-tier booking counts always match Matukio's different_fees_override exactly.
+    // Destructive, so it only runs with an explicit opt-in - re-running this script
+    // against a live/already-migrated DB without meaning to would otherwise silently
+    // delete real bookings for every tiered event.
     if (isTiered) {
+      if (process.env.CONFIRM_MIGRATION_WIPE !== '1') {
+        console.warn(`Skipping tiered-event rebuild for event ${newEventId} - set CONFIRM_MIGRATION_WIPE=1 to allow deleting/rebuilding its bookings+tickets.`);
+        continue;
+      }
       await prisma.booking.deleteMany({ where: { eventId: newEventId } });
       await prisma.eventTicket.deleteMany({ where: { eventId: newEventId } });
     }

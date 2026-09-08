@@ -8,6 +8,9 @@ import jwt from 'jsonwebtoken';
 import { resolveBookingCustomer } from '../utils/bookingCustomer';
 import { getNewsletterTransporter } from '../utils/newsletterTransporter';
 import { buildBookingPlaceholders, renderMatTokens, parseCsvTemplateTokens, friendlyColumnName, htmlTemplateToLines } from '../utils/matukioTemplates';
+import { escapeHtml } from '../utils/htmlEscape';
+import { csvEscape } from '../utils/csvEscape';
+import { publicLookupRateLimit } from '../middlewares/rateLimit.middleware';
 
 const router = Router();
 
@@ -32,7 +35,7 @@ router.get('/my-bookings', authenticateJWT, async (req: any, res) => {
 // Post-event rating - reachable via the unguessable booking id itself as the
 // link token (matches Matukio's uuid-token rating link), no login required.
 // Only allowed once the event has actually finished, and only once.
-router.get('/:id/rating-info', async (req, res) => {
+router.get('/:id/rating-info', publicLookupRateLimit, async (req, res) => {
   try {
     const booking = await prisma.booking.findUnique({
       where: { id: req.params.id as string },
@@ -54,7 +57,7 @@ router.get('/:id/rating-info', async (req, res) => {
   }
 });
 
-router.post('/:id/rate', async (req, res) => {
+router.post('/:id/rate', publicLookupRateLimit, async (req, res) => {
   try {
     const { rating, comment } = req.body;
     const ratingNum = Number(rating);
@@ -461,7 +464,6 @@ router.get('/export/csv', authenticateJWT, authorizeAdmin, async (req, res) => {
     const templatesConfig = await prisma.templatesConfig.findUnique({ where: { id: 'default' } });
     const csvTemplate = (templatesConfig?.csvXml as any)?.csvTemplate as string | undefined;
 
-    const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
     let header: string[];
     let rows: string[][];
 
@@ -493,7 +495,7 @@ router.get('/export/csv', authenticateJWT, authorizeAdmin, async (req, res) => {
       });
     }
 
-    const csv = [header, ...rows].map((r) => r.map(escape).join(';')).join('\r\n');
+    const csv = [header, ...rows].map((r) => r.map(csvEscape).join(';')).join('\r\n');
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename=buchungen.csv');
@@ -510,9 +512,9 @@ function renderPrintList(title: string, bookings: any[], withSignatureColumn: bo
     const seats = b.items.reduce((s: number, i: any) => s + i.quantity, 0);
     return `
       <tr>
-        <td>${name}</td>
-        <td>${email || ''}</td>
-        <td>${b.event.title}</td>
+        <td>${escapeHtml(name)}</td>
+        <td>${escapeHtml(email || '')}</td>
+        <td>${escapeHtml(b.event.title)}</td>
         <td>${new Date(b.event.startDate).toLocaleDateString('de-DE')}</td>
         <td>${seats}</td>
         ${withSignatureColumn ? '<td class="sig-cell"></td>' : ''}
@@ -666,30 +668,47 @@ async function createBookingAtomic(params: {
     throw new BookingRequestError(400, 'Registration deadline has passed');
   }
 
+  // Reject the whole request up front if any item has a non-positive/non-
+  // integer quantity (a negative value would otherwise drive the price
+  // negative - clamped to a free €0 booking - while still permanently
+  // deflating this ticket's booked-count in future capacity checks below),
+  // or if any ticketId doesn't actually belong to this event (which would
+  // let a caller borrow another event's ticket price/capacity accounting
+  // while the booking shows up on this event's participant list instead).
+  if (items && items.length > 0) {
+    for (const item of items) {
+      if (!Number.isInteger(item.quantity) || item.quantity < 1) {
+        throw new BookingRequestError(400, 'Ungültige Anzahl');
+      }
+    }
+    const ticketIds = items.map((i) => i.ticketId);
+    const validTickets = await prisma.eventTicket.findMany({ where: { id: { in: ticketIds }, eventId } });
+    const validTicketIds = new Set(validTickets.map((t) => t.id));
+    if (ticketIds.some((id) => !validTicketIds.has(id))) {
+      throw new BookingRequestError(400, 'Ungültiges Ticket für dieses Event');
+    }
+  }
+
   // Authoritative price calculation (tiered-fee + voucher discounts applied server-side)
   const priceResult = await calculateBookingPrice(eventId, items, voucherCode, isRegisteredUser);
   if (voucherCode && !priceResult.appliedVoucherCode) {
     throw new BookingRequestError(400, 'Ungültiger Gutschein');
   }
 
-  return prisma.$transaction(async (tx) => {
-    if (priceResult.appliedVoucherCode) {
-      const voucher = await tx.voucher.update({
-        where: { code: priceResult.appliedVoucherCode },
-        data: { usedCount: { increment: 1 } }
-      });
-      if (voucher.limit !== 0 && voucher.usedCount > voucher.limit) {
-        throw new BookingRequestError(400, 'Ungültiger Gutschein');
-      }
-      if (customerDetails) {
-        customerDetails.appliedVoucher = priceResult.appliedVoucherCode;
-      }
-    }
+  if (priceResult.appliedVoucherCode && customerDetails) {
+    customerDetails.appliedVoucher = priceResult.appliedVoucherCode;
+  }
 
-    // Determine Status (WAITLIST if any ticket exceeds capacity)
+  return prisma.$transaction(async (tx) => {
+    // Determine Status (WAITLIST if any ticket exceeds capacity). Lock
+    // tickets in a canonical order (sorted by id) rather than whatever order
+    // the client submitted them in - two concurrent bookings referencing the
+    // same two tickets in opposite orders would otherwise risk a MySQL
+    // deadlock, aborting one of them with a generic 500.
     let finalStatus = 'PENDING';
     if (items && items.length > 0) {
-      for (const item of items) {
+      const lockOrder = [...items].sort((a, b) => a.ticketId.localeCompare(b.ticketId));
+      for (const item of lockOrder) {
         // Row-lock the ticket so a concurrent transaction for the same ticket
         // blocks here until this one commits/rolls back.
         await tx.$queryRaw`SELECT id FROM EventTicket WHERE id = ${item.ticketId} FOR UPDATE`;
@@ -707,6 +726,22 @@ async function createBookingAtomic(params: {
             break; // Entire booking goes to waitlist
           }
         }
+      }
+    }
+
+    // Only consume the voucher's redemption slot once the booking actually
+    // has a real seat - a waitlisted booking has no guaranteed seat, so
+    // burning a limited-use voucher on it would deny it to a customer who
+    // actually gets in. The discount still applies to totalPrice either way
+    // (calculated above) and customerDetails.appliedVoucher (set above)
+    // still records which code was used, for if/when they're promoted.
+    if (priceResult.appliedVoucherCode && finalStatus !== 'WAITLIST') {
+      const voucher = await tx.voucher.update({
+        where: { code: priceResult.appliedVoucherCode },
+        data: { usedCount: { increment: 1 } }
+      });
+      if (voucher.limit !== 0 && voucher.usedCount > voucher.limit) {
+        throw new BookingRequestError(400, 'Ungültiger Gutschein');
       }
     }
 
@@ -808,12 +843,18 @@ router.post('/public', async (req, res) => {
 
 router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    // totalPrice is deliberately never settable through this generic admin
-    // edit route - it must stay tied to the actual booked items/tickets
-    // (recomputed via calculateBookingPrice at creation time), not an
-    // arbitrary override. The admin UI itself never sends this field; this
-    // just closes the gap for anyone hitting the endpoint directly.
-    const { items, id, user, event, totalPrice, ...bookingData } = req.body;
+    // totalPrice/eventId/userId are deliberately never settable through this
+    // generic admin edit route - totalPrice must stay tied to the actual
+    // booked items/tickets (recomputed via calculateBookingPrice at creation
+    // time), and reassigning eventId/userId here would move a booking onto
+    // a different event/customer without recomputing price, items, or
+    // capacity for either side. The admin UI itself never sends these
+    // fields; this just closes the gap for anyone hitting the endpoint
+    // directly.
+    const { items, id, user, event, totalPrice, eventId, userId, ...bookingData } = req.body;
+    if (items && items.some((i: any) => !Number.isInteger(Number(i.quantity)) || Number(i.quantity) < 1)) {
+      return res.status(400).json({ message: 'Ungültige Anzahl' });
+    }
     const existing = await prisma.booking.findUnique({ where: { id: req.params.id as string }, select: { status: true } });
     const booking = await prisma.booking.update({
       where: { id: req.params.id as string },
