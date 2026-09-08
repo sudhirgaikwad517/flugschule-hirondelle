@@ -7,6 +7,12 @@ interface BannerSlide {
   linkUrl?: string;
 }
 
+// Cycled per-slide (not randomized, so the layout is stable across
+// re-renders) to mimic the old site's "Camera" slideshow choosing a random
+// zoom anchor corner per slide - zooming toward a corner instead of the
+// center is what actually reads as a Ken Burns pan+zoom.
+const KENBURNS_ORIGINS = ['top left', 'bottom right', 'top right', 'bottom left'];
+
 const BANNER_SLIDES: BannerSlide[] = [
   {
     image: 'https://picsum.photos/id/1018/1920/1080',
@@ -81,11 +87,12 @@ export const Banner = () => {
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
   };
 
-  // Auto-play functionality
+  // Auto-play functionality - 7s dwell time matches the old site's Camera
+  // slideshow (`time: 7000` in its config)
   useEffect(() => {
     const timer = setInterval(() => {
       nextSlide();
-    }, 6000);
+    }, 7000);
     return () => clearInterval(timer);
   }, [slides.length]);
 
@@ -96,31 +103,33 @@ export const Banner = () => {
   return (
     <section className="relative w-full h-[calc(100vh-80px)] min-h-[500px] md:min-h-[600px] flex flex-col items-center justify-center text-center text-white overflow-hidden group">
       
-      {/* Background Images - Ken Burns effect: each slide slowly zooms in
-          while active, and crossfades through a blur into the next one.
-          The outgoing slide starts fading out immediately (delay-0); the
-          incoming slide's fade-in is delayed until the outgoing one is
-          most of the way through disappearing (delay-700), so the two
-          never sit at equal, fully-visible opacity at the same time - it
-          reads as "first fades away, then the next appears" rather than
-          an instant swap or an equal-strength blend. */}
-      {slides.map((slide, index) => (
-        <div
-          key={index}
-          className={`absolute inset-0 overflow-hidden transition-[opacity,filter] duration-[900ms] ease-in-out ${
-            index === currentSlide ? 'opacity-100 blur-none delay-700' : 'opacity-0 blur-md delay-0'
-          }`}
-        >
+      {/* Background Images - Ken Burns effect, matching the old site's real
+          "Camera" jQuery slideshow (mod_slideshowck) behaviour: a plain
+          simultaneous crossfade (1.5s, linear - both slides move together,
+          not sequentially) plus a zoom that pans toward a randomly-chosen
+          corner per slide (via transform-origin) rather than a flat
+          center-zoom, which is what actually gives it that diagonal
+          "Ken Burns" motion instead of just growing in place. */}
+      {slides.map((slide, index) => {
+        const origin = KENBURNS_ORIGINS[index % KENBURNS_ORIGINS.length];
+        return (
           <div
-            className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 ease-out ${
-              index === currentSlide ? 'kenburns-active' : ''
+            key={index}
+            className={`absolute inset-0 overflow-hidden transition-opacity duration-[1500ms] ease-linear ${
+              index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
             }`}
-            style={{ backgroundImage: `url("${slide.image}")` }}
-          ></div>
-          {/* Subtle overlay for text readability */}
-          <div className="absolute inset-0 bg-black/10"></div>
-        </div>
-      ))}
+          >
+            <div
+              className={`absolute inset-0 bg-cover bg-no-repeat ${
+                index === currentSlide ? 'kenburns-active' : ''
+              }`}
+              style={{ backgroundImage: `url("${slide.image}")`, backgroundPosition: origin, transformOrigin: origin }}
+            ></div>
+            {/* Subtle overlay for text readability */}
+            <div className="absolute inset-0 bg-black/10"></div>
+          </div>
+        );
+      })}
 
       {/* Name Plate Container - Aligned to bottom left of container */}
       <div className="absolute inset-0 z-20 flex items-end pb-24 md:pb-32">
