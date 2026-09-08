@@ -77,9 +77,14 @@ body.admin-root .RaDatagrid-tableWrapper {
    flex row by design, so a page with many filters/buttons runs its actions
    off the right edge of the screen instead of wrapping, with nothing to
    scroll them into view. Forcing wrap at all widths fixes that everywhere
-   in the admin, not just on Bookings. */
-body.admin-root .RaListToolbar-root {
+   in the admin, not just on Bookings.
+   NOTE: the actual DOM class here is RaList-actions (ListView.js passes it
+   in explicitly as a plain className prop) - RaListToolbar-root is only the
+   `name` used internally for MUI theme style-override matching and is never
+   attached to the rendered element, so targeting it does nothing. */
+body.admin-root .RaList-actions {
   flex-wrap: wrap !important;
+  row-gap: 8px;
 }
 
 /* CustomAppBar.tsx locks the admin header to exactly 64px - react-admin's
