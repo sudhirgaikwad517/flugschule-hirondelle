@@ -38,6 +38,29 @@ html, body {
   margin: 0;
   padding: 0;
 }
+/* Diagnosed via a live console check on the actual admin Bookings page:
+   html/body's own clientWidth measured far narrower than window.innerWidth
+   (e.g. 702px vs a real 1667px viewport), even though `width: 100%` above
+   should resolve against the viewport for the root element - everything
+   INSIDE (the sidebar+content layout) was still rendering at the full,
+   correct width and simply overflowing past html's undersized box, where
+   overflow-x:hidden then silently clipped it with no scrollbar. #root (React's
+   actual mount point, and the true root of everything this app renders) gets
+   its own explicit viewport-unit width here as a second, independent way to
+   size it - `vw` is computed straight from the viewport's own dimensions,
+   not through whatever percentage-resolution path was producing the wrong
+   answer for html/body's `width: 100%` above.
+   Deliberately NOT setting overflow-x here (same reasoning as body above):
+   a non-visible overflow-x on an element with the default overflow-y:
+   visible gets silently upgraded to overflow-y:auto too, turning #root
+   into its own scroll container - which is exactly what broke the fixed
+   admin sidebar/header before (see appBarAlwaysOn note below). html's own
+   overflow-x:hidden is still the one and only horizontal clipping
+   boundary; this rule only fixes #root's WIDTH. */
+#root {
+  width: 100vw;
+  max-width: 100vw;
+}
 
 body.admin-root .RaLayout-root {
   min-width: 0;
