@@ -272,7 +272,16 @@ const StatusChip = () => {
 
 export const BookingList = () => (
     <List filters={<BookingFilter />} actions={<BookingListActions />} filterDefaultValues={{ status: 'activeandpending' }} sort={{ field: 'createdAt', order: 'DESC' }}>
-        <Datagrid rowClick="show" bulkActionButtons={false} sx={{ overflowX: 'auto' }}>
+        {/* bulkActionButtons must be a truthy, non-false value for the
+            row-selection checkboxes to render at all - `false` here
+            previously disabled them outright, which meant
+            BookingListActions' Aktivieren/Ausstehend/Ablehnen/... row could
+            never actually have any selectedIds to act on. An empty fragment
+            keeps the checkboxes (and react-admin's small built-in "N
+            ausgewählt" / select-all-matching bar) without pulling in
+            react-admin's own default Delete button, since deletion here
+            goes through the dedicated Papierkorb flow instead. */}
+        <Datagrid rowClick="show" bulkActionButtons={<></>} sx={{ overflowX: 'auto' }}>
             <TextField source="shortId" label="ID" />
             <TextField source="customerName" label="Name" />
             <TextField source="customerEmail" label="E-Mail" />
