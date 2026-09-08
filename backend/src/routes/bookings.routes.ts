@@ -808,7 +808,12 @@ router.post('/public', async (req, res) => {
 
 router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    const { items, id, user, event, ...bookingData } = req.body;
+    // totalPrice is deliberately never settable through this generic admin
+    // edit route - it must stay tied to the actual booked items/tickets
+    // (recomputed via calculateBookingPrice at creation time), not an
+    // arbitrary override. The admin UI itself never sends this field; this
+    // just closes the gap for anyone hitting the endpoint directly.
+    const { items, id, user, event, totalPrice, ...bookingData } = req.body;
     const existing = await prisma.booking.findUnique({ where: { id: req.params.id as string }, select: { status: true } });
     const booking = await prisma.booking.update({
       where: { id: req.params.id as string },

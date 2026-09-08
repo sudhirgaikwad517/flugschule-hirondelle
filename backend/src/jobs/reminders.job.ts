@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { prisma } from '../utils/prisma';
 import { getNewsletterTransporter } from '../utils/newsletterTransporter';
+import { resolveBookingCustomer } from '../utils/bookingCustomer';
 
 async function resolveLocationName(event: { location: string | null; locationId: string | null }) {
   if (event.location) return event.location;
@@ -39,27 +40,33 @@ export const startCronJobs = () => {
       for (const event of upcomingEvents) {
         const locationName = await resolveLocationName(event);
         for (const booking of event.bookings) {
-          const customer = booking.customerDetails as any;
-          const customerEmail = customer ? customer.email : (booking.user ? booking.user.email : null);
-          const customerName = customer ? `${customer.firstName} ${customer.lastName}` : (booking.user ? booking.user.name : 'Kunde');
-          if (!customerEmail) continue;
+          // Each booking's email is isolated in its own try/catch - one
+          // SMTP failure used to abort the whole cron run, silently skipping
+          // every remaining booking that day with no way to retry until the
+          // date window matched again (i.e. never, for a one-off event).
+          try {
+            const { name: customerName, email: customerEmail } = resolveBookingCustomer(booking);
+            if (!customerEmail) continue;
 
-          const info = await transporter.sendMail({
-            from: fromHeader,
-            to: customerEmail,
-            subject: `Erinnerung: ${event.title} beginnt in 3 Tagen!`,
-            html: `
-              <h3>Hallo ${customerName},</h3>
-              <p>wir freuen uns auf Ihre Teilnahme an <strong>${event.title}</strong>!</p>
-              <p>Die Veranstaltung beginnt am ${new Date(event.startDate).toLocaleDateString('de-DE')}.</p>
-              <p>Ort: ${locationName}</p>
-              <br/>
-              <p>Wir wünschen Ihnen viel Spaß und einen guten Flug!</p>
-              <br/>
-              <p>Ihr Team der Flugschule Hirondelle</p>
-            `
-          });
-          if (isTestMode) console.log(`Reminder sent to ${customerEmail} (test mode, no real SMTP configured yet):`, info.messageId);
+            const info = await transporter.sendMail({
+              from: fromHeader,
+              to: customerEmail,
+              subject: `Erinnerung: ${event.title} beginnt in 3 Tagen!`,
+              html: `
+                <h3>Hallo ${customerName},</h3>
+                <p>wir freuen uns auf Ihre Teilnahme an <strong>${event.title}</strong>!</p>
+                <p>Die Veranstaltung beginnt am ${new Date(event.startDate).toLocaleDateString('de-DE')}.</p>
+                <p>Ort: ${locationName}</p>
+                <br/>
+                <p>Wir wünschen Ihnen viel Spaß und einen guten Flug!</p>
+                <br/>
+                <p>Ihr Team der Flugschule Hirondelle</p>
+              `
+            });
+            if (isTestMode) console.log(`Reminder sent to ${booking.id} (test mode, no real SMTP configured yet):`, info.messageId);
+          } catch (err) {
+            console.error(`Failed to send 3-day reminder for booking ${booking.id}:`, err);
+          }
         }
       }
 
@@ -77,7 +84,10 @@ export const startCronJobs = () => {
             { endDate: null, startDate: { gte: yesterdayStart, lt: yesterdayEnd } }
           ]
         },
-        include: { bookings: { where: { status: { not: 'CANCELLED' } }, include: { user: true } } }
+        // Only actually-confirmed/attended bookings - `not: CANCELLED` also
+        // matched PENDING (never paid) and WAITLIST (never admitted),
+        // sending "thanks for attending" emails to people who didn't.
+        include: { bookings: { where: { status: { in: ['CONFIRMED', 'COMPLETED'] } }, include: { user: true } } }
       });
 
       console.log(`Found ${endedEvents.length} events that ended yesterday - sending rating requests.`);
@@ -85,26 +95,28 @@ export const startCronJobs = () => {
       for (const event of endedEvents) {
         for (const booking of event.bookings) {
           if (booking.rating != null) continue; // already rated
-          const customer = booking.customerDetails as any;
-          const customerEmail = customer ? customer.email : (booking.user ? booking.user.email : null);
-          const customerName = customer ? `${customer.firstName} ${customer.lastName}` : (booking.user ? booking.user.name : 'Kunde');
-          if (!customerEmail) continue;
+          try {
+            const { name: customerName, email: customerEmail } = resolveBookingCustomer(booking);
+            if (!customerEmail) continue;
 
-          const baseUrl = process.env.FRONTEND_URL || 'https://www.fs-hirondelle.de';
-          const info = await transporter.sendMail({
-            from: fromHeader,
-            to: customerEmail,
-            subject: `Wie war "${event.title}"? Ihre Meinung ist uns wichtig!`,
-            html: `
-              <h3>Hallo ${customerName},</h3>
-              <p>vielen Dank für Ihre Teilnahme an <strong>${event.title}</strong>!</p>
-              <p>Wir würden uns sehr über Ihre Bewertung freuen:</p>
-              <p><a href="${baseUrl}/bewertung/${booking.id}" style="display:inline-block;padding:10px 20px;background:#5bc0de;color:#fff;text-decoration:none;border-radius:4px;">Jetzt bewerten</a></p>
-              <br/>
-              <p>Ihr Team der Flugschule Hirondelle</p>
-            `
-          });
-          if (isTestMode) console.log(`Rating request sent to ${customerEmail} (test mode, no real SMTP configured yet):`, info.messageId);
+            const baseUrl = process.env.FRONTEND_URL || 'https://www.fs-hirondelle.de';
+            const info = await transporter.sendMail({
+              from: fromHeader,
+              to: customerEmail,
+              subject: `Wie war "${event.title}"? Ihre Meinung ist uns wichtig!`,
+              html: `
+                <h3>Hallo ${customerName},</h3>
+                <p>vielen Dank für Ihre Teilnahme an <strong>${event.title}</strong>!</p>
+                <p>Wir würden uns sehr über Ihre Bewertung freuen:</p>
+                <p><a href="${baseUrl}/bewertung/${booking.id}" style="display:inline-block;padding:10px 20px;background:#5bc0de;color:#fff;text-decoration:none;border-radius:4px;">Jetzt bewerten</a></p>
+                <br/>
+                <p>Ihr Team der Flugschule Hirondelle</p>
+              `
+            });
+            if (isTestMode) console.log(`Rating request sent for booking ${booking.id} (test mode, no real SMTP configured yet):`, info.messageId);
+          } catch (err) {
+            console.error(`Failed to send rating request for booking ${booking.id}:`, err);
+          }
         }
       }
 

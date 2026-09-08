@@ -66,8 +66,10 @@ export async function generateInvoicePDF(bookingId: string): Promise<Buffer> {
     // Invoice Items
     doc.font('Helvetica');
     let y = doc.y + 10;
-    
+    let itemsTotal = 0;
+
     booking.items.forEach(item => {
+      itemsTotal += item.ticket.price * item.quantity;
       doc.text(item.ticket.name, 50, y);
       doc.text(item.quantity.toString(), 300, y);
       doc.text(`${item.ticket.price.toFixed(2)} €`, 400, y);
@@ -76,8 +78,20 @@ export async function generateInvoicePDF(bookingId: string): Promise<Buffer> {
     });
 
     doc.moveTo(50, y + 10).lineTo(550, y + 10).stroke();
-    
     y += 20;
+
+    // Items above are listed at full price; if a voucher/tiered-fee discount
+    // applied, totalPrice is lower than their sum - show it explicitly so
+    // the invoice's own numbers add up instead of jumping straight to a
+    // lower total with no line explaining why.
+    const discount = itemsTotal - booking.totalPrice;
+    if (discount > 0.01) {
+      doc.font('Helvetica');
+      doc.text('Rabatt:', 350, y);
+      doc.text(`-${discount.toFixed(2)} €`, 500, y);
+      y += 20;
+    }
+
     doc.font('Helvetica-Bold');
     doc.text('Gesamtbetrag:', 350, y);
     doc.text(`${booking.totalPrice.toFixed(2)} €`, 500, y);

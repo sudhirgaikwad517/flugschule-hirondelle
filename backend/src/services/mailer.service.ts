@@ -67,14 +67,23 @@ export async function sendBookingConfirmationEmail(bookingId: string) {
     `;
 
     let ticketRows = '';
+    let itemsTotal = 0;
     booking.items.forEach(item => {
+      itemsTotal += item.quantity * item.ticket.price;
       ticketRows += `<li>${item.quantity}x ${item.ticket.name} (${item.ticket.price} €)</li>`;
     });
+    // Tickets are listed at full price above; if a voucher/tiered-fee
+    // discount was applied, totalPrice is lower than that sum - show the
+    // discount explicitly so the numbers in the email actually add up.
+    const discount = itemsTotal - booking.totalPrice;
+    const discountRow = discount > 0.01
+      ? `<strong>Rabatt:</strong> -${discount.toFixed(2)} €<br/>`
+      : '';
 
     const bookingDetails = `
       <strong>Buchungs-ID:</strong> ${booking.id}<br/>
       <strong>Tickets:</strong><ul>${ticketRows}</ul>
-      <strong>Gesamtpreis:</strong> ${booking.totalPrice} €
+      ${discountRow}<strong>Gesamtpreis:</strong> ${booking.totalPrice} €
     `;
 
     // Replace placeholders in subject and body

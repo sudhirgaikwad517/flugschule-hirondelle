@@ -45,7 +45,9 @@ export function generateRecurringDates(spec: RecurrenceSpec): string[] {
   let count = spec.count ?? 0;
   if (spec.endMode === 'date' && spec.endDate) {
     const end = new Date(`${spec.endDate}T00:00:00`);
-    count = Math.max(0, diffInUnit(cursor, end, spec.type));
+    // +1: diffInUnit counts the number of unit-boundaries between start and
+    // end, but we want the occurrence count *inclusive* of both endpoints.
+    count = Math.max(0, diffInUnit(cursor, end, spec.type) + 1);
   }
   if (!count || count <= 0) return [];
   if (count > 366) count = 366; // sanity cap
@@ -53,16 +55,18 @@ export function generateRecurringDates(spec: RecurrenceSpec): string[] {
   const isSimple = spec.type === 'days' || spec.type === 'years';
   const weekdays = spec.weekdays?.length ? spec.weekdays : [cursor.getDay()];
 
+  // Push the *current* period before advancing, so i=0 is spec.startDate's
+  // own period - previously it advanced first, so startDate itself (and,
+  // for weeks/months, its own week/month) was never included in the output.
   for (let i = 0; i < count; i++) {
     if (isSimple) {
-      cursor = addUnit(cursor, 1, spec.type);
       dates.push(formatYMD(cursor));
-      continue;
+    } else {
+      for (const wd of weekdays) {
+        dates.push(formatYMD(setToWeekday(cursor, wd)));
+      }
     }
     cursor = addUnit(cursor, 1, spec.type);
-    for (const wd of weekdays) {
-      dates.push(formatYMD(setToWeekday(cursor, wd)));
-    }
   }
 
   return Array.from(new Set(dates)).sort();
