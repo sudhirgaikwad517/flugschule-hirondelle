@@ -58,6 +58,30 @@ body.admin-root .RaList-content {
   max-width: 100%;
 }
 
+/* Datagrid's own `sx` (e.g. Bookings.tsx) lands on RaDatagrid-root, but that
+   div only WRAPS the actual scroll boundary - the <table> itself sits one
+   level deeper inside RaDatagrid-tableWrapper, which react-admin ships with
+   no overflow rule at all. Without this, a table with many columns (like
+   Bookings) has nowhere to scroll and its trailing columns are simply
+   invisible once html's overflow-x:hidden clips them. */
+body.admin-root .RaDatagrid-root {
+  max-width: 100%;
+}
+body.admin-root .RaDatagrid-tableWrapper {
+  overflow-x: auto;
+}
+
+/* react-admin's ListToolbar (filters + the custom bulk-action buttons row,
+   e.g. Bookings' "Aktivieren/Ausstehend/Ablehnen/..." toolbar) only wraps
+   below the md breakpoint - above it, filters and actions share one nowrap
+   flex row by design, so a page with many filters/buttons runs its actions
+   off the right edge of the screen instead of wrapping, with nothing to
+   scroll them into view. Forcing wrap at all widths fixes that everywhere
+   in the admin, not just on Bookings. */
+body.admin-root .RaListToolbar-root {
+  flex-wrap: wrap !important;
+}
+
 /* CustomAppBar.tsx locks the admin header to exactly 64px - react-admin's
    own appFrame margin-top assumes its shorter stock app bar, so it under-
    compensates here and lets content/filter rows render under the fixed
