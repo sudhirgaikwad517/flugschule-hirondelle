@@ -48,6 +48,27 @@ body.admin-root .RaLayout-contentWithSidebar {
 body.admin-root #main-content {
   min-width: 0;
 }
+/* This was the actual missing link the whole time: react-admin's <List>
+   renders .list-page (flex row) > .RaList-main (flex column, flex:1 1
+   auto) > .RaList-content (flex item, stretched to fill). None of these
+   three had min-width:0, so each one kept its browser-default "automatic
+   minimum size" - a flex item is never allowed to shrink below its
+   content's own min-content width unless min-width:0 overrides that.
+   A wide Datagrid's min-content width (driven by its widest unbreakable
+   cell) forced EVERY ancestor in this chain to grow to match it instead
+   of staying bounded to the viewport, so the overflow never reached any
+   of the overflow-x:auto boundaries below (RaList-content, or the
+   booking-table-scroll wrapper in Bookings.tsx) - it sailed straight past
+   all of them and only got caught (silently, no scrollbar) by html's
+   overflow-x:hidden at the very top. min-width:0 here is what finally lets
+   the inner scroll containers actually see the overflow they're supposed
+   to catch. */
+body.admin-root .list-page {
+  min-width: 0;
+}
+body.admin-root .RaList-main {
+  min-width: 0;
+}
 /* This is the actual Card react-admin wraps each <List>'s content in - the
    real scroll boundary needs to live here (not further up the tree), or the
    overflow gets clipped away with nowhere to scroll to. react-admin's
@@ -56,6 +77,7 @@ body.admin-root #main-content {
 body.admin-root .RaList-content {
   overflow-x: auto !important;
   max-width: 100% !important;
+  min-width: 0 !important;
 }
 
 /* Overriding react-admin's RaDatagrid-tableWrapper via an external
