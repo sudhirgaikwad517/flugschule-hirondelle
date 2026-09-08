@@ -1,3 +1,7 @@
+import crypto from 'crypto';
+import { generateUnsubscribeToken } from './unsubscribeToken';
+import { JWT_SECRET } from './config';
+
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5556';
 const SITE_NAME = 'Flugschule Hirondelle';
@@ -50,13 +54,33 @@ function formatDate(date: Date, format: string): string {
 function buildUnsubscribeUrl(subscriber: Subscriber, allLists: boolean) {
   const params = new URLSearchParams({ email: subscriber.email });
   if (!allLists) params.set('list', subscriber.listType);
+  const scope = allLists ? 'unsuball' : `unsub:${subscriber.listType}`;
+  params.set('token', generateUnsubscribeToken(subscriber.email, scope));
   return `${FRONTEND_URL}/newsletter/abmelden?${params.toString()}`;
 }
 
-// Rewrites every http(s) link to go through our click-tracking redirect first.
+// Signs the (campaignId, email, url) triple so /api/track/click only ever
+// redirects to a URL that genuinely came from one of our own rewritten
+// campaign links - without this, the endpoint's ?url= param was an open
+// redirect anyone could abuse to build a phishing link that looks like it
+// comes from our own trusted domain.
+export function signClickTrackingUrl(campaignId: string, email: string, url: string): string {
+  return crypto.createHmac('sha256', JWT_SECRET).update(`${campaignId}:${email}:${url}`).digest('hex');
+}
+
+// Rewrites http(s) links to go through our click-tracking redirect first -
+// except the unsubscribe/stop-tracking/view-online links {unsubscribe},
+// {unsubscribeall}, {stoptracking}, {viewonline} generate above, which must
+// keep working (and keep their own signed token intact) even for a
+// subscriber who has tracking disabled, and shouldn't be reported as
+// "content clicks" anyway.
 function rewriteLinksForClickTracking(html: string, campaignId: string, email: string): string {
-  return html.replace(/href="(https?:\/\/[^"]+)"/gi, (_m, url) => {
-    const tracked = `${BACKEND_URL}/api/track/click?c=${encodeURIComponent(campaignId)}&e=${encodeURIComponent(email)}&url=${encodeURIComponent(url)}`;
+  return html.replace(/href="(https?:\/\/[^"]+)"/gi, (fullMatch, url) => {
+    if (url.startsWith(`${FRONTEND_URL}/newsletter/`) || url.startsWith(`${BACKEND_URL}/api/newslettercampaigns/`)) {
+      return fullMatch;
+    }
+    const sig = signClickTrackingUrl(campaignId, email, url);
+    const tracked = `${BACKEND_URL}/api/track/click?c=${encodeURIComponent(campaignId)}&e=${encodeURIComponent(email)}&url=${encodeURIComponent(url)}&sig=${sig}`;
     return `href="${tracked}"`;
   });
 }
@@ -79,8 +103,10 @@ export function renderCampaignHtml(html: string, subscriber: Subscriber, campaig
     `<a href="${buildUnsubscribeUrl(subscriber, false)}" style="color:inherit;">${label}</a>`);
   result = result.replace(/\{unsubscribeall\}(.*?)\{\/unsubscribeall\}/g, (_m, label) =>
     `<a href="${buildUnsubscribeUrl(subscriber, true)}" style="color:inherit;">${label}</a>`);
-  result = result.replace(/\{stoptracking\}(.*?)\{\/stoptracking\}/g, (_m, label) =>
-    `<a href="${FRONTEND_URL}/newsletter/tracking-stoppen?email=${encodeURIComponent(subscriber.email)}" style="color:inherit;">${label}</a>`);
+  result = result.replace(/\{stoptracking\}(.*?)\{\/stoptracking\}/g, (_m, label) => {
+    const token = generateUnsubscribeToken(subscriber.email, 'stoptracking');
+    return `<a href="${FRONTEND_URL}/newsletter/tracking-stoppen?email=${encodeURIComponent(subscriber.email)}&token=${token}" style="color:inherit;">${label}</a>`;
+  });
   if (campaignId) {
     result = result.replace(/\{viewonline\}(.*?)\{\/viewonline\}/g, (_m, label) =>
       `<a href="${BACKEND_URL}/api/newslettercampaigns/${campaignId}/view-online" style="color:inherit;">${label}</a>`);

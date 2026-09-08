@@ -7,7 +7,8 @@ interface Config {
   smtpHost: string;
   smtpPort: string;
   smtpUser: string;
-  smtpPass: string;
+  smtpPass?: string;
+  hasSmtpPass?: boolean;
   fromEmail: string;
   fromName: string;
   queueBatchSize: number;
@@ -252,8 +253,12 @@ export const AcyConfiguration = () => {
                     name="smtpPass"
                     value={config.smtpPass || ''}
                     onChange={handleChange}
+                    placeholder={config.hasSmtpPass ? '•••••••• (aktuell gesetzt - leer lassen zum Beibehalten)' : 'Passwort eingeben'}
                     className="w-full px-3 py-2 border border-slate-300 rounded focus:ring-[#0ea5e9] focus:border-[#0ea5e9]"
                   />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Aus Sicherheitsgründen wird das gespeicherte Passwort nie angezeigt. Leer lassen, um es unverändert zu lassen.
+                  </p>
                 </div>
               </div>
             </div>

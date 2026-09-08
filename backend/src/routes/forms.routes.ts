@@ -1,25 +1,8 @@
 import { Router } from 'express';
-import nodemailer from 'nodemailer';
+import { getNewsletterTransporter } from '../utils/newsletterTransporter';
+import { escapeHtml } from '../utils/htmlEscape';
 
 const router = Router();
-
-let transporter: nodemailer.Transporter | null = null;
-async function getTransporter() {
-  if (!transporter) {
-    // Ideally use real SMTP credentials from .env for production
-    const testAccount = await nodemailer.createTestAccount();
-    transporter = nodemailer.createTransport({
-      host: 'smtp.ethereal.email',
-      port: 587,
-      secure: false,
-      auth: {
-        user: testAccount.user,
-        pass: testAccount.pass,
-      },
-    });
-  }
-  return transporter;
-}
 
 router.post('/submit', async (req, res) => {
   try {
@@ -29,32 +12,40 @@ router.post('/submit', async (req, res) => {
       return res.status(400).json({ message: 'formName and data are required' });
     }
 
-    // Construct email content from dynamically submitted data
-    let htmlContent = `<h2>Neue Formular-Einreichung: ${formName}</h2>`;
+    // Construct email content from dynamically submitted data - every value
+    // (and the form name) is HTML-escaped since it's attacker-controlled and
+    // was previously interpolated raw into an email sent to school staff.
+    let htmlContent = `<h2>Neue Formular-Einreichung: ${escapeHtml(formName)}</h2>`;
     htmlContent += `<table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%; max-width: 600px;">`;
-    
+
     for (const [key, value] of Object.entries(data)) {
       htmlContent += `
         <tr>
-          <td style="background-color: #f2f2f2; font-weight: bold; width: 30%;">${key}</td>
-          <td>${value !== null && value !== undefined && value !== '' ? value : '<i>-</i>'}</td>
+          <td style="background-color: #f2f2f2; font-weight: bold; width: 30%;">${escapeHtml(key)}</td>
+          <td>${value !== null && value !== undefined && value !== '' ? escapeHtml(value) : '<i>-</i>'}</td>
         </tr>
       `;
     }
     htmlContent += `</table>`;
 
-    const t = await getTransporter();
+    // Uses the school's actually-configured SMTP account (AcyMailing >
+    // Konfiguration) - this used to always send through a throwaway Ethereal
+    // test account regardless of configuration, so every contact-form
+    // submission silently never reached the school despite reporting success.
+    const { transporter, config } = await getNewsletterTransporter();
+    const fromName = config?.fromName || 'Flugschule Hirondelle';
+    const fromEmail = config?.fromEmail || 'no-reply@fs-hirondelle.de';
+    const toEmail = config?.fromEmail || 'info@fs-hirondelle.de';
 
-    // Send email to admin
-    const info = await t.sendMail({
-      from: '"Flugschule Hirondelle Formulare" <noreply@fs-hirondelle.de>',
-      to: 'info@fs-hirondelle.de', // The admin email
-      replyTo: data.email || undefined,
+    const replyTo = typeof data.email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email) ? data.email : undefined;
+
+    await transporter.sendMail({
+      from: `"${fromName} Formulare" <${fromEmail}>`,
+      to: toEmail,
+      replyTo,
       subject: `[Website Formular] ${formName}`,
       html: htmlContent
     });
-
-    console.log(`Form ${formName} submitted. Ethereal Mail URL: ${nodemailer.getTestMessageUrl(info)}`);
 
     res.status(200).json({ message: 'Formular erfolgreich gesendet.' });
   } catch (error) {

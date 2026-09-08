@@ -47,7 +47,32 @@ const PORT = process.env.PORT || 5555;
 
 app.set('query parser', raQueryParser);
 
+// The site's own frontend is same-origin in production (this same process
+// serves the built frontend - see the NODE_ENV==='production' block below),
+// so it never actually needs CORS. This allowlist exists only for local dev
+// (frontend on a different Vite port) and any explicitly configured
+// FRONTEND_URL - previously cors() had no origin restriction at all, letting
+// any third-party site call every endpoint cross-origin.
+const allowedOrigins = new Set([
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://127.0.0.1:5173',
+  'https://flugschule-hirondelle.com',
+  'https://www.flugschule-hirondelle.com',
+  'https://fs-hirondelle.de',
+  'https://www.fs-hirondelle.de',
+  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+]);
+
 app.use(cors({
+  origin: (origin, callback) => {
+    // No Origin header = same-origin request, a server-to-server call, or a
+    // tool like curl - always allow those. An unrecognized Origin just gets
+    // no Access-Control-Allow-Origin header (callback(null, false)) rather
+    // than an error - the request still executes, but a compliant browser
+    // won't let that site's JS read the response.
+    callback(null, !origin || allowedOrigins.has(origin));
+  },
   exposedHeaders: ['Content-Range']
 }));
 app.use(express.json());

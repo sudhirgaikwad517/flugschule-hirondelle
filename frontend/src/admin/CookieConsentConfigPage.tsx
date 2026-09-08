@@ -57,14 +57,17 @@ export const CookieConsentConfigPage = () => {
             },
             body: JSON.stringify(config),
         })
-            .then((res) => res.json())
+            .then(async (res) => {
+                if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || 'Speichern fehlgeschlagen');
+                return res.json();
+            })
             .then(() => {
                 notify('Cookie-Einstellungen erfolgreich gespeichert', { type: 'success' });
                 setSaving(false);
             })
             .catch((err) => {
                 console.error(err);
-                notify('Fehler beim Speichern', { type: 'error' });
+                notify(err.message || 'Fehler beim Speichern', { type: 'error' });
                 setSaving(false);
             });
     };

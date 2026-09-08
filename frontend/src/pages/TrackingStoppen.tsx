@@ -5,11 +5,12 @@ import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 export const TrackingStoppen: React.FC = () => {
   const [searchParams] = useSearchParams();
   const email = searchParams.get('email');
+  const token = searchParams.get('token');
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
 
   useEffect(() => {
     const stopTracking = async () => {
-      if (!email) {
+      if (!email || !token) {
         setStatus('error');
         return;
       }
@@ -17,7 +18,7 @@ export const TrackingStoppen: React.FC = () => {
         const res = await fetch('/api/newsletters/public/stop-tracking', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email })
+          body: JSON.stringify({ email, token })
         });
         setStatus(res.ok ? 'success' : 'error');
       } catch {
@@ -25,7 +26,7 @@ export const TrackingStoppen: React.FC = () => {
       }
     };
     stopTracking();
-  }, [email]);
+  }, [email, token]);
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12 flex items-center justify-center px-4">

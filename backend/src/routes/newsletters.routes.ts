@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { prisma } from '../utils/prisma';
 import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware';
 import { getNewsletterTransporter } from '../utils/newsletterTransporter';
+import { verifyUnsubscribeToken } from '../utils/unsubscribeToken';
 
 const router = Router();
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
@@ -430,11 +431,19 @@ router.post('/public/subscribe', async (req, res) => {
 });
 
 // Public unsubscribe route (used by {unsubscribe}...{/unsubscribe} links in campaigns)
+// Requires the signed token issued in the email's unsubscribe link (see
+// utils/newsletterTags.ts buildUnsubscribeUrl) - previously this accepted a
+// bare email with no proof of ownership, so anyone could mass-unsubscribe
+// arbitrary third-party addresses.
 router.post('/public/unsubscribe', async (req, res) => {
   try {
-    const { email, listType } = req.body;
+    const { email, listType, token } = req.body;
     if (!email || typeof email !== 'string') {
       return res.status(400).json({ message: 'E-Mail ist erforderlich' });
+    }
+    const scope = listType ? `unsub:${listType}` : 'unsuball';
+    if (!verifyUnsubscribeToken(email, scope, token)) {
+      return res.status(403).json({ message: 'Ungültiger oder abgelaufener Abmeldelink' });
     }
 
     await prisma.newsletter.updateMany({
@@ -450,11 +459,15 @@ router.post('/public/unsubscribe', async (req, res) => {
 });
 
 // Public "stop tracking" route (used by {stoptracking}...{/stoptracking} links in campaigns)
+// - same token requirement as unsubscribe above, for the same reason.
 router.post('/public/stop-tracking', async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, token } = req.body;
     if (!email || typeof email !== 'string') {
       return res.status(400).json({ message: 'E-Mail ist erforderlich' });
+    }
+    if (!verifyUnsubscribeToken(email, 'stoptracking', token)) {
+      return res.status(403).json({ message: 'Ungültiger oder abgelaufener Link' });
     }
 
     await prisma.newsletter.updateMany({

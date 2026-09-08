@@ -52,7 +52,10 @@ export const PaymentConfigPage = () => {
             },
             body: JSON.stringify({ environment, paypalClientId, paypalClientSecret }),
         })
-            .then((res) => res.json())
+            .then(async (res) => {
+                if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || 'Speichern fehlgeschlagen');
+                return res.json();
+            })
             .then((data) => {
                 setHasSecret(!!data.hasSecret);
                 setPaypalClientSecret('');
@@ -61,7 +64,7 @@ export const PaymentConfigPage = () => {
             })
             .catch((err) => {
                 console.error(err);
-                notify('Fehler beim Speichern', { type: 'error' });
+                notify(err.message || 'Fehler beim Speichern', { type: 'error' });
                 setSaving(false);
             });
     };

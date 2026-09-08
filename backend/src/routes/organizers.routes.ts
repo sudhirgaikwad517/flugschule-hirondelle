@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../utils/prisma';
 import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware';
 import { getNewsletterTransporter } from '../utils/newsletterTransporter';
+import { escapeHtml } from '../utils/htmlEscape';
 
 const router = Router();
 
@@ -61,7 +62,7 @@ router.post('/:id/contact', async (req, res) => {
       replyTo: email,
       subject: `Kontaktanfrage von ${name} über die Webseite`,
       text: `Name: ${name}\nE-Mail: ${email}\n\nNachricht:\n${message}`,
-      html: `<p><strong>Name:</strong> ${name}</p><p><strong>E-Mail:</strong> ${email}</p><p><strong>Nachricht:</strong></p><p>${String(message).replace(/\n/g, '<br>')}</p>`
+      html: `<p><strong>Name:</strong> ${escapeHtml(name)}</p><p><strong>E-Mail:</strong> ${escapeHtml(email)}</p><p><strong>Nachricht:</strong></p><p>${escapeHtml(message).replace(/\n/g, '<br>')}</p>`
     });
 
     res.json({ message: 'Nachricht erfolgreich gesendet' });

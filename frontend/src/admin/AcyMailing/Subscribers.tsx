@@ -3,6 +3,17 @@ import { AcyLayout } from './AcyLayout';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Filter, UserPlus, Download, Upload, CheckCircle, Edit, Trash2, X, XCircle } from 'lucide-react';
 
+// Escapes a value for a CSV cell: doubles embedded quotes (proper CSV
+// escaping - a raw name/email containing a `"` would otherwise break the
+// row), and prefixes a leading =/+/-/@ with a single quote so spreadsheet
+// apps never interpret subscriber-supplied text as a formula (CSV/formula
+// injection - e.g. a name like `=cmd|'/c calc'!A1`).
+function csvField(value: unknown): string {
+  let s = String(value ?? '');
+  if (/^[=+\-@]/.test(s)) s = `'${s}`;
+  return `"${s.replace(/"/g, '""')}"`;
+}
+
 interface Subscriber {
   id: string;
   email: string;
@@ -106,13 +117,13 @@ export const AcySubscribers = () => {
   const handleExportOne = (sub: any) => {
     const headers = ['Email', 'Name', 'Listen', 'Sprache', 'Aktiv', 'Bestätigt', 'Erstellungsdatum'];
     const row = [
-      `"${sub.email}"`,
-      `"${sub.name || ''}"`,
-      `"${sub.lists ? sub.lists.join(';') : ''}"`,
-      `"${sub.language || 'German'}"`,
+      csvField(sub.email),
+      csvField(sub.name || ''),
+      csvField(sub.lists ? sub.lists.join(';') : ''),
+      csvField(sub.language || 'German'),
       sub.isActive ? 'Ja' : 'Nein',
       sub.isConfirmed ? 'Ja' : 'Nein',
-      `"${new Date(sub.subscribedAt).toISOString()}"`
+      csvField(new Date(sub.subscribedAt).toISOString())
     ];
     const csvContent = "data:text/csv;charset=utf-8," + headers.join(',') + '\n' + row.join(',');
     const encodedUri = encodeURI(csvContent);
@@ -220,13 +231,13 @@ export const AcySubscribers = () => {
 
     filteredSubscribers.forEach(sub => {
       const row = [
-        `"${sub.email}"`,
-        `"${sub.name || ''}"`,
-        `"${sub.lists ? sub.lists.join(';') : ''}"`,
-        `"${sub.language || 'German'}"`,
+        csvField(sub.email),
+        csvField(sub.name || ''),
+        csvField(sub.lists ? sub.lists.join(';') : ''),
+        csvField(sub.language || 'German'),
         sub.isActive ? 'Ja' : 'Nein',
         sub.isConfirmed ? 'Ja' : 'Nein',
-        `"${new Date(sub.subscribedAt).toISOString()}"`
+        csvField(new Date(sub.subscribedAt).toISOString())
       ];
       csvRows.push(row.join(','));
     });

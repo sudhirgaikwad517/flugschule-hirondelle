@@ -6,6 +6,7 @@ export const Abmelden: React.FC = () => {
   const [searchParams] = useSearchParams();
   const email = searchParams.get('email');
   const list = searchParams.get('list');
+  const token = searchParams.get('token');
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [settings, setSettings] = useState<{ unsubscribeTitle: string | null; unsubscribeColor: string }>({ unsubscribeTitle: null, unsubscribeColor: '#00a4ff' });
 
@@ -18,7 +19,7 @@ export const Abmelden: React.FC = () => {
 
   useEffect(() => {
     const unsubscribe = async () => {
-      if (!email) {
+      if (!email || !token) {
         setStatus('error');
         return;
       }
@@ -26,7 +27,7 @@ export const Abmelden: React.FC = () => {
         const res = await fetch('/api/newsletters/public/unsubscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, listType: list })
+          body: JSON.stringify({ email, listType: list, token })
         });
         setStatus(res.ok ? 'success' : 'error');
       } catch {
@@ -34,7 +35,7 @@ export const Abmelden: React.FC = () => {
       }
     };
     unsubscribe();
-  }, [email, list]);
+  }, [email, list, token]);
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12 flex items-center justify-center px-4">

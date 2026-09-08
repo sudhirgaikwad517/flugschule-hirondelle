@@ -10,13 +10,20 @@ router.use((req, res, next) => {
   next();
 });
 
+// Never send the SMTP password back to the client - only whether one is set,
+// same convention as PaymentConfigPage's PayPal secret handling.
+function maskSmtpPass<T extends { smtpPass?: string | null }>(config: T) {
+  const { smtpPass, ...rest } = config;
+  return { ...rest, hasSmtpPass: !!smtpPass };
+}
+
 // Get config
 router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
     let config = await prisma.newsletterConfig.findUnique({
       where: { id: 'default' }
     });
-    
+
     if (!config) {
       config = await prisma.newsletterConfig.create({
         data: {
@@ -34,7 +41,7 @@ router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
     res.set('Content-Range', `newsletterconfig 0-1/1`);
     // React admin expects an array for getList, or we can use getOne('newsletterconfig', { id: 'default' })
     // We'll return an array of 1 for standard getList compatibility
-    res.json([config]);
+    res.json([maskSmtpPass(config)]);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch Newsletter Config' });
   }
@@ -52,7 +59,7 @@ router.get('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
       });
     }
     if (config) {
-      res.json(config);
+      res.json(maskSmtpPass(config));
     } else {
       res.status(404).json({ error: 'Config not found' });
     }
@@ -74,11 +81,10 @@ router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
     // Trim to guard against accidental leading/trailing spaces from copy-paste,
     // which silently break SMTP host/credential lookups (e.g. DNS resolution).
     const trim = (v: any) => (typeof v === 'string' ? v.trim() : v);
-    const fields = {
+    const fields: Record<string, any> = {
       smtpHost: trim(smtpHost),
       smtpPort: trim(smtpPort),
       smtpUser: trim(smtpUser),
-      smtpPass: trim(smtpPass),
       fromEmail: trim(fromEmail),
       fromName: trim(fromName),
       queueBatchSize: queueBatchSize !== undefined ? Number(queueBatchSize) : undefined,
@@ -90,13 +96,18 @@ router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
       gdprExportEnabled,
       gdprDeleteEnabled
     };
+    // Blank/omitted password means "keep the existing one" - the client never
+    // receives the real value back to resend, so only overwrite when a new
+    // non-empty value was actually typed.
+    const trimmedPass = trim(smtpPass);
+    if (trimmedPass) fields.smtpPass = trimmedPass;
 
     const config = await prisma.newsletterConfig.upsert({
       where: { id: (req.params.id as string) },
       create: { id: (req.params.id as string), ...fields },
       update: fields
     });
-    res.json(config);
+    res.json(maskSmtpPass(config));
   } catch (error) {
     console.error('Failed to update Newsletter Config:', error);
     res.status(500).json({ error: 'Failed to update Config' });

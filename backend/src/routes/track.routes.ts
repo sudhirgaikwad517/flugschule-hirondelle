@@ -1,5 +1,7 @@
 import { Router } from 'express';
+import crypto from 'crypto';
 import { prisma } from '../utils/prisma';
+import { signClickTrackingUrl } from '../utils/newsletterTags';
 
 const router = Router();
 
@@ -43,22 +45,34 @@ router.get('/open', async (req, res) => {
 });
 
 // Click tracking: every link in a campaign is rewritten to
-// /api/track/click?c=campaignId&e=email&url=<original> before redirecting there.
+// /api/track/click?c=campaignId&e=email&url=<original>&sig=<signature>
+// before redirecting there. The signature (over campaignId+email+url) is
+// required and verified below - without it this ?url= redirect would be an
+// open redirect anyone could abuse to build a phishing link that looks like
+// it comes from our own trusted domain.
 router.get('/click', async (req, res) => {
   const url = String(req.query.url || '');
+  const campaignId = String(req.query.c || '');
+  const email = String(req.query.e || '');
+  const sig = String(req.query.sig || '');
+
+  if (!url || !/^https?:\/\//i.test(url) || !campaignId || !email) {
+    return res.status(400).send('Invalid redirect URL');
+  }
+
+  const expected = signClickTrackingUrl(campaignId, email, url);
+  const a = Buffer.from(sig);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    return res.status(403).send('Invalid or missing signature');
+  }
+
   try {
-    const campaignId = String(req.query.c || '');
-    const email = String(req.query.e || '');
-    if (campaignId && email && url) {
-      await recordUniqueEvent(campaignId, email, 'CLICK', url);
-    }
+    await recordUniqueEvent(campaignId, email, 'CLICK', url);
   } catch (error) {
     console.error('Click tracking error:', error);
   }
 
-  if (!url || !/^https?:\/\//i.test(url)) {
-    return res.status(400).send('Invalid redirect URL');
-  }
   res.redirect(url);
 });
 

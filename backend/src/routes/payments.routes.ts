@@ -68,18 +68,37 @@ router.post('/create-session', async (req: any, res) => {
 });
 
 // Capture PayPal Order
+//
+// This must bind the captured PayPal order back to the specific booking it
+// paid for - previously it trusted whatever {orderId, bookingId} the client
+// sent, with no check that the two actually match. That let anyone pay for
+// a cheap booking, capture a real COMPLETED orderId, then replay this
+// endpoint with that same orderId against a different, expensive bookingId
+// to confirm it for free. Now: the booking is fetched first (to know its
+// real price and current status), and after capture we verify PayPal's own
+// reference_id and captured amount both match this exact booking before
+// touching its status.
 router.post('/capture-paypal', async (req, res) => {
   try {
     const { orderId, bookingId } = req.body;
+    if (!orderId || !bookingId) {
+      return res.status(400).json({ message: 'orderId and bookingId are required' });
+    }
+
+    const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    if (booking.status === 'CANCELLED') {
+      return res.status(400).json({ message: 'This booking has been cancelled' });
+    }
 
     const { client: paypalClient, isMock } = await getPaypalClient();
 
     if (isMock && orderId === 'mock_token_123') {
-      const booking = await prisma.booking.update({
+      const updated = await prisma.booking.update({
         where: { id: bookingId },
-        data: { status: 'CONFIRMED' }
+        data: { status: 'CONFIRMED', paid: true }
       });
-      sendBookingConfirmationEmail(booking.id).catch(console.error);
+      sendBookingConfirmationEmail(updated.id).catch(console.error);
       return res.json({ success: true });
     }
 
@@ -87,17 +106,29 @@ router.post('/capture-paypal', async (req, res) => {
     request.requestBody({});
     const capture = await paypalClient.execute(request);
 
-    if (capture.result.status === 'COMPLETED') {
-      const booking = await prisma.booking.update({
-        where: { id: bookingId },
-        data: { status: 'CONFIRMED' }
-      });
-      // Send confirmation email asynchronously
-      sendBookingConfirmationEmail(booking.id).catch(console.error);
-      res.json({ success: true });
-    } else {
-      res.status(400).json({ success: false, message: 'Payment not completed' });
+    if (capture.result.status !== 'COMPLETED') {
+      return res.status(400).json({ success: false, message: 'Payment not completed' });
     }
+
+    const purchaseUnit = capture.result.purchase_units?.[0];
+    const capturedAmount = purchaseUnit?.payments?.captures?.[0]?.amount?.value;
+
+    if (purchaseUnit?.reference_id !== bookingId) {
+      console.error(`PayPal capture reference_id mismatch: order ${orderId} references ${purchaseUnit?.reference_id}, request claimed booking ${bookingId}`);
+      return res.status(400).json({ success: false, message: 'Payment does not match this booking' });
+    }
+    if (Number(capturedAmount) !== Number(booking.totalPrice)) {
+      console.error(`PayPal capture amount mismatch: captured ${capturedAmount}, booking ${bookingId} expects ${booking.totalPrice}`);
+      return res.status(400).json({ success: false, message: 'Payment amount does not match this booking' });
+    }
+
+    const updated = await prisma.booking.update({
+      where: { id: bookingId },
+      data: { status: 'CONFIRMED', paid: true }
+    });
+    // Send confirmation email asynchronously
+    sendBookingConfirmationEmail(updated.id).catch(console.error);
+    res.json({ success: true });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'PayPal capture failed' });
