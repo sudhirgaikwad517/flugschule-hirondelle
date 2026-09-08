@@ -54,8 +54,8 @@ body.admin-root #main-content {
    Datagrid renders a bare <table>, not a MUI TableContainer, so nothing
    provides this automatically. */
 body.admin-root .RaList-content {
-  overflow-x: auto;
-  max-width: 100%;
+  overflow-x: auto !important;
+  max-width: 100% !important;
 }
 
 /* Datagrid's own `sx` (e.g. Bookings.tsx) lands on RaDatagrid-root, but that
@@ -65,13 +65,15 @@ body.admin-root .RaList-content {
    Bookings) has nowhere to scroll and its trailing columns are simply
    invisible once html's overflow-x:hidden clips them. */
 body.admin-root .RaDatagrid-root {
-  max-width: 100%;
-  width: 100%;
+  max-width: 100% !important;
+  width: 100% !important;
+  display: block !important;
 }
 body.admin-root .RaDatagrid-tableWrapper {
-  display: block;
-  width: 100%;
-  overflow-x: auto;
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
   /* Windows Chrome/Edge normally reserve visible scrollbar space on their
      own, but make it unmistakable either way instead of a hairline that's
      easy to miss at a glance. */
@@ -103,6 +105,7 @@ body.admin-root .RaDatagrid-tableWrapper::-webkit-scrollbar-thumb {
 body.admin-root .RaList-actions {
   flex-wrap: wrap !important;
   row-gap: 8px;
+  max-width: 100% !important;
 }
 /* Wrapping the outer row only helps once the actions toolbar has its own
    line - but react-admin's TopToolbar itself is `flex: 0 1 auto`, meaning
@@ -112,10 +115,20 @@ body.admin-root .RaList-actions {
    sx on BookingListActions) never gets a chance to trigger because the box
    itself never becomes narrower than the viewport - it just runs past it.
    Forcing it to actually take the full row width makes its internal wrap
-   have something real to wrap against. */
+   have something real to wrap against.
+   Belt-and-suspenders: also give it its own horizontal scrollbar as a
+   fallback, so even if some other override stops the wrap from actually
+   happening, the hidden buttons are still reachable instead of silently
+   clipped off-screen with no way to reach them at all. */
 body.admin-root .RaList-actions .MuiToolbar-root {
+  display: flex !important;
+  flex-wrap: wrap !important;
   flex: 1 1 100% !important;
-  max-width: 100%;
+  width: 100% !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+  overflow-x: auto !important;
+  row-gap: 4px;
 }
 
 /* CustomAppBar.tsx locks the admin header to exactly 64px - react-admin's
