@@ -25,14 +25,26 @@ async function getTargetSubscribers(targetList: string) {
   return prisma.newsletter.findMany({ where, distinct: ['email'] });
 }
 
-async function populateQueue(campaign: any) {
-  // Guards against re-sending the BCC archive copy if the campaign gets saved
-  // again (e.g. navigating back through the wizard) while still SCHEDULED. PENDING
-  // items get wiped and rebuilt on every save, so only a non-PENDING item (already
-  // picked up by the cron worker) proves sending has genuinely started before.
-  const alreadyQueuedBefore = (await prisma.newsletterQueue.count({
-    where: { campaignId: campaign.id, status: { not: 'PENDING' } }
+// Has sending genuinely started for this campaign already? Any queue item
+// that's no longer PENDING (SENT/PROCESSING/FAILED) means the cron worker
+// has already picked at least one recipient up.
+async function hasSendingStarted(campaignId: string): Promise<boolean> {
+  return (await prisma.newsletterQueue.count({
+    where: { campaignId, status: { not: 'PENDING' } }
   })) > 0;
+}
+
+async function populateQueue(campaign: any) {
+  // Never wipe/rebuild the recipient queue once sending has actually
+  // started - PUT /:id used to unconditionally delete all PENDING rows and
+  // recreate the full recipient list on every save, which (a) sent the BCC
+  // archive copy again and (b) if that happened mid-send, permanently
+  // dropped whichever subscribers hadn't been reached yet while duplicating
+  // the ones who already had (a fresh createMany from getTargetSubscribers
+  // has no memory of who was already sent to in this round).
+  if (await hasSendingStarted(campaign.id)) {
+    return;
+  }
 
   const subscribers = await getTargetSubscribers(campaign.targetList);
 
@@ -46,8 +58,10 @@ async function populateQueue(campaign: any) {
     await prisma.newsletterQueue.createMany({ data: queueItems });
   }
 
-  // BCC gets a single archive copy when the campaign is queued, not one per subscriber
-  if (campaign.bcc && !alreadyQueuedBefore) {
+  // BCC gets a single archive copy when the campaign is queued, not one per
+  // subscriber - safe unconditionally here since we already returned above
+  // if sending had started before, so this path only runs once.
+  if (campaign.bcc) {
     const { transporter: t } = await getNewsletterTransporter();
     await t.sendMail({
       from: campaign.fromEmail ? `"${campaign.fromName || 'Flugschule Hirondelle'}" <${campaign.fromEmail}>` : '"Flugschule Hirondelle" <info@fs-hirondelle.de>',
@@ -134,13 +148,15 @@ router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
       where: { id: (req.params.id as string) },
       data: { subject, name, previewLine, body, design, status, sentAt: sentAt ? new Date(sentAt) : null, targetList, fromName, fromEmail, replyToName, replyToEmail, attachments, keywords, visible, bcc, bounceEmail, trackingEnabled }
     });
-    
-    // Refresh queue
-    await prisma.newsletterQueue.deleteMany({
-      where: { campaignId: campaign.id, status: 'PENDING' }
-    });
-    
-    if (campaign.status === 'SCHEDULED') {
+
+    // Refresh the queue only if sending hasn't actually started yet -
+    // otherwise this used to unconditionally wipe PENDING rows (dropping
+    // whoever hadn't been reached) and requeue everyone (duplicating
+    // whoever already had), see populateQueue's own guard for details.
+    if (campaign.status === 'SCHEDULED' && !(await hasSendingStarted(campaign.id))) {
+      await prisma.newsletterQueue.deleteMany({
+        where: { campaignId: campaign.id, status: 'PENDING' }
+      });
       await populateQueue(campaign);
     }
     
@@ -223,32 +239,52 @@ router.patch('/:id/cancel-scheduling', authenticateJWT, authorizeAdmin, async (r
 
 // Send Campaign
 router.post('/:id/send', authenticateJWT, authorizeAdmin, async (req, res) => {
+  const campaignId = (req.params.id as string);
+  let claimed = false;
   try {
-    const campaignId = (req.params.id as string);
+    // Atomically claim this campaign for sending - updateMany's returned
+    // count tells us whether THIS request was the one to flip it out of
+    // DRAFT/SCHEDULED, so a double-click or a retried request can never
+    // both pass and send the same campaign to every subscriber twice
+    // (the old code only checked status *before* the long async send, then
+    // wrote SENT only *after* - a classic check-then-act race).
+    const claim = await prisma.newsletterCampaign.updateMany({
+      where: { id: campaignId, status: { notIn: ['SENDING', 'SENT'] } },
+      data: { status: 'SENDING' }
+    });
+    if (claim.count === 0) {
+      return res.status(400).json({ message: 'Campaign not found, already sending, or already sent' });
+    }
+    claimed = true;
+
     const campaign = await prisma.newsletterCampaign.findUnique({ where: { id: campaignId } });
-    if (!campaign || campaign.status === 'SENT') {
-      return res.status(400).json({ message: 'Campaign not found or already sent' });
+    if (!campaign) {
+      return res.status(404).json({ message: 'Campaign not found' });
     }
 
     const subscribers = await getTargetSubscribers(campaign.targetList);
     if (subscribers.length === 0) {
+      await prisma.newsletterCampaign.update({ where: { id: campaignId }, data: { status: campaign.status === 'SENDING' ? 'DRAFT' : campaign.status } });
       return res.status(400).json({ message: 'No active subscribers found for this list' });
     }
 
     const { transporter: t } = await getNewsletterTransporter();
 
     // Send emails in parallel (in a real app, use a queue like BullMQ)
-    const emails = subscribers.map(sub => {
-      return t.sendMail({
+    const results = await Promise.allSettled(subscribers.map(sub =>
+      t.sendMail({
         from: campaign.fromEmail ? `"${campaign.fromName || 'Flugschule Hirondelle'}" <${campaign.fromEmail}>` : '"Flugschule Hirondelle" <info@fs-hirondelle.de>',
         to: sub.email,
         replyTo: campaign.replyToEmail ? `"${campaign.replyToName || ''}" <${campaign.replyToEmail}>` : undefined,
         subject: campaign.subject,
         html: renderCampaignHtml(campaign.body, sub, campaignId, campaign.trackingEnabled)
-      });
-    });
-
-    await Promise.allSettled(emails);
+      })
+    ));
+    const successCount = results.filter(r => r.status === 'fulfilled').length;
+    const failureCount = results.length - successCount;
+    if (failureCount > 0) {
+      console.error(`Campaign ${campaignId}: ${failureCount}/${results.length} sends failed`, results.filter(r => r.status === 'rejected'));
+    }
 
     // BCC gets a single archive copy of the campaign, not one per subscriber
     if (campaign.bcc) {
@@ -262,12 +298,22 @@ router.post('/:id/send', authenticateJWT, authorizeAdmin, async (req, res) => {
 
     const updated = await prisma.newsletterCampaign.update({
       where: { id: campaignId },
-      data: { status: 'SENT', sentAt: new Date() }
+      data: { status: 'SENT', sentAt: new Date(), recipientsCount: { increment: successCount } }
     });
 
-    res.json({ message: 'Campaign sent successfully', campaign: updated });
+    res.json({
+      message: failureCount > 0
+        ? `Campaign sent to ${successCount}/${results.length} subscribers (${failureCount} failed - see server logs)`
+        : 'Campaign sent successfully',
+      campaign: updated
+    });
   } catch (error) {
     console.error(error);
+    // Release the claim on an unexpected failure so the campaign isn't
+    // stuck in SENDING forever with no way to retry.
+    if (claimed) {
+      await prisma.newsletterCampaign.update({ where: { id: campaignId }, data: { status: 'DRAFT' } }).catch(() => {});
+    }
     res.status(500).json({ message: 'Internal server error during sending' });
   }
 });
