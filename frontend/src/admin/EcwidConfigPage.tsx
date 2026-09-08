@@ -84,17 +84,23 @@ export const EcwidConfigPage = () => {
         setLoading(true);
         fetch('/api/ecwid-config', {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${localStorage.getItem('auth')}`,
+            },
             body: JSON.stringify(config)
         })
-        .then(res => res.json())
+        .then(async res => {
+            if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || 'Speichern fehlgeschlagen');
+            return res.json();
+        })
         .then(() => {
             notify('Ecwid Einstellungen erfolgreich gespeichert', { type: 'success' });
             setLoading(false);
         })
         .catch(err => {
             console.error(err);
-            notify('Fehler beim Speichern', { type: 'error' });
+            notify(err.message || 'Fehler beim Speichern', { type: 'error' });
             setLoading(false);
         });
     };

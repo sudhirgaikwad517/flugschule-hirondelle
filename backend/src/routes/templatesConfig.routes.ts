@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import { prisma } from '../utils/prisma';
+import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware';
 
 const router = Router();
 
 // Get the templates config by id (React Admin useGetOne)
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     let config = await prisma.templatesConfig.findUnique({
       where: { id }
     });
@@ -70,9 +71,9 @@ router.get('/:id', async (req, res) => {
 });
 
 // Update the templates config
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     
     // Extract only valid fields
     const { emails, listViews, invoices, certificates, tickets, csvXml } = req.body;

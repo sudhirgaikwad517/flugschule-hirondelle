@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { prisma } from '../utils/prisma';
+import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware';
 
 const router = Router();
 
-router.get('/dashboard', async (req, res) => {
+router.get('/dashboard', authenticateJWT, authorizeAdmin, async (req, res) => {
     try {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -74,7 +75,7 @@ router.get('/dashboard', async (req, res) => {
     }
 });
 
-router.get('/acymailing', async (req, res) => {
+router.get('/acymailing', authenticateJWT, authorizeAdmin, async (req, res) => {
     try {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);

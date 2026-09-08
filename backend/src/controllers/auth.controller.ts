@@ -60,8 +60,8 @@ export const login = async (req: Request, res: Response) => {
       user: { id: user.id, name: user.name, email: user.email, role: user.role }
     });
   } catch (error) {
-    console.error(error);
-    require('fs').appendFileSync('login_error.log', JSON.stringify({ body: req.body, error: error?.toString(), stack: error instanceof Error ? error.stack : undefined }) + '\\n');
+    // Never log req.body here - it contains the user's plaintext password.
+    console.error('Login error for', email, error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };

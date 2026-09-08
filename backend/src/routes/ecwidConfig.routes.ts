@@ -1,9 +1,12 @@
 import { Router } from 'express';
 import { prisma } from '../utils/prisma';
+import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware';
 
 const router = Router();
 
-// Get Ecwid config
+// Get Ecwid config - stays public: the public Shop page needs this to render
+// the storefront widget for anonymous visitors. Contains only a store ID and
+// display flags, no secret.
 router.get('/', async (req, res) => {
   try {
     let config = await prisma.ecwidConfig.findUnique({
@@ -24,7 +27,7 @@ router.get('/', async (req, res) => {
 });
 
 // Upsert Ecwid config
-router.put('/', async (req, res) => {
+router.put('/', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
     const data = req.body;
     

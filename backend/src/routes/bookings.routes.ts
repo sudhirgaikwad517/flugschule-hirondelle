@@ -624,6 +624,115 @@ router.get('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
   }
 });
 
+class BookingRequestError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
+// Shared, atomic booking-creation path used by both POST / and POST /public.
+// Two concurrency bugs fixed here vs the old duplicated logic in each route:
+//   1. Voucher redemption was check-then-increment as two separate statements,
+//      so two concurrent requests on a near-limit voucher could both pass the
+//      check and over-redeem it. The increment now happens first inside a real
+//      DB transaction (which takes a row lock on the voucher via the UPDATE),
+//      and only *then* do we check whether it went over the limit - if so we
+//      throw and the whole transaction (including the increment) rolls back.
+//   2. Ticket-capacity was checked, then the booking created, as separate
+//      steps - two concurrent requests for the last slot could both pass and
+//      both get created. `SELECT ... FOR UPDATE` now locks the ticket row for
+//      the duration of the transaction so a second concurrent request blocks
+//      until the first commits (or rolls back), then re-reads a correct count.
+// Also: only an explicit allowlist of fields is ever written - no `...req.body`
+// spread - so a caller can never set paid/certificated/checkedIn/adminComment/
+// rating on their own booking.
+async function createBookingAtomic(params: {
+  eventId: string;
+  items: { ticketId: string; quantity: number }[] | undefined;
+  customerDetails: any;
+  paymentMethod: string | undefined;
+  remarks: string | undefined;
+  voucherCode: string | undefined;
+  userId: string | undefined;
+  isRegisteredUser: boolean;
+}) {
+  const { eventId, items, customerDetails, paymentMethod, remarks, voucherCode, userId, isRegisteredUser } = params;
+
+  const event = await prisma.event.findUnique({ where: { id: eventId } });
+  if (!event) throw new BookingRequestError(404, 'Event not found');
+  if (event.registrationDeadline && new Date() > new Date(event.registrationDeadline)) {
+    throw new BookingRequestError(400, 'Registration deadline has passed');
+  }
+
+  // Authoritative price calculation (tiered-fee + voucher discounts applied server-side)
+  const priceResult = await calculateBookingPrice(eventId, items, voucherCode, isRegisteredUser);
+  if (voucherCode && !priceResult.appliedVoucherCode) {
+    throw new BookingRequestError(400, 'Ungültiger Gutschein');
+  }
+
+  return prisma.$transaction(async (tx) => {
+    if (priceResult.appliedVoucherCode) {
+      const voucher = await tx.voucher.update({
+        where: { code: priceResult.appliedVoucherCode },
+        data: { usedCount: { increment: 1 } }
+      });
+      if (voucher.limit !== 0 && voucher.usedCount > voucher.limit) {
+        throw new BookingRequestError(400, 'Ungültiger Gutschein');
+      }
+      if (customerDetails) {
+        customerDetails.appliedVoucher = priceResult.appliedVoucherCode;
+      }
+    }
+
+    // Determine Status (WAITLIST if any ticket exceeds capacity)
+    let finalStatus = 'PENDING';
+    if (items && items.length > 0) {
+      for (const item of items) {
+        // Row-lock the ticket so a concurrent transaction for the same ticket
+        // blocks here until this one commits/rolls back.
+        await tx.$queryRaw`SELECT id FROM EventTicket WHERE id = ${item.ticketId} FOR UPDATE`;
+        const ticket = await tx.eventTicket.findUnique({
+          where: { id: item.ticketId },
+          include: { items: { include: { booking: { select: { status: true } } } } }
+        });
+        if (ticket) {
+          const bookedCount = ticket.items
+            .filter(i => i.booking.status !== 'CANCELLED')
+            .reduce((sum, i) => sum + i.quantity, 0);
+
+          if (bookedCount + Number(item.quantity) > ticket.capacity) {
+            finalStatus = 'WAITLIST';
+            break; // Entire booking goes to waitlist
+          }
+        }
+      }
+    }
+
+    const booking = await tx.booking.create({
+      data: {
+        eventId,
+        userId,
+        status: finalStatus as any,
+        totalPrice: priceResult.finalPrice,
+        customerDetails: customerDetails ?? undefined,
+        paymentMethod: paymentMethod ?? undefined,
+        remarks: remarks ?? undefined,
+        items: items ? {
+          create: items.map((i) => ({
+            ticketId: i.ticketId,
+            quantity: Number(i.quantity)
+          }))
+        } : undefined
+      },
+      include: { items: { include: { ticket: true } } }
+    });
+
+    return booking;
+  });
+}
+
 router.post('/', async (req: any, res) => {
   try {
     // Optional Authentication
@@ -638,74 +747,17 @@ router.post('/', async (req: any, res) => {
       }
     }
 
-    // Extract voucherCode - totalPrice/finalPrice from the client are
-    // intentionally discarded here and recomputed server-side below, never trusted.
-    const { items, customerDetails, paymentMethod, remarks, eventId, voucherCode, totalPrice: _clientTotalPrice, finalPrice: _clientFinalPrice, ...bookingData } = req.body;
-    delete bookingData.totalPrice;
+    const { items, customerDetails, paymentMethod, remarks, eventId, voucherCode } = req.body;
 
-    // Check Event Deadline
-    const event = await prisma.event.findUnique({ where: { id: eventId } });
-    if (!event) return res.status(404).json({ message: 'Event not found' });
-    if (event.registrationDeadline && new Date() > new Date(event.registrationDeadline)) {
-      return res.status(400).json({ message: 'Registration deadline has passed' });
-    }
-
-    // Authoritative price calculation (tiered-fee + voucher discounts applied server-side)
-    const priceResult = await calculateBookingPrice(eventId, items, voucherCode, !!req.user);
-
-    if (voucherCode && !priceResult.appliedVoucherCode) {
-      return res.status(400).json({ message: 'Ungültiger Gutschein' });
-    }
-
-    if (priceResult.appliedVoucherCode) {
-      await prisma.voucher.update({
-        where: { code: priceResult.appliedVoucherCode },
-        data: { usedCount: { increment: 1 } }
-      });
-      if (customerDetails) {
-        customerDetails.appliedVoucher = priceResult.appliedVoucherCode;
-      }
-    }
-
-    // Determine Status (WAITLIST if any ticket exceeds capacity)
-    let finalStatus = 'PENDING';
-    if (items && items.length > 0) {
-      for (const item of items) {
-        const ticket = await prisma.eventTicket.findUnique({
-          where: { id: item.ticketId },
-          include: { items: { include: { booking: { select: { status: true } } } } }
-        });
-        if (ticket) {
-          const bookedCount = ticket.items
-            .filter(i => i.booking.status !== 'CANCELLED')
-            .reduce((sum, i) => sum + i.quantity, 0);
-          
-          if (bookedCount + Number(item.quantity) > ticket.capacity) {
-            finalStatus = 'WAITLIST';
-            break; // Entire booking goes to waitlist
-          }
-        }
-      }
-    }
-
-    const booking = await prisma.booking.create({
-      data: {
-        ...bookingData,
-        eventId,
-        userId: req.user?.id,
-        status: finalStatus as any,
-        totalPrice: priceResult.finalPrice,
-        customerDetails: customerDetails ?? undefined,
-        paymentMethod: paymentMethod ?? undefined,
-        remarks: remarks ?? undefined,
-        items: items ? {
-          create: items.map((i: any) => ({
-            ticketId: i.ticketId,
-            quantity: Number(i.quantity)
-          }))
-        } : undefined
-      },
-      include: { items: { include: { ticket: true } } }
+    const booking = await createBookingAtomic({
+      eventId,
+      items,
+      customerDetails,
+      paymentMethod,
+      remarks,
+      voucherCode,
+      userId: req.user?.id,
+      isRegisteredUser: !!req.user
     });
 
     // Send confirmation email asynchronously
@@ -713,6 +765,9 @@ router.post('/', async (req: any, res) => {
 
     res.status(201).json(booking);
   } catch (error) {
+    if (error instanceof BookingRequestError) {
+      return res.status(error.status).json({ message: error.message });
+    }
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });
   }
@@ -727,60 +782,15 @@ router.post('/public', async (req, res) => {
       return res.status(400).json({ message: 'Event ID is required' });
     }
 
-    // Authoritative price calculation - never trust a client-submitted totalPrice.
-    const priceResult = await calculateBookingPrice(eventId, items, voucherCode, false);
-
-    if (voucherCode && !priceResult.appliedVoucherCode) {
-      return res.status(400).json({ message: 'Ungültiger Gutschein' });
-    }
-
-    if (priceResult.appliedVoucherCode) {
-      await prisma.voucher.update({
-        where: { code: priceResult.appliedVoucherCode },
-        data: { usedCount: { increment: 1 } }
-      });
-      if (customerDetails) {
-        customerDetails.appliedVoucher = priceResult.appliedVoucherCode;
-      }
-    }
-
-    // Determine Status (WAITLIST if any ticket exceeds capacity)
-    let finalStatus = 'PENDING';
-    if (items && items.length > 0) {
-      for (const item of items) {
-        const ticket = await prisma.eventTicket.findUnique({
-          where: { id: item.ticketId },
-          include: { items: { include: { booking: { select: { status: true } } } } }
-        });
-        if (ticket) {
-          const bookedCount = ticket.items
-            .filter(i => i.booking.status !== 'CANCELLED')
-            .reduce((sum, i) => sum + i.quantity, 0);
-          
-          if (bookedCount + Number(item.quantity) > ticket.capacity) {
-            finalStatus = 'WAITLIST';
-            break;
-          }
-        }
-      }
-    }
-
-    const booking = await prisma.booking.create({
-      data: {
-        eventId,
-        totalPrice: priceResult.finalPrice,
-        status: finalStatus as any,
-        customerDetails: customerDetails ?? undefined,
-        paymentMethod: paymentMethod ?? undefined,
-        remarks: remarks ?? undefined,
-        items: items ? {
-          create: items.map((i: any) => ({
-            ticketId: i.ticketId,
-            quantity: Number(i.quantity)
-          }))
-        } : undefined
-      },
-      include: { items: { include: { ticket: true } } }
+    const booking = await createBookingAtomic({
+      eventId,
+      items,
+      customerDetails,
+      paymentMethod,
+      remarks,
+      voucherCode,
+      userId: undefined,
+      isRegisteredUser: false
     });
 
     // Send confirmation email asynchronously
@@ -788,6 +798,9 @@ router.post('/public', async (req, res) => {
 
     res.status(201).json(booking);
   } catch (error) {
+    if (error instanceof BookingRequestError) {
+      return res.status(error.status).json({ message: error.message });
+    }
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });
   }

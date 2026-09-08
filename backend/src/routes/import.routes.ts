@@ -4,11 +4,12 @@ import fs from 'fs';
 import csvParser from 'csv-parser';
 import ical from 'node-ical';
 import { prisma } from '../utils/prisma';
+import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware';
 
 const router = Router();
-const upload = multer({ dest: 'uploads/' }); // temporary storage
+const upload = multer({ dest: 'uploads/', limits: { fileSize: 10 * 1024 * 1024 } }); // temporary storage, 10MB cap
 
-router.post('/csv', upload.single('csv_file'), async (req: Request, res: Response) => {
+router.post('/csv', authenticateJWT, authorizeAdmin, upload.single('csv_file'), async (req: Request, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -78,7 +79,7 @@ router.post('/csv', upload.single('csv_file'), async (req: Request, res: Respons
   }
 });
 
-router.post('/ics', upload.single('ics_file'), async (req: Request, res: Response) => {
+router.post('/ics', authenticateJWT, authorizeAdmin, upload.single('ics_file'), async (req: Request, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
