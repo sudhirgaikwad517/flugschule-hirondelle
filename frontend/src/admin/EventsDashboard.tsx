@@ -1,22 +1,45 @@
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, Typography, Grid, CircularProgress } from '@mui/material';
+import { Card, CardContent, CardHeader, Typography, Grid, CircularProgress, Box, FormControl, InputLabel, Select, MenuItem, TextField } from '@mui/material';
 import { Title, useDataProvider } from 'react-admin';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+const RANGE_PRESETS = [
+    { id: '7', label: 'Letzte 7 Tage' },
+    { id: '30', label: 'Letzte 30 Tage' },
+    { id: '90', label: 'Letzte 90 Tage' },
+    { id: '365', label: 'Letztes Jahr' },
+    { id: 'custom', label: 'Benutzerdefiniert' },
+];
+
+const toDateInputValue = (d: Date) => d.toISOString().split('T')[0];
 
 export const EventsDashboard = () => {
     const dataProvider = useDataProvider();
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-
     const [error, setError] = useState(false);
 
+    const [preset, setPreset] = useState('30');
+    const [customFrom, setCustomFrom] = useState(() => {
+        const d = new Date();
+        d.setDate(d.getDate() - 30);
+        return toDateInputValue(d);
+    });
+    const [customTo, setCustomTo] = useState(() => toDateInputValue(new Date()));
+
     useEffect(() => {
-        // We use a custom fetch to the new /api/stats/dashboard endpoint
         const fetchStats = async () => {
+            setLoading(true);
+            setError(false);
             try {
-                // HACK: Since we're using simpleRestProvider, we'll just fetch directly.
-                // In a real app we'd add a custom method to dataProvider.
-                const response = await fetch('/api/stats/dashboard', {
+                const qs = new URLSearchParams();
+                if (preset === 'custom') {
+                    qs.set('from', customFrom);
+                    qs.set('to', customTo);
+                } else {
+                    qs.set('days', preset);
+                }
+                const response = await fetch(`/api/stats/dashboard?${qs.toString()}`, {
                     headers: { Authorization: `Bearer ${localStorage.getItem('auth')}` }
                 });
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -30,23 +53,59 @@ export const EventsDashboard = () => {
             }
         };
         fetchStats();
-    }, [dataProvider]);
+    }, [dataProvider, preset, customFrom, customTo]);
+
+    const filterBar = (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center', mb: 3, mt: 1 }}>
+            <FormControl size="small" sx={{ minWidth: 200 }}>
+                <InputLabel>Zeitraum</InputLabel>
+                <Select value={preset} label="Zeitraum" onChange={(e) => setPreset(e.target.value)}>
+                    {RANGE_PRESETS.map((p) => <MenuItem key={p.id} value={p.id}>{p.label}</MenuItem>)}
+                </Select>
+            </FormControl>
+            {preset === 'custom' && (
+                <>
+                    <TextField
+                        size="small" label="Von" type="date" InputLabelProps={{ shrink: true }}
+                        value={customFrom} onChange={(e) => setCustomFrom(e.target.value)}
+                    />
+                    <TextField
+                        size="small" label="Bis" type="date" InputLabelProps={{ shrink: true }}
+                        value={customTo} onChange={(e) => setCustomTo(e.target.value)}
+                    />
+                </>
+            )}
+        </Box>
+    );
 
     if (loading) {
-        return <CircularProgress sx={{ display: 'block', margin: '40px auto' }} />;
+        return (
+            <>
+                <Title title="Flugschule Events Dashboard" />
+                {filterBar}
+                <CircularProgress sx={{ display: 'block', margin: '40px auto' }} />
+            </>
+        );
     }
 
     if (error || !data || !data.totals) {
-        return <Typography>Fehler beim Laden der Statistiken.</Typography>;
+        return (
+            <>
+                <Title title="Flugschule Events Dashboard" />
+                {filterBar}
+                <Typography>Fehler beim Laden der Statistiken.</Typography>
+            </>
+        );
     }
 
     return (
         <>
             <Title title="Flugschule Events Dashboard" />
-            <Grid container spacing={3} sx={{ mb: 3, mt: 1 }}>
+            {filterBar}
+            <Grid container spacing={3} sx={{ mb: 3 }}>
                 <Grid size={{ xs: 12, md: 4 }}>
                     <Card>
-                        <CardHeader title="Total Bookings (30 Days)" />
+                        <CardHeader title="Buchungen gesamt" />
                         <CardContent>
                             <Typography variant="h4">{data.totals.totalBookings}</Typography>
                         </CardContent>
@@ -54,7 +113,7 @@ export const EventsDashboard = () => {
                 </Grid>
                 <Grid size={{ xs: 12, md: 4 }}>
                     <Card>
-                        <CardHeader title="Total Events (30 Days)" />
+                        <CardHeader title="Veranstaltungen gesamt" />
                         <CardContent>
                             <Typography variant="h4">{data.totals.totalEvents}</Typography>
                         </CardContent>
@@ -62,7 +121,7 @@ export const EventsDashboard = () => {
                 </Grid>
                 <Grid size={{ xs: 12, md: 4 }}>
                     <Card>
-                        <CardHeader title="Total Revenue (30 Days)" />
+                        <CardHeader title="Umsatz gesamt" />
                         <CardContent>
                             <Typography variant="h4">€{data.totals.totalRevenue.toFixed(2)}</Typography>
                         </CardContent>

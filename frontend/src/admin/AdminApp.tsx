@@ -107,7 +107,7 @@ export const AdminApp = () => {
     }, []);
 
     return (
-    <Admin basename="/admin" theme={lightTheme} layout={CustomLayout} loginPage={AdminLoginPage} authProvider={authProvider} dataProvider={dataProvider} i18nProvider={i18nProvider}>
+    <Admin basename="/admin" theme={lightTheme} layout={CustomLayout} loginPage={AdminLoginPage} authProvider={authProvider} dataProvider={dataProvider} i18nProvider={i18nProvider} dashboard={EventsDashboard}>
         <Resource name="users" options={{ label: 'Benutzer' }} list={UserList} edit={UserEdit} create={UserCreate} />
         <Resource name="events" options={{ label: 'Veranstaltungen' }} list={EventList} edit={EventEdit} create={EventCreate} />
         <Resource name="customFields" options={{ label: 'Benutzerdefinierte Felder' }} list={CustomFieldList} edit={CustomFieldEdit} create={CustomFieldCreate} />

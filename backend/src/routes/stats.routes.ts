@@ -6,25 +6,45 @@ const router = Router();
 
 router.get('/dashboard', authenticateJWT, authorizeAdmin, async (req, res) => {
     try {
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        thirtyDaysAgo.setHours(0, 0, 0, 0);
+        // Accepts either a `days` preset (7/30/90/365, default 30) or an
+        // explicit `from`/`to` range (ISO date strings) - the frontend's
+        // date-range filter uses whichever the admin picked.
+        let rangeStart: Date;
+        let rangeEnd: Date;
+        if (req.query.from) {
+            rangeStart = new Date(String(req.query.from));
+            rangeStart.setHours(0, 0, 0, 0);
+        } else {
+            const days = Math.max(1, Math.min(730, Number(req.query.days) || 30));
+            rangeStart = new Date();
+            rangeStart.setDate(rangeStart.getDate() - days);
+            rangeStart.setHours(0, 0, 0, 0);
+        }
+        if (req.query.to) {
+            rangeEnd = new Date(String(req.query.to));
+            rangeEnd.setHours(23, 59, 59, 999);
+        } else {
+            rangeEnd = new Date();
+            rangeEnd.setHours(23, 59, 59, 999);
+        }
+        if (rangeStart > rangeEnd) [rangeStart, rangeEnd] = [rangeEnd, rangeStart];
+        const numDays = Math.min(730, Math.round((rangeEnd.getTime() - rangeStart.getTime()) / 86400000));
 
-        // Fetch all relevant data for the last 30 days
+        // Fetch all relevant data for the selected range
         const bookings = await prisma.booking.findMany({
-            where: { createdAt: { gte: thirtyDaysAgo } },
+            where: { createdAt: { gte: rangeStart, lte: rangeEnd } },
             select: { createdAt: true, totalPrice: true }
         });
 
         const events = await prisma.event.findMany({
-            where: { createdAt: { gte: thirtyDaysAgo } },
+            where: { createdAt: { gte: rangeStart, lte: rangeEnd } },
             select: { createdAt: true }
         });
 
-        // Initialize array for 30 days
+        // Initialize array for the selected range
         const historyMap = new Map();
-        for (let i = 0; i <= 30; i++) {
-            const date = new Date(thirtyDaysAgo);
+        for (let i = 0; i <= numDays; i++) {
+            const date = new Date(rangeStart);
             date.setDate(date.getDate() + i);
             const dateStr = date.toISOString().split('T')[0];
             historyMap.set(dateStr, {
@@ -62,6 +82,7 @@ router.get('/dashboard', authenticateJWT, authorizeAdmin, async (req, res) => {
 
         res.json({
             history,
+            range: { from: rangeStart.toISOString(), to: rangeEnd.toISOString() },
             totals: {
                 totalBookings,
                 totalEvents,
