@@ -19,26 +19,26 @@
   --font-luxurysans: "Jost", sans-serif;
 }
 
-html, body {
+/* overflow-x:hidden belongs on html only, never on body. Per the CSS overflow
+   spec, when one axis is non-visible and the other is visible, the browser
+   silently forces the visible one to "auto" too - so body with overflow-x:
+   hidden quietly became its own scrolling box distinct from the viewport
+   (regardless of what overflow-y was explicitly set to), which is exactly
+   why position:fixed/sticky admin header+sidebar kept scrolling away: they
+   were pinning relative to a scroller that itself wasn't the one visibly
+   moving. Leaving body's overflow completely alone avoids the whole
+   footgun - html's own overflow-x:hidden already keeps wide content from
+   ever widening the actual page horizontally. */
+html {
   overflow-x: hidden;
-  overflow-y: visible;
+}
+html, body {
   max-width: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
 }
 
-/* The admin panel (react-admin) has wide data tables/toolbars that legitimately
-   overflow horizontally sometimes. Scrolling the whole body (as before) dragged
-   the fixed app bar and the sidebar along with it, since react-admin's sidebar
-   is a normal flex sibling, not independently pinned like the app bar is.
-   Instead: keep the page itself non-scrolling horizontally, let react-admin's
-   own layout stay locked to the viewport width, and scope the horizontal
-   scrollbar to just the content area (#main-content) so only the table/page
-   content scrolls while the header and sidebar stay put. */
-body.admin-root {
-  overflow-x: hidden;
-}
 body.admin-root .RaLayout-root {
   min-width: 0;
 }
@@ -61,23 +61,20 @@ body.admin-root .RaList-content {
 /* CustomAppBar.tsx locks the admin header to exactly 64px - react-admin's
    own appFrame margin-top assumes its shorter stock app bar, so it under-
    compensates here and lets content/filter rows render under the fixed
-   header. 64px is the exact clearance; the sidebar sits flush against it. */
+   header. 64px is the exact clearance the fixed app bar needs. */
 body.admin-root .RaLayout-appFrame {
   margin-top: 64px !important;
 }
 
-/* react-admin pins the sidebar via an inner position:fixed div with no
-   declared top/left, which only *resolves* to a fixed viewport position
-   once at render time in this layout instead of actually staying pinned
-   while the page scrolls - so the sidebar was visibly scrolling away with
-   the page. Sticky with an explicit top offset (matching the header
-   clearance above) is deterministic regardless of that. */
-body.admin-root .RaSidebar-fixed {
-  position: sticky !important;
-  top: 64px !important;
-  height: calc(100vh - 64px) !important;
-  overflow-y: auto !important;
-}
+/* The real bug behind "sidebar disappears while scrolling" was NOT a
+   fixed-positioning problem: react-admin's Sidebar applies a negative
+   margin-top (RaSidebar-appBarCollapsed) once the page scrolls past ~100px
+   (via MUI's useScrollTrigger), assuming the app bar hides/collapses on
+   scroll to compensate. CustomLayout.tsx now passes appBarAlwaysOn to
+   <Layout>, which stops that class from ever being applied - the stock
+   position:fixed sidebar-pinning trick (RaSidebar-fixed) works correctly
+   on its own once that interference is gone, so no CSS override is needed
+   here any more. */
 
 /* The visible breathing room the user actually asked for: only between the
    header and each tab's own content, not the sidebar (which stays flush

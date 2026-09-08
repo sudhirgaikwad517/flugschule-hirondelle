@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Admin, Resource, fetchUtils, CustomRoutes, defaultTheme } from 'react-admin';
+import { Admin, Resource, fetchUtils, CustomRoutes, defaultTheme, Authenticated } from 'react-admin';
 import { Route, Navigate } from 'react-router-dom';
 import simpleRestProvider from 'ra-data-simple-rest';
 import polyglotI18nProvider from 'ra-i18n-polyglot';
@@ -121,31 +121,31 @@ export const AdminApp = () => {
         <Resource name="bookings" options={{ label: 'Buchungen' }} list={BookingList} show={BookingShow} />
         <Resource name="bookingFormConfig" intent="registration" />
         <CustomRoutes>
-            <Route path="/events-dashboard" element={<EventsDashboard />} />
-            <Route path="/booking-form-config" element={<BookingFormBuilder />} />
-            <Route path="/templates" element={<TemplatesBuilder />} />
-            <Route path="/import" element={<Import />} />
-            <Route path="/ecwid-config" element={<EcwidConfigPage />} />
-            <Route path="/cookie-consent" element={<CookieConsentConfigPage />} />
-            <Route path="/payment-config" element={<PaymentConfigPage />} />
+            <Route path="/events-dashboard" element={<Authenticated><EventsDashboard /></Authenticated>} />
+            <Route path="/booking-form-config" element={<Authenticated><BookingFormBuilder /></Authenticated>} />
+            <Route path="/templates" element={<Authenticated><TemplatesBuilder /></Authenticated>} />
+            <Route path="/import" element={<Authenticated><Import /></Authenticated>} />
+            <Route path="/ecwid-config" element={<Authenticated><EcwidConfigPage /></Authenticated>} />
+            <Route path="/cookie-consent" element={<Authenticated><CookieConsentConfigPage /></Authenticated>} />
+            <Route path="/payment-config" element={<Authenticated><PaymentConfigPage /></Authenticated>} />
             {/* Redirect old newsletter routes */}
             <Route path="/newsletters/*" element={<Navigate to="/acymailing/dashboard" replace />} />
             <Route path="/newslettercampaigns/*" element={<Navigate to="/acymailing/dashboard" replace />} />
         </CustomRoutes>
         <CustomRoutes noLayout>
-            <Route path="/acymailing/dashboard" element={<AcyDashboard />} />
-            <Route path="/acymailing/subscribers" element={<AcySubscribers />} />
-            <Route path="/acymailing/subscribers/edit/:email" element={<AcyEditSubscriber />} />
-            <Route path="/acymailing/lists" element={<AcyLists />} />
-            <Route path="/acymailing/statistics" element={<AcyStatistics />} />
-            <Route path="/acymailing/templates" element={<AcyTemplates />} />
-            <Route path="/acymailing/emails" element={<AcyEmails />} />
-            <Route path="/acymailing/emails/create" element={<AcyChooseCampaignType />} />
-            <Route path="/acymailing/emails/create/template" element={<AcyChooseTemplate />} />
-            <Route path="/acymailing/emails/create/edit" element={<AcyEditEmail />} />
-            <Route path="/acymailing/emails/edit/:id" element={<AcyEditEmail />} />
-            <Route path="/acymailing/queue" element={<AcyQueue />} />
-            <Route path="/acymailing/configuration" element={<AcyConfiguration />} />
+            <Route path="/acymailing/dashboard" element={<Authenticated><AcyDashboard /></Authenticated>} />
+            <Route path="/acymailing/subscribers" element={<Authenticated><AcySubscribers /></Authenticated>} />
+            <Route path="/acymailing/subscribers/edit/:email" element={<Authenticated><AcyEditSubscriber /></Authenticated>} />
+            <Route path="/acymailing/lists" element={<Authenticated><AcyLists /></Authenticated>} />
+            <Route path="/acymailing/statistics" element={<Authenticated><AcyStatistics /></Authenticated>} />
+            <Route path="/acymailing/templates" element={<Authenticated><AcyTemplates /></Authenticated>} />
+            <Route path="/acymailing/emails" element={<Authenticated><AcyEmails /></Authenticated>} />
+            <Route path="/acymailing/emails/create" element={<Authenticated><AcyChooseCampaignType /></Authenticated>} />
+            <Route path="/acymailing/emails/create/template" element={<Authenticated><AcyChooseTemplate /></Authenticated>} />
+            <Route path="/acymailing/emails/create/edit" element={<Authenticated><AcyEditEmail /></Authenticated>} />
+            <Route path="/acymailing/emails/edit/:id" element={<Authenticated><AcyEditEmail /></Authenticated>} />
+            <Route path="/acymailing/queue" element={<Authenticated><AcyQueue /></Authenticated>} />
+            <Route path="/acymailing/configuration" element={<Authenticated><AcyConfiguration /></Authenticated>} />
         </CustomRoutes>
         <Resource name="comments" options={{ label: 'Kommentare' }} list={CommentList} edit={CommentEdit} />
         <Resource name="news" options={{ label: 'Neuigkeiten / Blog' }} list={NewsList} edit={NewsEdit} create={NewsCreate} />
