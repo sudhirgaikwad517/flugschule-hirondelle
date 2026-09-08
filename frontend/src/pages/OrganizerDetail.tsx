@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
 import { ContactOrganizerModal } from '../components/common/ContactOrganizerModal';
+import { SafeHtml } from '../components/common/SafeHtml';
 
 interface OrganizerData {
   id: string;
@@ -54,7 +55,7 @@ export const OrganizerDetail = () => {
                     <img src={organizer.imageUrl} alt={organizer.name} className="w-full h-auto rounded-sm object-cover shadow-md mb-8 max-h-[400px]" />
                   )}
                   {organizer.description && (
-                    <div className="prose prose-sm md:prose-base max-w-none text-gray-600 font-light leading-relaxed" dangerouslySetInnerHTML={{ __html: organizer.description }} />
+                    <SafeHtml className="prose prose-sm md:prose-base max-w-none text-gray-600 font-light leading-relaxed" html={organizer.description || ''} />
                   )}
                 </div>
 

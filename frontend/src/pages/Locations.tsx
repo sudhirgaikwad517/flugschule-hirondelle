@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
+import { SafeHtml } from '../components/common/SafeHtml';
 
 interface LocationListItem {
   id: string;
@@ -81,7 +82,7 @@ export const Locations = () => {
                         <p className="text-sm text-gray-500 mb-1">{loc.name}</p>
                       )}
                       {loc.description && (
-                        <p className="text-sm text-gray-500 line-clamp-2" dangerouslySetInnerHTML={{ __html: loc.description }} />
+                        <SafeHtml className="text-sm text-gray-500 line-clamp-2" html={loc.description || ''} />
                       )}
                     </div>
                   </button>

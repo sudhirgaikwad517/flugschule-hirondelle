@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Banner } from '../components/common/Banner';
+import { SafeHtml } from '../components/common/SafeHtml';
 
 // Renders an admin-editable legal text page (AGB / Widerrufsbelehrung),
 // matching Matukio's agb_text/revoke_text configuration fields.
@@ -31,9 +32,9 @@ export const LegalPage = ({ slug }: { slug: string }) => {
           {loading ? (
             <p className="text-gray-500">Lädt...</p>
           ) : page ? (
-            <div
+            <SafeHtml
               className="prose prose-sm md:prose-base max-w-none text-gray-600 font-light leading-relaxed [&_a]:text-[#53a8c7] [&_a]:font-medium"
-              dangerouslySetInnerHTML={{ __html: page.content }}
+              html={page.content}
             />
           ) : (
             <p className="text-gray-500">Diese Seite konnte nicht geladen werden.</p>

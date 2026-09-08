@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AcyLayout } from './AcyLayout';
 import { ChevronRight, Save, Eye, Send, RotateCw, BookOpen, AlertCircle } from 'lucide-react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import DOMPurify from 'dompurify';
 
 declare global {
   interface Window {
@@ -1189,7 +1190,7 @@ export const AcyEditEmail = () => {
                   <span>Live Vorschau</span>
                   <span className="text-xs px-2 py-0.5 rounded bg-slate-700">Desktop</span>
                 </div>
-                <div className="bg-white flex-1 overflow-auto p-4" dangerouslySetInnerHTML={{ __html: formData.body }} />
+                <div className="bg-white flex-1 overflow-auto p-4" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(formData.body) }} />
               </div>
             </div>
           )}

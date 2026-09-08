@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
+import { SafeHtml } from '../components/common/SafeHtml';
 
 interface LocationData {
   id: string;
@@ -63,7 +64,7 @@ export const LocationDetail = () => {
                     <img src={location.imageUrl} alt={location.title} className="w-full h-auto rounded-sm object-cover shadow-md mb-8" />
                   )}
                   {location.description && (
-                    <div className="prose prose-sm md:prose-base max-w-none text-gray-600 font-light leading-relaxed mb-8" dangerouslySetInnerHTML={{ __html: location.description }} />
+                    <SafeHtml className="prose prose-sm md:prose-base max-w-none text-gray-600 font-light leading-relaxed mb-8" html={location.description || ''} />
                   )}
                   {mapUrl && (
                     <div className="w-full h-[350px] border border-gray-200 rounded-sm overflow-hidden mb-8">

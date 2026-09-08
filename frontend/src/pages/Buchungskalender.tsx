@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
+import DOMPurify from 'dompurify';
 import { Banner } from '../components/common/Banner';
 import { EventBookingModal } from '../components/events/EventBookingModal';
 import { EventDetailsView } from '../components/events/EventDetailsView';
@@ -336,7 +337,7 @@ export const Buchungskalender = () => {
                       <div 
                         key={item.event.id}
                         onClick={() => navigate(`/buchungskalender/${item.event.id}`)}
-                        data-tippy-content={`
+                        data-tippy-content={DOMPurify.sanitize(`
                           <div class='p-5 text-left bg-white font-sans'>
                             <h4 class='font-luxury text-2xl text-luxury-dark mb-1'>${item.event.title}${item.event.cancelled ? " <span class='text-red-700 text-xs uppercase font-bold align-middle bg-red-100 px-2 py-1 rounded-sm'>Storniert</span>" : ''}</h4>
                             <div class='flex flex-col gap-1 mb-4 pb-4 border-b border-gray-100'>
@@ -361,7 +362,7 @@ export const Buchungskalender = () => {
                               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                             </a>
                           </div>
-                        `}
+                        `)}
                         className={`event-block rounded-sm px-1 py-[2px] m-[2px] shadow-sm cursor-pointer hover:opacity-90 transition-opacity z-20 ${item.event.cancelled ? 'opacity-50' : ''} ${isSingleDay ? 'flex items-center whitespace-nowrap overflow-hidden text-ellipsis h-[24px]' : 'block whitespace-normal break-words h-full min-h-[24px]'}`}
                         style={{
                           gridColumn: `${item.startDay} / ${item.endDay + 1}`,

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
+import { SafeHtml } from '../components/common/SafeHtml';
 
 interface OrganizerListItem {
   id: string;
@@ -56,7 +57,7 @@ export const Organizers = () => {
                   <div className="p-5">
                     <h3 className="font-luxury text-xl text-luxury-dark mb-2">{org.name}</h3>
                     {org.description && (
-                      <p className="text-sm text-gray-500 line-clamp-3" dangerouslySetInnerHTML={{ __html: org.description }} />
+                      <SafeHtml className="text-sm text-gray-500 line-clamp-3" html={org.description || ''} />
                     )}
                   </div>
                 </button>
