@@ -115,7 +115,7 @@ export const Banner = () => {
         return (
           <div
             key={index}
-            className={`absolute inset-0 overflow-hidden transition-opacity duration-[1500ms] ease-linear ${
+            className={`absolute inset-0 overflow-hidden transition-opacity duration-[3000ms] ease-linear ${
               index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
             }`}
           >
