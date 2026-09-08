@@ -8,17 +8,23 @@ export const EventsDashboard = () => {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
+    const [error, setError] = useState(false);
+
     useEffect(() => {
         // We use a custom fetch to the new /api/stats/dashboard endpoint
         const fetchStats = async () => {
             try {
                 // HACK: Since we're using simpleRestProvider, we'll just fetch directly.
                 // In a real app we'd add a custom method to dataProvider.
-                const response = await fetch('/api/stats/dashboard');
+                const response = await fetch('/api/stats/dashboard', {
+                    headers: { Authorization: `Bearer ${localStorage.getItem('auth')}` }
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const json = await response.json();
                 setData(json);
-            } catch (error) {
-                console.error("Failed to fetch dashboard stats", error);
+            } catch (err) {
+                console.error("Failed to fetch dashboard stats", err);
+                setError(true);
             } finally {
                 setLoading(false);
             }
@@ -30,8 +36,8 @@ export const EventsDashboard = () => {
         return <CircularProgress sx={{ display: 'block', margin: '40px auto' }} />;
     }
 
-    if (!data) {
-        return <Typography>Error loading stats</Typography>;
+    if (error || !data || !data.totals) {
+        return <Typography>Fehler beim Laden der Statistiken.</Typography>;
     }
 
     return (
