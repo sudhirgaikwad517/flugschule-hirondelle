@@ -58,35 +58,27 @@ body.admin-root .RaList-content {
   max-width: 100% !important;
 }
 
-/* Datagrid's own `sx` (e.g. Bookings.tsx) lands on RaDatagrid-root, but that
-   div only WRAPS the actual scroll boundary - the <table> itself sits one
-   level deeper inside RaDatagrid-tableWrapper, which react-admin ships with
-   no overflow rule at all. Without this, a table with many columns (like
-   Bookings) has nowhere to scroll and its trailing columns are simply
-   invisible once html's overflow-x:hidden clips them. */
-body.admin-root .RaDatagrid-root {
-  max-width: 100% !important;
-  width: 100% !important;
-  display: block !important;
-}
-body.admin-root .RaDatagrid-tableWrapper {
-  display: block !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  overflow-x: auto !important;
-  /* Windows Chrome/Edge normally reserve visible scrollbar space on their
-     own, but make it unmistakable either way instead of a hairline that's
-     easy to miss at a glance. */
+/* Overriding react-admin's RaDatagrid-tableWrapper via an external
+   stylesheet (even with !important, confirmed matching/winning in
+   DevTools) turned out not to reliably produce a working scrollbar in
+   practice - the same unresolved issue as the admin toolbar below. Wide
+   list pages now own their scroll boundary directly instead (see the
+   .booking-table-scroll wrapper div in Bookings.tsx) rather than fighting
+   react-admin's internal structure from outside it. This nice-looking
+   scrollbar styling only ever applies to elements that opt into it via
+   that class - it can't compete with anything since nothing else targets
+   it. */
+.booking-table-scroll {
   scrollbar-width: auto;
   scrollbar-color: #9aa5b1 #eef1f4;
 }
-body.admin-root .RaDatagrid-tableWrapper::-webkit-scrollbar {
+.booking-table-scroll::-webkit-scrollbar {
   height: 10px;
 }
-body.admin-root .RaDatagrid-tableWrapper::-webkit-scrollbar-track {
+.booking-table-scroll::-webkit-scrollbar-track {
   background: #eef1f4;
 }
-body.admin-root .RaDatagrid-tableWrapper::-webkit-scrollbar-thumb {
+.booking-table-scroll::-webkit-scrollbar-thumb {
   background-color: #9aa5b1;
   border-radius: 6px;
 }

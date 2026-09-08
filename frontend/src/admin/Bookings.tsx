@@ -172,7 +172,15 @@ const BookingListActions = () => {
     };
 
     return (
-        <TopToolbar sx={{ flexWrap: 'wrap', gap: 0.5 }}>
+        // Plain div with an inline style, not react-admin's <TopToolbar>: an
+        // external stylesheet override (even with !important, confirmed
+        // winning in DevTools) still failed to make TopToolbar's own flex
+        // item actually wrap here - something about how its internal
+        // flex-basis/overflow interacts with react-admin's runtime-injected
+        // styles kept it laid out as a single unbroken row regardless. A
+        // plain element we fully own, styled only via React's inline style
+        // attribute, has no such competing styled-component to fight.
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, width: '100%', padding: '4px 4px 8px' }}>
             <RaButton label="Aktivieren" onClick={() => run('/bulk/activate', { ids: selectedIds })}><CheckCircleIcon /></RaButton>
             <RaButton label="Ausstehend" onClick={() => run('/bulk/pending', { ids: selectedIds })}><CancelIcon /></RaButton>
             <RaButton label="Ablehnen" onClick={() => openCompose(setRejectOpen)} />
@@ -218,7 +226,7 @@ const BookingListActions = () => {
                 onClose={() => setContactOpen(false)}
                 onSend={(subject, message) => run('/bulk/contact', { ids: selectedIds, subject, message })}
             />
-        </TopToolbar>
+        </div>
     );
 };
 
@@ -281,19 +289,30 @@ export const BookingList = () => (
             ausgewählt" / select-all-matching bar) without pulling in
             react-admin's own default Delete button, since deletion here
             goes through the dedicated Papierkorb flow instead. */}
-        <Datagrid rowClick="show" bulkActionButtons={<></>} sx={{ overflowX: 'auto' }}>
-            <TextField source="shortId" label="ID" />
-            <TextField source="customerName" label="Name" />
-            <TextField source="customerEmail" label="E-Mail" />
-            <FunctionField label="Event" render={(r: any) => r.event?.title || '—'} />
-            <DateField source="createdAt" label="Buchungsdatum" showTime />
-            <NumberField source="bookedSeats" label="Plätze" />
-            <PaidToggle label="Bezahlt" />
-            <BooleanField source="certificated" label="Zertifikat" />
-            <StatusChip label="Status" />
-            <NumberField source="totalPrice" label="Gesamtpreis (€)" options={{ style: 'currency', currency: 'EUR' }} />
-            <ShowButton />
-        </Datagrid>
+        {/* A plain wrapper div with an inline overflowX style, not just
+            sx on the Datagrid: overriding react-admin's own
+            RaDatagrid-tableWrapper via an external stylesheet (even with
+            !important) did not reliably produce a working scrollbar, for
+            the same reason the toolbar override above didn't - something
+            in how its runtime-injected styles interact keeps winning in
+            practice despite DevTools showing our rule as matching. Owning
+            the scroll boundary directly, with no react-admin styled
+            component in between, removes that uncertainty entirely. */}
+        <div className="booking-table-scroll" style={{ width: '100%', overflowX: 'auto' }}>
+            <Datagrid rowClick="show" bulkActionButtons={<></>}>
+                <TextField source="shortId" label="ID" />
+                <TextField source="customerName" label="Name" />
+                <TextField source="customerEmail" label="E-Mail" />
+                <FunctionField label="Event" render={(r: any) => r.event?.title || '—'} />
+                <DateField source="createdAt" label="Buchungsdatum" showTime />
+                <NumberField source="bookedSeats" label="Plätze" />
+                <PaidToggle label="Bezahlt" />
+                <BooleanField source="certificated" label="Zertifikat" />
+                <StatusChip label="Status" />
+                <NumberField source="totalPrice" label="Gesamtpreis (€)" options={{ style: 'currency', currency: 'EUR' }} />
+                <ShowButton />
+            </Datagrid>
+        </div>
     </List>
 );
 
