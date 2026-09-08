@@ -97,17 +97,22 @@ export const Banner = () => {
     <section className="relative w-full h-[calc(100vh-80px)] min-h-[500px] md:min-h-[600px] flex flex-col items-center justify-center text-center text-white overflow-hidden group">
       
       {/* Background Images - Ken Burns effect: each slide slowly zooms in
-          while active, and crossfades through a blur into the next one
-          (rather than a plain opacity cut) */}
+          while active, and crossfades through a blur into the next one.
+          The outgoing slide starts fading out immediately (delay-0); the
+          incoming slide's fade-in is delayed until the outgoing one is
+          most of the way through disappearing (delay-700), so the two
+          never sit at equal, fully-visible opacity at the same time - it
+          reads as "first fades away, then the next appears" rather than
+          an instant swap or an equal-strength blend. */}
       {slides.map((slide, index) => (
         <div
           key={index}
-          className={`absolute inset-0 overflow-hidden transition-[opacity,filter] duration-[1200ms] ease-in-out ${
-            index === currentSlide ? 'opacity-100 blur-none' : 'opacity-0 blur-md'
+          className={`absolute inset-0 overflow-hidden transition-[opacity,filter] duration-[900ms] ease-in-out ${
+            index === currentSlide ? 'opacity-100 blur-none delay-700' : 'opacity-0 blur-md delay-0'
           }`}
         >
           <div
-            className={`absolute inset-0 bg-cover bg-center bg-no-repeat ${
+            className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 ease-out ${
               index === currentSlide ? 'kenburns-active' : ''
             }`}
             style={{ backgroundImage: `url("${slide.image}")` }}
