@@ -178,6 +178,20 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Ken Burns effect for the home page Banner (Banner.tsx): the active
+   slide slowly zooms in for as long as it's displayed - restarts cleanly
+   each time a slide cycles back to active since it's a fresh class
+   addition, not a continuously-running animation. Duration matches the
+   Banner's 6s auto-play interval so the zoom keeps progressing smoothly
+   right up to the moment the next slide crossfades in. */
+@keyframes kenburns-zoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.15); }
+}
+.kenburns-active {
+  animation: kenburns-zoom 6500ms ease-out forwards;
+}
+
 h1, h2, h3, h4, h5, h6, .nav-item {
   font-family: var(--font-condensed);
 }

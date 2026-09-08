@@ -96,15 +96,22 @@ export const Banner = () => {
   return (
     <section className="relative w-full h-[calc(100vh-80px)] min-h-[500px] md:min-h-[600px] flex flex-col items-center justify-center text-center text-white overflow-hidden group">
       
-      {/* Background Images */}
+      {/* Background Images - Ken Burns effect: each slide slowly zooms in
+          while active, and crossfades through a blur into the next one
+          (rather than a plain opacity cut) */}
       {slides.map((slide, index) => (
-        <div 
+        <div
           key={index}
-          className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ease-in-out ${
-            index === currentSlide ? 'opacity-100' : 'opacity-0'
+          className={`absolute inset-0 overflow-hidden transition-[opacity,filter] duration-[1200ms] ease-in-out ${
+            index === currentSlide ? 'opacity-100 blur-none' : 'opacity-0 blur-md'
           }`}
-          style={{ backgroundImage: `url("${slide.image}")` }}
         >
+          <div
+            className={`absolute inset-0 bg-cover bg-center bg-no-repeat ${
+              index === currentSlide ? 'kenburns-active' : ''
+            }`}
+            style={{ backgroundImage: `url("${slide.image}")` }}
+          ></div>
           {/* Subtle overlay for text readability */}
           <div className="absolute inset-0 bg-black/10"></div>
         </div>
