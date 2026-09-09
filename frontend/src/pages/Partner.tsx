@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 
-import { Header as Navbar } from '../components/layout/Header';
-import { Footer } from '../components/layout/Footer';
 import { ExternalLink, Link as LinkIcon } from 'lucide-react';
 
 interface WebLink {
@@ -41,10 +39,6 @@ export const Partner: React.FC = () => {
 
   return (
     <div className="min-h-screen font-sans text-gray-900 bg-white">
-
-
-      <Navbar />
-
       <main className="pt-24 pb-16">
         <div className="max-w-6xl mx-auto px-4 md:px-8">
           <div className="text-center mb-16">
@@ -113,8 +107,6 @@ export const Partner: React.FC = () => {
           )}
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };

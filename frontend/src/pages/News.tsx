@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Header as Navbar } from '../components/layout/Header';
-import { Footer } from '../components/layout/Footer';
 import { Link } from 'react-router-dom';
 import { Calendar, User } from 'lucide-react';
 
@@ -36,10 +34,6 @@ export const News: React.FC = () => {
 
   return (
     <div className="min-h-screen font-sans text-gray-900 bg-white">
-
-
-      <Navbar />
-
       <main className="pt-24 pb-16">
         <div className="max-w-6xl mx-auto px-4 md:px-8">
           <div className="text-center mb-16">
@@ -104,8 +98,6 @@ export const News: React.FC = () => {
           )}
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };

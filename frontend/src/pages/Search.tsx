@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 
-import { Header as Navbar } from '../components/layout/Header';
-import { Footer } from '../components/layout/Footer';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search as SearchIcon, Calendar, FileText, Download } from 'lucide-react';
 
@@ -52,10 +50,6 @@ export const Search: React.FC = () => {
 
   return (
     <div className="min-h-screen font-sans text-gray-900 bg-white">
-
-
-      <Navbar />
-
       <main className="pt-24 pb-16 min-h-[70vh]">
         <div className="max-w-4xl mx-auto px-4 md:px-8">
           
@@ -174,8 +168,6 @@ export const Search: React.FC = () => {
           )}
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };
