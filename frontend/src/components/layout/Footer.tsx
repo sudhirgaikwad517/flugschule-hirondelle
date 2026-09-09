@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Send } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export const Footer = () => {
   const [name, setName] = useState('');
@@ -9,6 +8,32 @@ export const Footer = () => {
   const [tandemNewsletter, setTandemNewsletter] = useState(false);
 
   const [statusMsg, setStatusMsg] = useState('');
+
+  // Mirrors Header.tsx's exact auth-state pattern (same localStorage keys
+  // and 'auth-change' event) - not a new/separate auth mechanism, just
+  // reflecting the same login state to show Log out / Log in like the
+  // reference footer does next to the Subscribe button.
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const loadUser = () => {
+      setIsLoggedIn(!!localStorage.getItem('token'));
+    };
+    loadUser();
+    window.addEventListener('storage', loadUser);
+    window.addEventListener('auth-change', loadUser);
+    return () => {
+      window.removeEventListener('storage', loadUser);
+      window.removeEventListener('auth-change', loadUser);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setIsLoggedIn(false);
+    window.dispatchEvent(new Event('auth-change'));
+  };
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,132 +65,131 @@ export const Footer = () => {
     }
   };
 
+  const NAV_LINKS = [
+    { to: '/', label: 'Home' },
+    { to: '/ausbildung', label: 'Ausbildung' },
+    { to: '/infos/wetter', label: 'Wetter' },
+    { to: '/infos/team', label: 'Team' },
+    { to: '/infos#kontakt', label: 'Kontakt' },
+    { to: '/reisen', label: 'Reisen' },
+    { to: '/shop', label: 'Shop' },
+    { to: '/infos/medien', label: 'Medien' },
+    { to: '/ausbildung#tandem', label: 'Tandem' },
+    { to: '/impressum', label: 'Impressum' },
+    { to: '/buchungskalender', label: 'Kalender' },
+    { to: '/service#2-jahres-check', label: 'Checks' },
+    { to: '/infos/gelaende', label: 'Gelände' },
+    { to: '/faq', label: 'FAQ' },
+    { to: '/datenschutz', label: 'Datenschutzerklärung' },
+  ];
+
   return (
-    <footer className="bg-[#16A3E3] text-white pt-12 pb-6 font-luxurysans print:hidden">
-      <div className="container mx-auto px-8 max-w-[1400px]">
+    <footer
+      className="text-white pt-14 pb-10 font-luxurysans print:hidden"
+      style={{ background: 'linear-gradient(180deg, #4FA8C7 0%, #2B6E86 100%)' }}
+    >
+      <div className="container mx-auto px-6 md:px-10 max-w-[1400px]">
+        <div className="flex flex-col md:flex-row gap-12 md:gap-16">
 
-        {/* Main Footer Content */}
-        <div className="flex flex-col md:flex-row justify-between gap-12 mb-8">
-          
-          {/* Left: Branding & Kontakt */}
-          <div className="w-full md:w-1/3">
-            <div className="inline-flex items-center justify-center mb-5">
-              <img src="/logo.svg" alt="Flugschule Hirondelle" className="h-14 w-56 object-contain brightness-0 invert" />
-            </div>
-            <p className="text-sm text-white/80 leading-relaxed font-light mb-5 max-w-sm">
-              Die 1988 gegründete Flugschule Hirondelle ist eine der führenden Gleitschirmschulen im Herzen Deutschlands. Wir bieten moderne Ausbildung und exklusiven Zugang zu den besten Fluggebieten, um Sie in einer idyllischen Umgebung unter unberührtem Himmel in ein wahres Flugerlebnis eintauchen zu lassen.
-            </p>
-            <h3 className="font-luxury text-xl mb-3 text-white/80">Kontakt</h3>
-            <div className="text-sm text-white/80 leading-relaxed font-light space-y-1 mb-5">
-              <p>E-Mail: info@flugschule-hirondelle.de</p>
-              <p>Tel: +49 6201 12345</p>
-              <p>Fax: +49 6201 12346</p>
-              <p>Weinheim, 69469, Deutschland</p>
-            </div>
-            {/* Social Icons (Only FB and YT as per original) */}
-            <div className="flex gap-4">
-              <a href="#" className="text-white hover:text-luxury-gold transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-              </a>
-              <a href="#" className="text-white hover:text-luxury-gold transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/></svg>
-              </a>
-            </div>
-          </div>
-
-          {/* Center: Quick Links (Matching exactly the original right section) */}
-          <div className="w-full md:w-1/3">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3 text-sm text-white/80 font-light">
-              <Link to="/" className="hover:text-luxury-gold transition-colors">Home</Link>
-              <Link to="/ausbildung" className="hover:text-luxury-gold transition-colors">Ausbildung</Link>
-              <Link to="/infos/wetter" className="hover:text-luxury-gold transition-colors">Wetter</Link>
-              <Link to="/infos/team" className="hover:text-luxury-gold transition-colors">Team</Link>
-              <Link to="/infos#kontakt" className="hover:text-luxury-gold transition-colors">Kontakt</Link>
-              
-              <Link to="/reisen" className="hover:text-luxury-gold transition-colors">Reisen</Link>
-              <Link to="/shop" className="hover:text-luxury-gold transition-colors">Shop</Link>
-              <Link to="/infos/medien" className="hover:text-luxury-gold transition-colors">Medien</Link>
-              <Link to="/ausbildung#tandem" className="hover:text-luxury-gold transition-colors">Tandem</Link>
-              <Link to="/impressum" className="hover:text-luxury-gold transition-colors">Impressum</Link>
-              
-              <Link to="/buchungskalender" className="hover:text-luxury-gold transition-colors">Kalender</Link>
-              <Link to="/service#2-jahres-check" className="hover:text-luxury-gold transition-colors">Checks</Link>
-              <Link to="/infos/gelaende" className="hover:text-luxury-gold transition-colors">Gelände</Link>
-              <Link to="/faq" className="hover:text-luxury-gold transition-colors">FAQ</Link>
-              <Link to="/datenschutz" className="hover:text-luxury-gold transition-colors">Datenschutzerklärung</Link>
-            </div>
-          </div>
-
-          {/* Right: Newsletter (Matching exactly the original left section) */}
-          <div className="w-full md:w-1/3">
-            <form onSubmit={handleSubscribe} className="space-y-4">
-              <div className="flex flex-col gap-2 mb-4">
-                <label className="flex items-center gap-2 cursor-pointer text-sm text-white/80 font-light hover:text-white transition-colors">
-                  <input type="checkbox" checked={newsletter} onChange={(e) => setNewsletter(e.target.checked)} className="w-3 h-3 bg-transparent border-white/40" />
+          {/* Left: Newsletter signup + account */}
+          <div className="w-full md:w-[38%]">
+            <form onSubmit={handleSubscribe}>
+              <div className="flex flex-col gap-2 mb-5">
+                <label className="flex items-center gap-2 cursor-pointer text-sm text-white font-light">
+                  <input type="checkbox" checked={newsletter} onChange={(e) => setNewsletter(e.target.checked)} className="w-3.5 h-3.5 accent-white" />
                   Newsletter
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer text-sm text-white/80 font-light hover:text-white transition-colors">
-                  <input type="checkbox" checked={tandemNewsletter} onChange={(e) => setTandemNewsletter(e.target.checked)} className="w-3 h-3 bg-transparent border-white/40" />
+                <label className="flex items-center gap-2 cursor-pointer text-sm text-white font-light">
+                  <input type="checkbox" checked={tandemNewsletter} onChange={(e) => setTandemNewsletter(e.target.checked)} className="w-3.5 h-3.5 accent-white" />
                   Tandemflüge Newsletter
                 </label>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-white mb-1">Name</label>
-                <input 
-                  type="text" 
+              <div className="mb-4">
+                <label className="block text-sm text-white mb-1">Name</label>
+                <input
+                  type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-white text-black p-2 outline-none"
+                  className="w-full bg-white text-black text-sm p-2 outline-none"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-white mb-1">E-Mail</label>
-                <input 
-                  type="email" 
+              <div className="mb-4">
+                <label className="block text-sm text-white mb-1">E-Mail</label>
+                <input
+                  type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white text-black p-2 outline-none"
+                  className="w-full bg-white text-black text-sm p-2 outline-none"
                   required
                 />
               </div>
 
-              <div className="flex items-start gap-3 mt-6">
-                <input type="checkbox" id="privacy" className="w-4 h-4 mt-1 bg-transparent border-white/40" required />
-                <label htmlFor="privacy" className="text-xs text-white/80 font-light leading-snug">
-                  Ich akzeptiere die <Link to="/agb" className="font-bold underline hover:text-white transition-colors">Allgemeinen Geschäftsbedingungen</Link> und die <Link to="/datenschutz" className="font-bold underline hover:text-white transition-colors">Datenschutzerklärung</Link>
+              <div className="flex items-start gap-2 mb-5">
+                <input type="checkbox" id="privacy" className="w-3.5 h-3.5 mt-0.5 accent-white" required />
+                <label htmlFor="privacy" className="text-xs text-white font-light leading-snug">
+                  Ich akzeptiere die <Link to="/agb" className="underline hover:text-luxury-gold transition-colors">Allgemeinen Geschäftsbedingungen</Link> und die <Link to="/datenschutz" className="underline hover:text-luxury-gold transition-colors">Datenschutzerklärung</Link>.
                 </label>
               </div>
 
-              <div className="flex gap-2 pt-4">
-                <button type="submit" className="flex-1 bg-white/10 hover:bg-luxury-gold transition-colors text-white text-xs font-bold uppercase tracking-widest py-3 text-center">
+              <div className="flex items-center gap-5">
+                <button type="submit" className="bg-white/15 hover:bg-white/25 transition-colors text-white text-sm font-medium px-6 py-2.5">
                   Abonnieren
                 </button>
+                {isLoggedIn ? (
+                  <button type="button" onClick={handleLogout} className="text-sm text-white/90 hover:text-white transition-colors">
+                    Abmelden
+                  </button>
+                ) : (
+                  <Link to="/anmeldung" className="text-sm text-white/90 hover:text-white transition-colors">
+                    Anmelden
+                  </Link>
+                )}
               </div>
-              
+
               {statusMsg && (
-                <div className="mt-2 text-sm text-luxury-gold font-bold">
+                <div className="mt-3 text-sm text-luxury-gold font-bold">
                   {statusMsg}
                 </div>
               )}
             </form>
           </div>
 
-        </div>
+          {/* Right: bird emblem, nav link grid, social icons */}
+          <div className="w-full md:w-[62%] flex flex-col justify-center">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="flex-1 h-px bg-white/50"></div>
+              <div className="w-14 h-14 rounded-full border-2 border-white flex items-center justify-center flex-shrink-0">
+                <svg width="28" height="28" viewBox="0 0 64 64" fill="white" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M32 20c-3 5-9 10-18 13 7-1 13 0 18 4-8 2-16 6-22 14 9-5 17-7 24-6-2 6-2 13 0 19 3-6 6-11 10-14 4 3 7 8 10 14 2-6 2-13 0-19 7-1 15 1 24 6-6-8-14-12-22-14 5-4 11-5 18-4-9-3-15-8-18-13-1 2-2 4-4 5-2-1-3-3-4-5z" />
+                </svg>
+              </div>
+              <div className="flex-1 h-px bg-white/50"></div>
+            </div>
 
-        {/* Bottom Bar */}
-        <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row justify-between items-center text-[11px] uppercase tracking-widest font-semibold text-white/70">
-          <div className="flex gap-6 mb-4 md:mb-0">
-            <Link to="/datenschutz" className="hover:text-white transition-colors">DATENSCHUTZ</Link>
-            <Link to="/impressum" className="hover:text-white transition-colors">IMPRESSUM</Link>
-            <Link to="/agb" className="hover:text-white transition-colors">AGB</Link>
-          </div>
-          <div className="normal-case tracking-normal font-light text-sm text-white/70">
-            &copy; Copyright Flugschule Hirondelle. Alle Rechte vorbehalten.
-          </div>
-        </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-3 text-sm font-light mb-8">
+              {NAV_LINKS.map((link) => (
+                <Link key={link.to} to={link.to} className="underline hover:text-luxury-gold transition-colors">
+                  {link.label}
+                </Link>
+              ))}
+            </div>
 
+            <div className="flex items-center gap-4">
+              <div className="flex-1 h-px bg-white/50"></div>
+              <div className="flex gap-3">
+                <a href="#" aria-label="Facebook" className="w-8 h-8 rounded-full border border-white flex items-center justify-center hover:bg-white/10 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.51 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.47h-1.26c-1.24 0-1.63.77-1.63 1.56v1.87h2.78l-.44 2.91h-2.34V22c4.78-.76 8.44-4.92 8.44-9.94z"/></svg>
+                </a>
+                <a href="#" aria-label="YouTube" className="w-8 h-8 rounded-full border border-white flex items-center justify-center hover:bg-white/10 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M23.5 6.2a3.02 3.02 0 0 0-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.56A3.02 3.02 0 0 0 .5 6.2 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.8 3.02 3.02 0 0 0 2.12 2.14C4.5 20.5 12 20.5 12 20.5s7.5 0 9.38-.56a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.8zM9.75 15.5v-7l6.5 3.5-6.5 3.5z"/></svg>
+                </a>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </footer>
   );
