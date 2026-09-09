@@ -213,20 +213,22 @@ export const Home = () => {
       </section>
       */}
 
-      {/* 5. PROMO CARDS (From Old Website) / UNSERE HIGHLIGHTS - temporarily disabled, kept for future re-enable
-      <section className="pt-8 pb-24 bg-white px-4 relative z-30 border-t border-gray-100">
-        <div className="max-w-[1200px] mx-auto">
-
+      {/* 5. PROMO CARDS (From Old Website) / UNSERE HIGHLIGHTS - KEPT, just the
+          tagline+heading text above the cards was removed per request
+          (commented out below, not deleted, in case it's wanted back later)
           <div className="text-center mb-16">
             <p className="text-luxury-gold uppercase tracking-[0.2em] text-xs font-semibold mb-4">
               ENTDECKEN SIE MEHR
             </p>
             <h2 className="font-luxury text-4xl md:text-6xl text-luxury-dark">UNSERE HIGHLIGHTS</h2>
           </div>
+      */}
+      <section className="pt-8 pb-24 bg-white px-4 relative z-30 border-t border-gray-100">
+        <div className="max-w-[1200px] mx-auto">
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 
-            {/* Box 1: Fliegen Lernen }
+            {/* Box 1: Fliegen Lernen */}
             <div className="relative h-[400px] group overflow-hidden bg-white shadow-xl cursor-pointer">
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
@@ -250,7 +252,7 @@ export const Home = () => {
               </div>
             </div>
 
-            {/* Box 2: Shop Geöffnet }
+            {/* Box 2: Shop Geöffnet */}
             <div className="relative h-[400px] group overflow-hidden bg-white shadow-xl cursor-pointer">
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
@@ -274,7 +276,7 @@ export const Home = () => {
               </div>
             </div>
 
-            {/* Box 3: On Tour }
+            {/* Box 3: On Tour */}
             <div className="relative h-[400px] group overflow-hidden bg-white shadow-xl cursor-pointer">
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
@@ -301,7 +303,6 @@ export const Home = () => {
           </div>
         </div>
       </section>
-      */}
 
       {/* 6. NEWS & HOCH HINAUS (CONTENT FROM OLD SITE) - KEPT */}
       <section className="pt-8 pb-24 bg-white px-4 border-b border-gray-100">
