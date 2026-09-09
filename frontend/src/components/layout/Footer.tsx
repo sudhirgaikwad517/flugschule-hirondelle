@@ -161,7 +161,11 @@ export const Footer = () => {
             <div className="flex items-center gap-4 mb-8">
               <div className="flex-1 h-px bg-white/50"></div>
               <div className="w-14 h-14 rounded-full border border-white overflow-hidden flex-shrink-0">
-                <img src="/google.png" alt="Flugschule Hirondelle" className="w-full h-full object-cover" />
+                {/* bird-badge.png: white circle + bird in the brand's blue
+                    accent, not plain google.png - its own blue circle is too
+                    close in tone to this footer's gradient and disappears
+                    into it. */}
+                <img src="/bird-badge.png" alt="Flugschule Hirondelle" className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 h-px bg-white/50"></div>
             </div>
