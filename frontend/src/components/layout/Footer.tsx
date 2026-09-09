@@ -160,8 +160,17 @@ export const Footer = () => {
           <div className="w-full md:w-[62%] flex flex-col justify-center">
             <div className="flex items-center gap-4 mb-8">
               <div className="flex-1 h-px bg-white/50"></div>
-              <div className="w-14 h-14 rounded-full border-2 border-white flex items-center justify-center flex-shrink-0 overflow-hidden">
-                <img src="/google.png" alt="Flugschule Hirondelle" className="w-full h-full object-cover" />
+              <div className="w-14 h-14 rounded-full border-2 border-white flex items-center justify-center flex-shrink-0">
+                {/* google.png's swallow mark is opaque (both the bird AND its
+                    blue circle background), so a brightness/invert filter
+                    just turns the whole thing into one solid white blob with
+                    no visible bird detail - confirmed by testing it directly.
+                    bird-white.png is a one-time luminance-based cutout of the
+                    same source asset that keeps just the bird as white
+                    pixels on a transparent background, matching the
+                    reference: the page's own blue gradient shows through
+                    inside the ring, with only the bird silhouette on top. */}
+                <img src="/bird-white.png" alt="Flugschule Hirondelle" className="w-9 h-9 object-contain" />
               </div>
               <div className="flex-1 h-px bg-white/50"></div>
             </div>
