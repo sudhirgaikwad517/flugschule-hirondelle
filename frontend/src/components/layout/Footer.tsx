@@ -161,16 +161,15 @@ export const Footer = () => {
             <div className="flex items-center gap-4 mb-8">
               <div className="flex-1 h-px bg-white/50"></div>
               <div className="w-14 h-14 rounded-full border-2 border-white overflow-hidden flex-shrink-0">
-                {/* Plain, unmodified google.png (its own blue circle + white
-                    swallow) filling the ring edge-to-edge - both the
-                    brightness/invert filter and a transparent white-only
-                    cutout were tried and made the bird either disappear
-                    entirely or look faint/patchy, since the source art
-                    itself is a soft, low-contrast mark rather than solid
-                    white. The real asset as-is, sized to match the ring
-                    exactly (no gap around a smaller inner circle), reads
-                    closest to the reference. */}
-                <img src="/google.png" alt="Flugschule Hirondelle" className="w-full h-full object-cover" />
+                {/* google.png's own blue circle sits too close in tone to
+                    this footer's own blue gradient to read clearly - visually
+                    confirmed low-contrast. bird-badge.png recolors the same
+                    source silhouette (region-classified by luminance, not a
+                    plain filter) to a white circle with the bird in the
+                    brand's own blue accent (matches the swallow tint already
+                    used in logo.svg), which reads crisply against this
+                    background instead of nearly disappearing into it. */}
+                <img src="/bird-badge.png" alt="Flugschule Hirondelle" className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 h-px bg-white/50"></div>
             </div>
