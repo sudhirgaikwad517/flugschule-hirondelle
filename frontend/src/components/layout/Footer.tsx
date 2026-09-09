@@ -160,17 +160,17 @@ export const Footer = () => {
           <div className="w-full md:w-[62%] flex flex-col justify-center">
             <div className="flex items-center gap-4 mb-8">
               <div className="flex-1 h-px bg-white/50"></div>
-              <div className="w-14 h-14 rounded-full border-2 border-white flex items-center justify-center flex-shrink-0">
-                {/* google.png's swallow mark is opaque (both the bird AND its
-                    blue circle background), so a brightness/invert filter
-                    just turns the whole thing into one solid white blob with
-                    no visible bird detail - confirmed by testing it directly.
-                    bird-white.png is a one-time luminance-based cutout of the
-                    same source asset that keeps just the bird as white
-                    pixels on a transparent background, matching the
-                    reference: the page's own blue gradient shows through
-                    inside the ring, with only the bird silhouette on top. */}
-                <img src="/bird-white.png" alt="Flugschule Hirondelle" className="w-9 h-9 object-contain" />
+              <div className="w-14 h-14 rounded-full border-2 border-white overflow-hidden flex-shrink-0">
+                {/* Plain, unmodified google.png (its own blue circle + white
+                    swallow) filling the ring edge-to-edge - both the
+                    brightness/invert filter and a transparent white-only
+                    cutout were tried and made the bird either disappear
+                    entirely or look faint/patchy, since the source art
+                    itself is a soft, low-contrast mark rather than solid
+                    white. The real asset as-is, sized to match the ring
+                    exactly (no gap around a smaller inner circle), reads
+                    closest to the reference. */}
+                <img src="/google.png" alt="Flugschule Hirondelle" className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 h-px bg-white/50"></div>
             </div>
