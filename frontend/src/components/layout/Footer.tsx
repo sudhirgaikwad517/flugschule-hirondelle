@@ -160,8 +160,8 @@ export const Footer = () => {
           <div className="w-full md:w-[62%] flex flex-col justify-center">
             <div className="flex items-center gap-4 mb-8">
               <div className="flex-1 h-px bg-white/50"></div>
-              <div className="w-14 h-14 rounded-full border-2 border-white bg-white flex items-center justify-center flex-shrink-0">
-                <img src="/google.png" alt="Flugschule Hirondelle" className="w-11 h-11 object-contain" />
+              <div className="w-14 h-14 rounded-full border border-white overflow-hidden flex-shrink-0">
+                <img src="/google.png" alt="Flugschule Hirondelle" className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 h-px bg-white/50"></div>
             </div>
