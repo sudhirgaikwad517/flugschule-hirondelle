@@ -160,10 +160,8 @@ export const Footer = () => {
           <div className="w-full md:w-[62%] flex flex-col justify-center">
             <div className="flex items-center gap-4 mb-8">
               <div className="flex-1 h-px bg-white/50"></div>
-              <div className="w-14 h-14 rounded-full border-2 border-white flex items-center justify-center flex-shrink-0">
-                <svg width="28" height="28" viewBox="0 0 64 64" fill="white" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M32 20c-3 5-9 10-18 13 7-1 13 0 18 4-8 2-16 6-22 14 9-5 17-7 24-6-2 6-2 13 0 19 3-6 6-11 10-14 4 3 7 8 10 14 2-6 2-13 0-19 7-1 15 1 24 6-6-8-14-12-22-14 5-4 11-5 18-4-9-3-15-8-18-13-1 2-2 4-4 5-2-1-3-3-4-5z" />
-                </svg>
+              <div className="w-14 h-14 rounded-full border-2 border-white flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <img src="/google.png" alt="Flugschule Hirondelle" className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 h-px bg-white/50"></div>
             </div>
