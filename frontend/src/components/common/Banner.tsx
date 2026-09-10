@@ -203,8 +203,18 @@ export const Banner = ({ variant = 'subpage' }: BannerProps) => {
 
   if (!currentSlideData) return null;
 
+  // Old site computes the slideshow's height as a percentage of its own
+  // width, not viewport height - on the home page it spans the full page
+  // width (tall), but on every other page it sits inside the boxed content
+  // container (~1200px), which comes out noticeably shorter on desktop.
+  // Mobile is unaffected since the boxed container is effectively full-
+  // width there too, so both variants stay equal below the md breakpoint.
+  const heightClasses = variant === 'home'
+    ? 'h-[calc(100vh-80px)] min-h-[500px] md:min-h-[600px]'
+    : 'h-[calc(100vh-80px)] min-h-[500px] md:h-[75vh] md:min-h-[480px]';
+
   return (
-    <section className="relative w-full h-[calc(100vh-80px)] min-h-[500px] md:min-h-[600px] flex flex-col items-center justify-center text-center text-white overflow-hidden group">
+    <section className={`relative w-full ${heightClasses} flex flex-col items-center justify-center text-center text-white overflow-hidden group`}>
 
       {/* Background Images - Ken Burns effect ported from the css-101.org
           reference: opacity fades in over 3s while the zoom (scale 1 ->
@@ -240,8 +250,10 @@ export const Banner = ({ variant = 'subpage' }: BannerProps) => {
         );
       })}
 
-      {/* Name Plate Container - Aligned to bottom left of container */}
-      <div className="absolute inset-0 z-20 flex items-end pb-24 md:pb-32">
+      {/* Name Plate Container - Aligned to bottom left of container.
+          Old site hides the caption below 630px (.camera_caption_title
+          { display: none }) - hidden here below sm (640px) to match. */}
+      <div className="absolute inset-0 z-20 hidden sm:flex items-end pb-24 md:pb-32">
         <div className="container mx-auto px-4 lg:px-8 max-w-[1200px] w-full flex justify-start">
 
           {/* Conditionally render Name Plate */}
