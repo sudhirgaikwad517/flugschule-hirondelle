@@ -16,8 +16,11 @@ const WINDE_GELAENDE = [
 // grid row. The name gets a reserved two-line height (min-h + line-clamp)
 // so the icon underneath lines up at the same spot regardless of whether
 // the name actually wraps or not.
+// Exact size (114.3 x 76.52px) measured directly off the original site's
+// boxes via DevTools - w-full previously let the box stretch to whatever
+// width the grid column happened to give it instead of matching that.
 const Ortsschild = ({ name }: { name: string }) => (
-  <button className="bg-[#FACA05] border-2 border-black rounded-md p-1.5 flex flex-col items-center justify-center text-center shadow-md hover:scale-105 transition-transform duration-300 w-full h-20">
+  <button className="bg-[#FACA05] border-2 border-black rounded-md p-1.5 flex flex-col items-center justify-center text-center shadow-md hover:scale-105 transition-transform duration-300 w-[114px] h-[77px]">
     <span className="text-black font-bold text-[10px] md:text-[11px] leading-tight mb-1 px-1 min-h-[2em] flex items-center justify-center">
       {name}
     </span>
