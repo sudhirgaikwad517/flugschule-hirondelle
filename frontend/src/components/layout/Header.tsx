@@ -327,10 +327,14 @@ export const Header = () => {
 
                 {/* Ausbildung */}
                 <div className="flex flex-col">
-                  <button onClick={() => toggleMobileMenu('ausbildung')} className="flex justify-between items-center w-full text-gray-800 text-[26px] font-luxury hover:text-hirondelle-blue transition-colors text-left py-1">
-                    Ausbildung
-                    <ChevronRight className={`w-4 h-4 text-gray-800 transition-transform ${expandedMobileMenu === 'ausbildung' ? 'rotate-90' : ''}`} />
-                  </button>
+                  <div className="flex justify-between items-center w-full text-gray-800 text-[26px] font-luxury">
+                    <Link to="/ausbildung" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-hirondelle-blue transition-colors py-1 flex-1">
+                      Ausbildung
+                    </Link>
+                    <button onClick={() => toggleMobileMenu('ausbildung')} aria-label="Ausbildung Untermenü umschalten" className="p-2 -mr-2">
+                      <ChevronRight className={`w-4 h-4 text-gray-800 transition-transform ${expandedMobileMenu === 'ausbildung' ? 'rotate-90' : ''}`} />
+                    </button>
+                  </div>
                   <div className={`overflow-hidden transition-all duration-300 ${expandedMobileMenu === 'ausbildung' ? 'max-h-[800px] mt-2 mb-2 opacity-100' : 'max-h-0 opacity-0'}`}>
                     <div className="flex flex-col space-y-4 pl-4 py-2">
                       <Link to="/ausbildung/schnupperkurs" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Schnupper-/Einsteigerkurs</Link>
@@ -346,10 +350,14 @@ export const Header = () => {
 
                 {/* Performance */}
                 <div className="flex flex-col">
-                  <button onClick={() => toggleMobileMenu('performance')} className="flex justify-between items-center w-full text-gray-800 text-[26px] font-luxury hover:text-hirondelle-blue transition-colors text-left py-1">
-                    Performance
-                    <ChevronRight className={`w-4 h-4 text-gray-800 transition-transform ${expandedMobileMenu === 'performance' ? 'rotate-90' : ''}`} />
-                  </button>
+                  <div className="flex justify-between items-center w-full text-gray-800 text-[26px] font-luxury">
+                    <Link to="/performance" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-hirondelle-blue transition-colors py-1 flex-1">
+                      Performance
+                    </Link>
+                    <button onClick={() => toggleMobileMenu('performance')} aria-label="Performance Untermenü umschalten" className="p-2 -mr-2">
+                      <ChevronRight className={`w-4 h-4 text-gray-800 transition-transform ${expandedMobileMenu === 'performance' ? 'rotate-90' : ''}`} />
+                    </button>
+                  </div>
                   <div className={`overflow-hidden transition-all duration-300 ${expandedMobileMenu === 'performance' ? 'max-h-[400px] mt-2 mb-2 opacity-100' : 'max-h-0 opacity-0'}`}>
                     <div className="flex flex-col space-y-4 pl-4 py-2">
                       <Link to="/performance/sicherheitstraining" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Sicherheit</Link>
@@ -362,10 +370,14 @@ export const Header = () => {
 
                 {/* Reisen */}
                 <div className="flex flex-col">
-                  <button onClick={() => toggleMobileMenu('reisen')} className="flex justify-between items-center w-full text-gray-800 text-[26px] font-luxury hover:text-hirondelle-blue transition-colors text-left py-1">
-                    Reisen
-                    <ChevronRight className={`w-4 h-4 text-gray-800 transition-transform ${expandedMobileMenu === 'reisen' ? 'rotate-90' : ''}`} />
-                  </button>
+                  <div className="flex justify-between items-center w-full text-gray-800 text-[26px] font-luxury">
+                    <Link to="/reisen" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-hirondelle-blue transition-colors py-1 flex-1">
+                      Reisen
+                    </Link>
+                    <button onClick={() => toggleMobileMenu('reisen')} aria-label="Reisen Untermenü umschalten" className="p-2 -mr-2">
+                      <ChevronRight className={`w-4 h-4 text-gray-800 transition-transform ${expandedMobileMenu === 'reisen' ? 'rotate-90' : ''}`} />
+                    </button>
+                  </div>
                   <div className={`overflow-hidden transition-all duration-300 ${expandedMobileMenu === 'reisen' ? 'max-h-[800px] mt-2 mb-2 opacity-100' : 'max-h-0 opacity-0'}`}>
                     <div className="flex flex-col space-y-4 pl-4 py-2">
                       {reisenTours.map(tour => (
@@ -384,10 +396,14 @@ export const Header = () => {
 
                 {/* Service */}
                 <div className="flex flex-col">
-                  <button onClick={() => toggleMobileMenu('service')} className="flex justify-between items-center w-full text-gray-800 text-[26px] font-luxury hover:text-hirondelle-blue transition-colors text-left py-1">
-                    Service
-                    <ChevronRight className={`w-4 h-4 text-gray-800 transition-transform ${expandedMobileMenu === 'service' ? 'rotate-90' : ''}`} />
-                  </button>
+                  <div className="flex justify-between items-center w-full text-gray-800 text-[26px] font-luxury">
+                    <Link to="/service" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-hirondelle-blue transition-colors py-1 flex-1">
+                      Service
+                    </Link>
+                    <button onClick={() => toggleMobileMenu('service')} aria-label="Service Untermenü umschalten" className="p-2 -mr-2">
+                      <ChevronRight className={`w-4 h-4 text-gray-800 transition-transform ${expandedMobileMenu === 'service' ? 'rotate-90' : ''}`} />
+                    </button>
+                  </div>
                   <div className={`overflow-hidden transition-all duration-300 ${expandedMobileMenu === 'service' ? 'max-h-[400px] mt-2 mb-2 opacity-100' : 'max-h-0 opacity-0'}`}>
                     <div className="flex flex-col space-y-4 pl-4 py-2">
                       <Link to="/service/2-jahres-check" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">2-Jahres-Check</Link>
@@ -401,10 +417,14 @@ export const Header = () => {
 
                 {/* Infos */}
                 <div className="flex flex-col">
-                  <button onClick={() => toggleMobileMenu('infos')} className="flex justify-between items-center w-full text-gray-800 text-[26px] font-luxury hover:text-hirondelle-blue transition-colors text-left py-1">
-                    Infos
-                    <ChevronRight className={`w-4 h-4 text-gray-800 transition-transform ${expandedMobileMenu === 'infos' ? 'rotate-90' : ''}`} />
-                  </button>
+                  <div className="flex justify-between items-center w-full text-gray-800 text-[26px] font-luxury">
+                    <Link to="/infos" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-hirondelle-blue transition-colors py-1 flex-1">
+                      Infos
+                    </Link>
+                    <button onClick={() => toggleMobileMenu('infos')} aria-label="Infos Untermenü umschalten" className="p-2 -mr-2">
+                      <ChevronRight className={`w-4 h-4 text-gray-800 transition-transform ${expandedMobileMenu === 'infos' ? 'rotate-90' : ''}`} />
+                    </button>
+                  </div>
                   <div className={`overflow-hidden transition-all duration-300 ${expandedMobileMenu === 'infos' ? 'max-h-[600px] mt-2 mb-2 opacity-100' : 'max-h-0 opacity-0'}`}>
                     <div className="flex flex-col space-y-4 pl-4 py-2">
                       <Link to="/news" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Aktuelles (News)</Link>
