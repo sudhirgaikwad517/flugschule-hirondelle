@@ -39,7 +39,7 @@ export const Windenschein = () => {
               ) : (
                 <button type="button" onClick={() => setShowVideo(true)} className="w-full h-full block cursor-pointer">
                   <img
-                    src="/images/windenschein/hero.webp"
+                    src="/images/windenschein/hero.jpg"
                     alt="Windenschlepp Video"
                     className="w-full h-full object-cover opacity-70 transition-transform duration-1000 group-hover:scale-105"
                   />
@@ -225,7 +225,7 @@ export const Windenschein = () => {
                  Der Windenschein ist auch als Geschenk-Gutschein möglich
                </p>
                <div className="w-full h-[180px] rounded-sm overflow-hidden shadow-sm relative group cursor-pointer border border-gray-200">
-                  <img src="/images/gutscheine/gutschein.webp" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
+                  <img src="/images/gutscheine/gutschein.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                   <div className="absolute bottom-4 left-4">
                      <p className="text-white font-luxury text-3xl font-bold italic opacity-90 drop-shadow-md tracking-wider">GUTSCHEIN</p>
@@ -245,7 +245,7 @@ export const Windenschein = () => {
                  {Array.from({ length: 9 }, (_, i) => i + 1).map((n, index) => (
                    <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
                      <img
-                       src={`/images/windenschein/gallery-${n}.webp`}
+                       src={`/images/windenschein/gallery-${n}.jpg`}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />

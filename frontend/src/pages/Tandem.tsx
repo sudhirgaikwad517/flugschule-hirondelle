@@ -34,7 +34,7 @@ export const Tandem = () => {
                 <button type="button" onClick={() => setShowVideo(true)} className="w-full h-full block cursor-pointer">
                   <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
                   <img
-                    src="/images/tandem-page/hero.webp"
+                    src="/images/tandem-page/hero.jpg"
                     alt="Tandemflug in der Pfalz"
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                   />
@@ -94,10 +94,10 @@ export const Tandem = () => {
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
               
               <div className="grid grid-cols-2 gap-4">
-                <div className="overflow-hidden rounded-sm relative group"><div className="absolute inset-2 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div><img src="/images/tandem-page/gallery-1.webp" alt="Impression 1" className="w-full h-auto transition-transform duration-1000 group-hover:scale-105" /></div>
-                <div className="overflow-hidden rounded-sm mt-8 relative group"><div className="absolute inset-2 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div><img src="/images/tandem-page/gallery-2.webp" alt="Impression 2" className="w-full h-auto transition-transform duration-1000 group-hover:scale-105" /></div>
-                <div className="overflow-hidden rounded-sm -mt-8 relative group"><div className="absolute inset-2 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div><img src="/images/tandem-page/gallery-3.webp" alt="Impression 3" className="w-full h-auto transition-transform duration-1000 group-hover:scale-105" /></div>
-                <div className="overflow-hidden rounded-sm relative group"><div className="absolute inset-2 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div><img src="/images/tandem-page/gallery-4.webp" alt="Impression 4" className="w-full h-auto transition-transform duration-1000 group-hover:scale-105" /></div>
+                <div className="overflow-hidden rounded-sm relative group"><div className="absolute inset-2 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div><img src="/images/tandem-page/gallery-1.jpg" alt="Impression 1" className="w-full h-auto transition-transform duration-1000 group-hover:scale-105" /></div>
+                <div className="overflow-hidden rounded-sm mt-8 relative group"><div className="absolute inset-2 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div><img src="/images/tandem-page/gallery-2.jpg" alt="Impression 2" className="w-full h-auto transition-transform duration-1000 group-hover:scale-105" /></div>
+                <div className="overflow-hidden rounded-sm -mt-8 relative group"><div className="absolute inset-2 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div><img src="/images/tandem-page/gallery-3.jpg" alt="Impression 3" className="w-full h-auto transition-transform duration-1000 group-hover:scale-105" /></div>
+                <div className="overflow-hidden rounded-sm relative group"><div className="absolute inset-2 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div><img src="/images/tandem-page/gallery-4.jpg" alt="Impression 4" className="w-full h-auto transition-transform duration-1000 group-hover:scale-105" /></div>
               </div>
             </div>
           </div>
@@ -168,10 +168,10 @@ export const Tandem = () => {
         
         <div className="flex flex-wrap gap-12 md:gap-16 mb-20">
           {[
-            { name: 'Alex', img: '/images/team/schlink.webp' },
-            { name: 'Markus', img: '/images/team/markus.webp' },
-            { name: 'Karl-Peter', img: '/images/team/karlpeter.webp' },
-            { name: 'Tobi', img: '/images/team/tobi.webp' }
+            { name: 'Alex', img: '/images/team/schlink.jpg' },
+            { name: 'Markus', img: '/images/team/markus.jpg' },
+            { name: 'Karl-Peter', img: '/images/team/karlpeter.jpg' },
+            { name: 'Tobi', img: '/images/team/tobi.jpg' }
           ].map((pilot) => (
             <div key={pilot.name} className="flex flex-col items-center gap-4 group cursor-pointer">
               <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-[4px] border-white shadow-lg group-hover:border-luxury-gold transition-colors duration-500 relative">

@@ -39,7 +39,7 @@ export const Groundhandling = () => {
               ) : (
                 <button type="button" onClick={() => setShowVideo(true)} className="w-full h-full block cursor-pointer">
                   <img
-                    src="/images/groundhandling/hero.webp"
+                    src="/images/groundhandling/hero.jpg"
                     alt="Groundhandling & Rückwärts aufziehen"
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-80"
                   />
@@ -153,7 +153,7 @@ export const Groundhandling = () => {
                  Du suchst ein außergewöhnliches Geschenk? Warum nicht einmal einen Gutschein für einen Groundhandling-Kurs verschenken!
                </p>
                <div className="relative h-40 w-full rounded-sm overflow-hidden group cursor-pointer mb-4">
-                 <img src="/images/gutscheine/gutschein.webp" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
+                 <img src="/images/gutscheine/gutschein.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
                  <div className="absolute right-0 top-0 bottom-0 w-16 bg-[#0088cc] flex items-center justify-center">
                    <div className="rotate-[-90deg] text-white font-bold tracking-widest whitespace-nowrap">Gutschein</div>
@@ -178,7 +178,7 @@ export const Groundhandling = () => {
                  {Array.from({ length: 12 }, (_, i) => i + 1).map((n, index) => (
                    <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
                      <img
-                       src={`/images/groundhandling/gallery-${n}.webp`}
+                       src={`/images/groundhandling/gallery-${n}.jpg`}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />

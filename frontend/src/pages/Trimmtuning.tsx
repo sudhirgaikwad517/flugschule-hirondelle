@@ -25,7 +25,7 @@ export const Trimmtuning = () => {
             {/* Main Image */}
             <div className="w-full h-[400px] relative overflow-hidden rounded-sm shadow-sm group cursor-pointer">
               <img 
-                src="/images/service/trimmtuning.webp"
+                src="/images/service/trimmtuning.jpg"
                 alt="Trimmtuning"
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
               />

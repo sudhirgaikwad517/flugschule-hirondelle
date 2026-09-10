@@ -26,7 +26,7 @@ export const ReparaturService = () => {
             {/* Main Image */}
             <div className="w-full h-[400px] relative overflow-hidden rounded-sm shadow-sm group cursor-pointer">
               <img 
-                src="/images/service/reparatur.webp"
+                src="/images/service/reparatur.jpg"
                 alt="Reparatur-Service"
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
               />
@@ -37,7 +37,7 @@ export const ReparaturService = () => {
               <div className="md:w-1/3 flex-shrink-0">
                 <div className="w-full h-[250px] relative overflow-hidden rounded-sm shadow-sm group cursor-pointer">
                   <img 
-                    src="/images/service/reparatur.webp"
+                    src="/images/service/reparatur.jpg"
                     alt="Werkstatt"
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                   />

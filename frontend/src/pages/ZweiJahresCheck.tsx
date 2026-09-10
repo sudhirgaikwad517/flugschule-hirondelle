@@ -37,7 +37,7 @@ export const ZweiJahresCheck = () => {
               ) : (
                 <button type="button" onClick={() => setShowVideo(true)} className="w-full h-full block cursor-pointer">
                   <img
-                    src="/images/service/check.webp"
+                    src="/images/service/check.jpg"
                     alt="Gleitschirm Check Video"
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                   />
@@ -117,7 +117,7 @@ export const ZweiJahresCheck = () => {
                  {Array.from({ length: 8 }, (_, i) => (i % 5) + 1).map((n, index) => (
                    <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-900">
                      <img
-                       src={`/images/service-check/gallery-${n}.webp`}
+                       src={`/images/service-check/gallery-${n}.jpg`}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />

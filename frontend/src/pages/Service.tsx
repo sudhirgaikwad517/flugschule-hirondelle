@@ -8,25 +8,25 @@ export const Service = () => {
       id: '2-jahres-check',
       title: '2-JAHRES-CHECK',
       description: 'Wartungsarbeiten und Reparaturen in unserer Service-Werkstätte',
-      image: '/images/service/check.webp'
+      image: '/images/service/check.jpg'
     },
     {
       id: 'rettungspacken',
       title: 'RETTUNGSGERÄTE-PACKSERVICE',
       description: 'Rettung professionell gepackt! Wir packen sie, als wäre es unsere eigene.',
-      image: '/images/service/rettungspackservice.webp'
+      image: '/images/service/rettungspackservice.png'
     },
     {
       id: 'trimmtuning',
       title: 'TRIMMTUNING',
       description: '„Trimmtuning“ – für bessere und sicherere Schirme! Mit professioneller Leinenvermessung und optimaler Einstellung der Leinenlängen mehr erreichen: Idealerweise kann so in der Luft mehr Leistung rausgeholt werden, ohne dass euer Schirm dadurch an Sicherheit verliert oder anspruchsvoller wird.',
-      image: '/images/service/trimmtuning.webp'
+      image: '/images/service/trimmtuning.jpg'
     },
     {
       id: 'reparatur',
       title: 'REPARATUR-SERVICE',
       description: 'Defekte an der Ausrüstung? Wir bieten euch einen Reparatur Service für eure Ausrüstung an.',
-      image: '/images/service/reparatur.webp'
+      image: '/images/service/reparatur.jpg'
     }
   ];
 

@@ -35,14 +35,14 @@ export const GELAENDE_ARTICLES: GelaendeArticle[] = [
 <p><strong>Eckdaten:</strong><br />Ausrichtung: Ost<br />Windspektrum: 50° bis 110°<br />Höhendifferenz: 50 Meter<br />Geländehalter: 1.ODC</p>
 </div>
 <div class="col-md-6"><a href="http://maps.apple.com/?q=%2049.734277,%208.822510"><img src="/images/Google_Routenplaner_Maps_org.gif" alt="Google Routenplaner Maps org" width="120" height="90" /></a> <br /> <a href="http://maps.apple.com/?q=%2049.734277,%208.822510">Routenplaner für Smartphones</a></div>
-<br /> <br /> <img src="/images/1-gelaende/erlau.webp" alt="Erlau" class="voll" /> <br /><br /><strong>Parkplatz:&nbsp;</strong><a href="https://goo.gl/maps/kPkh6ogZp5H2">Wanderparkplatz Rodenstein</a>, 64407 Fränkisch-Crumbach<br /><br /> <strong>Adresse/ Anfahrt:</strong><br />Von Füth im Odenwald aus kommend zum Wanderparkplatz bei der Ruine Rodenstein: 100 Meter vor dem Ortsausgangsschild von 64385 Reichelsheim links ab Richtung Ruine Rodenstein / Eberbach. Durch das Örtchen Eberbach bitte mit 30 kam ha fahren. Einen km nach der Abzweigung führt ein Weg hoch, der nur für landwirtschaftlichen Verkehr freigegeben ist. Dort gerade aus (halb links) auf der normalen Straße weiterfahren. Nach weiteren 700 m kommt man dann zu einem Straßen-T an dem es links zur Ruine Rodenstein geht und rechts zum Parkplatz. Hier rechts abbiegen und den Berg hoch fahren nach 300 m beim nächsten Straßen-T links. Nach 100 m ist der große Wanderparkplatz auf der rechten Seite (49°44´03,97´´Nord 8°49´21,21´´ Ost). Oberhalb vom Parkplatz wird ein Weg vielleicht bergauf. Der Weg ist mit dem Hinweisschild „weißes Rechteck mit blauem Dreieck“ gekennzeichnet. Nicht den Weg mit dem Sperr Schild nehmen. Nach 400 m kommt man an eine Gabelung, dort weiter gerade aus dem Wegweisern folgen. Nach weiteren 200 m kommt man zur nächsten Gabelung. Dort rechts halten und noch 100 m bis zum Übungshang (49°44´27,49´´Nord 8°49´28,31´´ Ost) laufen. Landeplatz 1: (49°44´28,87´´Nord 8°49´43,53´´ Ost) Landeplatz 2: (49°44´23,79´´Nord 8°49´44,29´´ Ost).<br /><br />
+<br /> <br /> <img src="/images/1-gelaende/erlau.JPG" alt="Erlau" class="voll" /> <br /><br /><strong>Parkplatz:&nbsp;</strong><a href="https://goo.gl/maps/kPkh6ogZp5H2">Wanderparkplatz Rodenstein</a>, 64407 Fränkisch-Crumbach<br /><br /> <strong>Adresse/ Anfahrt:</strong><br />Von Füth im Odenwald aus kommend zum Wanderparkplatz bei der Ruine Rodenstein: 100 Meter vor dem Ortsausgangsschild von 64385 Reichelsheim links ab Richtung Ruine Rodenstein / Eberbach. Durch das Örtchen Eberbach bitte mit 30 kam ha fahren. Einen km nach der Abzweigung führt ein Weg hoch, der nur für landwirtschaftlichen Verkehr freigegeben ist. Dort gerade aus (halb links) auf der normalen Straße weiterfahren. Nach weiteren 700 m kommt man dann zu einem Straßen-T an dem es links zur Ruine Rodenstein geht und rechts zum Parkplatz. Hier rechts abbiegen und den Berg hoch fahren nach 300 m beim nächsten Straßen-T links. Nach 100 m ist der große Wanderparkplatz auf der rechten Seite (49°44´03,97´´Nord 8°49´21,21´´ Ost). Oberhalb vom Parkplatz wird ein Weg vielleicht bergauf. Der Weg ist mit dem Hinweisschild „weißes Rechteck mit blauem Dreieck“ gekennzeichnet. Nicht den Weg mit dem Sperr Schild nehmen. Nach 400 m kommt man an eine Gabelung, dort weiter gerade aus dem Wegweisern folgen. Nach weiteren 200 m kommt man zur nächsten Gabelung. Dort rechts halten und noch 100 m bis zum Übungshang (49°44´27,49´´Nord 8°49´28,31´´ Ost) laufen. Landeplatz 1: (49°44´28,87´´Nord 8°49´43,53´´ Ost) Landeplatz 2: (49°44´23,79´´Nord 8°49´44,29´´ Ost).<br /><br />
 <p><strong>Zum Fluggelände:<br /></strong>In Erlau wird der Wind durch das U-förmige Gelände kanalisiert und sorgt somit oft für gute Startbedingungen. Bei sehr schwachem, überregionalem Wind, bildet sich morgens in Erlau ein thermisch bedingter Ostwind aus, der dann später auf die Hauptwindrichtung dreht. Bei Seitenwindlagen ist erfahrungsgemäß ein Nordschlag turbulenzarmer als ein Südschlag. Das kommt von der Leesituation durch den hohen Buchenwald auf der rechten Seite des Übungshangs. Abends setzt sich auf dem Übungshang leichter Rückenwind ein, obwohl die Windfahne am Holunderhof noch Ostwind anzeigt. Dieser Effekt erklärt sich dadurch, dass kalte schwerere Luft bodennah nach unten abfließt. Die kalte Luft bildet sich im Wald hinter dem Übungshang, der abends im Schatten liegt.</p>
 <p><strong><br />Besonderheiten / Gefahrenquellen / Regeln<br /></strong>Wenn es gut trägt, kann man über den unteren Zaun fliegen und auf dem großen Landeplatz östlich des unteren Zauns landen. Trägt es weniger gut, muss vor dem Zaun am Hang mit Seitenwind gelandet werden. Piloten vom oberen Startplatz starten können im unteren Bereich des Übungshanges landen-Luftraumkontrolle! Am Vormittag nach anfangs ruhigen Flugbedingungen kann der Wind sehr schnell aufleben. Bei Weidebetrieb kann der Übungshang ab und zu gesperrt sein. In Erlau wird 30 km/h auf der Straße gefahren! Bitte daran halten.</p>
 <p><strong>Richtwerte für Flüge mit dem L-Schein:</strong><br />Wetterdaten Melibokus: Windrichtung zwischen 50° bis 110°; Windgeschwindigkeit im Durchschnitt kleiner 15km/h; Spitzen kleiner 25 km/h. Wind am Hang zw. 10-12Km/h optimal |&nbsp; Tel. Melibokus : 06251 / 983612</p>
 </div>
-<div class="col-md-6"><iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d8454.331400063544!2d8.823493765027685!3d49.73706580741055!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47bd60e4cb678049%3A0xd65ddab5f83f13a2!2sWanderparkplatz%20Rodenstein!5e1!3m2!1sde!2sde!4v1588789569688!5m2!1sde!2sde" width="600" height="450" frameborder="0" style="border:0;" allowfullscreen="" aria-hidden="false" tabindex="0"></iframe> <img src="/images/1-gelaende/Erlau_1.webp" alt="" width="550" height="362" /></div>
+<div class="col-md-6"><iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d8454.331400063544!2d8.823493765027685!3d49.73706580741055!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47bd60e4cb678049%3A0xd65ddab5f83f13a2!2sWanderparkplatz%20Rodenstein!5e1!3m2!1sde!2sde!4v1588789569688!5m2!1sde!2sde" width="600" height="450" frameborder="0" style="border:0;" allowfullscreen="" aria-hidden="false" tabindex="0"></iframe> <img src="/images/1-gelaende/Erlau_1.png" alt="" width="550" height="362" /></div>
 <div>&nbsp;</div>
-<div class="col-md-6"><img src="/images/1-gelaende/Erlau_2.webp" alt="" width="550" height="341" /></div>`,
+<div class="col-md-6"><img src="/images/1-gelaende/Erlau_2.png" alt="" width="550" height="341" /></div>`,
   },
   {
     slug: 'gadern',
@@ -52,7 +52,7 @@ export const GELAENDE_ARTICLES: GelaendeArticle[] = [
 <p style="text-align: left;"><strong>Eckdaten:</strong><br />Ausrichtung: Nord-Ost<br />Windspektrum: 30° - 100°<br />Höhendifferenz: 50 Meter<br />Geländehalter: Lindenfelser Gleitschirmflieger</p>
 </div>
 <div class="col-md-6"><a href="http://maps.apple.com/?q=%2049.577619, 8.800768"><img src="/images/Google_Routenplaner_Maps_org.gif" alt="Google Routenplaner Maps org" width="120" height="90" /></a> <br /><a href="http://maps.apple.com/?q=%2049.577619, 8.800768">Routenplaner für Smartphones</a></div>
-<br /> <br /> <img src="/images/1-gelaende/gadern.webp" alt="Gadern" class="voll" />
+<br /> <br /> <img src="/images/1-gelaende/gadern.JPG" alt="Gadern" class="voll" />
 <p><strong>Adresse/ Anfahrt:</strong><br />69483 Wald-Michelbach<br />Ortsteil Gadern</p>
 <p>Gasthaus Bergblick; Stallenkandel 5; 69483 Wald-Michelbach (GPS: 49°34´41.08´´ Nord 8°48´01,16´´ Ost)</p>
 <p><a href="/pdf/Gelaendebeschreibung%20Gadern.pdf" target="_blank" rel="noopener noreferrer" class="boxblau">Download Infos &amp; Geländebeschreibung</a><br /><br /><strong>Parken am Bergblick:</strong> <br />Die Autos sollen auf dem Hof des Gasthauses geparkt werden. Ihr fahrt am Gasthaus vorbei in die Einfahrt nach unten bis zum Parkplatz. Der Parkplatz vor dem Gasthaus und gegenüber auf der Straße muss für die Tagesgäste frei bleiben.<br /><br /><strong>Vom Bergblick zum Startplatz:</strong><br />Vom Gasthaus Bergblick die Hauptstraße wieder ca. 200 Meter bergab laufen. Dort führt ein Teerweg scharf rechts ab. Diesem ca. 500 Meter bis auf die Kuppe folgen. Auf der Kuppe links und nach 100 Metern seht ihr rechts den Startplatz (GPS: 49°34´55.58´´ Nord 8°48´17,76´´ Ost)</p>
@@ -68,7 +68,7 @@ export const GELAENDE_ARTICLES: GelaendeArticle[] = [
 <p><strong>Eckdaten:</strong><br />Ausrichtung: Süd<br />Windspektrum: 150° bis 210°<br />Höhendifferenz: 30 bis 107 Meter<br />Geländehalter: Lindenfelser Gleitschirmflieger</p>
 </div>
 <div class="col-md-6"><a href="http://maps.apple.com/?q=%2049.686950,%208.768991"><img src="/images/Google_Routenplaner_Maps_org.gif" alt="Google Routenplaner Maps org" width="120" height="90" /></a>&nbsp;<br /><a href="http://maps.apple.com/?q=%2049.686950,%208.768991">Routenplaner für Smartphones</a></div>
-<br /> <br /> <img src="/images/1-gelaende/lindenfels.webp" alt="Lindenfels" class="voll" />
+<br /> <br /> <img src="/images/1-gelaende/lindenfels.JPG" alt="Lindenfels" class="voll" />
 <p><strong>Adresse/ Anfahrt:</strong><br />Schwimmbadstraße 10<br />64678 Schlierbach</p>
 <p>Von dort aus 100 Meter weiter Bergauffahren. Treffpunkt ist rechts am Parkplatz bei der Pferdekoppel, parken bitte in der Straße im Wald oder am Schwimmbad (im Wald weiter der Straße folgen).<br />GPS: 49°41´13.27´´ N , 8°46´08,97´´O</p>
 <p><a href="/pdf/Gelaendebeschreibung%20Lindenfels.pdf" target="_blank" rel="noopener noreferrer" class="boxblau">Download Infos &amp; Geländebeschreibung</a></p>
@@ -117,7 +117,7 @@ export const GELAENDE_ARTICLES: GelaendeArticle[] = [
 <p><strong>Eckdaten:</strong><br />Ausrichtung: West bis Nord<br />Optimale Ausrichtung: Nordwest<br />Windspektrum: 270° bis 360°<br />Höhendifferenz: 50 Meter<br />Geländehalter: Flugschule Hirondelle</p>
 </div>
 <div class="col-md-6"><a href="http://maps.apple.com/?q=%2049.755215,%208.821954"><img src="/images/Google_Routenplaner_Maps_org.gif" alt="Google Routenplaner Maps org" width="120" height="90" /></a>&nbsp;<br /><a href="http://maps.apple.com/?q=%2049.755215,%208.821954">Routenplaner für Smartphones</a></div>
-<br /> <br /> <img src="/images/1-gelaende/nonrod.webp" alt="Nonrod" class="voll" />
+<br /> <br /> <img src="/images/1-gelaende/nonrod.JPG" alt="Nonrod" class="voll" />
 <p><strong>Adresse/ Anfahrt:</strong><br />Am Lohberg 3<br />64405 Fischbachtal<br />Ortsteil Nonrod</p>
 <p>Dort rechts die Schottereinfahrt hoch fahren, GPS: 49°45´18.77´´ N , 8°49´19,52´´O<br /><br /></p>
 <p>&nbsp;</p>
@@ -144,13 +144,13 @@ export const GELAENDE_ARTICLES: GelaendeArticle[] = [
 <p><strong>Eckdaten:</strong><br />Ausrichtung: Südost<br />Windspektrum: 90° bis 190°<br />Höhendifferenz: 70 Meter<br />Geländehalter: Fliegergemeinschaft Stauf e.V.</p>
 </div>
 <div class="col-md-6"><a href="https://goo.gl/maps/XJftNXwsCzK2"><img src="/images/Google_Routenplaner_Maps_org.gif" alt="Google Routenplaner Maps org" width="120" height="90" /></a>&nbsp;<br /><a href="https://goo.gl/maps/XJftNXwsCzK2">Routenplaner für Smartphones</a></div>
-<br /> <br /> <img src="/images/1-gelaende/stauf.webp" alt="Stauf" class="voll" />
+<br /> <br /> <img src="/images/1-gelaende/stauf.JPG" alt="Stauf" class="voll" />
 <p><strong>Adresse/ Anfahrt:</strong></p>
 <p>Parkplatz:</p>
 <p>67304 Eisenberg,&nbsp;Ortsteil Steinborn (nicht Stauf!), Ramsener Straße&nbsp;<br />Parkplatz am Wendehammer im Feld<br />GPS N 49°33´00.9´´ O 08°01´41.0´´</p>
 <p>Adresse Startplatz:</p>
 <p>67304 Eisenberg<br />Ortsteil Stauf Talstraße 12<br />GPS N 49°33´00.9´´ O 08°01´41.0´´&nbsp;</p>
-<p><img src="/images/1-gelaende/stauf.webp" alt="Anfahrt und Parkplatz Stauf" width="500" height="436" /></p>
+<p><img src="/images/1-gelaende/stauf.png" alt="Anfahrt und Parkplatz Stauf" width="500" height="436" /></p>
 <p><br /><strong>Achtung:</strong> <br />Sollten wir links in der Rinne schulen, bitte unbedingt die Wege benutzen und nicht quer über die Wiese laufen. Bitte haltet euch daran... es gab schon richtig Ärger deswegen!!!</p>
 <p><strong>Besonderheiten / Gefahrenquellen:</strong></p>
 <ul>
@@ -197,11 +197,11 @@ export const GELAENDE_ARTICLES: GelaendeArticle[] = [
 <p><strong>Eckdaten:</strong><br />55595 St. Katharinen N 49°52´26” O 07°46´19”<br />Ausrichtung: SO,NW Schlepplänge 1000m&nbsp;</p>
 </div>
 <div class="col-md-6"><a href="https://maps.app.goo.gl/EDBjt7yqxjycCQ6K7" rel="alternate"><img src="/images/Google_Routenplaner_Maps_org.gif" alt="Google Routenplaner Maps org" width="120" height="90" /></a><br /><a href="https://maps.app.goo.gl/EDBjt7yqxjycCQ6K7" rel="alternate">Routenplaner für Smartphones</a></div>
-<br /> <br /> <img src="/images/1-Bilderfuernewsletter/winde_.webp" alt="Winde Unteres Mergesfeld" class="voll" />
+<br /> <br /> <img src="/images/1-Bilderfuernewsletter/winde_.jpg" alt="Winde Unteres Mergesfeld" class="voll" />
 <p><strong>Anfahrt:</strong></p>
 <p>Koordinaten fürs Navi zur groben Anfahrt: 55595 St. Katharinen, Am Roten Berg.&nbsp;</p>
 <p>Der Parkplatz zur Schleppstrecke befindet sich je nach Windrichtung am jeweiligen Ende der Schleppstrecke.</p>
-<p><img src="/images/1-gelaende/Winde_BK.webp" alt="Winde BK" class="voll" /></p>
+<p><img src="/images/1-gelaende/Winde_BK.jpg" alt="Winde BK" class="voll" /></p>
 <p>&nbsp;</p>
 <p style="align: center;"><b>&nbsp;</b></p>
 </div>
@@ -217,7 +217,7 @@ export const GELAENDE_ARTICLES: GelaendeArticle[] = [
 </div>
 <div class="col-md-6"><a href="http://maps.apple.com/?q=%2049.34969865567721,%208.489609956741333" rel="alternate"><img src="/images/Google_Routenplaner_Maps_org.gif" alt="Google Routenplaner Maps org" width="120" height="90" /></a>&nbsp;<br /><a href="http://maps.apple.com/?q=%2049.34969865567721,%208.489609956741333" rel="alternate">Routenplaner für Smartphones</a></div>
 <div>&nbsp;</div>
-<br /> <img src="/images/1-gelaende/winde_herrenteich.webp" alt="Winde Herrenteich" class="voll" />
+<br /> <img src="/images/1-gelaende/winde_herrenteich.jpg" alt="Winde Herrenteich" class="voll" />
 <p style="align: center;"><b>Tipp für Navigationssysteme<br /></b>Der Flugplatz Herrenteich gehört örtlich zur Gemeinde Hockenheim. Deshalb in den Navigationssystemen zuerst den Ort Hockenheim auswählen und dann als Sonderziel/Straße Herrenteich eingeben</p>
 <ul>
 <li><b>Beschreibung von Schwetzingen, Ketsch, Plankstadt, Oftersheim und Heidelberg</b><br /> In Schwetzingen am Schloßgarten vorbei in Richtung Hockenheim fahren. Kurz nachdem Verlassen des Ortes nach rechts in Richtung Ketsch abbiegen. In Ketsch folgt man der Hauptstraße ganz durch den Ort. Am Ende der Straße biegt man an der Kirche rechts und gleich darauf, ca. 20 Meter später, an der Eisdiele wieder links ab (in Richtung Speyer). Sie befinden sich jetzt am Altrhein. Von hier aus sind es noch ca. 3,5 Kilometer auf dem Rheindamm bis zum Flugplatz Herrenteich, vorbei am Ketscher Frei- und Hallenbad und am Hohwiesensee (kostenloser Badesee).&nbsp;</li>

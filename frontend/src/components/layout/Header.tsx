@@ -24,16 +24,16 @@ export const Header = () => {
   const [user, setUser] = useState<any>(null);
   const reisenTours = ['Brasilien', 'Kolumbien', 'Südafrika', 'Bassano', 'Griechenland', 'Slowenien', 'Bergamo', 'Savoye', 'Vogesen', 'Pfalz'];
   const reisenImages: Record<string, string> = {
-    Brasilien: '/images/reisen/brasilien.webp',
-    Kolumbien: '/images/reisen/kolumbien.webp',
-    Südafrika: '/images/reisen/suedafrika.webp',
-    Bassano: '/images/reisen/bassano.webp',
-    Griechenland: '/images/reisen/griechenland.webp',
-    Slowenien: '/images/reisen/slowenien.webp',
-    Bergamo: '/images/reisen/bergamo.webp',
-    Savoye: '/images/reisen/savoye.webp',
-    Vogesen: '/images/reisen/vogesen.webp',
-    Pfalz: '/images/reisen/pfalz.webp'
+    Brasilien: '/images/reisen/brasilien.jpg',
+    Kolumbien: '/images/reisen/kolumbien.jpg',
+    Südafrika: '/images/reisen/suedafrika.jpg',
+    Bassano: '/images/reisen/bassano.jpg',
+    Griechenland: '/images/reisen/griechenland.jpg',
+    Slowenien: '/images/reisen/slowenien.jpg',
+    Bergamo: '/images/reisen/bergamo.jpg',
+    Savoye: '/images/reisen/savoye.jpg',
+    Vogesen: '/images/reisen/vogesen.jpg',
+    Pfalz: '/images/reisen/pfalz.jpg'
   };
 
   const toggleMobileMenu = (menu: string) => {
@@ -154,7 +154,7 @@ export const Header = () => {
                     </div>
                     <div className="flex-1 flex gap-4">
                       <div className="relative flex-1 h-[300px] overflow-hidden group/card cursor-pointer">
-                        <img src="/images/tandemschein/hero.webp" className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-105" alt="Tandem" />
+                        <img src="/images/tandemschein/hero.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-105" alt="Tandem" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
                         <div className="absolute bottom-6 left-6 right-6">
                           <p className="text-white text-[10px] uppercase tracking-widest font-bold mb-1">ERLEBNIS</p>
@@ -162,7 +162,7 @@ export const Header = () => {
                         </div>
                       </div>
                       <div className="relative flex-1 h-[300px] overflow-hidden group/card cursor-pointer">
-                        <img src="/images/performance/sicherheitstraining.webp" className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-105" alt="Performance" />
+                        <img src="/images/performance/sicherheitstraining.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-105" alt="Performance" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
                         <div className="absolute bottom-6 left-6 right-6">
                           <p className="text-white text-[10px] uppercase tracking-widest font-bold mb-1">TRAINING</p>

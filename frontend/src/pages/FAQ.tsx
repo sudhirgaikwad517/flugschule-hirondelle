@@ -147,7 +147,7 @@ export const FAQ = () => {
                 <div className="px-8 pt-8">
                   <h2 className="font-luxury text-2xl text-luxury-dark uppercase tracking-wide mb-6">Noch Fragen?!</h2>
                 </div>
-                <img src="/images/inhalte/fragen_4.webp" alt="Noch Fragen?" className="w-full h-auto" />
+                <img src="/images/inhalte/fragen_4.jpg" alt="Noch Fragen?" className="w-full h-auto" />
                 <div className="p-8 space-y-4 text-[15px] text-gray-600 font-light leading-relaxed">
                   <p>Wir vom Team Hirondelle stehen euch für alle eure Anliegen gerne zur Verfügung! Sprecht uns an oder besucht uns in der Flugschule!</p>
                   <p>
