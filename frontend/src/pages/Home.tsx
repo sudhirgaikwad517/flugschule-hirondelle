@@ -243,8 +243,8 @@ export const Home = () => {
             <h2 className="font-luxury text-4xl md:text-6xl text-luxury-dark">UNSERE HIGHLIGHTS</h2>
           </div>
       */}
-      <section className="pt-8 pb-24 bg-white px-4 relative z-30 border-t border-gray-100">
-        <div className="max-w-[1200px] mx-auto">
+      <section className="pt-8 pb-24 bg-white relative z-30 border-t border-gray-100">
+        <div className="container mx-auto px-4 lg:px-8 max-w-[1200px]">
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 
@@ -327,8 +327,8 @@ export const Home = () => {
       </section>
 
       {/* 6. NEWS & HOCH HINAUS (CONTENT FROM OLD SITE) - KEPT */}
-      <section className="pt-8 pb-24 bg-white px-4 border-b border-gray-100">
-        <div className="max-w-[1200px] mx-auto flex flex-col lg:flex-row gap-16">
+      <section className="pt-8 pb-24 bg-white border-b border-gray-100">
+        <div className="container mx-auto px-4 lg:px-8 max-w-[1200px] flex flex-col lg:flex-row gap-16">
 
           {/* Left: NEWS */}
           <div className="w-full lg:w-5/12 flex flex-col">

@@ -12,8 +12,8 @@ export const Header = () => {
   // applied instantly with no transition. No color/transition here either.
   const getNavClass = (path: string) => {
     const isActive = path === '/' ? pathname === '/' : pathname.startsWith(path);
-    return `text-[14px] uppercase tracking-widest font-semibold flex items-center gap-1 text-white pl-2.5 pr-[14px] py-1.5 rounded-md ${
-      isActive ? 'bg-white/20' : 'hover:bg-white/20'
+    return `text-[14px] uppercase tracking-widest flex items-center gap-1 text-white pl-2.5 pr-[14px] py-1.5 rounded-md ${
+      isActive ? 'font-bold bg-white/20' : 'font-normal hover:bg-white/20'
     }`;
   };
 
@@ -113,7 +113,11 @@ export const Header = () => {
 
               <Link to="/" className={getNavClass('/')}>
                 <span className="flex items-center justify-center">
-                  H<img src="/bird-badge.png" alt="O" className="w-[11px] h-[11px] object-contain mx-[1.5px] -mt-[1px]" />ME
+                  H
+                  <span className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-full bg-white mx-[2px] shrink-0">
+                    <img src="/bird-badge.png" alt="O" className="w-[13px] h-[13px] object-contain" />
+                  </span>
+                  ME
                 </span>
               </Link>
 
