@@ -25,7 +25,7 @@ export const Layout = () => {
     <div className="flex flex-col min-h-screen relative overflow-x-hidden">
       <Header />
       
-      <main className="flex-grow w-full pt-[80px]">
+      <main className="flex-grow w-full pt-[40px]">
         <Outlet />
       </main>
       <Footer />

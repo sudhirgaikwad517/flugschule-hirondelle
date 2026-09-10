@@ -208,12 +208,18 @@ export const Banner = ({ variant = 'subpage' }: BannerProps) => {
 
       {/* Logo - old site positions its logo absolutely so it overlaps the
           banner images instead of sitting in the nav bar (.logo img,
-          position:absolute, width 300px/180px on home, 250px/150px on
-          subpages, desktop/mobile respectively - measured on the live
-          site). Header.tsx no longer renders a logo; this is the only one. */}
+          position:absolute). Measured on the live site (banner's own
+          top-left as origin, since our fixed header is now the same 40px
+          height as the old site's): home sits ~9-10px into the banner on
+          both mobile and desktop; subpages sit noticeably lower (~15px
+          mobile, ~40px desktop) and use a smaller logo. left-4 md:left-8
+          matches the px-4 lg:px-8 inset every other section on the page
+          uses. Header.tsx no longer renders a logo; this is the only one. */}
       <Link
         to="/"
-        className="absolute top-3 md:top-6 left-4 md:left-8 z-20"
+        className={`absolute left-4 md:left-8 z-20 ${
+          variant === 'home' ? 'top-[9px] md:top-[10px]' : 'top-[15px] md:top-[40px]'
+        }`}
       >
         <img
           src="/logo.svg"

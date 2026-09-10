@@ -97,7 +97,7 @@ export const Header = () => {
           the banner images (see Banner.tsx), not in this bar, so there's
           no logo slot here anymore. */}
       <div
-        className={`transition-colors duration-300 h-[80px] flex items-center`}
+        className={`transition-colors duration-300 h-[40px] flex items-center`}
       >
         <div className="w-full px-4 md:px-8">
           <nav className="flex items-center justify-end">
@@ -112,13 +112,13 @@ export const Header = () => {
               </Link>
 
               {/* Mega Menu: Ausbildung */}
-              <div className="group h-[80px] flex items-center">
+              <div className="group h-[40px] flex items-center">
                 <Link to="/ausbildung" className={getNavClass('/ausbildung')}>
                   AUSBILDUNG <ChevronDown className="w-3 h-3" />
                 </Link>
 
                 {/* Full Width Dropdown via Absolute */}
-                <div className="absolute top-[80px] left-0 w-full bg-[#111] border-t border-white/10 hidden group-hover:block transition-all shadow-2xl z-50">
+                <div className="absolute top-[40px] left-0 w-full bg-[#111] border-t border-white/10 hidden group-hover:block transition-all shadow-2xl z-50">
                   <div className="container mx-auto max-w-7xl px-8 py-12 flex gap-12">
                     <div className="flex-1 grid grid-cols-2 gap-8">
                       <div>
@@ -162,11 +162,11 @@ export const Header = () => {
               </div>
 
               {/* Performance Dropdown */}
-              <div className="relative group h-[80px] flex items-center">
+              <div className="relative group h-[40px] flex items-center">
                 <Link to="/performance" className={getNavClass('/performance')}>
                   PERFORMANCE <ChevronDown className="w-3 h-3" />
                 </Link>
-                <div className="absolute top-[80px] right-0 w-56 bg-[#111] border-t border-white/10 hidden group-hover:block px-0 py-4 shadow-2xl">
+                <div className="absolute top-[40px] right-0 w-56 bg-[#111] border-t border-white/10 hidden group-hover:block px-0 py-4 shadow-2xl">
                   <ul className="flex flex-col">
                     <li><Link to="/performance/sicherheitstraining" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Sicherheit</Link></li>
                     <li><Link to="/performance/rettungsgeraetetraining" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Rettungsgeräte</Link></li>
@@ -177,12 +177,12 @@ export const Header = () => {
               </div>
 
               {/* Mega Menu: Reisen */}
-              <div className="group h-[80px] flex items-center">
+              <div className="group h-[40px] flex items-center">
                 <Link to="/reisen" className={getNavClass('/reisen')}>
                   REISEN <ChevronDown className="w-3 h-3" />
                 </Link>
 
-                <div className="absolute top-[80px] left-0 w-full bg-[#111] border-t border-white/10 hidden group-hover:block transition-all shadow-2xl z-50">
+                <div className="absolute top-[40px] left-0 w-full bg-[#111] border-t border-white/10 hidden group-hover:block transition-all shadow-2xl z-50">
                   <div className="container mx-auto max-w-7xl px-8 py-12 relative">
                     {/* Prev Button */}
                     <button onClick={(e) => { e.preventDefault(); prevReisen(); }} className={`absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors z-10 ${reisenIndex === 0 ? 'opacity-30 cursor-not-allowed' : 'opacity-100'}`}>
@@ -223,11 +223,11 @@ export const Header = () => {
               </Link>
 
               {/* Service Dropdown */}
-              <div className="relative group h-[80px] flex items-center">
+              <div className="relative group h-[40px] flex items-center">
                 <Link to="/service" className={getNavClass('/service')}>
                   SERVICE <ChevronDown className="w-3 h-3" />
                 </Link>
-                <div className="absolute top-[80px] right-0 w-64 bg-[#111] border-t border-white/10 hidden group-hover:block px-0 py-4 shadow-2xl">
+                <div className="absolute top-[40px] right-0 w-64 bg-[#111] border-t border-white/10 hidden group-hover:block px-0 py-4 shadow-2xl">
                   <ul className="flex flex-col">
                     <li><Link to="/service/2-jahres-check" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">2-Jahres-Check</Link></li>
                     <li><Link to="/service/rettungspacken" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Rettungspacken</Link></li>
@@ -239,11 +239,11 @@ export const Header = () => {
               </div>
 
               {/* Infos Dropdown */}
-              <div className="relative group h-[80px] flex items-center">
+              <div className="relative group h-[40px] flex items-center">
                 <Link to="/infos" className={getNavClass('/infos')}>
                   INFOS <ChevronDown className="w-3 h-3" />
                 </Link>
-                <div className="absolute top-[80px] left-0 w-64 bg-[#111] border-t border-white/10 hidden group-hover:block px-0 py-4 shadow-2xl">
+                <div className="absolute top-[40px] left-0 w-64 bg-[#111] border-t border-white/10 hidden group-hover:block px-0 py-4 shadow-2xl">
                   <ul className="flex flex-col">
                     <li><Link to="/infos#kontakt" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Kontakt & Anfahrt</Link></li>
                     <li><Link to="/infos/team" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Team</Link></li>
@@ -263,11 +263,11 @@ export const Header = () => {
               </Link>
 
               {user ? (
-                <div className="relative group h-[80px] flex items-center ml-2">
+                <div className="relative group h-[40px] flex items-center ml-2">
                   <span className="cursor-pointer border border-[#394553] text-[#394553] text-[11px] uppercase tracking-[0.15em] font-semibold px-4 py-2 hover:bg-[#394553] hover:text-white transition-all rounded-sm flex items-center gap-1">
                     {user.name ? user.name.split(' ')[0] : 'KONTO'} <ChevronDown className="w-3 h-3" />
                   </span>
-                  <div className="absolute top-[80px] right-0 w-48 bg-[#111] border-t border-white/10 hidden group-hover:block px-0 py-4 shadow-2xl">
+                  <div className="absolute top-[40px] right-0 w-48 bg-[#111] border-t border-white/10 hidden group-hover:block px-0 py-4 shadow-2xl">
                     <ul className="flex flex-col">
                       <li><Link to="/profil" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Mein Profil</Link></li>
                       <li><button onClick={handleLogout} className="block w-full text-left px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Logout</button></li>
