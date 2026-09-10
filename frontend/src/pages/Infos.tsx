@@ -100,7 +100,7 @@ export const Infos = () => {
                 loading="lazy" 
                 referrerPolicy="no-referrer-when-downgrade"
                 title="Flugschule Hirondelle Weinheim Location"
-                className="absolute inset-0 grayscale hover:grayscale-0 transition-all duration-1000"
+                className="absolute inset-0"
               ></iframe>
             </div>
           </div>
