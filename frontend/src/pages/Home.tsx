@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
 import { useState, useEffect } from 'react';
 
@@ -25,7 +26,7 @@ export const Home = () => {
     <div className="w-full bg-white font-luxurysans">
 
       {/* 1. HERO SECTION */}
-      <Banner />
+      <Banner variant="home" />
 
       {/* 2. INTRO TEXT SECTION - temporarily disabled, kept for future re-enable
       <section className="py-24 md:py-32 bg-white px-4 text-center border-b border-gray-100">
@@ -228,11 +229,11 @@ export const Home = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 
-            {/* Box 1: Fliegen Lernen */}
-            <div className="relative h-[400px] group overflow-hidden bg-white shadow-xl cursor-pointer">
+            {/* Box 1: Fliegen Lernen - old site's box links to /ausbildung/schnupperkurs */}
+            <Link to="/ausbildung/schnupperkurs" className="relative h-[400px] group overflow-hidden bg-white shadow-xl cursor-pointer block">
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{ backgroundImage: `url("${getImage(7, '/images/ausbildung-5.jpg')}")` }}
+                style={{ backgroundImage: `url("${getImage(7, '/images/startbuttons/startbutton_schnuppern.jpg')}")` }}
               ></div>
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-dark/90 via-luxury-dark/40 to-black/20"></div>
               <div className="absolute inset-4 border border-white/20 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
@@ -250,13 +251,13 @@ export const Home = () => {
                   Reinschnuppern beim 1-Tageskurs oder Schnupperwochenende
                 </p>
               </div>
-            </div>
+            </Link>
 
-            {/* Box 2: Shop Geöffnet */}
-            <div className="relative h-[400px] group overflow-hidden bg-white shadow-xl cursor-pointer">
+            {/* Box 2: Shop Geöffnet - old site's box links to /infos */}
+            <Link to="/infos" className="relative h-[400px] group overflow-hidden bg-white shadow-xl cursor-pointer block">
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{ backgroundImage: `url("${getImage(8, '/images/ausbildung-6.jpg')}")` }}
+                style={{ backgroundImage: `url("${getImage(8, '/images/startbuttons/gutschein.jpg')}")` }}
               ></div>
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-dark/90 via-luxury-dark/40 to-black/20"></div>
               <div className="absolute inset-4 border border-white/20 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
@@ -269,18 +270,20 @@ export const Home = () => {
               </div>
 
               <div className="absolute bottom-8 left-8 right-8 z-20">
-                <p className="text-white font-bold text-sm mb-2">Donnerstag, 16.7.26 16-19 Uhr</p>
+                <p className="text-white font-bold text-sm mb-2">Mittwoch, 2.9.26 16-19 Uhr</p>
                 <p className="text-white/80 text-sm font-light leading-relaxed">
                   Alex und Sarah sind für euch in Weinheim im Laden, bitte unbedingt voranmelden!
                 </p>
               </div>
-            </div>
+            </Link>
 
-            {/* Box 3: On Tour */}
-            <div className="relative h-[400px] group overflow-hidden bg-white shadow-xl cursor-pointer">
+            {/* Box 3: On Tour - old site's box links to the old Kolumbien
+                event listing; our equivalent content lives at
+                /reisen/kolumbien-tour */}
+            <Link to="/reisen/kolumbien-tour" className="relative h-[400px] group overflow-hidden bg-white shadow-xl cursor-pointer block">
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{ backgroundImage: `url("${getImage(9, '/images/ausbildung-1.jpg')}")` }}
+                style={{ backgroundImage: `url("${getImage(9, '/images/bilder/2-tour-kolumbien/Kolumbien_3997_2.jpg')}")` }}
               ></div>
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-dark/90 via-luxury-dark/40 to-black/20"></div>
               <div className="absolute inset-4 border border-white/20 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
@@ -298,7 +301,7 @@ export const Home = () => {
                   Fliegen über den grünen Landschaften des Valle del Cauca in den besten Fluggebieten von Cali Richtung Medellin...
                 </p>
               </div>
-            </div>
+            </Link>
 
           </div>
         </div>

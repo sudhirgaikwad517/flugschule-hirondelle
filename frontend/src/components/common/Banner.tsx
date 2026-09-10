@@ -7,39 +7,89 @@ interface BannerSlide {
   linkUrl?: string;
 }
 
-const BANNER_SLIDES: BannerSlide[] = [
-  {
-    image: 'https://picsum.photos/id/1018/1920/1080',
-    text: 'Über den Zuckerrohrfeldern in Kolumbien'
-  },
-  {
-    image: 'https://picsum.photos/id/1036/1920/1080',
-    text: 'Sicherheitstraining am Gardasee'
-  },
-  {
-    image: 'https://picsum.photos/id/1043/1920/1080',
-    // No text plate for this one
-  },
-  {
-    image: 'https://picsum.photos/id/1044/1920/1080',
-    text: 'Genuss unter den Wolken'
-  },
-  {
-    image: 'https://picsum.photos/id/1050/1920/1080',
-    text: 'Fliegen im Sommer an der Düne...'
-  },
-  {
-    image: 'https://picsum.photos/id/1060/1920/1080',
-    text: '... und im Winter im Schnee'
-  },
-  {
-    image: 'https://picsum.photos/id/1070/1920/1080',
-    // No text plate for this one
-  },
-  {
-    image: 'https://picsum.photos/id/1080/1920/1080',
-    text: 'Traumhafte Ausblicke von ganz oben'
-  }
+// Old site actually runs two separate slideshow modules (verified against
+// the live site's HTML): "top" (id 127) on the home page only, with
+// caption text baked into each slide, and "topseite" (id 140) on every
+// other page, sharing most of the same photo pool but with NO caption
+// text at all. That's why captions only ever appear on the home banner.
+const HOME_SLIDES: BannerSlide[] = [
+  { image: '/images/headers/slider4.jpg', text: 'Erlebe die Freiheit des Fliegens' },
+  { image: '/images/headers/slider_gardasee.jpg', text: 'Sicherheitstraining am Gardasee' },
+  { image: '/images/headers/slider_griechenland2.jpg', text: 'Türkisblaues Meer' },
+  { image: '/images/headers/slider1.jpg' },
+  { image: '/images/headers/sliderbschein.jpg', text: 'Genuss unter den Wolken' },
+  { image: '/images/headers/slider11.jpg', text: "Fliegen im Sommer an der Düne..." },
+  { image: '/images/headers/P1030577.jpg', text: '... und im Winter im Schnee' },
+  { image: '/images/headers/slider_groundhandling.jpg', text: 'Groundhandling auf der Wiese' },
+  { image: '/images/headers/P1030623.jpg', text: 'Traumhafte Ausblicke von ganz oben' },
+  { image: '/images/headers/slider_bergamo.jpg' },
+  { image: '/images/headers/slider_kolumbien1.jpg', text: 'Über den Zuckerrohrfeldern in Kolumbien' },
+  { image: '/images/headers/DSC00324.jpg' },
+  { image: '/images/headers/slider_pfalz.jpg', text: 'Burgumrundung im Pfälzerwald' },
+  { image: '/images/headers/slider2.jpg', text: 'Ausbildung auf höchstem Niveau', linkUrl: '/' },
+  { image: '/images/headers/DSC05188.png' },
+  { image: '/images/headers/slider_allgu.jpg', text: 'Allgäuer Höhenluft' },
+  { image: '/images/headers/slider_brasilien.jpg', text: 'Unter der Sonne Brasiliens' },
+  { image: '/images/headers/slider_bassano.jpg', text: 'Bassano - das Mekka der Gleitschirmszene' },
+  { image: '/images/headers/slider3.jpg', text: "Doppelt fliegt's besser: Tandemflüge" },
+  { image: '/images/headers/slider_griechenland1.jpg', text: 'Griechenland - einmal die Küste abfliegen' },
+  { image: '/images/headers/slider_griechenland3.jpg', text: 'Sightseeing von oben' },
+  { image: '/images/headers/slider_griechenland4.jpg' },
+  { image: '/images/headers/slider_griechenland5.jpg', text: 'Gechillt beim Landecocktail' },
+  { image: '/images/headers/slider_kolumbien3.jpg', text: 'Packservice am Landeplatz' },
+  { image: '/images/headers/slider_kolumbien4.jpg' },
+  { image: '/images/headers/slider_kolumbien5.jpg' },
+  { image: '/images/headers/slider_sa6.jpg', text: 'Im Sandkasten Südafrikas' },
+  { image: '/images/headers/slider_pfalz2.jpg' },
+  { image: '/images/headers/slider_sa4.jpg' },
+  { image: '/images/headers/slider_pfalz3.jpg', text: 'Vom Pfälzer Rebenmeer in die Rheinebene' },
+  { image: '/images/headers/slider_sa1.jpg' },
+  { image: '/images/headers/slider_sa2.jpg', text: 'Paradiesisch an der Paradise Ridge in Südafrika' },
+  { image: '/images/headers/slider_sa3.jpg' },
+  { image: '/images/headers/slider_spanien.jpg' },
+  { image: '/images/headers/slider_slowenien.jpg' },
+  { image: '/images/headers/slider_sa5.jpg' },
+  { image: '/images/headers/slider_stubai.jpg', text: 'Das Stubaital' },
+];
+
+// "topseite" module's slides, in its own order - a different subset of the
+// same photo pool, deliberately with no `text` (so no caption box ever
+// renders for these, matching the old site's subpages exactly).
+const SUBPAGE_SLIDES: BannerSlide[] = [
+  { image: '/images/headers/slider11.jpg' },
+  { image: '/images/headers/P1030623.jpg' },
+  { image: '/images/headers/slider_sa4.jpg' },
+  { image: '/images/headers/slider_griechenland4.jpg' },
+  { image: '/images/headers/slider_griechenland1.jpg' },
+  { image: '/images/headers/slider4.jpg' },
+  { image: '/images/headers/slider_bergamo.jpg' },
+  { image: '/images/headers/slider_pfalz3.jpg' },
+  { image: '/images/headers/slider_sa2.jpg' },
+  { image: '/images/headers/slider_spanien.jpg' },
+  { image: '/images/headers/slider_kolumbien1.jpg' },
+  { image: '/images/headers/slider_sa5.jpg' },
+  { image: '/images/headers/slider_bassano.jpg' },
+  { image: '/images/headers/slider_pfalz2.jpg' },
+  { image: '/images/headers/slider_allgu.jpg' },
+  { image: '/images/headers/slider_stubai.jpg' },
+  { image: '/images/headers/slider3.jpg' },
+  { image: '/images/headers/slider_sa6.jpg' },
+  { image: '/images/headers/slider_groundhandling.jpg' },
+  { image: '/images/headers/slider2.jpg' },
+  { image: '/images/headers/slider_slowenien.jpg' },
+  { image: '/images/headers/slider_griechenland3.jpg' },
+  { image: '/images/headers/slider_kolumbien3.jpg' },
+  { image: '/images/headers/slider_griechenland5.jpg' },
+  { image: '/images/headers/slider_pfalz.jpg' },
+  { image: '/images/headers/slider_kolumbien4.jpg' },
+  { image: '/images/headers/slider1.jpg' },
+  { image: '/images/headers/slider_brasilien.jpg' },
+  { image: '/images/headers/slider_gardasee.jpg' },
+  { image: '/images/headers/P1030577.jpg' },
+  { image: '/images/headers/slider_teneriffa.jpg' },
+  { image: '/images/headers/slider_sa1.jpg' },
+  { image: '/images/headers/slider_kolumbien5.jpg' },
+  { image: '/images/headers/slider_griechenland2.jpg' },
 ];
 
 // Ported from the classic css-101.org Ken Burns technique
@@ -57,8 +107,17 @@ function transformOriginFor(position: number): string {
   return origin;
 }
 
-export const Banner = () => {
-  const [slides, setSlides] = useState(BANNER_SLIDES);
+interface BannerProps {
+  // Old site only shows the home page's slideshow with caption text
+  // overlaid ("top" module); every other page uses a separate, caption-
+  // free slideshow ("topseite" module). Defaulting to 'subpage' means the
+  // ~50 other pages that just render <Banner /> need no changes.
+  variant?: 'home' | 'subpage';
+}
+
+export const Banner = ({ variant = 'subpage' }: BannerProps) => {
+  const defaultSlides = variant === 'home' ? HOME_SLIDES : SUBPAGE_SLIDES;
+  const [slides, setSlides] = useState(defaultSlides);
   // The curated default slides are all known 1920x1080 (16:9), so a corner
   // zoom/pan never crops the actual subject out of frame - but admin-
   // uploaded CMS banners can be any aspect ratio (e.g. a portrait photo),
@@ -76,6 +135,11 @@ export const Banner = () => {
   const [activeSlides, setActiveSlides] = useState<number[]>([0]);
 
   useEffect(() => {
+    // Only the home page's slideshow is admin-manageable via the CMS
+    // banners API (position 'home_top') - subpages always use the fixed
+    // caption-free slide set, matching the old site's separate module.
+    if (variant !== 'home') return;
+
     const fetchBanners = async () => {
       try {
         const res = await fetch('/api/banners/public');
@@ -101,7 +165,7 @@ export const Banner = () => {
       }
     };
     fetchBanners();
-  }, []);
+  }, [variant]);
 
   // If the CMS fetch above replaces `slides` with a shorter array than
   // whatever was already active, an activeSlides index can end up out of
