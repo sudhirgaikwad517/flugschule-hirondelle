@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface BannerSlide {
@@ -116,14 +117,15 @@ interface BannerProps {
 }
 
 export const Banner = ({ variant = 'subpage' }: BannerProps) => {
-  const defaultSlides = variant === 'home' ? HOME_SLIDES : SUBPAGE_SLIDES;
-  const [slides, setSlides] = useState(defaultSlides);
-  // The curated default slides are all known 1920x1080 (16:9), so a corner
-  // zoom/pan never crops the actual subject out of frame - but admin-
-  // uploaded CMS banners can be any aspect ratio (e.g. a portrait photo),
-  // where anchoring to a corner risks cropping the subject. Only apply the
-  // corner pan to the curated defaults; CMS slides get a safe center anchor.
-  const [isDynamic, setIsDynamic] = useState(false);
+  // Was previously swappable for admin-configured AdBanner rows (position
+  // 'home_top'), but that override had no way to validate the fetched URLs
+  // and would silently replace the real, curated 37-slide set with
+  // whatever (possibly stale) AdBanner rows exist - causing the reported
+  // "some images play, then it snaps back to the first image" bug the
+  // moment that fetch resolved. Removed: the home/subpage slide sets below
+  // are the site's actual accurate content now, not a placeholder meant to
+  // be overridden.
+  const slides = variant === 'home' ? HOME_SLIDES : SUBPAGE_SLIDES;
 
   // The css-101.org reference keeps exactly two slides "active" (its .fx
   // class) at any moment - the newest (fading/zooming in) and the one
@@ -133,47 +135,6 @@ export const Banner = ({ variant = 'subpage' }: BannerProps) => {
   // reverse transition is never actually seen. `activeSlides` mirrors that
   // exact two-element sliding window, oldest first.
   const [activeSlides, setActiveSlides] = useState<number[]>([0]);
-
-  useEffect(() => {
-    // Only the home page's slideshow is admin-manageable via the CMS
-    // banners API (position 'home_top') - subpages always use the fixed
-    // caption-free slide set, matching the old site's separate module.
-    if (variant !== 'home') return;
-
-    const fetchBanners = async () => {
-      try {
-        const res = await fetch('/api/banners/public');
-        if (res.ok) {
-          const data = await res.json();
-          const topBanners = data.filter((b: any) => b.position === 'home_top');
-
-          if (topBanners.length > 0) {
-            const dynamicSlides = topBanners.map((b: any) => ({
-              image: b.imageUrl,
-              text: b.title,
-              linkUrl: b.linkUrl
-            }));
-
-            // Mix static and dynamic, or just replace
-            // Replacing if dynamic exists is usually preferred for CMS control
-            setIsDynamic(true);
-            setSlides(dynamicSlides);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to fetch banners', err);
-      }
-    };
-    fetchBanners();
-  }, [variant]);
-
-  // If the CMS fetch above replaces `slides` with a shorter array than
-  // whatever was already active, an activeSlides index can end up out of
-  // bounds - every slide's active check would then fail at once, blanking
-  // the banner until the next tick self-heals it.
-  useEffect(() => {
-    if (activeSlides.some((i) => i >= slides.length)) setActiveSlides([0]);
-  }, [slides, activeSlides]);
 
   const nextSlide = () => {
     setActiveSlides((prev) => {
@@ -203,18 +164,13 @@ export const Banner = ({ variant = 'subpage' }: BannerProps) => {
 
   if (!currentSlideData) return null;
 
-  // Old site computes the slideshow's height as a percentage of its own
-  // width, not viewport height - on the home page it spans the full page
-  // width (tall), but on every other page it sits inside the boxed content
-  // container (~1200px), which comes out noticeably shorter on desktop.
-  // Mobile is unaffected since the boxed container is effectively full-
-  // width there too, so both variants stay equal below the md breakpoint.
-  const heightClasses = variant === 'home'
-    ? 'h-[calc(100vh-80px)] min-h-[500px] md:min-h-[600px]'
-    : 'h-[calc(100vh-80px)] min-h-[500px] md:h-[75vh] md:min-h-[480px]';
-
+  // Measured directly against the live old site (both the home and
+  // subpage sliders): height is always exactly 40% of the slideshow's own
+  // width (which is always the full viewport width, on every page), with
+  // a 150px floor - confirmed at viewports from 280px up to 2560px wide.
+  // Identical formula for home and subpage; no separate sizing needed.
   return (
-    <section className={`relative w-full ${heightClasses} flex flex-col items-center justify-center text-center text-white overflow-hidden group`}>
+    <section className="relative w-full h-[max(40vw,150px)] flex flex-col items-center justify-center text-center text-white overflow-hidden group">
 
       {/* Background Images - Ken Burns effect ported from the css-101.org
           reference: opacity fades in over 3s while the zoom (scale 1 ->
@@ -227,7 +183,7 @@ export const Banner = ({ variant = 'subpage' }: BannerProps) => {
       {slides.map((slide, index) => {
         const rank = activeSlides.indexOf(index); // -1, 0 (older-active) or 1 (newer-active)
         const isActive = rank !== -1;
-        const origin = isDynamic ? 'center center' : transformOriginFor(index + 1);
+        const origin = transformOriginFor(index + 1);
         return (
           <div
             key={index}
@@ -249,6 +205,22 @@ export const Banner = ({ variant = 'subpage' }: BannerProps) => {
           </div>
         );
       })}
+
+      {/* Logo - old site positions its logo absolutely so it overlaps the
+          banner images instead of sitting in the nav bar (.logo img,
+          position:absolute, width 300px/180px on home, 250px/150px on
+          subpages, desktop/mobile respectively - measured on the live
+          site). Header.tsx no longer renders a logo; this is the only one. */}
+      <Link
+        to="/"
+        className="absolute top-3 md:top-6 left-4 md:left-8 z-20"
+      >
+        <img
+          src="/logo.svg"
+          alt="Flugschule Hirondelle"
+          className={variant === 'home' ? 'w-[180px] md:w-[300px] h-auto object-contain' : 'w-[150px] md:w-[250px] h-auto object-contain'}
+        />
+      </Link>
 
       {/* Name Plate Container - Aligned to bottom left of container.
           Old site hides the caption below 630px (.camera_caption_title

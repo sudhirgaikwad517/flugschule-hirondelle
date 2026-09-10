@@ -8,10 +8,10 @@ export const Header = () => {
 
   const getNavClass = (path: string) => {
     const isActive = path === '/' ? pathname === '/' : pathname.startsWith(path);
-    return `text-[11.5px] uppercase tracking-widest font-semibold flex items-center gap-1 transition-colors pl-2.5 pr-[14px] py-1.5 rounded-md ${
-      isActive 
-        ? 'bg-hirondelle-blue/10 text-hirondelle-blue' 
-        : 'text-gray-800 hover:text-hirondelle-blue hover:bg-black/5'
+    return `text-[14px] uppercase tracking-widest font-semibold flex items-center gap-1 transition-colors pl-2.5 pr-[14px] py-1.5 rounded-md ${
+      isActive
+        ? 'bg-white/15 text-luxury-gold'
+        : 'text-white hover:text-luxury-gold hover:bg-white/10'
     }`;
   };
 
@@ -86,23 +86,21 @@ export const Header = () => {
   };
 
   return (
-    <header className="w-full fixed top-0 left-0 z-50 font-luxurysans bg-[#f4f5f6] shadow-sm print:hidden">
+    <header
+      className="w-full fixed top-0 left-0 z-50 font-luxurysans shadow-sm print:hidden"
+      style={{ background: 'linear-gradient(180deg, #4FA8C7 0%, #2B6E86 100%)' }}
+    >
 
 
 
-      {/* Main Navigation */}
-      <div 
+      {/* Main Navigation - old site's logo sits absolutely positioned over
+          the banner images (see Banner.tsx), not in this bar, so there's
+          no logo slot here anymore. */}
+      <div
         className={`transition-colors duration-300 h-[80px] flex items-center`}
       >
         <div className="w-full px-4 md:px-8">
-          <nav className="flex items-center justify-between">
-
-            {/* Left: Logo */}
-            <div className="flex-shrink-0">
-              <Link to="/" className="block">
-                <img src="/logo.svg" alt="Flugschule Hirondelle" className="h-16 w-56 md:h-[72px] md:w-[280px] object-contain" />
-              </Link>
-            </div>
+          <nav className="flex items-center justify-end">
 
             {/* Right: All Menu Items */}
             <div className="hidden xl:flex items-center justify-end gap-1 2xl:gap-3">
@@ -288,7 +286,7 @@ export const Header = () => {
             <div className="xl:hidden flex items-center justify-end">
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="text-gray-800 p-2"
+                className="text-white p-2"
               >
                 {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
