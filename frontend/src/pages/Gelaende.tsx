@@ -17,12 +17,12 @@ const WINDE_GELAENDE = [
 // so the icon underneath lines up at the same spot regardless of whether
 // the name actually wraps or not.
 const Ortsschild = ({ name }: { name: string }) => (
-  <button className="bg-[#FACA05] border-2 border-black rounded-md p-2 flex flex-col items-center justify-center text-center shadow-md hover:scale-105 transition-transform duration-300 w-full h-32">
-    <span className="text-black font-bold text-[11px] md:text-[12px] leading-tight mb-2 px-1 min-h-[2.4em] flex items-center justify-center">
+  <button className="bg-[#FACA05] border-2 border-black rounded-md p-1.5 flex flex-col items-center justify-center text-center shadow-md hover:scale-105 transition-transform duration-300 w-full h-20">
+    <span className="text-black font-bold text-[10px] md:text-[11px] leading-tight mb-1 px-1 min-h-[2em] flex items-center justify-center">
       {name}
     </span>
     <div className="mt-auto">
-      <img src="/google.png" alt="icon" className="w-6 h-6 object-contain" />
+      <img src="/google.png" alt="icon" className="w-5 h-5 object-contain" />
     </div>
   </button>
 );
@@ -82,7 +82,7 @@ export const Gelaende = () => {
                 <h3 className="italic text-xl font-luxury text-gray-700 mb-5">
                   Schnupper-/Grundkurs:
                 </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-3">
                   {SCHNUPPER_KURS_GELAENDE.map((name) => (
                     <Ortsschild key={name} name={name} />
                   ))}
@@ -94,7 +94,7 @@ export const Gelaende = () => {
                 <h3 className="italic text-xl font-luxury text-gray-700 mb-5">
                   Winde:
                 </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-3">
                   {WINDE_GELAENDE.map((name) => (
                     <Ortsschild key={name} name={name} />
                   ))}
