@@ -9,9 +9,16 @@ const WINDE_GELAENDE = [
   'Bad Kreuznach', 'Herrenteich'
 ];
 
+// A fixed height (not aspect-[4/3]) is what actually keeps every box the
+// same size - aspect-ratio only sets a *preferred* ratio, so a name that
+// wraps to two lines (e.g. "Nonrod Nordost") still grows the button taller
+// than a one-line name (e.g. "Stauf") sitting right next to it in the same
+// grid row. The name gets a reserved two-line height (min-h + line-clamp)
+// so the icon underneath lines up at the same spot regardless of whether
+// the name actually wraps or not.
 const Ortsschild = ({ name }: { name: string }) => (
-  <button className="bg-[#FACA05] border-2 border-black rounded-md p-2 flex flex-col items-center justify-center text-center shadow-md hover:scale-105 transition-transform duration-300 w-full aspect-[4/3]">
-    <span className="text-black font-bold text-[11px] md:text-[12px] leading-tight mb-2 px-1">
+  <button className="bg-[#FACA05] border-2 border-black rounded-md p-2 flex flex-col items-center justify-center text-center shadow-md hover:scale-105 transition-transform duration-300 w-full h-32">
+    <span className="text-black font-bold text-[11px] md:text-[12px] leading-tight mb-2 px-1 min-h-[2.4em] flex items-center justify-center">
       {name}
     </span>
     <div className="mt-auto">
