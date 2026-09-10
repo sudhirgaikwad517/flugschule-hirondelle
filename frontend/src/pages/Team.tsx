@@ -159,7 +159,7 @@ export const Team = () => {
                       <img 
                         src={member.certificate} 
                         alt={`${member.name} Zertifikat`} 
-                        className="w-full h-auto object-cover rounded-sm grayscale hover:grayscale-0 transition-all duration-700 opacity-90"
+                        className="w-full h-auto object-cover rounded-sm"
                       />
                       <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mt-3 text-center">
                         DHV Zertifiziert
@@ -190,7 +190,7 @@ export const Team = () => {
                   <img 
                     src={brand.img} 
                     alt={brand.name} 
-                    className="w-full h-full object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
+                    className="w-full h-full object-contain"
                   />
                 </div>
               ))}
