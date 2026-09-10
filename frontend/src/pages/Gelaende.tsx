@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
 
 const SCHNUPPER_KURS_GELAENDE = [
@@ -8,6 +9,22 @@ const SCHNUPPER_KURS_GELAENDE = [
 const WINDE_GELAENDE = [
   'Bad Kreuznach', 'Herrenteich'
 ];
+
+// Old site's article slugs (hiron_content.alias) - not derivable from the
+// display name, e.g. "Nonroder Höhe" is aliased "nonrod", not
+// "nonroder-hoehe", so this maps each box to its real detail-page slug.
+const GELAENDE_SLUGS: Record<string, string> = {
+  'Billings': 'billings',
+  'Erlau': 'erlau',
+  'Gadern': 'gadern',
+  'Lindenfels': 'lindenfels',
+  'Nonrod Nordost': 'nonrod-nordost',
+  'Nonroder Höhe': 'nonrod',
+  'Stauf': 'stauf',
+  'Winterkasten': 'winterkasten',
+  'Bad Kreuznach': 'bad-kreuznach',
+  'Herrenteich': 'herrenteich',
+};
 
 // A fixed height (not aspect-[4/3]) is what actually keeps every box the
 // same size - aspect-ratio only sets a *preferred* ratio, so a name that
@@ -20,14 +37,17 @@ const WINDE_GELAENDE = [
 // boxes via DevTools - w-full previously let the box stretch to whatever
 // width the grid column happened to give it instead of matching that.
 const Ortsschild = ({ name }: { name: string }) => (
-  <button className="bg-[#FACA05] border-2 border-black rounded-md p-1 flex flex-col items-center justify-center text-center shadow-md hover:scale-105 transition-transform duration-300 w-[114px] h-[77px]">
+  <Link
+    to={`/infos/gelaende/${GELAENDE_SLUGS[name]}`}
+    className="bg-[#FACA05] border-2 border-black rounded-md p-1 flex flex-col items-center justify-center text-center shadow-md hover:scale-105 transition-transform duration-300 w-[114px] h-[77px]"
+  >
     <span className="text-black font-extrabold text-[13px] md:text-[14px] leading-tight mb-1 px-1 min-h-[2em] flex items-center justify-center">
       {name}
     </span>
     <div className="mt-auto">
       <img src="/google.png" alt="icon" className="w-7 h-7 object-contain" />
     </div>
-  </button>
+  </Link>
 );
 
 export const Gelaende = () => {

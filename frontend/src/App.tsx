@@ -45,6 +45,7 @@ import { ReparaturService } from './pages/ReparaturService';
 import { ServiceAuftrag } from './pages/ServiceAuftrag';
 import { Team } from './pages/Team';
 import { Gelaende } from './pages/Gelaende';
+import { GelaendeDetail } from './pages/GelaendeDetail';
 import { Wetter } from './pages/Wetter';
 import { Medien } from './pages/Medien';
 import { Gruppenevents } from './pages/Gruppenevents';
@@ -118,6 +119,7 @@ function App() {
           <Route path="infos" element={<Infos />} />
           <Route path="infos/team" element={<Team />} />
           <Route path="infos/gelaende" element={<Gelaende />} />
+          <Route path="infos/gelaende/:slug" element={<GelaendeDetail />} />
           <Route path="infos/wetter" element={<Wetter />} />
           <Route path="infos/medien" element={<Medien />} />
           <Route path="infos/gruppenevents" element={<Gruppenevents />} />
