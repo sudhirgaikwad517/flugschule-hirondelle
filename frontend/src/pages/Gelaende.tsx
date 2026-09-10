@@ -56,7 +56,7 @@ export const Gelaende = () => {
       <Banner />
 
       <section className="pt-16 md:pt-24 pb-12">
-        <div className="container mx-auto px-4 lg:px-8 max-w-[1200px]">
+        <div className="container mx-auto px-4 max-w-[1200px]">
           
           {/* Main Title */}
           <div className="mb-12">
