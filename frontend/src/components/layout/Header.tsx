@@ -114,12 +114,12 @@ export const Header = () => {
               <Link to="/" className={getNavClass('/')}>
                 <span className="flex items-center justify-center">
                   H
-                  {/* bird-badge.png already has its own white circle baked
-                      in (a wrapping bg-white circle here shrinks the image
-                      down further, making its thin blue bird linework
-                      anti-alias into near-invisibility) - render it alone,
-                      large enough for the blue to actually read. */}
-                  <img src="/bird-badge.png" alt="O" className="w-[22px] h-[22px] object-contain mx-[1px] shrink-0" />
+                  {/* Same icon markup as the home page's promo cards
+                      (google.png inside a bg-white bordered circle) - reused
+                      as-is, just sized down for the nav bar. */}
+                  <span className="w-4 h-4 rounded-full border border-white flex items-center justify-center overflow-hidden bg-white mx-[2px] shrink-0">
+                    <img src="/google.png" alt="O" className="w-full h-full object-contain" />
+                  </span>
                   ME
                 </span>
               </Link>
