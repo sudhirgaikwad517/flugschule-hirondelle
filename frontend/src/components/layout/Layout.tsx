@@ -1,11 +1,22 @@
 import { Outlet, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { CookieConsent } from '../common/CookieConsent';
 
 export const Layout = () => {
   const { pathname, hash } = useLocation();
+
+  // useLayoutEffect (not useEffect) so this runs before the browser paints
+  // the new route - otherwise, navigating from far down a long page (e.g.
+  // a footer link) briefly paints the new, usually shorter, page's DOM at
+  // the OLD scroll position first, which can land at or past that page's
+  // own footer before the reset kicks in on the next frame - looking like
+  // the new page opened "below" the footer with the old page's tail still
+  // visible above it.
+  useLayoutEffect(() => {
+    if (!hash) window.scrollTo(0, 0);
+  }, [pathname, hash]);
 
   useEffect(() => {
     if (hash) {
@@ -18,7 +29,6 @@ export const Layout = () => {
       }, 50);
       return () => clearTimeout(timer);
     }
-    window.scrollTo(0, 0);
   }, [pathname, hash]);
 
   return (
