@@ -201,24 +201,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Ken Burns effect for the home page Banner (Banner.tsx), modeled on the
-   old site's real "Camera" jQuery slideshow: the active slide zooms
-   in - toward a per-slide corner via transform-origin, set inline in
-   Banner.tsx, so it reads as a diagonal pan+zoom rather than a flat
-   center-zoom - for as long as it's displayed. Restarts cleanly each
-   time a slide cycles back to active since it's a fresh class addition,
-   not a continuously-running animation. Duration is slightly longer than
-   the Banner's 7s auto-play interval (matching Camera's own approach of
-   never letting the zoom finish/reset while a slide is still showing) so
-   the motion never visibly stalls before the next crossfade begins. */
-@keyframes kenburns-zoom {
-  from { transform: scale(1); }
-  to { transform: scale(1.18); }
-}
-.kenburns-active {
-  animation: kenburns-zoom 8500ms ease-out forwards;
-}
-
 h1, h2, h3, h4, h5, h6, .nav-item {
   font-family: var(--font-condensed);
 }
