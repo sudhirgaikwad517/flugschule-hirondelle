@@ -341,7 +341,7 @@ export const Home = () => {
               <h2 className="font-luxury text-4xl md:text-5xl text-luxury-dark">HOCH HINAUS</h2>
             </div>
 
-            <div className="text-gray-500 font-light leading-relaxed text-sm md:text-base space-y-6 mb-16">
+            <div className="font-sans text-gray-500 font-light leading-relaxed text-sm md:text-base space-y-6 mb-16">
               <p>
                 Willkommen bei der Flugschule Hirondelle, der Gleitschirmschule im Rhein-Main-Neckar Dreieck. Fliegen lernen mit dem Team Hirondelle heißt: Persönliche und individuelle auf den Schüler zugeschnittene Ausbildung. Unser Team besteht aus sehr erfahrenen und ambitionierten Fluglehrern.
               </p>

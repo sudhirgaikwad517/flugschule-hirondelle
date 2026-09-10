@@ -95,18 +95,18 @@ export const Footer = () => {
           <div className="w-full md:w-[38%]">
             <form onSubmit={handleSubscribe}>
               <div className="flex flex-col gap-2 mb-5">
-                <label className="flex items-center gap-2 cursor-pointer text-sm text-white font-light">
+                <label className="flex items-center gap-2 cursor-pointer text-sm text-white font-semibold">
                   <input type="checkbox" checked={newsletter} onChange={(e) => setNewsletter(e.target.checked)} className="w-3.5 h-3.5 accent-white" />
                   Newsletter
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer text-sm text-white font-light">
+                <label className="flex items-center gap-2 cursor-pointer text-sm text-white font-semibold">
                   <input type="checkbox" checked={tandemNewsletter} onChange={(e) => setTandemNewsletter(e.target.checked)} className="w-3.5 h-3.5 accent-white" />
                   Tandemflüge Newsletter
                 </label>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm text-white mb-1">Name</label>
+                <label className="block text-sm text-white font-semibold mb-1">Name</label>
                 <input
                   type="text"
                   value={name}
@@ -116,7 +116,7 @@ export const Footer = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm text-white mb-1">E-Mail</label>
+                <label className="block text-sm text-white font-semibold mb-1">E-Mail</label>
                 <input
                   type="email"
                   value={email}
@@ -128,7 +128,7 @@ export const Footer = () => {
 
               <div className="flex items-start gap-2 mb-5">
                 <input type="checkbox" id="privacy" className="w-3.5 h-3.5 mt-0.5 accent-white" required />
-                <label htmlFor="privacy" className="text-xs text-white font-light leading-snug">
+                <label htmlFor="privacy" className="text-xs text-white font-semibold leading-snug">
                   Ich akzeptiere die <Link to="/agb" className="underline hover:text-luxury-gold transition-colors">Allgemeinen Geschäftsbedingungen</Link> und die <Link to="/datenschutz" className="underline hover:text-luxury-gold transition-colors">Datenschutzerklärung</Link>.
                 </label>
               </div>
@@ -138,11 +138,11 @@ export const Footer = () => {
                   Abonnieren
                 </button>
                 {isLoggedIn ? (
-                  <button type="button" onClick={handleLogout} className="text-sm text-white/90 hover:text-white transition-colors">
+                  <button type="button" onClick={handleLogout} className="text-sm font-medium text-white/90 hover:text-white transition-colors">
                     Abmelden
                   </button>
                 ) : (
-                  <Link to="/anmeldung" className="text-sm text-white/90 hover:text-white transition-colors">
+                  <Link to="/anmeldung" className="text-sm font-medium text-white/90 hover:text-white transition-colors">
                     Anmelden
                   </Link>
                 )}
@@ -170,7 +170,7 @@ export const Footer = () => {
               <div className="flex-1 h-px bg-white/50"></div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-3 text-sm font-light mb-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-3 text-sm font-semibold mb-8">
               {NAV_LINKS.map((link) => (
                 <Link key={link.to} to={link.to} className="underline hover:text-luxury-gold transition-colors">
                   {link.label}
