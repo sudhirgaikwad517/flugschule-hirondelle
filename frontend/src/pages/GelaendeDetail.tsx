@@ -16,7 +16,7 @@ export const GelaendeDetail = () => {
       <Banner />
 
       <section className="pt-16 md:pt-24 pb-12">
-        <div className="container mx-auto px-4 lg:px-8 max-w-[900px]">
+        <div className="container mx-auto px-4 lg:px-8 max-w-[1200px]">
           <Link
             to="/infos/gelaende"
             className="inline-block text-sm text-luxury-gold hover:underline mb-8 font-semibold tracking-wide uppercase"
