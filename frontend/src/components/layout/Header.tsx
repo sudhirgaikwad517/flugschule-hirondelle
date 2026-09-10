@@ -247,14 +247,13 @@ export const Header = () => {
                 </Link>
                 <div className="absolute top-[80px] left-0 w-64 bg-[#111] border-t border-white/10 hidden group-hover:block px-0 py-4 shadow-2xl">
                   <ul className="flex flex-col">
-                    <li><Link to="/news" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Aktuelles (News)</Link></li>
                     <li><Link to="/infos#kontakt" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Kontakt & Anfahrt</Link></li>
                     <li><Link to="/infos/team" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Team</Link></li>
                     <li><Link to="/infos/gelaende" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Gelände</Link></li>
                     <li><Link to="/infos/wetter" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Wetter</Link></li>
                     <li><Link to="/infos/medien" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Medien</Link></li>
                     <li><Link to="/downloads" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Downloads</Link></li>
-                    <li><Link to="/partner" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Partner & Links</Link></li>
+                    <li><Link to="/infos/gruppenevents" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Gruppenevents</Link></li>
                     <li><Link to="/infos/gutscheine" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Gutscheine</Link></li>
                     <li><Link to="/infos/versicherungen" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Versicherungen</Link></li>
                   </ul>
@@ -427,14 +426,13 @@ export const Header = () => {
                   </div>
                   <div className={`overflow-hidden transition-all duration-300 ${expandedMobileMenu === 'infos' ? 'max-h-[600px] mt-2 mb-2 opacity-100' : 'max-h-0 opacity-0'}`}>
                     <div className="flex flex-col space-y-4 pl-4 py-2">
-                      <Link to="/news" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Aktuelles (News)</Link>
                       <Link to="/infos#kontakt" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Kontakt & Anfahrt</Link>
                       <Link to="/infos/team" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Team</Link>
                       <Link to="/infos/gelaende" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Gelände</Link>
                       <Link to="/infos/wetter" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Wetter</Link>
                       <Link to="/infos/medien" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Medien</Link>
                       <Link to="/downloads" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Downloads</Link>
-                      <Link to="/partner" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Partner & Links</Link>
+                      <Link to="/infos/gruppenevents" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Gruppenevents</Link>
                       <Link to="/infos/gutscheine" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Gutscheine</Link>
                       <Link to="/infos/versicherungen" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Versicherungen</Link>
                     </div>
