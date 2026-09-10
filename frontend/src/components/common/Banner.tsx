@@ -150,11 +150,12 @@ export const Banner = ({ variant = 'subpage' }: BannerProps) => {
     });
   };
 
-  // Auto-play - 6s cycle, matching the reference's setInterval(kenBurns, 6000)
+  // Auto-play - old site's SlideshowCK module (id 127) params: time=7000ms
+  // per slide before auto-advance, verified against the live DB.
   useEffect(() => {
     const timer = setInterval(() => {
       nextSlide();
-    }, 6000);
+    }, 7000);
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slides.length]);

@@ -6,12 +6,14 @@ export const Header = () => {
   const location = useLocation();
   const pathname = location.pathname;
 
+  // Old site's nav hover (.nav > li > a:hover, custom.css) never changes
+  // text color - only a light white overlay on the item itself
+  // (rgba(255,255,255,0.2)) and a barely-visible text-shadow deepening,
+  // applied instantly with no transition. No color/transition here either.
   const getNavClass = (path: string) => {
     const isActive = path === '/' ? pathname === '/' : pathname.startsWith(path);
-    return `text-[14px] uppercase tracking-widest font-semibold flex items-center gap-1 transition-colors pl-2.5 pr-[14px] py-1.5 rounded-md ${
-      isActive
-        ? 'bg-white/15 text-luxury-gold'
-        : 'text-white hover:text-luxury-gold hover:bg-white/10'
+    return `text-[14px] uppercase tracking-widest font-semibold flex items-center gap-1 text-white pl-2.5 pr-[14px] py-1.5 rounded-md ${
+      isActive ? 'bg-white/20' : 'hover:bg-white/20'
     }`;
   };
 
