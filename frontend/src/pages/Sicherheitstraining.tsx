@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
 import { Check } from 'lucide-react';
+import { useValidatedImageUrl, useValidatedImageList } from '../hooks/useValidatedImage';
 
 interface PageMedia {
   headerImageUrl: string | null;
@@ -51,6 +52,9 @@ export const Sicherheitstraining = () => {
       .catch(console.error);
   }, []);
 
+  const heroImage = useValidatedImageUrl(media?.contentImageUrl, FALLBACK_HERO_IMAGE);
+  const galleryImages = useValidatedImageList(parseGalleryImages(media?.galleryImages ?? null), FALLBACK_GALLERY);
+
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -83,7 +87,7 @@ export const Sicherheitstraining = () => {
                 ></iframe>
               ) : (
                 <img
-                  src={media?.contentImageUrl || FALLBACK_HERO_IMAGE}
+                  src={heroImage}
                   alt="Sicherheitstraining Gardasee"
                   className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                 />
@@ -209,28 +213,22 @@ export const Sicherheitstraining = () => {
             </div>
 
             {/* Impressions Gallery */}
-            {(() => {
-              const configured = parseGalleryImages(media?.galleryImages ?? null);
-              const gallery = configured.length > 0 ? configured : FALLBACK_GALLERY;
-              return (
-                <div>
-                   <h3 className="font-luxury text-2xl text-[#53a8c7] mb-6 uppercase tracking-wider border-b border-gray-200 pb-4">
-                     Impressionen
-                   </h3>
-                   <div className="grid grid-cols-2 gap-2">
-                     {gallery.map((img: string, index: number) => (
-                       <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
-                         <img
-                           src={img}
-                           alt={`Impression ${index + 1}`}
-                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                         />
-                       </div>
-                     ))}
+            <div>
+               <h3 className="font-luxury text-2xl text-[#53a8c7] mb-6 uppercase tracking-wider border-b border-gray-200 pb-4">
+                 Impressionen
+               </h3>
+               <div className="grid grid-cols-2 gap-2">
+                 {galleryImages.map((img: string, index: number) => (
+                   <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
+                     <img
+                       src={img}
+                       alt={`Impression ${index + 1}`}
+                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                     />
                    </div>
-                </div>
-              );
-            })()}
+                 ))}
+               </div>
+            </div>
 
           </div>
 

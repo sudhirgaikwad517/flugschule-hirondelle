@@ -4,6 +4,11 @@ import { useState, useEffect } from 'react';
 
 export const Home = () => {
   const [media, setMedia] = useState<any>(null);
+  // Only ever promotes an admin-uploaded URL once the browser has actually
+  // confirmed it loads - otherwise a stale/deleted upload would flash the
+  // correct local fallback in, then silently swap to a broken image once
+  // the fetch above resolves (fallback -> real -> broken, visibly delayed).
+  const [validatedImages, setValidatedImages] = useState<Record<number, string>>({});
 
   useEffect(() => {
     fetch(`/api/pagemedia/public/home`)
@@ -15,11 +20,25 @@ export const Home = () => {
       .catch(err => console.error('Error fetching home media:', err));
   }, []);
 
+  useEffect(() => {
+    if (!media?.galleryImages) return;
+    let cancelled = false;
+    Object.entries(media.galleryImages as Record<string, string>).forEach(([idxStr, url]) => {
+      if (!url) return;
+      const index = Number(idxStr);
+      const img = new Image();
+      img.onload = () => {
+        if (!cancelled) setValidatedImages((prev) => ({ ...prev, [index]: url }));
+      };
+      img.src = url;
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [media]);
+
   const getImage = (index: number, fallbackSrc: string) => {
-    if (media?.galleryImages && media.galleryImages[index]) {
-      return media.galleryImages[index];
-    }
-    return fallbackSrc;
+    return validatedImages[index] || fallbackSrc;
   };
 
   return (
