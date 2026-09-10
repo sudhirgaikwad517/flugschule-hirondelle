@@ -213,21 +213,30 @@ export const Banner = ({ variant = 'subpage' }: BannerProps) => {
           top-left as origin, since our fixed header is now the same 40px
           height as the old site's): home sits ~9-10px into the banner on
           both mobile and desktop; subpages sit noticeably lower (~15px
-          mobile, ~40px desktop) and use a smaller logo. left-4 md:left-8
-          matches the px-4 lg:px-8 inset every other section on the page
-          uses. Header.tsx no longer renders a logo; this is the only one. */}
-      <Link
-        to="/"
-        className={`absolute left-4 md:left-8 z-20 ${
-          variant === 'home' ? 'top-[9px] md:top-[10px]' : 'top-[15px] md:top-[40px]'
-        }`}
-      >
-        <img
-          src="/logo.svg"
-          alt="Flugschule Hirondelle"
-          className={variant === 'home' ? 'w-[180px] md:w-[300px] h-auto object-contain' : 'w-[150px] md:w-[250px] h-auto object-contain'}
-        />
-      </Link>
+          mobile, ~40px desktop) and use a smaller logo. Anchored to the
+          same centered max-w-[1200px] container (with the `relative` this
+          needs to actually work, unlike an earlier attempt that dropped
+          it) as the nav bar and page content below, with the same left-4
+          md:left-8 inset Header.tsx uses, so the logo lines up with HOME
+          in the nav and with the content's edge - not just the raw
+          viewport edge. Header.tsx no longer renders a logo; this is the
+          only one. */}
+      <div className="absolute inset-x-0 top-0 z-20 pointer-events-none">
+        <div className="relative mx-auto max-w-[1200px] h-0">
+          <Link
+            to="/"
+            className={`pointer-events-auto absolute left-4 md:left-8 ${
+              variant === 'home' ? 'top-[9px] md:top-[10px]' : 'top-[15px] md:top-[40px]'
+            }`}
+          >
+            <img
+              src="/logo.svg"
+              alt="Flugschule Hirondelle"
+              className={variant === 'home' ? 'w-[180px] md:w-[300px] h-auto object-contain' : 'w-[150px] md:w-[250px] h-auto object-contain'}
+            />
+          </Link>
+        </div>
+      </div>
 
       {/* Name Plate Container - Aligned to bottom left of container.
           Old site hides the caption below 630px (.camera_caption_title

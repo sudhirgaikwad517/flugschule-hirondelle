@@ -101,15 +101,19 @@ export const Header = () => {
       <div
         className={`transition-colors duration-300 h-[40px] flex items-center`}
       >
-        <div className="w-full px-4 md:px-8">
+        <div className="container mx-auto max-w-[1200px] px-4 md:px-8">
           <nav className="flex items-center justify-end">
 
-            {/* Right: All Menu Items */}
-            <div className="hidden xl:flex items-center justify-end gap-1 2xl:gap-3">
+            {/* Old site's nav sits inside the same centered max-w-[1200px]
+                container as the logo and page content below it, with items
+                spread from that container's left edge to its right edge
+                (not bunched at one side) - so HOME lines up with the logo
+                and content edge, matching the old site exactly. */}
+            <div className="hidden xl:flex items-center justify-between w-full">
 
               <Link to="/" className={getNavClass('/')}>
                 <span className="flex items-center justify-center">
-                  H<img src="/google.png" alt="O" className="w-[13px] h-[13px] object-contain mx-[1.5px] -mt-[1px]" />ME
+                  H<img src="/bird-badge.png" alt="O" className="w-[11px] h-[11px] object-contain mx-[1.5px] -mt-[1px]" />ME
                 </span>
               </Link>
 
