@@ -283,10 +283,10 @@ export const Banner = ({ variant = 'subpage' }: BannerProps) => {
         </div>
       </div>
 
-      {/* Navigation Buttons (Simple thin arrows like in screenshot) */}
+      {/* Navigation Buttons - desktop only, hidden on mobile per request */}
       <button
         onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-30 flex items-center justify-center text-white hover:text-white/80 transition-colors drop-shadow-md"
+        className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-30 items-center justify-center text-white hover:text-white/80 transition-colors drop-shadow-md"
         aria-label="Vorheriges Bild"
       >
         <ChevronLeft className="w-10 h-10 md:w-12 md:h-12 stroke-[1.5]" />
@@ -294,7 +294,7 @@ export const Banner = ({ variant = 'subpage' }: BannerProps) => {
 
       <button
         onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-30 flex items-center justify-center text-white hover:text-white/80 transition-colors drop-shadow-md"
+        className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-30 items-center justify-center text-white hover:text-white/80 transition-colors drop-shadow-md"
         aria-label="Nächstes Bild"
       >
         <ChevronRight className="w-10 h-10 md:w-12 md:h-12 stroke-[1.5]" />
