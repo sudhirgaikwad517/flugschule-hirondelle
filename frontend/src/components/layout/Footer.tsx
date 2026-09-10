@@ -172,7 +172,7 @@ export const Footer = () => {
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-3 text-sm font-semibold mb-8">
               {NAV_LINKS.map((link) => (
-                <Link key={link.to} to={link.to} className="underline hover:text-luxury-gold transition-colors">
+                <Link key={link.to} to={link.to} className="underline hover:text-luxury-gold transition-colors break-words">
                   {link.label}
                 </Link>
               ))}

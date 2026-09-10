@@ -11,6 +11,34 @@ interface PageMedia {
   galleryImages: string | null;
 }
 
+// Real photos ported from the old site (images/1-sicherheit_gardasee/) -
+// used whenever no admin gallery is configured via the pagemedia API, so
+// the page never falls back to an unrelated stock photo.
+const FALLBACK_HERO_IMAGE = '/images/performance/sicherheitstraining.jpg';
+const FALLBACK_GALLERY = [
+  '/images/sicherheitstraining/gallery/gallery-1.jpg',
+  '/images/sicherheitstraining/gallery/gallery-2.jpg',
+  '/images/sicherheitstraining/gallery/gallery-3.jpg',
+  '/images/sicherheitstraining/gallery/gallery-4.jpg',
+  '/images/sicherheitstraining/gallery/gallery-5.jpg',
+  '/images/sicherheitstraining/gallery/gallery-6.jpg',
+  '/images/sicherheitstraining/gallery/gallery-7.jpg',
+  '/images/sicherheitstraining/gallery/gallery-8.jpg',
+];
+
+// The API's galleryImages column is stored as a JSON string, but may come
+// back already-parsed depending on how it was written - handle both.
+function parseGalleryImages(value: string | null): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 export const Sicherheitstraining = () => {
   const [media, setMedia] = useState<PageMedia | null>(null);
 
@@ -54,9 +82,9 @@ export const Sicherheitstraining = () => {
                   allowFullScreen
                 ></iframe>
               ) : (
-                <img 
-                  src={media?.contentImageUrl || "https://picsum.photos/id/1054/1000/600"} 
-                  alt="Sicherheitstraining Gardasee" 
+                <img
+                  src={media?.contentImageUrl || FALLBACK_HERO_IMAGE}
+                  alt="Sicherheitstraining Gardasee"
                   className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                 />
               )}
@@ -181,24 +209,28 @@ export const Sicherheitstraining = () => {
             </div>
 
             {/* Impressions Gallery */}
-            {media?.galleryImages && Array.isArray(media.galleryImages) && media.galleryImages.length > 0 && (
-              <div>
-                 <h3 className="font-luxury text-2xl text-[#53a8c7] mb-6 uppercase tracking-wider border-b border-gray-200 pb-4">
-                   Impressionen
-                 </h3>
-                 <div className="grid grid-cols-2 gap-2">
-                   {media.galleryImages.map((img: string, index: number) => (
-                     <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
-                       <img 
-                         src={img} 
-                         alt={`Impression ${index + 1}`} 
-                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                       />
-                     </div>
-                   ))}
-                 </div>
-              </div>
-            )}
+            {(() => {
+              const configured = parseGalleryImages(media?.galleryImages ?? null);
+              const gallery = configured.length > 0 ? configured : FALLBACK_GALLERY;
+              return (
+                <div>
+                   <h3 className="font-luxury text-2xl text-[#53a8c7] mb-6 uppercase tracking-wider border-b border-gray-200 pb-4">
+                     Impressionen
+                   </h3>
+                   <div className="grid grid-cols-2 gap-2">
+                     {gallery.map((img: string, index: number) => (
+                       <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
+                         <img
+                           src={img}
+                           alt={`Impression ${index + 1}`}
+                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                         />
+                       </div>
+                     ))}
+                   </div>
+                </div>
+              );
+            })()}
 
           </div>
 

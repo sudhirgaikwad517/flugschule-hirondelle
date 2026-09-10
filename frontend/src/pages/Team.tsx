@@ -60,11 +60,13 @@ const TEAM_MEMBERS = [
   }
 ];
 
+// Ozone and Advance dropped: no real logo file exists in the old codebase
+// (only unrelated sample/partner photos), so a real Ozone/Advance asset
+// would need to be sourced fresh rather than ported - showing a fake stock
+// photo in their place would be worse than omitting them for now.
 const SHOP_BRANDS = [
-  { name: 'Ozone', img: 'https://picsum.photos/id/1035/200/100' },
-  { name: 'Advance', img: 'https://picsum.photos/id/1036/200/100' },
   { name: 'Niviuk', img: '/images/brands/niviuk.png' },
-  { name: 'Phi', img: 'https://picsum.photos/id/1038/200/100' },
+  { name: 'Phi', img: '/images/brands/phi.png' },
   { name: 'Independence', img: '/images/brands/independence.png' },
   { name: 'Skyman', img: '/images/brands/skyman.png' },
 ];

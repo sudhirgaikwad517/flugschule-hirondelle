@@ -1,12 +1,12 @@
 import { Banner } from '../components/common/Banner';
 
 const IMPRESSIONS = [
-  'https://picsum.photos/seed/event1/400/300',
-  'https://picsum.photos/seed/event2/400/300',
-  'https://picsum.photos/seed/event3/400/300',
-  'https://picsum.photos/seed/event4/400/300',
-  'https://picsum.photos/seed/event5/400/300',
-  'https://picsum.photos/seed/event6/400/300',
+  '/images/gruppenevents/gallery-1.jpg',
+  '/images/gruppenevents/gallery-2.jpg',
+  '/images/gruppenevents/gallery-3.jpg',
+  '/images/gruppenevents/gallery-4.jpg',
+  '/images/gruppenevents/gallery-5.jpg',
+  '/images/gruppenevents/gallery-6.jpg',
 ];
 
 export const Gruppenevents = () => {
@@ -31,9 +31,9 @@ export const Gruppenevents = () => {
             <div className="lg:col-span-7">
               {/* Main Image */}
               <div className="w-full mb-10 overflow-hidden shadow-lg border border-gray-100">
-                <img 
-                  src="https://picsum.photos/seed/gruppeneventmain/1200/600" 
-                  alt="Gruppenevent Paragliding" 
+                <img
+                  src="/images/gruppenevents/hero.jpg"
+                  alt="Gruppenevent Paragliding"
                   className="w-full h-auto object-cover"
                 />
               </div>

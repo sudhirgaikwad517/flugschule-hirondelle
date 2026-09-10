@@ -24,8 +24,8 @@ export const Medien = () => {
               <div className="relative w-full aspect-video rounded-sm overflow-hidden shadow-lg border border-gray-100">
                 <iframe 
                   className="absolute inset-0 w-full h-full"
-                  src="https://www.youtube.com/embed/8KKXgu00pUw" 
-                  title="Events und Reisen" 
+                  src="https://www.youtube.com/embed/videoseries?list=PLhgO8bAZR5WcQpilBTfbEs0u0e9h0Yxg9"
+                  title="Events und Reisen"
                   frameBorder="0" 
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                   allowFullScreen
@@ -39,8 +39,8 @@ export const Medien = () => {
               <div className="relative w-full aspect-video rounded-sm overflow-hidden shadow-lg border border-gray-100">
                 <iframe 
                   className="absolute inset-0 w-full h-full"
-                  src="https://www.youtube.com/embed/GIDODa--gUs" 
-                  title="Infos rund ums Gleitschirmfliegen" 
+                  src="https://www.youtube.com/embed/videoseries?list=PLhgO8bAZR5We5CYDd5HqNZE04ehUf4yZU"
+                  title="Infos rund ums Gleitschirmfliegen"
                   frameBorder="0" 
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                   allowFullScreen
