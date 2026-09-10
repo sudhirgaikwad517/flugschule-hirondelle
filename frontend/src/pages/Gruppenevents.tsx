@@ -1,12 +1,12 @@
 import { Banner } from '../components/common/Banner';
 
 const IMPRESSIONS = [
-  '/images/gruppenevents/gallery-1.jpg',
-  '/images/gruppenevents/gallery-2.jpg',
-  '/images/gruppenevents/gallery-3.jpg',
-  '/images/gruppenevents/gallery-4.jpg',
-  '/images/gruppenevents/gallery-5.jpg',
-  '/images/gruppenevents/gallery-6.jpg',
+  '/images/gruppenevents/gallery-1.webp',
+  '/images/gruppenevents/gallery-2.webp',
+  '/images/gruppenevents/gallery-3.webp',
+  '/images/gruppenevents/gallery-4.webp',
+  '/images/gruppenevents/gallery-5.webp',
+  '/images/gruppenevents/gallery-6.webp',
 ];
 
 export const Gruppenevents = () => {
@@ -32,7 +32,7 @@ export const Gruppenevents = () => {
               {/* Main Image */}
               <div className="w-full mb-10 overflow-hidden shadow-lg border border-gray-100">
                 <img
-                  src="/images/gruppenevents/hero.jpg"
+                  src="/images/gruppenevents/hero.webp"
                   alt="Gruppenevent Paragliding"
                   className="w-full h-auto object-cover"
                 />

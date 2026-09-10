@@ -39,7 +39,7 @@ export const LSchein = () => {
               ) : (
                 <button type="button" onClick={() => setShowVideo(true)} className="w-full h-full block cursor-pointer">
                   <img
-                    src="/images/grundkurs/hero.jpg"
+                    src="/images/grundkurs/hero.webp"
                     alt="L-Schein Grundkurs"
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-80"
                   />
@@ -198,7 +198,7 @@ export const LSchein = () => {
                  {Array.from({ length: 9 }, (_, i) => i + 1).map((n, index) => (
                    <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
                      <img
-                       src={`/images/grundkurs/gallery-${n}.jpg`}
+                       src={`/images/grundkurs/gallery-${n}.webp`}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />

@@ -77,7 +77,7 @@ export const Gutscheine = () => {
             <div className="lg:col-span-5 pt-4">
               <div className="w-full">
                 <img
-                  src="/images/gutscheine/gutschein.jpg"
+                  src="/images/gutscheine/gutschein.webp"
                   alt="Geschenk-Gutschein"
                   className="w-full h-auto object-cover shadow-sm border border-gray-100 rounded-sm"
                 />

@@ -64,9 +64,9 @@ export const Home = () => {
       <section className="w-full overflow-hidden relative">
         {(() => {
           const galleryImages = [
-            getSquareImage(0, '/images/ausbildung-6.jpg'),
-            getSquareImage(1, '/images/ausbildung-5.jpg'),
-            getSquareImage(2, '/images/ausbildung-4.jpg'),
+            getSquareImage(0, '/images/ausbildung-6.webp'),
+            getSquareImage(1, '/images/ausbildung-5.webp'),
+            getSquareImage(2, '/images/ausbildung-4.webp'),
           ];
           const prevGallery = () => setGalleryIndex((i) => (i - 1 + galleryImages.length) % galleryImages.length);
           const nextGallery = () => setGalleryIndex((i) => (i + 1) % galleryImages.length);
@@ -133,7 +133,7 @@ export const Home = () => {
             <div className="relative h-[550px] group overflow-hidden bg-white shadow-sm cursor-pointer">
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{ backgroundImage: `url("${getImage(3, '/images/ausbildung-1.jpg')}")` }}
+                style={{ backgroundImage: `url("${getImage(3, '/images/ausbildung-1.webp')}")` }}
               ></div>
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-dark/90 via-luxury-dark/20 to-transparent"></div>
 
@@ -160,7 +160,7 @@ export const Home = () => {
             <div className="relative h-[550px] group overflow-hidden bg-white shadow-sm cursor-pointer">
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{ backgroundImage: `url("${getImage(4, '/images/ausbildung-2.jpg')}")` }}
+                style={{ backgroundImage: `url("${getImage(4, '/images/ausbildung-2.webp')}")` }}
               ></div>
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-dark/90 via-luxury-dark/20 to-transparent"></div>
               <div className="absolute inset-4 border border-luxury-gold/50 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold"></div>
@@ -184,7 +184,7 @@ export const Home = () => {
             <div className="relative h-[550px] group overflow-hidden bg-white shadow-sm cursor-pointer">
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{ backgroundImage: `url("${getImage(5, '/images/ausbildung-3.jpg')}")` }}
+                style={{ backgroundImage: `url("${getImage(5, '/images/ausbildung-3.webp')}")` }}
               ></div>
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-dark/90 via-luxury-dark/20 to-transparent"></div>
               <div className="absolute inset-4 border border-luxury-gold/50 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold"></div>
@@ -208,7 +208,7 @@ export const Home = () => {
             <div className="relative h-[550px] group overflow-hidden bg-white shadow-sm cursor-pointer">
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{ backgroundImage: `url("${getImage(6, '/images/ausbildung-4.jpg')}")` }}
+                style={{ backgroundImage: `url("${getImage(6, '/images/ausbildung-4.webp')}")` }}
               ></div>
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-dark/90 via-luxury-dark/20 to-transparent"></div>
               <div className="absolute inset-4 border border-luxury-gold/50 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold"></div>
@@ -252,7 +252,7 @@ export const Home = () => {
             <Link to="/ausbildung/schnupperkurs" className="relative h-[400px] group overflow-hidden bg-white shadow-xl cursor-pointer block">
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{ backgroundImage: `url("${getImage(7, '/images/startbuttons/startbutton_schnuppern.jpg')}")` }}
+                style={{ backgroundImage: `url("${getImage(7, '/images/startbuttons/startbutton_schnuppern.webp')}")` }}
               ></div>
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-dark/90 via-luxury-dark/40 to-black/20"></div>
               <div className="absolute inset-4 border border-white/20 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
@@ -276,7 +276,7 @@ export const Home = () => {
             <Link to="/infos" className="relative h-[400px] group overflow-hidden bg-white shadow-xl cursor-pointer block">
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{ backgroundImage: `url("${getImage(8, '/images/startbuttons/gutschein.jpg')}")` }}
+                style={{ backgroundImage: `url("${getImage(8, '/images/startbuttons/gutschein.webp')}")` }}
               ></div>
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-dark/90 via-luxury-dark/40 to-black/20"></div>
               <div className="absolute inset-4 border border-white/20 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
@@ -302,7 +302,7 @@ export const Home = () => {
             <Link to="/reisen/kolumbien-tour" className="relative h-[400px] group overflow-hidden bg-white shadow-xl cursor-pointer block">
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{ backgroundImage: `url("${getImage(9, '/images/bilder/2-tour-kolumbien/Kolumbien_3997_2.jpg')}")` }}
+                style={{ backgroundImage: `url("${getImage(9, '/images/bilder/2-tour-kolumbien/Kolumbien_3997_2.webp')}")` }}
               ></div>
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-dark/90 via-luxury-dark/40 to-black/20"></div>
               <div className="absolute inset-4 border border-white/20 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
@@ -377,13 +377,13 @@ export const Home = () => {
               <div className="flex justify-center gap-x-10 sm:gap-x-16">
                 <div className="flex flex-col items-center group cursor-pointer">
                   <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
-                    <img src="/images/team/schlink.jpg" className="w-full h-full rounded-full object-cover" alt="Alex" />
+                    <img src="/images/team/schlink.webp" className="w-full h-full rounded-full object-cover" alt="Alex" />
                   </div>
                   <span className="font-luxury text-lg text-luxury-dark tracking-wide">Alex</span>
                 </div>
                 <div className="flex flex-col items-center group cursor-pointer">
                   <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
-                    <img src="/images/team/sarah.jpg" className="w-full h-full rounded-full object-cover" alt="Sarah" />
+                    <img src="/images/team/sarah.webp" className="w-full h-full rounded-full object-cover" alt="Sarah" />
                   </div>
                   <span className="font-luxury text-lg text-luxury-dark tracking-wide">Sarah</span>
                 </div>
@@ -391,19 +391,19 @@ export const Home = () => {
               <div className="flex flex-wrap justify-center gap-x-6 sm:gap-x-10 gap-y-10">
                 <div className="flex flex-col items-center group cursor-pointer">
                   <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
-                    <img src="/images/team/tobi.jpg" className="w-full h-full rounded-full object-cover" alt="Tobi" />
+                    <img src="/images/team/tobi.webp" className="w-full h-full rounded-full object-cover" alt="Tobi" />
                   </div>
                   <span className="font-luxury text-lg text-luxury-dark tracking-wide">Tobi</span>
                 </div>
                 <div className="flex flex-col items-center group cursor-pointer">
                   <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
-                    <img src="/images/team/holger.jpg" className="w-full h-full rounded-full object-cover" alt="Holger" />
+                    <img src="/images/team/holger.webp" className="w-full h-full rounded-full object-cover" alt="Holger" />
                   </div>
                   <span className="font-luxury text-lg text-luxury-dark tracking-wide">Holger</span>
                 </div>
                 <div className="flex flex-col items-center group cursor-pointer">
                   <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
-                    <img src="/images/team/markus.jpg" className="w-full h-full rounded-full object-cover" alt="Markus" />
+                    <img src="/images/team/markus.webp" className="w-full h-full rounded-full object-cover" alt="Markus" />
                   </div>
                   <span className="font-luxury text-lg text-luxury-dark tracking-wide">Markus</span>
                 </div>
@@ -476,14 +476,14 @@ export const Home = () => {
           <div className="w-full lg:w-1/2 flex gap-4 h-[600px]">
             <div className="w-1/2 h-full pt-12">
               <img
-                src={getImage(10, '/images/ausbildung-2.jpg')}
+                src={getImage(10, '/images/ausbildung-2.webp')}
                 alt="Essential 1"
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="w-1/2 h-full pb-12">
               <img
-                src={getImage(11, '/images/ausbildung-3.jpg')}
+                src={getImage(11, '/images/ausbildung-3.webp')}
                 alt="Essential 2"
                 className="w-full h-full object-cover"
               />

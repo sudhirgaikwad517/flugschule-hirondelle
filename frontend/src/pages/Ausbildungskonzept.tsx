@@ -53,7 +53,7 @@ export const Ausbildungskonzept = () => {
               {/* Graphic */}
               <div className="w-full max-w-2xl mb-2">
                 <img 
-                  src="https://www.fs-hirondelle.de/images/inhalte/ausbildungswege.png" 
+                  src="https://www.fs-hirondelle.de/images/inhalte/ausbildungswege.webp" 
                   alt="Ausbildungswege Grafik" 
                   className="w-full object-contain"
                   onError={(e) => {

@@ -27,7 +27,7 @@ export const Schnupperkurs = () => {
             {/* Featured Image */}
             <div className="w-full h-[400px] overflow-hidden rounded-sm shadow-sm group">
               <img 
-                src="/images/schnupperkurs/hero.jpg"
+                src="/images/schnupperkurs/hero.webp"
                 alt="Schnupperkurs"
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
               />
@@ -138,7 +138,7 @@ export const Schnupperkurs = () => {
                  {Array.from({ length: 9 }, (_, i) => i + 1).map((n, index) => (
                    <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
                      <img
-                       src={`/images/schnupperkurs/gallery-${n}.jpg`}
+                       src={`/images/schnupperkurs/gallery-${n}.webp`}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />

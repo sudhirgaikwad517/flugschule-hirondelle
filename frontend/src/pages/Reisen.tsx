@@ -52,7 +52,7 @@ export const Reisen = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="/images/reisen/brasilien.jpg" alt="Brasilien Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/reisen/brasilien.webp" alt="Brasilien Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -77,7 +77,7 @@ export const Reisen = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="/images/reisen/kolumbien.jpg" alt="Kolumbien Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/reisen/kolumbien.webp" alt="Kolumbien Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -102,7 +102,7 @@ export const Reisen = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="/images/reisen/suedafrika.jpg" alt="Südafrika Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/reisen/suedafrika.webp" alt="Südafrika Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -127,7 +127,7 @@ export const Reisen = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="/images/reisen/bassano.jpg" alt="Bassano Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/reisen/bassano.webp" alt="Bassano Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -152,7 +152,7 @@ export const Reisen = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="/images/reisen/slowenien.jpg" alt="Slowenien Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/reisen/slowenien.webp" alt="Slowenien Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -177,7 +177,7 @@ export const Reisen = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="/images/reisen/griechenland.jpg" alt="Griechenland Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/reisen/griechenland.webp" alt="Griechenland Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -202,7 +202,7 @@ export const Reisen = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="/images/reisen/bergamo.jpg" alt="Bergamo Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/reisen/bergamo.webp" alt="Bergamo Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -227,7 +227,7 @@ export const Reisen = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="/images/reisen/savoye.jpg" alt="Savoyer Alpentour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/reisen/savoye.webp" alt="Savoyer Alpentour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -252,7 +252,7 @@ export const Reisen = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="/images/reisen/vogesen.jpg" alt="Vogesen Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/reisen/vogesen.webp" alt="Vogesen Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -277,7 +277,7 @@ export const Reisen = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="/images/reisen/pfalz.jpg" alt="Pfalz Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/reisen/pfalz.webp" alt="Pfalz Tour" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>

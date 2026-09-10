@@ -27,7 +27,7 @@ export const SavoyeTour = () => {
             {/* Main Image */}
             <div className="w-full h-[400px] relative overflow-hidden rounded-sm shadow-sm">
               <img 
-                src="/images/reisen/savoye.jpg"
+                src="/images/reisen/savoye.webp"
                 alt="Savoyer Alpentour"
                 className="w-full h-full object-cover transition-transform duration-1000 hover:scale-105"
               />
@@ -136,7 +136,7 @@ export const SavoyeTour = () => {
                  Die Tour ist auch als Geschenk-Gutschein möglich
                </p>
                <div className="relative h-40 w-full rounded-sm overflow-hidden group cursor-pointer mb-4">
-                 <img src="/images/gutscheine/gutschein.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
+                 <img src="/images/gutscheine/gutschein.webp" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
                  <div className="absolute right-0 top-0 bottom-0 w-16 bg-[#0088cc] flex items-center justify-center">
                    <div className="rotate-[-90deg] text-white font-bold tracking-widest whitespace-nowrap">Gutschein</div>
@@ -153,7 +153,7 @@ export const SavoyeTour = () => {
                  {Array.from({ length: 10 }, (_, i) => (i % 6) + 1).map((n, index) => (
                    <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-900">
                      <img
-                       src={`/images/tour-savoye/gallery-${n}.jpg`}
+                       src={`/images/tour-savoye/gallery-${n}.webp`}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />

@@ -15,16 +15,16 @@ interface PageMedia {
 // Real photos ported from the old site (images/1-sicherheit_gardasee/) -
 // used whenever no admin gallery is configured via the pagemedia API, so
 // the page never falls back to an unrelated stock photo.
-const FALLBACK_HERO_IMAGE = '/images/performance/sicherheitstraining.jpg';
+const FALLBACK_HERO_IMAGE = '/images/performance/sicherheitstraining.webp';
 const FALLBACK_GALLERY = [
-  '/images/sicherheitstraining/gallery/gallery-1.jpg',
-  '/images/sicherheitstraining/gallery/gallery-2.jpg',
-  '/images/sicherheitstraining/gallery/gallery-3.jpg',
-  '/images/sicherheitstraining/gallery/gallery-4.jpg',
-  '/images/sicherheitstraining/gallery/gallery-5.jpg',
-  '/images/sicherheitstraining/gallery/gallery-6.jpg',
-  '/images/sicherheitstraining/gallery/gallery-7.jpg',
-  '/images/sicherheitstraining/gallery/gallery-8.jpg',
+  '/images/sicherheitstraining/gallery/gallery-1.webp',
+  '/images/sicherheitstraining/gallery/gallery-2.webp',
+  '/images/sicherheitstraining/gallery/gallery-3.webp',
+  '/images/sicherheitstraining/gallery/gallery-4.webp',
+  '/images/sicherheitstraining/gallery/gallery-5.webp',
+  '/images/sicherheitstraining/gallery/gallery-6.webp',
+  '/images/sicherheitstraining/gallery/gallery-7.webp',
+  '/images/sicherheitstraining/gallery/gallery-8.webp',
 ];
 
 // The API's galleryImages column is stored as a JSON string, but may come
@@ -201,7 +201,7 @@ export const Sicherheitstraining = () => {
                  Das Sicherheitstraining ist auch als Geschenk-Gutschein möglich.
                </p>
                <div className="w-full h-[180px] rounded-sm overflow-hidden shadow-sm relative group cursor-pointer border border-gray-200">
-                  <img src="/images/gutscheine/gutschein.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
+                  <img src="/images/gutscheine/gutschein.webp" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                   <div className="absolute bottom-4 left-4">
                      <p className="text-white font-luxury text-3xl font-bold italic opacity-90 drop-shadow-md tracking-wider">GUTSCHEIN</p>
@@ -279,7 +279,7 @@ export const Sicherheitstraining = () => {
                 Das Team bei den exclusiven Sicherheitstrainings besteht aus dem Trainingsleiter, einem erfahrenen Startleiter und einem Kameramann für die Videoaufzeichnungen. Wir arbeiten mit mind. zwei Fluglehrern, einem am Startplatz und dem Trainingsleiter direkt am See, so dass dieser im Falle einer Wasserlandung schnell mit dem einsatzbereiten Rettungsboot in kürzester Zeit bei dir ist. Der Fluglehrer am Startplatz steht für alle noch offenen Fragen zur Verfügung, gibt dir wertvolle Tipps beim Start und sorgt für einen reibungslosen und stressfreien Ablauf am Startplatz. Nach dem Start begleitet er dich über Funk, bis der Fluglehrer am See übernimmt und du die im Vorfeld vereinbarten Flugfiguren beginnen kannst. Die Übungen werden von unserem Kameramann auf Video aufgenommen. Während deiner Flüge bekommst du in der Luft über Funk Hilfen und Anweisungen zu deinen Übungen und sofortige Korrekturen bei eventuellen Fehlern. Da immer nur ein Teilnehmer Übungen durchführt, kann auf das Flugkönnen jedes Einzelnen genauestens eingegangen werden.
               </p>
               <div className="flex items-center gap-6 bg-gray-50 p-6 rounded-sm border border-gray-100 shadow-sm inline-flex">
-                <img src="/images/team/schlink.jpg" alt="Alex Schlink" className="w-20 h-20 rounded-full object-cover border-2 border-luxury-gold/30" />
+                <img src="/images/team/schlink.webp" alt="Alex Schlink" className="w-20 h-20 rounded-full object-cover border-2 border-luxury-gold/30" />
                 <p className="font-medium text-[15px] text-luxury-dark text-left">Startleiter: Alex, Performance-Trainer<br/>und Ausbildungsleiter der Flugschule Hirondelle</p>
               </div>
             </div>
