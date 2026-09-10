@@ -114,9 +114,12 @@ export const Header = () => {
               <Link to="/" className={getNavClass('/')}>
                 <span className="flex items-center justify-center">
                   H
-                  <span className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-full bg-white mx-[2px] shrink-0">
-                    <img src="/bird-badge.png" alt="O" className="w-[13px] h-[13px] object-contain" />
-                  </span>
+                  {/* bird-badge.png already has its own white circle baked
+                      in (a wrapping bg-white circle here shrinks the image
+                      down further, making its thin blue bird linework
+                      anti-alias into near-invisibility) - render it alone,
+                      large enough for the blue to actually read. */}
+                  <img src="/bird-badge.png" alt="O" className="w-[22px] h-[22px] object-contain mx-[1px] shrink-0" />
                   ME
                 </span>
               </Link>
