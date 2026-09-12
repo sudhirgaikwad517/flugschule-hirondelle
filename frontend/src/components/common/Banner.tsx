@@ -172,13 +172,16 @@ export const Banner = ({ variant = 'subpage' }: BannerProps) => {
   // Identical formula for home and subpage; no separate sizing needed.
   //
   // On subpages specifically (not home), the old site's banner div starts
-  // almost at the very top of the page (measured top ~6px) while its fixed
-  // nav bar(s) render on top of it, opaque - so on screen, the top ~40px of
-  // the banner is actually hidden behind the header, making the VISIBLE
-  // banner shorter than its own box height. Replicated here with a
-  // negative top margin on desktop only (home already matches with zero
-  // overlap, and mobile was explicitly asked to stay untouched).
-  const subpageDesktopOverlap = variant === 'subpage' ? 'md:-mt-[40px]' : '';
+  // at top:6px (not 0) while the 40px fixed nav renders opaque on top of
+  // it - so only 34px of the banner is actually hidden, not the full 40.
+  // Verified precisely against the live Ausbildung subpage at 1366px:
+  // old's visible banner (measuring from the nav's bottom edge to the
+  // banner's own bottom edge, ignoring the separate tour/course sub-menu
+  // row) is exactly 512px; -mt-[34px] here reproduces that exactly
+  // (546px box - 34px overlap = 512px visible). Desktop only - home
+  // already matches with zero overlap, and mobile was explicitly asked
+  // to stay untouched.
+  const subpageDesktopOverlap = variant === 'subpage' ? 'md:-mt-[34px]' : '';
 
   return (
     <section className={`relative w-full h-[max(40vw,150px)] flex flex-col items-center justify-center text-center text-white overflow-hidden group ${subpageDesktopOverlap}`}>
