@@ -170,8 +170,18 @@ export const Banner = ({ variant = 'subpage' }: BannerProps) => {
   // width (which is always the full viewport width, on every page), with
   // a 150px floor - confirmed at viewports from 280px up to 2560px wide.
   // Identical formula for home and subpage; no separate sizing needed.
+  //
+  // On subpages specifically (not home), the old site's banner div starts
+  // almost at the very top of the page (measured top ~6px) while its fixed
+  // nav bar(s) render on top of it, opaque - so on screen, the top ~40px of
+  // the banner is actually hidden behind the header, making the VISIBLE
+  // banner shorter than its own box height. Replicated here with a
+  // negative top margin on desktop only (home already matches with zero
+  // overlap, and mobile was explicitly asked to stay untouched).
+  const subpageDesktopOverlap = variant === 'subpage' ? 'md:-mt-[40px]' : '';
+
   return (
-    <section className="relative w-full h-[max(40vw,150px)] flex flex-col items-center justify-center text-center text-white overflow-hidden group">
+    <section className={`relative w-full h-[max(40vw,150px)] flex flex-col items-center justify-center text-center text-white overflow-hidden group ${subpageDesktopOverlap}`}>
 
       {/* Background Images - Ken Burns effect ported from the css-101.org
           reference: opacity fades in over 3s while the zoom (scale 1 ->
