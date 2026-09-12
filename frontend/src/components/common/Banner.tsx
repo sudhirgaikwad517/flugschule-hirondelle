@@ -174,17 +174,16 @@ export const Banner = ({ variant = 'subpage' }: BannerProps) => {
   // On subpages specifically (not home), the old site's banner div starts
   // at top:6px (not 0) while the 40px fixed nav renders opaque on top of
   // it - so only 34px of the banner is actually hidden, not the full 40.
-  // Verified precisely against the live Ausbildung subpage at 1366px:
-  // old's visible banner (measuring from the nav's bottom edge to the
-  // banner's own bottom edge, ignoring the separate tour/course sub-menu
-  // row) is exactly 512px; -mt-[34px] here reproduces that exactly
-  // (546px box - 34px overlap = 512px visible). Desktop only - home
-  // already matches with zero overlap, and mobile was explicitly asked
-  // to stay untouched.
+  // Kept exactly as-is per explicit request. The box height itself is now
+  // a fixed 432px VISIBLE (i.e. measured from the nav's bottom edge) on
+  // desktop, replacing the old 40vw-based box height for this variant -
+  // box height 466px - the 34px overlap = 432px visible. Desktop only;
+  // mobile and the home variant are untouched.
   const subpageDesktopOverlap = variant === 'subpage' ? 'md:-mt-[34px]' : '';
+  const subpageDesktopHeight = variant === 'subpage' ? 'md:h-[466px]' : '';
 
   return (
-    <section className={`relative w-full h-[max(40vw,150px)] flex flex-col items-center justify-center text-center text-white overflow-hidden group ${subpageDesktopOverlap}`}>
+    <section className={`relative w-full h-[max(40vw,150px)] ${subpageDesktopHeight} flex flex-col items-center justify-center text-center text-white overflow-hidden group ${subpageDesktopOverlap}`}>
 
       {/* Background Images - Ken Burns effect ported from the css-101.org
           reference: opacity fades in over 3s while the zoom (scale 1 ->
