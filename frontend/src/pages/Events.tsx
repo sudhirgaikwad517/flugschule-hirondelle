@@ -357,7 +357,8 @@ export const Events = () => {
             <div className="space-y-6">
               {filteredEvents.map(event => {
                 const colorObj = categoryColors[event.category] || categoryColors['Sonstiges'];
-                
+                const isPastEvent = new Date() > new Date(event.end || event.start);
+
                 // Calculate spaces
                 const totalCapacity = event.maxParticipants || 0;
                 const totalBooked = event.tickets?.reduce((sum, t) => sum + (t.bookedCount || 0), 0) || 0;
@@ -462,12 +463,18 @@ export const Events = () => {
                           </div>
                           
                           <div className="flex gap-2 w-full sm:w-auto">
-                            <button 
-                              onClick={() => navigate(`/buchungskalender/${event.id}`)}
-                              className="flex-1 sm:flex-none px-6 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition"
-                            >
-                              Buchen
-                            </button>
+                            {isPastEvent && !event.cancelled ? (
+                              <span className="flex-1 sm:flex-none px-6 py-2 text-gray-400 font-medium text-sm text-center">
+                                Bereits stattgefunden
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => navigate(`/buchungskalender/${event.id}`)}
+                                className="flex-1 sm:flex-none px-6 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition"
+                              >
+                                Buchen
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>

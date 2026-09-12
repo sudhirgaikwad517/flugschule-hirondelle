@@ -34,7 +34,13 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
       .catch(() => setParticipants(null));
   }, [event?.id]);
 
-  const isPastDeadline = event.registrationDeadline && new Date() > new Date(event.registrationDeadline);
+  // Most migrated events have no registrationDeadline set at all (null), so
+  // isPastDeadline alone never catches an event whose own date has simply
+  // already happened - that let a "Jetzt buchen" button show for events
+  // long over. Falls back to the event's own start date when there's no
+  // explicit deadline.
+  const isPastEvent = new Date() > new Date(event.end || event.endDate || event.start || event.startDate);
+  const isPastDeadline = isPastEvent || (event.registrationDeadline && new Date() > new Date(event.registrationDeadline));
   const paidPrices = event.tickets?.map((t: Ticket) => t.price).filter((p: number) => p > 0) || [];
   const minPrice = paidPrices.length > 0 ? Math.min(...paidPrices) : 0;
   const maxPrice = event.tickets?.length > 0 ? Math.max(...event.tickets.map((t: Ticket) => t.price)) : 0;
@@ -159,7 +165,7 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
               ) : isPastDeadline ? (
                 <div className="flex items-start gap-3 text-red-700">
                   <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                  <span className="font-semibold">Die Anmeldefrist ist überschritten.</span>
+                  <span className="font-semibold">{isPastEvent ? 'Diese Veranstaltung hat bereits stattgefunden.' : 'Die Anmeldefrist ist überschritten.'}</span>
                 </div>
               ) : (
                 <div className="flex flex-col gap-6">
@@ -282,7 +288,7 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
                   <tr className="border-b border-gray-100">
                     <td className="py-3 px-5 font-semibold text-gray-500 w-1/3">Status</td>
                     <td className="py-3 px-5 text-gray-700">
-                      {event.cancelled ? <span className="text-red-700 font-semibold">Storniert</span> : isPastDeadline ? 'Anmeldeschluss vorbei' : 'Anmeldung offen'}
+                      {event.cancelled ? <span className="text-red-700 font-semibold">Storniert</span> : isPastEvent ? 'Bereits stattgefunden' : isPastDeadline ? 'Anmeldeschluss vorbei' : 'Anmeldung offen'}
                     </td>
                   </tr>
                   <tr className="border-b border-gray-100">
