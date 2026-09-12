@@ -184,7 +184,10 @@ export const Buchungskalender = () => {
                 </p>
                 <div className="mb-8 w-full">
                   <span className="text-[14px] mr-4 text-gray-500 italic font-luxury text-lg">Hier geht's zur</span>
-                  <button className="px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm">
+                  <button
+                    onClick={() => navigate('/events')}
+                    className="px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[14px] font-semibold rounded-sm"
+                  >
                     LISTENANSICHT
                   </button>
                 </div>
@@ -199,13 +202,13 @@ export const Buchungskalender = () => {
               <div className="grid grid-cols-2 gap-2 mb-2">
                 <button
                   onClick={() => setHiddenCategories(new Set())}
-                  className="w-full py-2 text-[10px] font-bold tracking-widest uppercase transition-opacity hover:opacity-90 rounded-sm bg-luxury-slate text-white"
+                  className="w-full py-2 text-[14px] font-bold tracking-widest uppercase transition-opacity hover:opacity-90 rounded-sm bg-luxury-slate text-white"
                 >
                   Alle anzeigen
                 </button>
                 <button
                   onClick={() => setHiddenCategories(new Set(ALL_CATEGORIES))}
-                  className="w-full py-2 text-[10px] font-bold tracking-widest uppercase transition-opacity hover:opacity-90 rounded-sm bg-gray-300 text-gray-700"
+                  className="w-full py-2 text-[14px] font-bold tracking-widest uppercase transition-opacity hover:opacity-90 rounded-sm bg-gray-300 text-gray-700"
                 >
                   Alle ausblenden
                 </button>
@@ -217,7 +220,7 @@ export const Buchungskalender = () => {
                     <button
                       key={cat}
                       onClick={() => toggleCategory(cat as Category)}
-                      className={`w-full py-2.5 px-2 text-[10px] font-bold tracking-widest uppercase truncate transition-all hover:opacity-90 rounded-sm ${hiddenCategories.has(cat as Category) ? 'opacity-30 line-through' : ''}`}
+                      className={`w-full py-2.5 px-2 text-[14px] font-bold tracking-widest uppercase truncate transition-all hover:opacity-90 rounded-sm ${hiddenCategories.has(cat as Category) ? 'opacity-30 line-through' : ''}`}
                       style={{ backgroundColor: categoryColors[cat as Category].bg, color: categoryColors[cat as Category].text }}
                     >
                       {cat}
@@ -230,7 +233,7 @@ export const Buchungskalender = () => {
                     <button
                       key={cat}
                       onClick={() => toggleCategory(cat as Category)}
-                      className={`w-full py-2.5 px-2 text-[10px] font-bold tracking-widest uppercase truncate transition-all hover:opacity-90 rounded-sm ${hiddenCategories.has(cat as Category) ? 'opacity-30 line-through' : ''}`}
+                      className={`w-full py-2.5 px-2 text-[14px] font-bold tracking-widest uppercase truncate transition-all hover:opacity-90 rounded-sm ${hiddenCategories.has(cat as Category) ? 'opacity-30 line-through' : ''}`}
                       style={{ backgroundColor: categoryColors[cat as Category].bg, color: categoryColors[cat as Category].text }}
                     >
                       {cat}
@@ -371,7 +374,7 @@ export const Buchungskalender = () => {
                           color: item.event.calendarTextColor || categoryColors[item.event.category]?.text || '#374151',
                         }}
                       >
-                        <span className={`font-semibold leading-tight ${item.event.cancelled ? 'line-through' : ''} ${isSingleDay ? 'text-[11px] block text-center w-full' : 'text-[10px] block'}`}>
+                        <span className={`font-semibold leading-tight ${item.event.cancelled ? 'line-through' : ''} ${isSingleDay ? 'text-[14px] block text-center w-full' : 'text-[14px] block'}`}>
                           {displayText}
                         </span>
                       </div>
