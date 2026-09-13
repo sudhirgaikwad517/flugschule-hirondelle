@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { EventComments } from '../common/EventComments';
 
 interface Ticket {
   id: string;
@@ -314,9 +313,6 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
             </div>
           </div>
 
-          <div className="print:hidden">
-            <EventComments eventId={event.id} />
-          </div>
         </div>
 
         {/* Right Column - Sidebar */}

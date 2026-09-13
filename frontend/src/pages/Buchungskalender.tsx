@@ -98,9 +98,14 @@ export const Buchungskalender = () => {
 
   // Helper to determine layout rows for events in a month
   const getEventRowsForMonth = (monthIndex: number, daysInMonth: number) => {
-    const monthStart = new Date(activeYear, monthIndex, 1);
-    const monthEnd = new Date(activeYear, monthIndex, daysInMonth);
-    
+    // Event dates are stored as naive German wall-clock values serialized with
+    // a "Z" (UTC) suffix - so month/day boundaries must be built with
+    // Date.UTC and events positioned via getUTCDate(), not the local-timezone
+    // Date methods, otherwise a viewer whose browser timezone differs enough
+    // can see an event shifted onto the wrong calendar day.
+    const monthStart = new Date(Date.UTC(activeYear, monthIndex, 1));
+    const monthEnd = new Date(Date.UTC(activeYear, monthIndex, daysInMonth, 23, 59, 59, 999));
+
     // Find events that overlap with this month
     const monthEvents = filteredEvents.filter(e => {
       return e.start <= monthEnd && e.end >= monthStart;
@@ -116,8 +121,8 @@ export const Buchungskalender = () => {
 
     monthEvents.forEach(e => {
       // Calculate start and end day clamped to this month (1-indexed)
-      const startDay = e.start < monthStart ? 1 : e.start.getDate();
-      const endDay = e.end > monthEnd ? daysInMonth : e.end.getDate();
+      const startDay = e.start < monthStart ? 1 : e.start.getUTCDate();
+      const endDay = e.end > monthEnd ? daysInMonth : e.end.getUTCDate();
 
       // Find first row where it fits
       let rowIndex = 0;
@@ -366,7 +371,7 @@ export const Buchungskalender = () => {
                             </a>
                           </div>
                         `)}
-                        className={`event-block rounded-sm px-1 py-[2px] m-[2px] shadow-sm cursor-pointer hover:opacity-90 transition-opacity z-20 ${item.event.cancelled ? 'opacity-50' : ''} ${isSingleDay ? 'flex items-center whitespace-nowrap overflow-hidden text-ellipsis h-[24px]' : 'block whitespace-normal break-words h-full min-h-[24px]'}`}
+                        className={`event-block rounded-sm px-1 py-[2px] m-[2px] shadow-sm cursor-pointer hover:opacity-90 transition-opacity z-20 flex items-center whitespace-nowrap overflow-hidden text-ellipsis h-[24px] ${item.event.cancelled ? 'opacity-50' : ''}`}
                         style={{
                           gridColumn: `${item.startDay} / ${item.endDay + 1}`,
                           gridRow: rIdx + 2,
@@ -374,7 +379,7 @@ export const Buchungskalender = () => {
                           color: item.event.calendarTextColor || categoryColors[item.event.category]?.text || '#374151',
                         }}
                       >
-                        <span className={`font-semibold leading-tight ${item.event.cancelled ? 'line-through' : ''} ${isSingleDay ? 'text-[14px] block text-center w-full' : 'text-[14px] block'}`}>
+                        <span className={`font-semibold leading-tight text-[14px] block text-center w-full truncate ${item.event.cancelled ? 'line-through' : ''}`}>
                           {displayText}
                         </span>
                       </div>
