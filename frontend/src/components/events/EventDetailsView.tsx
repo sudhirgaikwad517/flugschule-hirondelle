@@ -45,6 +45,12 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
   const minPrice = paidPrices.length > 0 ? Math.min(...paidPrices) : 0;
   const maxPrice = event.tickets?.length > 0 ? Math.max(...event.tickets.map((t: Ticket) => t.price)) : 0;
   const hasMultiplePrices = event.tickets?.length > 1 && minPrice !== maxPrice;
+  // The ticket rows already show "(Ausgebucht - Warteliste)" per ticket and
+  // the book button already switches to "Auf Warteliste eintragen" once
+  // the selected quantity would exceed capacity - but the Status field in
+  // the sidebar never reflected this at all, always saying "Anmeldung
+  // offen" even for an event where every ticket is already over capacity.
+  const isFullyBooked = !!event.tickets?.length && event.tickets.every((t: Ticket) => (t.bookedCount || 0) >= (t.capacity || 0));
 
   const isWaitlistBooking = React.useMemo(() => {
     if (!event.tickets) return false;
@@ -288,7 +294,7 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
                   <tr className="border-b border-gray-100">
                     <td className="py-3 px-5 font-semibold text-gray-500 w-1/3">Status</td>
                     <td className="py-3 px-5 text-gray-700">
-                      {event.cancelled ? <span className="text-red-700 font-semibold">Storniert</span> : isPastEvent ? 'Bereits stattgefunden' : isPastDeadline ? 'Anmeldeschluss vorbei' : 'Anmeldung offen'}
+                      {event.cancelled ? <span className="text-red-700 font-semibold">Storniert</span> : isPastEvent ? 'Bereits stattgefunden' : isPastDeadline ? 'Anmeldeschluss vorbei' : isFullyBooked ? <span className="text-orange-600 font-semibold">Ausgebucht (Warteliste)</span> : 'Anmeldung offen'}
                     </td>
                   </tr>
                   <tr className="border-b border-gray-100">
