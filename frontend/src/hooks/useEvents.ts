@@ -59,6 +59,7 @@ export interface CalendarEvent {
   tickets?: Ticket[];
   tags?: string;
   eventNumber?: string;
+  bookingNumber?: string;
   seriesId?: string;
   cancelled?: boolean;
   tieredFees?: boolean;
@@ -100,6 +101,7 @@ export const useEvents = () => {
           tickets: e.tickets,
           tags: e.tags,
           eventNumber: e.eventNumber,
+          bookingNumber: e.bookingNumber,
           seriesId: e.seriesId,
           cancelled: e.cancelled,
           tieredFees: e.tieredFees,

@@ -34,6 +34,23 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
       .catch(() => setParticipants(null));
   }, [event?.id]);
 
+  // Loads X's own share-button widget script once (avoid re-loading it via
+  // an `.id` guard); on later navigations between events, the script is
+  // already present, so just ask it to re-scan for the current page's
+  // .twitter-share-button anchor instead.
+  React.useEffect(() => {
+    const scriptId = 'twitter-wjs';
+    if (!document.getElementById(scriptId)) {
+      const js = document.createElement('script');
+      js.id = scriptId;
+      js.src = 'https://platform.twitter.com/widgets.js';
+      js.async = true;
+      document.body.appendChild(js);
+    } else if ((window as any).twttr?.widgets) {
+      (window as any).twttr.widgets.load();
+    }
+  }, [event?.id]);
+
   // Most migrated events have no registrationDeadline set at all (null), so
   // isPastDeadline alone never catches an event whose own date has simply
   // already happened - that let a "Jetzt buchen" button show for events
@@ -51,6 +68,13 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
   // the sidebar never reflected this at all, always saying "Anmeldung
   // offen" even for an event where every ticket is already over capacity.
   const isFullyBooked = !!event.tickets?.length && event.tickets.every((t: Ticket) => (t.bookedCount || 0) >= (t.capacity || 0));
+
+  // Old site's "Freie Plätze": event-wide capacity minus the sum of only
+  // ACTIVE (our CONFIRMED, via ticket.bookedCount) bookings across every
+  // ticket - matches MatukioHelperUtilsEvents::getEventBookableArray()
+  // exactly (maxpupil - gebucht, floored at 0).
+  const totalBookedActive = (event.tickets || []).reduce((sum: number, t: Ticket) => sum + (t.bookedCount || 0), 0);
+  const freiePlaetze = event.maxParticipants ? Math.max(0, event.maxParticipants - totalBookedActive) : null;
 
   const isWaitlistBooking = React.useMemo(() => {
     if (!event.tickets) return false;
@@ -105,8 +129,15 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
             <div className="flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
               <span>
-                {new Date(event.start || event.startDate).toLocaleDateString('de-DE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                {event.end && event.end !== event.start ? ` bis ${new Date(event.end || event.endDate).toLocaleDateString('de-DE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}` : ''}
+                {/* Dates are stored as naive wall-clock values (no real
+                    timezone - matches how the old site stored them too),
+                    serialized with a UTC "Z" suffix - formatting with the
+                    viewer's own local timezone would silently shift the
+                    displayed date/time depending on where they are.
+                    timeZone: 'UTC' displays the stored value as-is for
+                    every viewer, everywhere. */}
+                {new Date(event.start || event.startDate).toLocaleDateString('de-DE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}
+                {event.end && event.end !== event.start ? ` bis ${new Date(event.end || event.endDate).toLocaleDateString('de-DE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}` : ''}
               </span>
             </div>
             
@@ -221,6 +252,14 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
             </div>
           </div>
 
+          {/* X (Twitter) share button - same widget markup as the old site
+              (templates/hirondelle2015/html/com_matukio/event/modern.php):
+              a plain twitter-share-button anchor rendered by X's own
+              widgets.js, which now draws it as the black "Post" button. */}
+          <div className="print:hidden">
+            <a href="https://twitter.com/share" className="twitter-share-button" data-lang="en">Tweet</a>
+          </div>
+
           {/* Event Details Box */}
           <div className="bg-gray-50 border border-gray-200 rounded-sm overflow-hidden mb-12">
             <div className="bg-luxury-slate text-white py-3 px-5 font-luxury text-xl tracking-wide">
@@ -291,12 +330,29 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
             <div className="p-0">
               <table className="w-full text-sm text-left">
                 <tbody>
+                  {event.bookingNumber && (
+                    <tr className="border-b border-gray-100">
+                      <td className="py-3 px-5 font-semibold text-gray-500 w-1/3">Nummer</td>
+                      <td className="py-3 px-5 text-gray-700">{event.bookingNumber}</td>
+                    </tr>
+                  )}
                   <tr className="border-b border-gray-100">
                     <td className="py-3 px-5 font-semibold text-gray-500 w-1/3">Status</td>
                     <td className="py-3 px-5 text-gray-700">
                       {event.cancelled ? <span className="text-red-700 font-semibold">Storniert</span> : isPastEvent ? 'Bereits stattgefunden' : isPastDeadline ? 'Anmeldeschluss vorbei' : isFullyBooked ? <span className="text-orange-600 font-semibold">Ausgebucht (Warteliste)</span> : 'Anmeldung offen'}
                     </td>
                   </tr>
+                  {freiePlaetze !== null && (
+                    <tr className="border-b border-gray-100">
+                      <td className="py-3 px-5 font-semibold text-gray-500 w-1/3">Freie Plätze</td>
+                      <td className="py-3 px-5 text-gray-700">
+                        {freiePlaetze}
+                        {freiePlaetze === 0 && !event.cancelled && !isPastEvent && (
+                          <span className="text-orange-600"> *Ihre Buchung wird auf der Warteliste durchgeführt.</span>
+                        )}
+                      </td>
+                    </tr>
+                  )}
                   <tr className="border-b border-gray-100">
                     <td className="py-3 px-5 font-semibold text-gray-500">Info</td>
                     <td className="py-3 px-5 text-gray-700">
@@ -306,7 +362,7 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
                   <tr className="border-b border-gray-100">
                     <td className="py-3 px-5 font-semibold text-gray-500">Anmelde-schluss</td>
                     <td className="py-3 px-5 text-gray-700">
-                      {event.registrationDeadline ? new Date(event.registrationDeadline).toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'}
+                      {event.registrationDeadline ? new Date(event.registrationDeadline).toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) : '-'}
                     </td>
                   </tr>
                   <tr>
@@ -352,7 +408,7 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
                     onClick={() => onSelectAdditionalDate?.(d.id)}
                     className="text-left text-luxury-gold hover:underline text-sm"
                   >
-                    {new Date(d.start).toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit' })}, {new Date(d.start).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(d.start).toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC' })}, {new Date(d.start).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}
                   </button>
                 ))}
               </div>

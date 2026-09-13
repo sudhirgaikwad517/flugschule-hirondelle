@@ -388,8 +388,12 @@ export const Events = () => {
                         </div>
                       )}
                       <div className="absolute top-0 left-0 bg-white bg-opacity-90 px-3 py-2 text-center rounded-br-lg shadow-sm">
-                        <div className="text-xs font-bold text-gray-500 uppercase">{event.start.toLocaleDateString('de-DE', { month: 'short' })}</div>
-                        <div className="text-2xl font-black text-gray-800">{event.start.getDate()}</div>
+                        {/* Stored dates are naive wall-clock values serialized
+                            with a UTC "Z" suffix (see EventDetailsView.tsx) -
+                            UTC methods/timeZone keep this consistent for
+                            every viewer regardless of their own timezone. */}
+                        <div className="text-xs font-bold text-gray-500 uppercase">{event.start.toLocaleDateString('de-DE', { month: 'short', timeZone: 'UTC' })}</div>
+                        <div className="text-2xl font-black text-gray-800">{event.start.getUTCDate()}</div>
                       </div>
                     </div>
                     
@@ -425,7 +429,7 @@ export const Events = () => {
                         <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-500 mb-4">
                           <div className="flex items-center gap-1.5">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            {event.start.toLocaleDateString('de-DE')} {event.end > event.start && `- ${event.end.toLocaleDateString('de-DE')}`}
+                            {event.start.toLocaleDateString('de-DE', { timeZone: 'UTC' })} {event.end > event.start && `- ${event.end.toLocaleDateString('de-DE', { timeZone: 'UTC' })}`}
                           </div>
                           {event.location && (
                             <div className="flex items-center gap-1.5">

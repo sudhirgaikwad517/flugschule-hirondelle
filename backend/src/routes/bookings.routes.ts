@@ -717,8 +717,14 @@ async function createBookingAtomic(params: {
           include: { items: { include: { booking: { select: { status: true } } } } }
         });
         if (ticket) {
+          // Same fix as events.routes.ts's bookedCount: only CONFIRMED
+          // reduces real capacity (matches old Matukio's ACTIVE-only rule) -
+          // this filter previously excluded only 'CANCELLED', a status this
+          // schema never uses, so WAITLIST/COMPLETED bookings were
+          // incorrectly counted here too, pushing brand-new bookings onto
+          // the waitlist even when real seats were still open.
           const bookedCount = ticket.items
-            .filter(i => i.booking.status !== 'CANCELLED')
+            .filter(i => i.booking.status === 'CONFIRMED')
             .reduce((sum, i) => sum + i.quantity, 0);
 
           if (bookedCount + Number(item.quantity) > ticket.capacity) {

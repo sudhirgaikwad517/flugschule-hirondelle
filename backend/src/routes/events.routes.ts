@@ -77,8 +77,16 @@ router.get('/', async (req, res) => {
     const parsedEvents = events.map(e => ({
       ...e,
       tickets: ((e as any).tickets as any[]).map((t: any) => {
+        // Old site (Matukio) only counts a booking against capacity/"Freie
+        // Plätze" when its status is ACTIVE - PENDING, WAITLIST, and (its
+        // DELETED, which migrated into our schema as COMPLETED - see the
+        // migration notes) never reduce availability. This previously
+        // excluded only 'CANCELLED', a status this schema never actually
+        // uses, so every booking regardless of status was being counted -
+        // inflating "X/Y gebucht" and showing events as overbooked/
+        // waitlist-only when they still had real capacity.
         const bookedCount = t.items
-          .filter((i: any) => i.booking.status !== 'CANCELLED')
+          .filter((i: any) => i.booking.status === 'CONFIRMED')
           .reduce((acc: number, i: any) => acc + i.quantity, 0);
         const { items, ...ticketProps } = t;
         return { ...ticketProps, bookedCount };
@@ -172,8 +180,9 @@ router.get('/:id', async (req, res) => {
     const parsedEvent = {
       ...event,
       tickets: event.tickets.map((t: any) => {
+        // See the matching comment in GET / above - only CONFIRMED counts.
         const bookedCount = t.items
-          .filter((i: any) => i.booking.status !== 'CANCELLED')
+          .filter((i: any) => i.booking.status === 'CONFIRMED')
           .reduce((acc: number, i: any) => acc + i.quantity, 0);
         const { items, ...ticketProps } = t;
         return { ...ticketProps, bookedCount };

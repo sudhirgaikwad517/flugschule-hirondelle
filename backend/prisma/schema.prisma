@@ -91,6 +91,11 @@ model Event {
   customBookingEmail   String?
   customCertificate    String?
   eventNumber          String?
+  // Old site's Matukio "Nummer" field (hiron_matukio_recurring.semnum) -
+  // a site-wide per-year running counter assigned when the date was
+  // created, shown as-is ("5/26") in the old site's Informationen box.
+  // Purely a stored label, not derived from capacity/bookings.
+  bookingNumber        String?
   titleOverride        String?
   organizerId          String?
   locationId           String?
