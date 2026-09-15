@@ -395,6 +395,20 @@ export const Buchungskalender = () => {
                             key={`header-${d.num}`}
                             className="text-center border-b border-[#f0f0f0]"
                             style={{
+                              // Old site's .weekday/.saturday/.sunday all set
+                              // width: 24px on these exact header cells.
+                              // table-layout: auto gives the FIRST row's
+                              // widths priority when sizing columns, so
+                              // this is what actually keeps every day
+                              // uniform by default - only a column whose
+                              // own content truly can't fit (an unbreakable
+                              // long single-line event title) grows beyond
+                              // it. Without a width hint here, auto-layout
+                              // instead free-balances every column against
+                              // every row (including wide multi-day event
+                              // spans), which is what made the whole table
+                              // lopsided.
+                              width: '24px',
                               height: '33px',
                               backgroundColor: d.isHoliday ? '#bbbbbb' : d.isWeekend ? '#cccccc' : '#f0f0f0',
                             }}
