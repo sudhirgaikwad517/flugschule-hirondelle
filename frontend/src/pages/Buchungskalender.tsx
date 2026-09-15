@@ -16,6 +16,58 @@ const ALL_CATEGORIES = Object.keys(categoryColors).filter(c => c !== 'ALLE ANZEI
 const germanDays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 const germanMonths = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 
+// Meeus/Jones/Butcher algorithm for the Gregorian Easter Sunday - every
+// other German public holiday below is a fixed offset from it (or a fixed
+// calendar date), so this is all that's needed to compute holidays for
+// any year, not just the ones hardcoded in the old site's
+// brcalendarHolidays.json (which stops at 2035).
+function easterSunday(year: number): Date {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(year, month - 1, day);
+}
+
+const addDays = (d: Date, n: number) => {
+  const r = new Date(d);
+  r.setDate(r.getDate() + n);
+  return r;
+};
+
+const dateKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+// Matches the old site's brcalendarHolidays.json exactly (Baden-Württemberg
+// public holidays, minus Heilige Drei Könige which that file never
+// included either) - computed instead of hardcoded so it stays correct
+// for any year.
+function getGermanHolidays(year: number): Set<string> {
+  const easter = easterSunday(year);
+  return new Set([
+    new Date(year, 0, 1),     // Neujahrstag
+    addDays(easter, -2),      // Karfreitag
+    addDays(easter, 1),       // Ostermontag
+    new Date(year, 4, 1),     // Tag der Arbeit
+    addDays(easter, 39),      // Christi Himmelfahrt
+    addDays(easter, 50),      // Pfingstmontag
+    addDays(easter, 60),      // Fronleichnam
+    new Date(year, 9, 3),     // Tag der Deutschen Einheit
+    new Date(year, 10, 1),    // Allerheiligen
+    new Date(year, 11, 25),   // 1. Weihnachtstag
+    new Date(year, 11, 26),   // 2. Weihnachtstag
+  ].map(dateKey));
+}
+
 export const Buchungskalender = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
@@ -95,6 +147,7 @@ export const Buchungskalender = () => {
   };
 
   const filteredEvents = getFilteredEvents();
+  const germanHolidays = getGermanHolidays(activeYear);
 
   // Helper to determine layout rows for events in a month
   const getEventRowsForMonth = (monthIndex: number, daysInMonth: number) => {
@@ -273,53 +326,58 @@ export const Buchungskalender = () => {
         {loading ? (
           <div className="flex justify-center py-20 text-gray-500">Lade Termine...</div>
         ) : (
-        <div ref={calendarRef} className="flex flex-col gap-12 pb-4 w-full">
+        <div ref={calendarRef} className="flex flex-col w-full border-t border-[#cccccc] pt-5">
           {months.map(month => {
             const rows = getEventRowsForMonth(month.monthIndex, month.daysInMonth);
             const totalRows = Math.max(rows.length, 3); // Minimum 3 empty event rows for visual consistency
-            
+
             // Generate day headers
             const days = Array.from({ length: month.daysInMonth }, (_, i) => {
               const date = new Date(activeYear, month.monthIndex, i + 1);
               const dayOfWeek = date.getDay(); // 0 = Sun, 6 = Sat
               const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-              return { num: i + 1, name: germanDays[dayOfWeek], isWeekend };
+              const isHoliday = germanHolidays.has(dateKey(date));
+              return { num: i + 1, name: germanDays[dayOfWeek], isWeekend, isHoliday };
             });
 
             return (
-              <div key={month.name} className="w-full mb-4">
-                <h3 className="text-gray-700 font-bold mb-2">{month.name}</h3>
-                <div className="overflow-x-auto pb-4 w-full scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                  <div 
-                    className="border-t border-l border-gray-200 relative min-w-full" 
-                    style={{ 
-                      display: 'grid', 
+              <div key={month.name} className="w-full">
+                <h3 className="text-[14px] font-normal text-[#666666] mb-2">{month.name}</h3>
+                <div className="overflow-x-auto w-full mb-5 shadow-[0_0_3px_rgba(0,0,0,0.2)] bg-white scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                  <div
+                    className="border-t border-l border-[#f0f0f0] relative min-w-full"
+                    style={{
+                      display: 'grid',
                       gridTemplateColumns: `repeat(${month.daysInMonth}, minmax(32px, 1fr))`
                     }}
                   >
                     {/* Days Header (Row 1) */}
                     {days.map(d => (
-                      <div 
-                        key={`header-${d.num}`} 
-                        className={`text-center py-1 z-10 border-b border-gray-300 ${d.isWeekend ? 'bg-gray-200' : 'bg-gray-100'}`}
-                        style={{ gridColumn: d.num, gridRow: 1 }}
+                      <div
+                        key={`header-${d.num}`}
+                        className="flex flex-col items-center justify-center text-center z-10 border-b border-[#f0f0f0]"
+                        style={{
+                          gridColumn: d.num,
+                          gridRow: 1,
+                          height: '33px',
+                          backgroundColor: d.isHoliday ? '#bbbbbb' : d.isWeekend ? '#cccccc' : '#f0f0f0',
+                        }}
                       >
-                        <div className="text-[12px] text-gray-800 font-medium">{d.num}</div>
-                        <div className="text-[10px] text-gray-500">{d.name}</div>
+                        <div className="text-[14px] leading-[14px] text-gray-800">{d.num}</div>
+                        <div className="text-[11px] leading-[14px] text-gray-500 opacity-50">{d.name}</div>
                       </div>
                     ))}
 
                   {/* Grid Cells (Empty Background for all rows) */}
-                  {Array.from({ length: totalRows }).map((_, rIdx) => 
+                  {Array.from({ length: totalRows }).map((_, rIdx) =>
                     days.map(d => (
-                      <div 
-                        key={`cell-${rIdx}-${d.num}`} 
-                        className={`border-r border-b border-gray-200 ${d.isWeekend ? 'bg-gray-100' : 'bg-white'}`}
-                        style={{ 
-                          gridColumn: d.num, 
+                      <div
+                        key={`cell-${rIdx}-${d.num}`}
+                        className="border-r border-b border-[#f0f0f0] bg-white"
+                        style={{
+                          gridColumn: d.num,
                           gridRow: rIdx + 2,
-                          minHeight: '28px',
-                          height: '100%'
+                          height: '24px'
                         }}
                       />
                     ))
