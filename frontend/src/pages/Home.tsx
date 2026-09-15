@@ -366,9 +366,16 @@ export const Home = () => {
 
             <div className="w-full overflow-hidden h-[500px] flex items-start justify-start">
                {/* Facebook Page Plugin - official fb-page/XFBML embed, parsed
-                   by the SDK script loaded above. */}
+                   by the SDK script loaded above. data-adapt-container-width
+                   makes the SDK measure this div's ACTUAL rendered CSS width
+                   at parse time and use that for the iframe - since the div
+                   itself had no width of its own (only the data-width hint,
+                   which isn't real CSS), it was collapsing to the width of
+                   its tiny fallback link text before the SDK ever got to it,
+                   locking the plugin into a much narrower iframe than
+                   intended. w-full makes it fill this column first. */}
                <div
-                  className="fb-page"
+                  className="fb-page w-full"
                   data-href="https://www.facebook.com/fshirondelle"
                   data-tabs="timeline"
                   data-width="500"
