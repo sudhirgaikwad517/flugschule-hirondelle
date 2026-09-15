@@ -14,7 +14,7 @@ export const Ausbildung = () => {
         <div className="text-center mb-16 mt-8">
           
           {/* Intro text */}
-          <p className="text-xl md:text-2xl text-luxury-gold italic font-luxury mb-8 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-luxury-heading italic font-luxury mb-8 max-w-3xl mx-auto leading-relaxed">
             "Die Flugschule Hirondelle bietet euch eine qualifizierte, sichere und vielseitige Ausbildung."
           </p>
           
@@ -108,7 +108,7 @@ export const Ausbildung = () => {
             <div className="w-full md:w-1/2 flex flex-col items-start">
               <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">Schnupper-/Einsteigerkurs</h2>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
-              <h3 className="text-xl italic text-luxury-gold font-luxury mb-6">Der Anfang einer neuen Leidenschaft....</h3>
+              <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">Der Anfang einer neuen Leidenschaft....</h3>
               <p className="text-gray-500 mb-8 leading-relaxed font-light text-justify">
                 Am Schnuppertag / Einsteigerkurs lernst du die Grundzüge des Gleitschirmfliegens kennen. Anfängliche Aufzieh- und Laufübungen bereiten dich auf deine ersten Flüge vor: Kappe auslegen, Leinen sortieren, Eintrittsöffnungen kontrollieren, damit der Gleitschirm anschließend richtig über euch steigt. Gurtzeug anlegen, Startcheck und los geht's zum ersten Versuch.
               </p>
@@ -129,7 +129,7 @@ export const Ausbildung = () => {
             <div className="w-full md:w-1/2 flex flex-col items-start">
               <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">L-Schein</h2>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
-              <h3 className="text-xl italic text-luxury-gold font-luxury mb-6">Du legst den Grundstein...</h3>
+              <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">Du legst den Grundstein...</h3>
               <p className="text-gray-500 mb-8 leading-relaxed font-light text-justify">
                 Aufbauend auf den Schnupperkurs werden im Grundkurs die fehlenden Flüge zur Erlangung des L-Scheins absolviert. Ziel des Kurses ist es, mindestens 15 Flüge am Hang oder an der Winde zu absolvieren, bei denen die Höhendifferenz schon bis zu 200 Meter betragen kann. Kurvenflug und Schirmkontrolle sind einige der Lerninhalte, die in diesem Kurs auf dem Lehrplan stehen.
               </p>
@@ -150,7 +150,7 @@ export const Ausbildung = () => {
             <div className="w-full md:w-1/2 flex flex-col items-start">
               <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">A-Schein</h2>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
-              <h3 className="text-xl italic text-luxury-gold font-luxury mb-6">Was dich erwartet beim Höhenflugkurs...</h3>
+              <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">Was dich erwartet beim Höhenflugkurs...</h3>
               <p className="text-gray-500 mb-8 leading-relaxed font-light text-justify">
                 Aufbauend auf dem Grundkurs, werden beim Höhenflugkurs die ersten 15 Flüge für den beschränkten Luftfahrerschein (A-Schein) durchgeführt. Das Ziel des Höhenflugkurses ist der Höhenflugausweis.
               </p>
@@ -171,7 +171,7 @@ export const Ausbildung = () => {
             <div className="w-full md:w-1/2 flex flex-col items-start">
               <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">B-Schein</h2>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
-              <h3 className="text-xl italic text-luxury-gold font-luxury mb-6">Auf Strecke mit dem unbeschränkten Luftfahrerschein...</h3>
+              <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">Auf Strecke mit dem unbeschränkten Luftfahrerschein...</h3>
               <p className="text-gray-500 mb-8 leading-relaxed font-light text-justify">
                 Das Gleitpotential des Gleitschirms ausreizen, die Thermik ausfliegen und dann auf Strecke gehen. Von Aufwind zu Aufwind gleiten und die Landschaft aus der Vogelperspektive genießen, das ist der Traum vieler Flieger.
               </p>
@@ -192,7 +192,7 @@ export const Ausbildung = () => {
             <div className="w-full md:w-1/2 flex flex-col items-start">
               <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">Windenschein</h2>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
-              <h3 className="text-xl italic text-luxury-gold font-luxury mb-6">Windenschlepp mit dem Gleitschirm...</h3>
+              <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">Windenschlepp mit dem Gleitschirm...</h3>
               <p className="text-gray-500 mb-8 leading-relaxed font-light text-justify">
                 Das Schleppen an der Winde ist eine ideale Möglichkeit, auch im Flachland mit dem Gleitschirm in die Luft zu kommen. Der Windenschein ist die ideale Ergänzung zum A-Scheinkurs da ihr hier schnell einen Großteil der nötigen Flüge für die A-Scheinprüfung sammeln könnt.
               </p>
@@ -213,7 +213,7 @@ export const Ausbildung = () => {
             <div className="w-full md:w-1/2 flex flex-col items-start">
               <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">Tandemschein</h2>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
-              <h3 className="text-xl italic text-luxury-gold font-luxury mb-6">Zusammen mit Freunden zum Fliegen gehen.</h3>
+              <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">Zusammen mit Freunden zum Fliegen gehen.</h3>
               <p className="text-gray-500 mb-8 leading-relaxed font-light text-justify">
                 Zum Fliegen gehen und die Leidenschaft mit Freunden teilen? Mit dem Tandemschein kein Problem! Die Freiheit und die Eindrücke in der Luft mit jemanden teilen zu können ist ein fantastisches Erlebnis sowohl für den Piloten auch für den Passagier. Einfach ein Traum.
               </p>

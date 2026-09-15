@@ -260,11 +260,11 @@ export const Banner = ({ variant = 'subpage' }: BannerProps) => {
           {currentSlideData.text && (
             <div className="bg-[#53a8c7]/90 inline-flex items-center gap-3 md:gap-5 pl-4 pr-10 py-3 md:py-4 max-w-full backdrop-blur-[2px]">
               {/* Logo from google.png - Filtered to be pure white */}
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border-[2px] border-white flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center shrink-0">
                 <img
                   src="/google.png"
                   alt="Logo"
-                  className="w-6 h-6 md:w-8 md:h-8 object-contain brightness-0 invert opacity-100"
+                  className="w-8 h-8 md:w-10 md:h-10 object-contain brightness-0 invert opacity-100"
                 />
               </div>
 

@@ -17,7 +17,7 @@ export const BassanoTour = () => {
           <div className="lg:col-span-8 space-y-12">
             
             <div>
-              <p className="text-luxury-gold uppercase tracking-[0.2em] text-xs font-semibold mb-3">
+              <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-3">
                 REISEN
               </p>
               <h1 className="font-luxury text-4xl md:text-5xl text-luxury-dark uppercase">

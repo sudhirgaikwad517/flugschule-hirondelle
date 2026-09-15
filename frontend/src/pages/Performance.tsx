@@ -19,7 +19,7 @@ export const Performance = () => {
         {/* Intro Section */}
         <div className="flex flex-col lg:flex-row gap-12 mb-24 items-center">
           <div className="w-full lg:w-1/2">
-            <p className="text-xl md:text-2xl text-luxury-gold italic font-luxury mb-6 leading-relaxed text-center lg:text-left">
+            <p className="text-xl md:text-2xl text-luxury-heading italic font-luxury mb-6 leading-relaxed text-center lg:text-left">
               "Als SkyPerformance Trainer bieten wir ein umfangreiches Fortbildungsangebot unter der Leitung speziell ausgebildeter Fluglehrer."
             </p>
           </div>
@@ -43,7 +43,7 @@ export const Performance = () => {
             <div className="w-full md:w-1/2 flex flex-col items-start">
               <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">Sicherheitstraining - Gardasee</h2>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
-              <h3 className="text-xl italic text-luxury-gold font-luxury mb-6">Sicherheitstraining am Gardasee...</h3>
+              <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">Sicherheitstraining am Gardasee...</h3>
               <p className="text-gray-500 mb-8 leading-relaxed font-light text-justify">
                 Fünf Tage für deine Sicherheit, für die Verbesserung von richtigen Reaktionen und deinem fliegerischem Können. Am Südrand der italienischen Alpen liegt der wunderschöne Gardasee, den wir als Ausgangspunkt unseres Sicherheitstrainings genießen dürfen.
               </p>
@@ -64,7 +64,7 @@ export const Performance = () => {
             <div className="w-full md:w-1/2 flex flex-col items-start">
               <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">Rettungsgerätetraining</h2>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
-              <h3 className="text-xl italic text-luxury-gold font-luxury mb-6">Ein Muss für jeden Gleitschirmpiloten...</h3>
+              <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">Ein Muss für jeden Gleitschirmpiloten...</h3>
               <p className="text-gray-500 mb-8 leading-relaxed font-light text-justify">
                 Gleitschirmfliegen ist eigentlich eine sehr sichere Sache aber dennoch kann es vorkommen, dass ihr in eine Situation geratet, die für euch als Pilot unbeherrschbar ist. Ein Muss für jeden Gleitschirm- und Drachenpiloten ist daher ein Rettungsgerätewurftraining mit der eigenen Ausrüstung.
               </p>
@@ -85,7 +85,7 @@ export const Performance = () => {
             <div className="w-full md:w-1/2 flex flex-col items-start">
               <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">Refresherkurs</h2>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
-              <h3 className="text-xl italic text-luxury-gold font-luxury mb-6">Sicher in allen Situationen...</h3>
+              <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">Sicher in allen Situationen...</h3>
               <p className="text-gray-500 mb-8 leading-relaxed font-light text-justify">
                 Der Refresher-Kurs richtet sich an alle Piloten, die bereits ihre Ausbildung abgeschlossen haben. Wer unseren schönen Sport einmal gelernt hat und aus welchen Gründen auch immer länger nicht mehr geflogen ist.
               </p>
@@ -106,7 +106,7 @@ export const Performance = () => {
             <div className="w-full md:w-1/2 flex flex-col items-start">
               <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">Groundhandling Kurs</h2>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
-              <h3 className="text-xl italic text-luxury-gold font-luxury mb-6">Auf Tuchfühlung mit dem Gleitschirm...</h3>
+              <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">Auf Tuchfühlung mit dem Gleitschirm...</h3>
               <p className="text-gray-500 mb-8 leading-relaxed font-light text-justify">
                 Den Gleitschirm kennen lernen und als riesigen Lenkdrachen benutzen, Windsprünge meistern, den Hang kreuzen oder mit geöffnetem Segel bergauf laufen – das sind die Lernziele im diesem Seminar. Groundhandling ist das A & O für jeden Piloten, um den eigenen Schirm sicher zu steuern.
               </p>

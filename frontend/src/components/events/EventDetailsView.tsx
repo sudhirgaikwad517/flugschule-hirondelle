@@ -164,14 +164,6 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
         </div>
         
         <div className="flex items-center gap-1 print:hidden">
-          {/* Add to Calendar Button */}
-          <a
-            href={`/api/events/${event.id}/ics`}
-            className="text-gray-400 hover:text-luxury-dark transition-colors p-2"
-            title="Zum Kalender hinzufügen"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14v4m-2-2h4"></path></svg>
-          </a>
           {/* Print Button */}
           <button
             onClick={() => window.print()}

@@ -54,7 +54,7 @@ export const Tandem = () => {
               )}
             </div>
 
-            <h3 className="text-xl md:text-2xl italic text-luxury-gold font-luxury mb-6 leading-relaxed max-w-4xl">
+            <h3 className="text-xl md:text-2xl italic text-luxury-heading font-luxury mb-6 leading-relaxed max-w-4xl">
               "Der erste Schritt, um sicher in die Luft zu kommen!"
             </h3>
             

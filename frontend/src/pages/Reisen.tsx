@@ -18,7 +18,7 @@ export const Reisen = () => {
 
         {/* Intro Section */}
         <div className="mb-24 flex flex-col items-center text-center">
-          <h3 className="text-xl md:text-2xl italic text-luxury-gold font-luxury mb-6 leading-relaxed max-w-4xl">
+          <h3 className="text-xl md:text-2xl italic text-luxury-heading font-luxury mb-6 leading-relaxed max-w-4xl">
             "Die Hotspots der Fliegerszene erkunden mit Flugbetreuung."
           </h3>
           <p className="text-gray-500 leading-relaxed font-light mb-10 max-w-4xl">

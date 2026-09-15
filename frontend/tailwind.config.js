@@ -18,7 +18,8 @@ export default {
           gold: '#C19B76',
           dark: '#1A1F24',
           light: '#FAF9F7',
-          slate: '#394553'
+          slate: '#394553',
+          heading: '#339aca'
         }
       },
       fontFamily: {

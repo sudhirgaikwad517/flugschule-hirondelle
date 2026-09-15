@@ -41,6 +41,31 @@ export const Home = () => {
     return validatedImages[index] || fallbackSrc;
   };
 
+  // Loads Facebook's XFBML SDK once (the old site's own template already
+  // pulls in this same connect.facebook.net/sdk.js#xfbml=1 script) so the
+  // fb-page div below renders as the real page timeline. A bare
+  // <iframe src="https://www.facebook.com/plugins/page.php?..."> (the
+  // previous approach here) is Meta's older embed method and gets hit
+  // with a "Log into Facebook" wall far more often than the officially
+  // supported fb-page/XFBML integration.
+  useEffect(() => {
+    const scriptId = 'facebook-jssdk';
+    if (document.getElementById(scriptId)) {
+      (window as any).FB?.XFBML.parse();
+      return;
+    }
+    if (!document.getElementById('fb-root')) {
+      const root = document.createElement('div');
+      root.id = 'fb-root';
+      document.body.appendChild(root);
+    }
+    const js = document.createElement('script');
+    js.id = scriptId;
+    js.src = '//connect.facebook.net/de_DE/sdk.js#xfbml=1&version=v19.0';
+    js.async = true;
+    document.body.appendChild(js);
+  }, []);
+
   return (
     <div className="w-full bg-white font-luxurysans">
 
@@ -50,7 +75,7 @@ export const Home = () => {
       {/* 2. INTRO TEXT SECTION - temporarily disabled, kept for future re-enable
       <section className="py-24 md:py-32 bg-white px-4 text-center border-b border-gray-100">
         <div className="max-w-4xl mx-auto">
-          <p className="text-luxury-gold uppercase tracking-[0.2em] text-xs font-semibold mb-8">
+          <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-8">
             LEIDENSCHAFT FÜRS FLIEGEN TRIFFT AUF PROFESSIONELLE AUSBILDUNG
           </p>
           <p className="font-luxury font-bold text-3xl md:text-5xl text-luxury-dark leading-[1.4] mx-auto">
@@ -121,7 +146,7 @@ export const Home = () => {
       <section className="py-24 bg-[#FAF9F7] px-4">
         <div className="max-w-[1200px] mx-auto">
           <div className="text-center mb-16">
-            <p className="text-luxury-gold uppercase tracking-[0.2em] text-xs font-semibold mb-4">
+            <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-4">
               ERLEBEN SIE ULTIMATIVE FLUGERLEBNISSE
             </p>
             <h2 className="font-luxury text-4xl md:text-6xl text-luxury-dark">IHR FLUGPARADIES</h2>
@@ -237,7 +262,7 @@ export const Home = () => {
           tagline+heading text above the cards was removed per request
           (commented out below, not deleted, in case it's wanted back later)
           <div className="text-center mb-16">
-            <p className="text-luxury-gold uppercase tracking-[0.2em] text-xs font-semibold mb-4">
+            <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-4">
               ENTDECKEN SIE MEHR
             </p>
             <h2 className="font-luxury text-4xl md:text-6xl text-luxury-dark">UNSERE HIGHLIGHTS</h2>
@@ -333,31 +358,37 @@ export const Home = () => {
           {/* Left: NEWS */}
           <div className="w-full lg:w-5/12 flex flex-col">
             <div className="mb-10">
-              <p className="text-luxury-gold uppercase tracking-[0.2em] text-xs font-semibold mb-3">
+              <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-3">
                 AKTUELLES
               </p>
               <h2 className="font-luxury text-4xl md:text-5xl text-luxury-dark">NEWS</h2>
             </div>
 
             <div className="w-full overflow-hidden h-[500px] flex items-start justify-start">
-               {/* Facebook Page Plugin Iframe */}
-               <iframe
-                  src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Ffshirondelle&tabs=timeline&height=500&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 'none', overflow: 'hidden', maxWidth: '100%', minWidth: '280px' }}
-                  scrolling="no"
-                  frameBorder="0"
-                  allowFullScreen={true}
-                  allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
-               </iframe>
+               {/* Facebook Page Plugin - official fb-page/XFBML embed, parsed
+                   by the SDK script loaded above. */}
+               <div
+                  className="fb-page"
+                  data-href="https://www.facebook.com/fshirondelle"
+                  data-tabs="timeline"
+                  data-width="500"
+                  data-height="500"
+                  data-small-header="false"
+                  data-adapt-container-width="true"
+                  data-hide-cover="false"
+                  data-show-facepile="true"
+               >
+                  <blockquote cite="https://www.facebook.com/fshirondelle" className="fb-xfbml-parse-ignore">
+                    <a href="https://www.facebook.com/fshirondelle">Flugschule Hirondelle</a>
+                  </blockquote>
+               </div>
             </div>
           </div>
 
           {/* Right: HOCH HINAUS & TEAM */}
           <div className="w-full lg:w-7/12 flex flex-col">
             <div className="mb-10">
-              <p className="text-luxury-gold uppercase tracking-[0.2em] text-xs font-semibold mb-3">
+              <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-3">
                 ...mit dem Team Hirondelle
               </p>
               <h2 className="font-luxury text-4xl md:text-5xl text-luxury-dark">HOCH HINAUS</h2>
@@ -420,7 +451,7 @@ export const Home = () => {
 
           {/* Left: Text & Icons }
           <div className="w-full lg:w-1/2">
-            <p className="text-luxury-gold uppercase tracking-[0.2em] text-xs font-semibold mb-4">
+            <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-4">
               ENTDECKEN SIE UNSERE DIENSTLEISTUNGEN
             </p>
             <h2 className="font-luxury text-5xl md:text-6xl text-luxury-dark mb-16">UNSER ANGEBOT</h2>
