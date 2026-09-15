@@ -373,17 +373,23 @@ export const Home = () => {
                    which isn't real CSS), it was collapsing to the width of
                    its tiny fallback link text before the SDK ever got to it,
                    locking the plugin into a much narrower iframe than
-                   intended. w-full makes it fill this column first. */}
+                   intended. w-full makes it fill this column first.
+
+                   Attributes match the old site's own live module exactly
+                   (hiron_modules id 132, "HOME // Facebook 500px"):
+                   data-show-posts="true" + small-header instead of the
+                   fuller data-tabs="timeline" widget - the simpler
+                   posts-only view we'd been using data-tabs for instead. */}
                <div
                   className="fb-page w-full"
                   data-href="https://www.facebook.com/fshirondelle"
-                  data-tabs="timeline"
                   data-width="500"
                   data-height="500"
-                  data-small-header="false"
+                  data-small-header="true"
                   data-adapt-container-width="true"
                   data-hide-cover="false"
-                  data-show-facepile="true"
+                  data-show-facepile="false"
+                  data-show-posts="true"
                >
                   <blockquote cite="https://www.facebook.com/fshirondelle" className="fb-xfbml-parse-ignore">
                     <a href="https://www.facebook.com/fshirondelle">Flugschule Hirondelle</a>
