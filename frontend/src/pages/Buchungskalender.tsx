@@ -474,7 +474,7 @@ export const Buchungskalender = () => {
                                     </a>
                                   </div>
                                 `)}
-                                className={`event-block rounded-sm px-1 py-[2px] cursor-pointer hover:opacity-90 transition-opacity align-middle text-center whitespace-normal break-words ${item.event.cancelled ? 'opacity-50' : ''}`}
+                                className={`event-block rounded-sm px-1 py-[2px] cursor-pointer hover:opacity-90 transition-opacity align-middle text-center whitespace-normal break-words text-[11.9px] leading-[14.875px] ${item.event.cancelled ? 'opacity-50' : ''}`}
                                 style={{
                                   backgroundColor: item.event.color || categoryColors[item.event.category]?.bg || '#bdc3c7',
                                   color: item.event.calendarTextColor || categoryColors[item.event.category]?.text || '#374151',
