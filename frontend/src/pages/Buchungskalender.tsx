@@ -354,112 +354,139 @@ export const Buchungskalender = () => {
               return { num: i + 1, name: germanDays[dayOfWeek], isWeekend, isHoliday };
             });
 
+            // Build each row as a real sequence of table cells (an empty
+            // filler <td colSpan> for gaps, an event <td colSpan> for
+            // occupied spans) instead of CSS-Grid-positioned overlays. A
+            // real <table> with the browser's default table-layout: auto
+            // lets a day's column grow wider than its neighbours when that
+            // column's own content needs it (exactly like the old site's
+            // real <table>-based brcalendarTable) - a CSS Grid's tracks
+            // can't do that (they're shared, evenly-distributed tracks),
+            // which was previously forcing long single-day titles to wrap
+            // across extra lines and, since a CSS Grid row's height is
+            // shared by every item placed in it, dragging every other
+            // event in that same row taller too.
+            const tableRows = Array.from({ length: totalRows }, (_, rIdx) => {
+              const row = [...(rows[rIdx] || [])].sort((a, b) => a.startDay - b.startDay);
+              const cells: ({ type: 'empty'; span: number; key: string } | { type: 'event'; span: number; item: typeof row[number] })[] = [];
+              let day = 1;
+              row.forEach(item => {
+                if (item.startDay > day) {
+                  cells.push({ type: 'empty', span: item.startDay - day, key: `empty-${rIdx}-${day}` });
+                }
+                cells.push({ type: 'event', span: item.endDay - item.startDay + 1, item });
+                day = item.endDay + 1;
+              });
+              if (day <= month.daysInMonth) {
+                cells.push({ type: 'empty', span: month.daysInMonth - day + 1, key: `empty-${rIdx}-${day}` });
+              }
+              return cells;
+            });
+
             return (
               <div key={month.name} className="w-full">
                 <h3 className="text-[14px] font-normal text-[#666666] mb-2">{month.name}</h3>
                 <div className="overflow-x-auto w-full mb-5 shadow-[0_0_3px_rgba(0,0,0,0.2)] bg-white scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                  <div
-                    className="border-t border-l border-[#f0f0f0] relative min-w-full"
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: `repeat(${month.daysInMonth}, minmax(32px, 1fr))`
-                    }}
-                  >
-                    {/* Days Header (Row 1) */}
-                    {days.map(d => (
-                      <div
-                        key={`header-${d.num}`}
-                        className="flex flex-col items-center justify-center text-center z-10 border-b border-[#f0f0f0]"
-                        style={{
-                          gridColumn: d.num,
-                          gridRow: 1,
-                          height: '33px',
-                          backgroundColor: d.isHoliday ? '#bbbbbb' : d.isWeekend ? '#cccccc' : '#f0f0f0',
-                        }}
-                      >
-                        <div className="text-[14px] leading-[14px] text-gray-800">{d.num}</div>
-                        <div className="text-[11px] leading-[14px] text-gray-500 opacity-50">{d.name}</div>
-                      </div>
-                    ))}
+                  <table className="w-full border-t border-l border-[#f0f0f0]" style={{ borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr>
+                        {days.map(d => (
+                          <td
+                            key={`header-${d.num}`}
+                            className="text-center border-b border-[#f0f0f0]"
+                            style={{
+                              height: '33px',
+                              backgroundColor: d.isHoliday ? '#bbbbbb' : d.isWeekend ? '#cccccc' : '#f0f0f0',
+                            }}
+                          >
+                            <div className="text-[14px] leading-[14px] text-gray-800">{d.num}</div>
+                            <div className="text-[11px] leading-[14px] text-gray-500 opacity-50">{d.name}</div>
+                          </td>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tableRows.map((cells, rIdx) => (
+                        <tr key={rIdx}>
+                          {cells.map(cell => {
+                            if (cell.type === 'empty') {
+                              return (
+                                <td
+                                  key={cell.key}
+                                  colSpan={cell.span}
+                                  className="border-r border-b border-[#f0f0f0] bg-white"
+                                  style={{ height: '24px' }}
+                                />
+                              );
+                            }
 
-                  {/* Grid Cells (Empty Background for all rows) */}
-                  {Array.from({ length: totalRows }).map((_, rIdx) =>
-                    days.map(d => (
-                      <div
-                        key={`cell-${rIdx}-${d.num}`}
-                        className="border-r border-b border-[#f0f0f0] bg-white"
-                        style={{
-                          gridColumn: d.num,
-                          gridRow: rIdx + 2,
-                          minHeight: '24px'
-                        }}
-                      />
-                    ))
-                  )}
+                            const item = cell.item;
+                            // Old site only ever shortens the event's own
+                            // exact title via this fixed dictionary
+                            // (brcalendar/tmpl/default.php's $shortTitles) -
+                            // it never truncates/abbreviates by duration or
+                            // length, it always shows the full title
+                            // otherwise, wrapped across lines if needed.
+                            const displayText = SHORT_TITLES[item.event.title] || item.event.title;
 
-                  {/* Events (Row 2+) */}
-                  {rows.map((row, rIdx) =>
-                    row.map(item => {
-                      // Old site only ever shortens the event's own exact
-                      // title via this fixed dictionary
-                      // (brcalendar/tmpl/default.php's $shortTitles) - it
-                      // never truncates/abbreviates by duration or length,
-                      // it always shows the full title otherwise, wrapped
-                      // across lines, with the row growing to fit.
-                      const displayText = SHORT_TITLES[item.event.title] || item.event.title;
+                            return (
+                              <td
+                                key={item.event.id}
+                                colSpan={cell.span}
+                                onClick={() => navigate(`/buchungskalender/${item.event.id}`)}
+                                data-tippy-content={DOMPurify.sanitize(`
+                                  <div class='p-5 text-left bg-white font-sans'>
+                                    <h4 class='font-luxury text-2xl text-luxury-dark mb-1'>${item.event.title}${item.event.cancelled ? " <span class='text-red-700 text-xs uppercase font-bold align-middle bg-red-100 px-2 py-1 rounded-sm'>Storniert</span>" : ''}</h4>
+                                    <div class='flex flex-col gap-1 mb-4 pb-4 border-b border-gray-100'>
+                                      <div class='flex items-center gap-2 text-[12px] text-gray-500 font-semibold'>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path></svg>
+                                        ${item.event.category}
+                                      </div>
+                                      ${item.event.tickets && item.event.tickets.length > 0 ? `
+                                      <div class='flex items-center gap-2 text-[12px] text-gray-800 font-bold'>
+                                        <svg class="w-4 h-4 text-luxury-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                                        ab €${Math.min(...item.event.tickets.map(t => t.price))} Euro
+                                      </div>
+                                      ` : ''}
+                                    </div>
 
-                      return (
-                      <div 
-                        key={item.event.id}
-                        onClick={() => navigate(`/buchungskalender/${item.event.id}`)}
-                        data-tippy-content={DOMPurify.sanitize(`
-                          <div class='p-5 text-left bg-white font-sans'>
-                            <h4 class='font-luxury text-2xl text-luxury-dark mb-1'>${item.event.title}${item.event.cancelled ? " <span class='text-red-700 text-xs uppercase font-bold align-middle bg-red-100 px-2 py-1 rounded-sm'>Storniert</span>" : ''}</h4>
-                            <div class='flex flex-col gap-1 mb-4 pb-4 border-b border-gray-100'>
-                              <div class='flex items-center gap-2 text-[12px] text-gray-500 font-semibold'>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path></svg>
-                                ${item.event.category}
-                              </div>
-                              ${item.event.tickets && item.event.tickets.length > 0 ? `
-                              <div class='flex items-center gap-2 text-[12px] text-gray-800 font-bold'>
-                                <svg class="w-4 h-4 text-luxury-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
-                                ab €${Math.min(...item.event.tickets.map(t => t.price))} Euro
-                              </div>
-                              ` : ''}
-                            </div>
-                            
-                            <div class='text-[13px] text-gray-600 mb-6 leading-relaxed max-h-[300px] overflow-y-auto pr-2 custom-scrollbar'>
-                              ${item.event.description ? item.event.description.replace(/\\n/g, '<br/>') : 'Keine Beschreibung verfügbar.'}
-                            </div>
-                            
-                            <a href='/reisen/${item.event.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}' class='text-luxury-gold text-[12px] uppercase tracking-widest font-bold hover:text-luxury-dark transition-colors inline-flex items-center gap-2'>
-                              Zur Reisebeschreibung
-                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                            </a>
-                          </div>
-                        `)}
-                        className={`event-block rounded-sm px-1 py-[2px] m-[2px] shadow-sm cursor-pointer hover:opacity-90 transition-opacity z-20 flex items-center justify-center whitespace-normal break-words min-h-[24px] ${item.event.cancelled ? 'opacity-50' : ''}`}
-                        style={{
-                          gridColumn: `${item.startDay} / ${item.endDay + 1}`,
-                          gridRow: rIdx + 2,
-                          backgroundColor: item.event.color || categoryColors[item.event.category]?.bg || '#bdc3c7',
-                          color: item.event.calendarTextColor || categoryColors[item.event.category]?.text || '#374151',
-                        }}
-                      >
-                        {/* Old site's .br-event-title inherits .br-event's
-                            font-size: .85em (of its 14px table font) = 11.9px
-                            - noticeably smaller than the day-grid's own
-                            14px. Matching it exactly is what lets full names
-                            like "Schnupper-/ Einsteigerkurs" fit without
-                            being cut off, same as the old site. */}
-                        <span className={`font-normal leading-tight text-[11.9px] text-center w-full ${item.event.cancelled ? 'line-through' : ''}`}>
-                          {displayText}
-                        </span>
-                      </div>
-                    );
-                  })
-                  )}
-                </div>
+                                    <div class='text-[13px] text-gray-600 mb-6 leading-relaxed max-h-[300px] overflow-y-auto pr-2 custom-scrollbar'>
+                                      ${item.event.description ? item.event.description.replace(/\\n/g, '<br/>') : 'Keine Beschreibung verfügbar.'}
+                                    </div>
+
+                                    <a href='/reisen/${item.event.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}' class='text-luxury-gold text-[12px] uppercase tracking-widest font-bold hover:text-luxury-dark transition-colors inline-flex items-center gap-2'>
+                                      Zur Reisebeschreibung
+                                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                    </a>
+                                  </div>
+                                `)}
+                                className={`event-block rounded-sm px-1 py-[2px] cursor-pointer hover:opacity-90 transition-opacity align-middle text-center whitespace-normal break-words ${item.event.cancelled ? 'opacity-50' : ''}`}
+                                style={{
+                                  backgroundColor: item.event.color || categoryColors[item.event.category]?.bg || '#bdc3c7',
+                                  color: item.event.calendarTextColor || categoryColors[item.event.category]?.text || '#374151',
+                                  height: '24px',
+                                }}
+                              >
+                                {/* Old site's .br-event-title inherits
+                                    .br-event's font-size: .85em (of its
+                                    14px table font) = 11.9px - noticeably
+                                    smaller than the day-grid's own 14px.
+                                    Matching it exactly, together with the
+                                    real <table> auto-layout above, is what
+                                    lets full names like "Schnupper-/
+                                    Einsteigerkurs" fit without being cut
+                                    off or forced onto extra lines, same as
+                                    the old site. */}
+                                <span className={`font-normal leading-tight text-[11.9px] ${item.event.cancelled ? 'line-through' : ''}`}>
+                                  {displayText}
+                                </span>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             );
