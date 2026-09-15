@@ -16,6 +16,20 @@ const ALL_CATEGORIES = Object.keys(categoryColors).filter(c => c !== 'ALLE ANZEI
 const germanDays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 const germanMonths = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 
+// Old site's brcalendar/tmpl/default.php $shortTitles table - an exact-title
+// lookup, not a length/duration heuristic. Any event whose title isn't one
+// of these keys is shown in full (wrapped across lines if needed).
+const SHORT_TITLES: Record<string, string> = {
+  'Schnupperkurs': 'SK',
+  'Schnupperwochenende': 'SW',
+  'Refresher': 'RE',
+  'Grundkurs': 'GK',
+  'B-Schein Theorie': 'B-TH',
+  'Rettungsgeräte Seminar': 'RET',
+  'Winden-Kompakt Kurs': 'W',
+  'Schnuppertag': 'ST',
+};
+
 // Meeus/Jones/Butcher algorithm for the Gregorian Easter Sunday - every
 // other German public holiday below is a fixed offset from it (or a fixed
 // calendar date), so this is all that's needed to compute holidays for
@@ -377,28 +391,23 @@ export const Buchungskalender = () => {
                         style={{
                           gridColumn: d.num,
                           gridRow: rIdx + 2,
-                          height: '24px'
+                          minHeight: '24px'
                         }}
                       />
                     ))
                   )}
 
                   {/* Events (Row 2+) */}
-                  {rows.map((row, rIdx) => 
+                  {rows.map((row, rIdx) =>
                     row.map(item => {
-                      const isSingleDay = item.startDay === item.endDay;
-                      
-                      const getAbbreviation = (title: string) => {
-                        const t = title.toLowerCase();
-                        if (t.includes('rettungs')) return 'RET';
-                        if (t.includes('refresher')) return 'RE';
-                        if (t.includes('winde')) return 'Winde';
-                        if (t.includes('b-th')) return 'B-TH';
-                        return title.length > 6 ? title.substring(0, 3).toUpperCase() : title;
-                      };
-                      
-                      const displayText = isSingleDay ? getAbbreviation(item.event.title) : item.event.title;
-                      
+                      // Old site only ever shortens the event's own exact
+                      // title via this fixed dictionary
+                      // (brcalendar/tmpl/default.php's $shortTitles) - it
+                      // never truncates/abbreviates by duration or length,
+                      // it always shows the full title otherwise, wrapped
+                      // across lines, with the row growing to fit.
+                      const displayText = SHORT_TITLES[item.event.title] || item.event.title;
+
                       return (
                       <div 
                         key={item.event.id}
@@ -429,7 +438,7 @@ export const Buchungskalender = () => {
                             </a>
                           </div>
                         `)}
-                        className={`event-block rounded-sm px-1 py-[2px] m-[2px] shadow-sm cursor-pointer hover:opacity-90 transition-opacity z-20 flex items-center whitespace-nowrap overflow-hidden text-ellipsis h-[24px] ${item.event.cancelled ? 'opacity-50' : ''}`}
+                        className={`event-block rounded-sm px-1 py-[2px] m-[2px] shadow-sm cursor-pointer hover:opacity-90 transition-opacity z-20 flex items-center justify-center whitespace-normal break-words min-h-[24px] ${item.event.cancelled ? 'opacity-50' : ''}`}
                         style={{
                           gridColumn: `${item.startDay} / ${item.endDay + 1}`,
                           gridRow: rIdx + 2,
@@ -437,7 +446,13 @@ export const Buchungskalender = () => {
                           color: item.event.calendarTextColor || categoryColors[item.event.category]?.text || '#374151',
                         }}
                       >
-                        <span className={`font-semibold leading-tight text-[14px] block text-center w-full truncate ${item.event.cancelled ? 'line-through' : ''}`}>
+                        {/* Old site's .br-event-title inherits .br-event's
+                            font-size: .85em (of its 14px table font) = 11.9px
+                            - noticeably smaller than the day-grid's own
+                            14px. Matching it exactly is what lets full names
+                            like "Schnupper-/ Einsteigerkurs" fit without
+                            being cut off, same as the old site. */}
+                        <span className={`font-normal leading-tight text-[11.9px] text-center w-full ${item.event.cancelled ? 'line-through' : ''}`}>
                           {displayText}
                         </span>
                       </div>
