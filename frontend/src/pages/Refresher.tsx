@@ -1,8 +1,18 @@
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
-import { Check, Gift } from 'lucide-react';
+import { Check, Search } from 'lucide-react';
+import { useLightbox } from '../components/common/Lightbox';
+import { GutscheinBox } from '../components/common/GutscheinBox';
+
+// Old site's actual "Simple Image Gallery" filenames for this page
+// (/images/bilder/1-refresher/*), in their real order.
+const GALLERY_FILES = [
+  '19796867335_b24c8e36a4_o', '1Platzhalterbild', 'DSC_0072', 'DSC01324', 'DSC01376',
+  'DSC01389', 'DSC01390', 'DSC01395',
+];
 
 export const Refresher = () => {
+  const { openGallery } = useLightbox();
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -126,36 +136,16 @@ export const Refresher = () => {
 
               <Link 
                 to="/events?category=Refresherkurs" 
-                className="w-full block bg-luxury-dark hover:bg-luxury-gold text-white text-center py-4 text-sm font-semibold uppercase tracking-widest transition-colors shadow-md"
+                className="w-full block bg-[#526a75] hover:bg-luxury-gold text-white text-center py-4 text-sm font-semibold uppercase tracking-widest transition-colors shadow-md"
               >
                 Termine &gt; siehe Kalender
               </Link>
             </div>
 
-            {/* Voucher Box */}
-            <div>
-               <h3 className="font-luxury text-2xl text-luxury-dark mb-4 uppercase tracking-wider border-b border-gray-200 pb-4">
-                 Kurs Verschenken
-               </h3>
-               <p className="text-gray-500 font-light text-sm mb-4">
-                 Refresherkurs ist auch als Geschenk-Gutschein möglich
-               </p>
-               <div className="relative h-40 w-full rounded-sm overflow-hidden group cursor-pointer mb-4">
-                 <img src="/images/gutscheine/gutschein.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
-                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
-                 <div className="absolute right-0 top-0 bottom-0 w-16 bg-[#0088cc] flex items-center justify-center">
-                   <div className="rotate-[-90deg] text-white font-bold tracking-widest whitespace-nowrap">Gutschein</div>
-                 </div>
-               </div>
-               <div className="relative">
-                 <input 
-                   type="email" 
-                   placeholder="E-Mail für Gutschein..." 
-                   className="w-full border border-gray-300 p-3 pl-10 focus:outline-none focus:border-luxury-gold transition-colors text-sm font-light"
-                 />
-                 <Gift className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-               </div>
-            </div>
+            <GutscheinBox
+              heading="Kurs Verschenken"
+              description="Refresherkurs ist auch als Geschenk-Gutschein möglich"
+            />
 
             {/* Impressions Gallery */}
             <div>
@@ -163,13 +153,23 @@ export const Refresher = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {Array.from({ length: 12 }, (_, i) => (i % 6) + 1).map((n, index) => (
-                   <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
+                 {GALLERY_FILES.map((file, index) => (
+                   <div
+                     key={file}
+                     className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
+                     onClick={() => openGallery(
+                       GALLERY_FILES.map((f) => ({ src: `/images/refresher/${f}.jpg`, alt: 'Impression' })),
+                       index
+                     )}
+                   >
                      <img
-                       src={`/images/refresher/gallery-${n}.jpg`}
+                       src={`/images/refresher/${file}.jpg`}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
+                     <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                       <Search className="w-5 h-5 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]" />
+                     </div>
                    </div>
                  ))}
                </div>

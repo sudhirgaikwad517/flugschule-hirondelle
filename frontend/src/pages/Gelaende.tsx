@@ -71,8 +71,8 @@ export const Gelaende = () => {
             {/* Left Column (Map) */}
             <div className="lg:col-span-7">
               <div className="w-full h-[500px] lg:h-[600px] bg-gray-100 rounded-sm shadow-md overflow-hidden relative border border-gray-200">
-                <iframe 
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2595.660155239922!2d8.6657929!3d49.5446328!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4797cf9286eb2973%3A0x1d5821cba50ef12!2sUntergasse%2027%2C%2069469%20Weinheim%2C%20Germany!5e0!3m2!1sen!2sus!4v1700000000000!5m2!1sen!2sus" 
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4242.9186224659925!2d8.671651451819987!3d49.555984059185896!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4797db13e510f3f5%3A0xd6abf4967e8663e9!2sFlugschule%20Hirondelle!5e1!3m2!1sde!2sde!4v1588791930011!5m2!1sde!2sde"
                   width="100%" 
                   height="100%" 
                   style={{ border: 0 }} 

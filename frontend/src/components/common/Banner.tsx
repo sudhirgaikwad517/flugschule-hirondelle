@@ -93,19 +93,15 @@ const SUBPAGE_SLIDES: BannerSlide[] = [
   { image: '/images/headers/slider_griechenland2.jpg' },
 ];
 
-// Ported from the classic css-101.org Ken Burns technique
-// (http://www.css-101.org/articles/ken-burns_effect/css-transition.php):
-// each slide's zoom origin cascades through four corners via the same
-// nth-child(2n+1)/(3n+1)/(4n+1) overrides (later rule wins, matching CSS
-// cascade order), so consecutive slides pan in varied directions instead
-// of all zooming from the same corner. `position` is the 1-indexed slot
-// (matching :nth-child's 1-indexing).
-function transformOriginFor(position: number): string {
-  let origin = 'bottom left';
-  if (position % 2 === 1) origin = 'top right';
-  if (position % 3 === 1) origin = 'top left';
-  if (position % 4 === 1) origin = 'bottom right';
-  return origin;
+// Matches the actual old-site slider (SlideshowCK / camera.min.js's
+// "kenburns" fx, verified by decompiling the live site's own JS): on every
+// transition it picks the pan corner at random - `Math.random() < .5` for
+// each axis independently (left/right, top/bottom) - not a deterministic
+// per-slide pattern. Re-picked fresh each time a slide becomes active.
+function randomTransformOrigin(): string {
+  const vertical = Math.random() < 0.5 ? 'top' : 'bottom';
+  const horizontal = Math.random() < 0.5 ? 'left' : 'right';
+  return `${vertical} ${horizontal}`;
 }
 
 interface BannerProps {
@@ -127,26 +123,38 @@ export const Banner = ({ variant = 'subpage' }: BannerProps) => {
   // be overridden.
   const slides = variant === 'home' ? HOME_SLIDES : SUBPAGE_SLIDES;
 
-  // The css-101.org reference keeps exactly two slides "active" (its .fx
-  // class) at any moment - the newest (fading/zooming in) and the one
-  // before it (already fully zoomed in, about to be silently replaced).
-  // Removing the older one lets it transition back to rest instead of
-  // snapping, but since a newer opaque slide already covers it, that
-  // reverse transition is never actually seen. `activeSlides` mirrors that
-  // exact two-element sliding window, oldest first.
-  const [activeSlides, setActiveSlides] = useState<number[]>([0]);
+  // Camera.js keeps exactly two slides "active" at any moment - the newest
+  // (fading/zooming in) and the one before it (already fully zoomed in,
+  // about to be silently replaced). Removing the older one lets it
+  // transition back to rest instead of snapping, but since a newer opaque
+  // slide already covers it, that reverse transition is never actually
+  // seen. `activeSlides` mirrors that exact two-element sliding window,
+  // oldest first, each entry carrying the random pan corner it was given
+  // the moment it became active.
+  // Starts empty (not [{index:0,...}]) so the very first slide gets a real
+  // "opacity 0, scale 1" frame painted before the mount effect below
+  // activates it - otherwise the browser paints it already at its final
+  // opacity/scale with nothing to transition from, so the first image
+  // would sit frozen (no crossfade, no zoom) until the second slide takes
+  // over. The real SlideshowCK plugin fades/zooms in its first slide too
+  // (just with a faster 400ms crossfade override), so this restores that.
+  const [activeSlides, setActiveSlides] = useState<{ index: number; origin: string }[]>([]);
+
+  useEffect(() => {
+    setActiveSlides([{ index: 0, origin: randomTransformOrigin() }]);
+  }, []);
 
   const nextSlide = () => {
     setActiveSlides((prev) => {
-      const last = prev[prev.length - 1] ?? 0;
-      return [...prev, (last + 1) % slides.length].slice(-2);
+      const last = prev[prev.length - 1]?.index ?? 0;
+      return [...prev, { index: (last + 1) % slides.length, origin: randomTransformOrigin() }].slice(-2);
     });
   };
 
   const prevSlide = () => {
     setActiveSlides((prev) => {
-      const last = prev[prev.length - 1] ?? 0;
-      return [...prev, (last - 1 + slides.length) % slides.length].slice(-2);
+      const last = prev[prev.length - 1]?.index ?? 0;
+      return [...prev, { index: (last - 1 + slides.length) % slides.length, origin: randomTransformOrigin() }].slice(-2);
     });
   };
 
@@ -160,7 +168,7 @@ export const Banner = ({ variant = 'subpage' }: BannerProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slides.length]);
 
-  const currentSlide = activeSlides[activeSlides.length - 1] ?? 0;
+  const currentSlide = activeSlides[activeSlides.length - 1]?.index ?? 0;
   const currentSlideData = slides[currentSlide] || slides[0];
 
   if (!currentSlideData) return null;
@@ -185,18 +193,22 @@ export const Banner = ({ variant = 'subpage' }: BannerProps) => {
   return (
     <section className={`relative w-full h-[max(40vw,150px)] ${subpageDesktopHeight} flex flex-col items-center justify-center text-center text-white overflow-hidden group ${subpageDesktopOverlap}`}>
 
-      {/* Background Images - Ken Burns effect ported from the css-101.org
-          reference: opacity fades in over 3s while the zoom (scale 1 ->
-          1.1) keeps running for 10s (slower than the fade, so it's still
-          visibly panning well after the crossfade itself is done), zooming
-          toward a per-slide corner via transform-origin rather than the
-          center. Exactly two slides carry the "active" state at once
-          (activeSlides), matching the reference's own two-slide overlap
-          technique instead of a single instantaneous swap. */}
+      {/* Background Images - Ken Burns effect matched to the old site's
+          actual SlideshowCK params (time: 7000, transPeriod: 3000): the
+          opacity crossfade runs linearly over the 3s transPeriod while the
+          zoom (100% -> 130%, i.e. scale 1 -> 1.3) runs over 2x the slide
+          time (14s, eased like jQuery's default "swing"), so it's still
+          visibly zooming well after the crossfade itself is done - toward
+          the random corner picked for that activation (randomTransformOrigin)
+          rather than the center. Exactly two slides carry the "active"
+          state at once (activeSlides), matching the plugin's own
+          two-slide overlap technique instead of a single instantaneous
+          swap. */}
       {slides.map((slide, index) => {
-        const rank = activeSlides.indexOf(index); // -1, 0 (older-active) or 1 (newer-active)
-        const isActive = rank !== -1;
-        const origin = transformOriginFor(index + 1);
+        const entryRank = activeSlides.findIndex((entry) => entry.index === index); // -1, 0 (older-active) or 1 (newer-active)
+        const entry = entryRank !== -1 ? activeSlides[entryRank] : undefined;
+        const isActive = !!entry;
+        const origin = entry?.origin ?? 'center center';
         return (
           <div
             key={index}
@@ -206,11 +218,11 @@ export const Banner = ({ variant = 'subpage' }: BannerProps) => {
               backgroundPosition: origin,
               transformOrigin: origin,
               opacity: isActive ? 1 : 0,
-              transform: isActive ? 'scale(1.1)' : 'scale(1)',
+              transform: isActive ? 'scale(1.3)' : 'scale(1)',
               transitionProperty: 'opacity, transform',
-              transitionDuration: '3000ms, 10000ms',
-              transitionTimingFunction: 'ease-out',
-              zIndex: rank === 1 ? 2 : rank === 0 ? 1 : 0,
+              transitionDuration: '3000ms, 14000ms',
+              transitionTimingFunction: 'linear, ease-in-out',
+              zIndex: entryRank === 1 ? 2 : entryRank === 0 ? 1 : 0,
             }}
           >
             {/* Subtle overlay for text readability */}
@@ -252,29 +264,40 @@ export const Banner = ({ variant = 'subpage' }: BannerProps) => {
 
       {/* Name Plate Container - Aligned to bottom left of container.
           Old site hides the caption below 630px (.camera_caption_title
-          { display: none }) - hidden here below sm (640px) to match. */}
-      <div className="absolute inset-0 z-20 hidden sm:flex items-end pb-24 md:pb-32">
+          { display: none }) - hidden here below sm (640px) to match.
+          Vertical position measured directly against the live site (its
+          .camera_caption sits at top:55% of the slideshow, landing the
+          caption box's own center at ~61% down the banner - notably
+          closer to the middle, near the prev/next arrows, not hugging the
+          bottom edge). Expressed as a vw padding (not a fixed px or a %,
+          which resolves against width not height) because the banner's
+          own height is itself `max(40vw,150px)`, so a vw value scales
+          with it proportionally instead of drifting off at other sizes. */}
+      <div className="absolute inset-0 z-20 hidden sm:flex items-end pb-[14vw]">
         <div className="container mx-auto px-4 lg:px-8 max-w-[1200px] w-full flex justify-start">
 
           {/* Conditionally render Name Plate */}
           {currentSlideData.text && (
-            <div className="bg-[#53a8c7]/90 inline-flex items-center gap-3 md:gap-5 pl-4 pr-10 py-3 md:py-4 max-w-full backdrop-blur-[2px]">
-              {/* Logo from google.png - Filtered to be pure white */}
-              <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center shrink-0">
+            <div className="bg-[#53a8c7]/65 inline-flex items-center gap-1.5 md:gap-2 pl-4 pr-10 py-1.5 md:py-2 max-w-full backdrop-blur-[2px]">
+              {/* Old site's actual icotitleslide.png (verified against the
+                  live site's own CSS: .camera_caption_title background) -
+                  a white ring + swallow silhouette on transparent, not a
+                  filled circle, so no wrapper fill or invert filter needed. */}
+              <div className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center shrink-0">
                 <img
-                  src="/google.png"
+                  src="/icotitleslide.png"
                   alt="Logo"
-                  className="w-8 h-8 md:w-10 md:h-10 object-contain brightness-0 invert opacity-100"
+                  className="w-full h-full object-contain"
                 />
               </div>
 
               {/* Italic Text */}
               {currentSlideData.linkUrl ? (
-                <a href={currentSlideData.linkUrl} target="_blank" rel="noopener noreferrer" className="text-white text-xl md:text-[24px] lg:text-[28px] italic font-semibold tracking-wide drop-shadow-sm text-left leading-tight truncate hover:underline">
+                <a href={currentSlideData.linkUrl} target="_blank" rel="noopener noreferrer" className="text-white text-[22px] italic font-normal tracking-wide drop-shadow-sm text-left leading-tight truncate hover:underline">
                   {currentSlideData.text}
                 </a>
               ) : (
-                <p className="text-white text-xl md:text-[24px] lg:text-[28px] italic font-semibold tracking-wide drop-shadow-sm text-left leading-tight truncate">
+                <p className="text-white text-[22px] italic font-normal tracking-wide drop-shadow-sm text-left leading-tight truncate">
                   {currentSlideData.text}
                 </p>
               )}

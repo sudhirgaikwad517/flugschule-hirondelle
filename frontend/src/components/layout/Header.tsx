@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Menu, X, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Menu, X, ChevronDown, ChevronRight } from 'lucide-react';
 
 export const Header = () => {
   const location = useLocation();
@@ -10,17 +10,18 @@ export const Header = () => {
   // text color - only a light white overlay on the item itself
   // (rgba(255,255,255,0.2)) and a barely-visible text-shadow deepening,
   // applied instantly with no transition. No color/transition here either.
+  // Active items no longer get a persistent background - only bold text -
+  // so hover still shows the same overlay on every item, active or not.
   const getNavClass = (path: string) => {
     const isActive = path === '/' ? pathname === '/' : pathname.startsWith(path);
-    return `text-[14px] uppercase tracking-widest flex items-center gap-1 text-white pl-2.5 pr-[14px] py-1.5 rounded-md ${
-      isActive ? 'font-bold bg-white/20' : 'font-normal hover:bg-white/20'
+    return `text-[14px] uppercase tracking-widest flex items-center gap-1 text-white pl-2.5 pr-[14px] py-1.5 rounded-md hover:bg-white/20 ${
+      isActive ? 'font-bold' : 'font-normal'
     }`;
   };
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedMobileMenu, setExpandedMobileMenu] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
-  const [reisenIndex, setReisenIndex] = useState(0);
   const [user, setUser] = useState<any>(null);
   const reisenTours = ['Brasilien', 'Kolumbien', 'Südafrika', 'Bassano', 'Griechenland', 'Slowenien', 'Bergamo', 'Savoye', 'Vogesen', 'Pfalz'];
   const reisenImages: Record<string, string> = {
@@ -39,14 +40,6 @@ export const Header = () => {
   const toggleMobileMenu = (menu: string) => {
     if (expandedMobileMenu === menu) setExpandedMobileMenu(null);
     else setExpandedMobileMenu(menu);
-  };
-
-  const nextReisen = () => {
-    if (reisenIndex < reisenTours.length - 5) setReisenIndex(reisenIndex + 1);
-  };
-
-  const prevReisen = () => {
-    if (reisenIndex > 0) setReisenIndex(reisenIndex - 1);
   };
 
   useEffect(() => {
@@ -114,63 +107,42 @@ export const Header = () => {
               <Link to="/" className={getNavClass('/')}>
                 <span className="flex items-center justify-center">
                   H
-                  {/* Same icon markup as the home page's promo cards
-                      (google.png inside a bg-white bordered circle) - reused
-                      as-is, just sized down for the nav bar. */}
-                  <span className="w-4 h-4 rounded-full border border-white flex items-center justify-center overflow-hidden bg-white mx-[2px] shrink-0">
-                    <img src="/google.png" alt="O" className="w-full h-full object-contain" />
+                  {/* Old site's actual icotitleslide.png (white ring +
+                      swallow silhouette, cropped tight to its own content -
+                      the source file ships with ~20% transparent padding on
+                      every side, which was quietly shrinking the visible
+                      ring back down near text-size even at a bigger
+                      container) standing in for the "O", sized clearly
+                      larger than the surrounding letters and sitting close
+                      to them, matching the live site. */}
+                  <span className="w-7 h-7 flex items-center justify-center shrink-0">
+                    <img src="/icotitleslide.png" alt="O" className="w-full h-full object-contain" />
                   </span>
                   ME
                 </span>
               </Link>
 
-              {/* Mega Menu: Ausbildung */}
-              <div className="group h-[40px] flex items-center">
+              {/* Ausbildung Dropdown - plain single-column list like Infos,
+                  not a full-width mega menu with promo images (those two
+                  images didn't belong to any real submenu page). Item
+                  order matches the live site's actual Ausbildung submenu
+                  exactly (verified against its own flat menu markup):
+                  Schnupperkurs, L-Schein, A-Schein, B-Schein, Winde,
+                  Tandem, Ausbildungskonzept. */}
+              <div className="relative group h-[40px] flex items-center">
                 <Link to="/ausbildung" className={getNavClass('/ausbildung')}>
                   AUSBILDUNG <ChevronDown className="w-3 h-3" />
                 </Link>
-
-                {/* Full Width Dropdown via Absolute */}
-                <div className="absolute top-[40px] left-0 w-full bg-[#111] border-t border-white/10 hidden group-hover:block transition-all shadow-2xl z-50">
-                  <div className="container mx-auto max-w-7xl px-8 py-12 flex gap-12">
-                    <div className="flex-1 grid grid-cols-2 gap-8">
-                      <div>
-                        <h4 className="text-white text-[11px] uppercase tracking-[0.2em] font-bold mb-6">EINSTIEG & GRUNDLAGEN</h4>
-                        <ul className="space-y-4">
-                          <li><Link to="/ausbildung/schnupperkurs" className="text-gray-400 hover:text-luxury-gold text-sm transition-colors">Schnupper-/Einsteigerkurs</Link></li>
-                          <li><Link to="/ausbildung/l-schein" className="text-gray-400 hover:text-luxury-gold text-sm transition-colors">L-Schein (Grundkurs)</Link></li>
-                          <li><Link to="/ausbildung/ausbildungskonzept" className="text-gray-400 hover:text-luxury-gold text-sm transition-colors">Ausbildungskonzept</Link></li>
-                        </ul>
-                      </div>
-                      <div>
-                        <h4 className="text-white text-[11px] uppercase tracking-[0.2em] font-bold mb-6">WEITERBILDUNG</h4>
-                        <ul className="space-y-4">
-                          <li><Link to="/ausbildung/a-schein" className="text-gray-400 hover:text-luxury-gold text-sm transition-colors">A-Schein</Link></li>
-                          <li><Link to="/ausbildung/b-schein" className="text-gray-400 hover:text-luxury-gold text-sm transition-colors">B-Schein</Link></li>
-                          <li><Link to="/ausbildung/windenschein" className="text-gray-400 hover:text-luxury-gold text-sm transition-colors">Winde</Link></li>
-                          <li><Link to="/ausbildung/tandemschein" className="text-gray-400 hover:text-luxury-gold text-sm transition-colors">Tandem</Link></li>
-                        </ul>
-                      </div>
-                    </div>
-                    <div className="flex-1 flex gap-4">
-                      <div className="relative flex-1 h-[300px] overflow-hidden group/card cursor-pointer">
-                        <img src="/images/tandemschein/hero.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-105" alt="Tandem" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                        <div className="absolute bottom-6 left-6 right-6">
-                          <p className="text-white text-[10px] uppercase tracking-widest font-bold mb-1">ERLEBNIS</p>
-                          <h5 className="font-luxury text-white text-2xl">Tandemflüge</h5>
-                        </div>
-                      </div>
-                      <div className="relative flex-1 h-[300px] overflow-hidden group/card cursor-pointer">
-                        <img src="/images/performance/sicherheitstraining.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-105" alt="Performance" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                        <div className="absolute bottom-6 left-6 right-6">
-                          <p className="text-white text-[10px] uppercase tracking-widest font-bold mb-1">TRAINING</p>
-                          <h5 className="font-luxury text-white text-2xl">Performance</h5>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                <div className="absolute top-[40px] left-0 w-64 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl">
+                  <ul className="flex flex-col">
+                    <li><Link to="/ausbildung/schnupperkurs" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Schnupper-/Einsteigerkurs</Link></li>
+                    <li><Link to="/ausbildung/l-schein" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">L-Schein (Grundkurs)</Link></li>
+                    <li><Link to="/ausbildung/a-schein" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">A-Schein</Link></li>
+                    <li><Link to="/ausbildung/b-schein" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">B-Schein</Link></li>
+                    <li><Link to="/ausbildung/windenschein" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Winde</Link></li>
+                    <li><Link to="/ausbildung/tandemschein" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Tandem</Link></li>
+                    <li><Link to="/ausbildung/ausbildungskonzept" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Ausbildungskonzept</Link></li>
+                  </ul>
                 </div>
               </div>
 
@@ -179,12 +151,12 @@ export const Header = () => {
                 <Link to="/performance" className={getNavClass('/performance')}>
                   PERFORMANCE <ChevronDown className="w-3 h-3" />
                 </Link>
-                <div className="absolute top-[40px] right-0 w-56 bg-[#111] border-t border-white/10 hidden group-hover:block px-0 py-4 shadow-2xl">
+                <div className="absolute top-[40px] right-0 w-56 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl">
                   <ul className="flex flex-col">
-                    <li><Link to="/performance/sicherheitstraining" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Sicherheit</Link></li>
-                    <li><Link to="/performance/rettungsgeraetetraining" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Rettungsgeräte</Link></li>
-                    <li><Link to="/performance/refresher" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Refresher</Link></li>
-                    <li><Link to="/performance/groundhandling" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Groundhandling</Link></li>
+                    <li><Link to="/performance/sicherheitstraining" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Sicherheit</Link></li>
+                    <li><Link to="/performance/rettungsgeraetetraining" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Rettungsgeräte</Link></li>
+                    <li><Link to="/performance/refresher" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Refresher</Link></li>
+                    <li><Link to="/performance/groundhandling" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Groundhandling</Link></li>
                   </ul>
                 </div>
               </div>
@@ -195,34 +167,24 @@ export const Header = () => {
                   REISEN <ChevronDown className="w-3 h-3" />
                 </Link>
 
-                <div className="absolute top-[40px] left-0 w-full bg-[#111] border-t border-white/10 hidden group-hover:block transition-all shadow-2xl z-50">
-                  <div className="container mx-auto max-w-7xl px-8 py-12 relative">
-                    {/* Prev Button */}
-                    <button onClick={(e) => { e.preventDefault(); prevReisen(); }} className={`absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors z-10 ${reisenIndex === 0 ? 'opacity-30 cursor-not-allowed' : 'opacity-100'}`}>
-                      <ChevronLeft className="w-6 h-6 text-white" />
-                    </button>
-
-                    <div className="overflow-hidden w-full px-8">
-                      <div className="flex transition-transform duration-500 ease-in-out gap-4" style={{ transform: `translateX(-${reisenIndex * (100 / 5)}%)` }}>
-                        {reisenTours.map((tour, idx) => (
-                          <Link 
-                            to={tour === 'Brasilien' ? '/reisen/brasilien-tour' : tour === 'Kolumbien' ? '/reisen/kolumbien-tour' : tour === 'Südafrika' ? '/reisen/suedafrika-tour' : tour === 'Bassano' ? '/reisen/bassano-tour' : tour === 'Griechenland' ? '/reisen/griechenland-tour' : tour === 'Slowenien' ? '/reisen/slowenien-tour' : tour === 'Bergamo' ? '/reisen/bergamo-tour' : tour === 'Savoye' ? '/reisen/savoye-tour' : tour === 'Vogesen' ? '/reisen/vogesen-tour' : tour === 'Pfalz' ? '/reisen/pfalz-tour' : `/reisen#${tour.toLowerCase()}`} 
-                            key={tour} 
-                            className="block flex-none w-[calc(20%-12.8px)] text-center group/tour cursor-pointer"
-                          >
-                            <div className="w-full h-[200px] overflow-hidden mb-4">
-                              <img src={reisenImages[tour]} alt={tour} className="w-full h-full object-cover transition-transform duration-700 group-hover/tour:scale-110" />
-                            </div>
-                            <h5 className="font-luxury text-white text-xl">{tour}</h5>
-                          </Link>
-                        ))}
-                      </div>
+                {/* All 10 tours in one static row - no slider/arrows, just
+                    smaller thumbnails so every item fits on screen at once. */}
+                <div className="absolute top-[40px] left-0 w-full bg-luxury-gold border-t border-black/10 hidden group-hover:block transition-all shadow-2xl z-50">
+                  <div className="container mx-auto max-w-[1600px] px-8 py-8">
+                    <div className="flex gap-3">
+                      {reisenTours.map((tour) => (
+                        <Link
+                          to={tour === 'Brasilien' ? '/reisen/brasilien-tour' : tour === 'Kolumbien' ? '/reisen/kolumbien-tour' : tour === 'Südafrika' ? '/reisen/suedafrika-tour' : tour === 'Bassano' ? '/reisen/bassano-tour' : tour === 'Griechenland' ? '/reisen/griechenland-tour' : tour === 'Slowenien' ? '/reisen/slowenien-tour' : tour === 'Bergamo' ? '/reisen/bergamo-tour' : tour === 'Savoye' ? '/reisen/savoye-tour' : tour === 'Vogesen' ? '/reisen/vogesen-tour' : tour === 'Pfalz' ? '/reisen/pfalz-tour' : `/reisen#${tour.toLowerCase()}`}
+                          key={tour}
+                          className="block flex-1 min-w-0 text-center group/tour cursor-pointer"
+                        >
+                          <div className="w-full h-[100px] overflow-hidden mb-2">
+                            <img src={reisenImages[tour]} alt={tour} className="w-full h-full object-cover transition-transform duration-700 group-hover/tour:scale-110" />
+                          </div>
+                          <h5 className="font-luxury text-black text-sm truncate">{tour}</h5>
+                        </Link>
+                      ))}
                     </div>
-
-                    {/* Next Button */}
-                    <button onClick={(e) => { e.preventDefault(); nextReisen(); }} className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors z-10 ${reisenIndex >= reisenTours.length - 5 ? 'opacity-30 cursor-not-allowed' : 'opacity-100'}`}>
-                      <ChevronRight className="w-6 h-6 text-white" />
-                    </button>
                   </div>
                 </div>
               </div>
@@ -240,13 +202,13 @@ export const Header = () => {
                 <Link to="/service" className={getNavClass('/service')}>
                   SERVICE <ChevronDown className="w-3 h-3" />
                 </Link>
-                <div className="absolute top-[40px] right-0 w-64 bg-[#111] border-t border-white/10 hidden group-hover:block px-0 py-4 shadow-2xl">
+                <div className="absolute top-[40px] right-0 w-64 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl">
                   <ul className="flex flex-col">
-                    <li><Link to="/service/2-jahres-check" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">2-Jahres-Check</Link></li>
-                    <li><Link to="/service/rettungspacken" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Rettungspacken</Link></li>
-                    <li><Link to="/service/trimmtuning" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Trimmen</Link></li>
-                    <li><Link to="/service/reparatur" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Reparaturen</Link></li>
-                    <li><Link to="/service/service-auftrag" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Service-Auftrag</Link></li>
+                    <li><Link to="/service/2-jahres-check" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Checks</Link></li>
+                    <li><Link to="/service/rettungspacken" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Rettungspacken</Link></li>
+                    <li><Link to="/service/trimmtuning" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Trimmen</Link></li>
+                    <li><Link to="/service/reparatur" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Reparaturen</Link></li>
+                    <li><Link to="/service/service-auftrag" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Service-Auftrag</Link></li>
                   </ul>
                 </div>
               </div>
@@ -256,17 +218,17 @@ export const Header = () => {
                 <Link to="/infos" className={getNavClass('/infos')}>
                   INFOS <ChevronDown className="w-3 h-3" />
                 </Link>
-                <div className="absolute top-[40px] left-0 w-64 bg-[#111] border-t border-white/10 hidden group-hover:block px-0 py-4 shadow-2xl">
+                <div className="absolute top-[40px] left-0 w-64 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl">
                   <ul className="flex flex-col">
-                    <li><Link to="/infos#kontakt" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Kontakt & Anfahrt</Link></li>
-                    <li><Link to="/infos/team" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Team</Link></li>
-                    <li><Link to="/infos/gelaende" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Gelände</Link></li>
-                    <li><Link to="/infos/wetter" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Wetter</Link></li>
-                    <li><Link to="/infos/medien" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Medien</Link></li>
-                    <li><Link to="/downloads" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Downloads</Link></li>
-                    <li><Link to="/infos/gruppenevents" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Gruppenevents</Link></li>
-                    <li><Link to="/infos/gutscheine" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Gutscheine</Link></li>
-                    <li><Link to="/infos/versicherungen" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Versicherungen</Link></li>
+                    <li><Link to="/infos#kontakt" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Kontakt & Anfahrt</Link></li>
+                    <li><Link to="/infos/team" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Team</Link></li>
+                    <li><Link to="/infos/gelaende" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Gelände</Link></li>
+                    <li><Link to="/infos/wetter" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Wetter</Link></li>
+                    <li><Link to="/infos/medien" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Medien</Link></li>
+                    <li><Link to="/downloads" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Downloads</Link></li>
+                    <li><Link to="/infos/gruppenevents" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Gruppenevents</Link></li>
+                    <li><Link to="/infos/gutscheine" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Gutscheine</Link></li>
+                    <li><Link to="/infos/versicherungen" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Versicherungen</Link></li>
                   </ul>
                 </div>
               </div>
@@ -280,10 +242,10 @@ export const Header = () => {
                   <span className="cursor-pointer border border-[#394553] text-[#394553] text-[11px] uppercase tracking-[0.15em] font-semibold px-4 py-2 hover:bg-[#394553] hover:text-white transition-all rounded-sm flex items-center gap-1">
                     {user.name ? user.name.split(' ')[0] : 'KONTO'} <ChevronDown className="w-3 h-3" />
                   </span>
-                  <div className="absolute top-[40px] right-0 w-48 bg-[#111] border-t border-white/10 hidden group-hover:block px-0 py-4 shadow-2xl">
+                  <div className="absolute top-[40px] right-0 w-48 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl">
                     <ul className="flex flex-col">
-                      <li><Link to="/profil" className="block px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Mein Profil</Link></li>
-                      <li><button onClick={handleLogout} className="block w-full text-left px-8 py-3 text-gray-400 hover:text-luxury-gold text-sm transition-colors border-b border-white/5">Logout</button></li>
+                      <li><Link to="/profil" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Mein Profil</Link></li>
+                      <li><button onClick={handleLogout} className="block w-full text-left px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Logout</button></li>
                     </ul>
                   </div>
                 </div>
@@ -349,11 +311,11 @@ export const Header = () => {
                     <div className="flex flex-col space-y-4 pl-4 py-2">
                       <Link to="/ausbildung/schnupperkurs" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Schnupper-/Einsteigerkurs</Link>
                       <Link to="/ausbildung/l-schein" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">L-Schein (Grundkurs)</Link>
-                      <Link to="/ausbildung/ausbildungskonzept" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Ausbildungskonzept</Link>
                       <Link to="/ausbildung/a-schein" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">A-Schein</Link>
                       <Link to="/ausbildung/b-schein" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">B-Schein</Link>
                       <Link to="/ausbildung/windenschein" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Winde</Link>
                       <Link to="/ausbildung/tandemschein" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Tandem</Link>
+                      <Link to="/ausbildung/ausbildungskonzept" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Ausbildungskonzept</Link>
                     </div>
                   </div>
                 </div>
@@ -416,7 +378,7 @@ export const Header = () => {
                   </div>
                   <div className={`overflow-hidden transition-all duration-300 ${expandedMobileMenu === 'service' ? 'max-h-[400px] mt-2 mb-2 opacity-100' : 'max-h-0 opacity-0'}`}>
                     <div className="flex flex-col space-y-4 pl-4 py-2">
-                      <Link to="/service/2-jahres-check" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">2-Jahres-Check</Link>
+                      <Link to="/service/2-jahres-check" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Checks</Link>
                       <Link to="/service/rettungspacken" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Rettungspacken</Link>
                       <Link to="/service/trimmtuning" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Trimmen</Link>
                       <Link to="/service/reparatur" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Reparaturen</Link>

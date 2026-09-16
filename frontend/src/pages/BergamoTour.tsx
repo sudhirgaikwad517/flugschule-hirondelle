@@ -1,8 +1,23 @@
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
+import { Search } from 'lucide-react';
 import { EventComments } from '../components/common/EventComments';
+import { useLightbox } from '../components/common/Lightbox';
+import { GutscheinBox } from '../components/common/GutscheinBox';
+
+// Old site's actual "Simple Image Gallery" filenames for this page
+// (/images/bilder/2-tour-bergamo/*), in their real order.
+const GALLERY_FILES = [
+  '03f0d2a6-4c66-49c0-bd99-872b02771702.jpg', '078fa6dc-5afc-486f-8b15-87c1abb22ee7.jpg', 'Bergamo_1389.jpg', 'Bergamo_1655.jpg', 'Bergamo_2477.jpg',
+  'Bergamo_2798.jpg', 'Bergamo_4039.jpg', 'Bergamo_4411.jpg', 'Bergamo_4700.jpg', 'Bergamo_5418.jpg',
+  'Bergamo_5595.jpg', 'Bergamo_7045.jpg', 'Bergamo_7542.jpg', 'Bergamo_7825.jpg', 'Bergamo_7955.jpg',
+  'Bergamo_8375.jpg', 'Bergamo_8503.jpg', 'Bergamo_8774.jpg', 'Bergamo_8999.jpg', 'IMG_6817.jpg',
+  'IMG_6821.jpg', 'IMG_6824.jpg', 'IMG_6829.jpg', 'IMG_6840.jpg', 'IMG_6847.jpg',
+  'IMG_6849.jpg', 'IMG_6854.jpg',
+];
 
 export const BergamoTour = () => {
+  const { openGallery } = useLightbox();
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -95,10 +110,10 @@ export const BergamoTour = () => {
 
             {/* Badges */}
             <div className="flex flex-col gap-1 w-full font-semibold text-white text-center text-sm">
-              <div className="bg-[#e67e22] py-2">Streckenflugtraining</div>
-              <div className="bg-[#27ae60] py-2">Thermik- und Flugtechniktraining</div>
-              <div className="bg-[#8cc63f] py-2">Soaringtraining</div>
-              <div className="bg-[#2980b9] py-2">Groundhandlingtraining</div>
+              <div className="bg-[#E58E26] py-2">Streckenflugtraining</div>
+              <div className="bg-[#34963B] py-2">Thermik- und Flugtechniktraining</div>
+              <div className="bg-[#80C533] py-2">Soaringtraining</div>
+              <div className="bg-[#3274B7] py-2">Groundhandlingtraining</div>
             </div>
             
             {/* Booking Card */}
@@ -132,36 +147,35 @@ export const BergamoTour = () => {
               </Link>
             </div>
 
-            {/* Voucher Box */}
-            <div>
-               <h3 className="font-luxury text-2xl text-[#53a8c7] mb-4 uppercase tracking-wider border-b border-gray-200 pb-4">
-                 Tour Verschenken
-               </h3>
-               <p className="text-gray-500 font-light text-sm mb-4">
-                 Die Tour ist auch als Geschenk-Gutschein möglich
-               </p>
-               <div className="relative h-40 w-full rounded-sm overflow-hidden group cursor-pointer mb-4">
-                 <img src="/images/gutscheine/gutschein.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
-                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
-                 <div className="absolute right-0 top-0 bottom-0 w-16 bg-[#0088cc] flex items-center justify-center">
-                   <div className="rotate-[-90deg] text-white font-bold tracking-widest whitespace-nowrap">Gutschein</div>
-                 </div>
-               </div>
-            </div>
+            <GutscheinBox
+              heading="Tour Verschenken"
+              description="Die Tour ist auch als Geschenk-Gutschein möglich"
+              headingClassName="text-[#53a8c7]"
+            />
 
             {/* Impressions Gallery */}
             <div>
                <h3 className="font-luxury text-2xl text-[#53a8c7] mb-6 uppercase tracking-wider border-b border-gray-200 pb-4">
                  Impressionen
                </h3>
-               <div className="grid grid-cols-2 gap-1 bg-black p-1">
-                 {Array.from({ length: 10 }, (_, i) => i + 1).map((n, index) => (
-                   <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-900">
+               <div className="grid grid-cols-3 gap-2">
+                 {GALLERY_FILES.map((file, index) => (
+                   <div
+                     key={file}
+                     className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
+                     onClick={() => openGallery(
+                       GALLERY_FILES.map((f) => ({ src: `/images/tour-bergamo/${f}`, alt: 'Impression' })),
+                       index
+                     )}
+                   >
                      <img
-                       src={`/images/tour-bergamo/gallery-${n}.jpg`}
+                       src={`/images/tour-bergamo/${file}`}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
+                     <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                       <Search className="w-5 h-5 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]" />
+                     </div>
                    </div>
                  ))}
                </div>
@@ -171,7 +185,7 @@ export const BergamoTour = () => {
           
         </div>
 
-        <div className="max-w-[1200px] mx-auto mt-12">
+        <div id="comments" className="max-w-[1200px] mx-auto mt-12">
           <EventComments pageSlug="bergamo-tour" />
         </div>
       </section>

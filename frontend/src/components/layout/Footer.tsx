@@ -65,21 +65,27 @@ export const Footer = () => {
     }
   };
 
+  // Order matches the live site's own footer sitemap menu exactly
+  // (verified against its actual markup, which regroups these same 15
+  // items into different column counts at different widths but always in
+  // this same underlying sequence): Home, Reisen, Kalender, Ausbildung,
+  // Shop, Checks, Wetter, Medien, Gelände, Team, Tandem, FAQ, Kontakt,
+  // Impressum, Datenschutzerklärung.
   const NAV_LINKS = [
     { to: '/', label: 'Home' },
-    { to: '/ausbildung', label: 'Ausbildung' },
-    { to: '/infos/wetter', label: 'Wetter' },
-    { to: '/infos/team', label: 'Team' },
-    { to: '/infos#kontakt', label: 'Kontakt' },
     { to: '/reisen', label: 'Reisen' },
-    { to: '/shop', label: 'Shop' },
-    { to: '/infos/medien', label: 'Medien' },
-    { to: '/ausbildung#tandem', label: 'Tandem' },
-    { to: '/impressum', label: 'Impressum' },
     { to: '/buchungskalender', label: 'Kalender' },
+    { to: '/ausbildung', label: 'Ausbildung' },
+    { to: '/shop', label: 'Shop' },
     { to: '/service#2-jahres-check', label: 'Checks' },
+    { to: '/infos/wetter', label: 'Wetter' },
+    { to: '/infos/medien', label: 'Medien' },
     { to: '/infos/gelaende', label: 'Gelände' },
+    { to: '/infos/team', label: 'Team' },
+    { to: '/ausbildung#tandem', label: 'Tandem' },
     { to: '/faq', label: 'FAQ' },
+    { to: '/infos#kontakt', label: 'Kontakt' },
+    { to: '/impressum', label: 'Impressum' },
     { to: '/datenschutz', label: 'Datenschutzerklärung' },
   ];
 
@@ -105,7 +111,7 @@ export const Footer = () => {
                 </label>
               </div>
 
-              <div className="mb-4">
+              <div className="mb-4 max-w-xs">
                 <label className="block text-sm text-white font-semibold mb-1">Name</label>
                 <input
                   type="text"
@@ -115,7 +121,7 @@ export const Footer = () => {
                 />
               </div>
 
-              <div className="mb-4">
+              <div className="mb-4 max-w-xs">
                 <label className="block text-sm text-white font-semibold mb-1">E-Mail</label>
                 <input
                   type="email"
@@ -160,19 +166,24 @@ export const Footer = () => {
           <div className="w-full md:w-[62%] flex flex-col justify-center">
             <div className="flex items-center gap-4 mb-8">
               <div className="flex-1 h-px bg-white/50"></div>
-              <div className="w-14 h-14 rounded-full border border-white overflow-hidden flex-shrink-0">
-                {/* bird-badge.png: white circle + bird in the brand's blue
-                    accent, not plain google.png - its own blue circle is too
-                    close in tone to this footer's gradient and disappears
-                    into it. */}
-                <img src="/bird-badge.png" alt="Flugschule Hirondelle" className="w-full h-full object-cover" />
+              <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
+                {/* Old site's actual icotitleslide.png (white ring + swallow
+                    silhouette, no fill) - same asset as the header's HOME
+                    icon and the banner caption, for one consistent bird
+                    mark across the site instead of the ad-hoc bird-badge.png. */}
+                <img src="/icotitleslide.png" alt="Flugschule Hirondelle" className="w-full h-full object-contain" />
               </div>
               <div className="flex-1 h-px bg-white/50"></div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-3 text-sm font-semibold mb-8">
+            {/* 5 columns filled top-to-bottom then next column (grid-flow-col
+                + grid-rows-3), matching the live site's real footer sitemap
+                exactly: column 1 is Home/Reisen/Kalender, column 2 is
+                Ausbildung/Shop/Checks, and so on - not a left-to-right,
+                row-by-row fill, which regroups the same 15 links wrong. */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 md:grid-rows-3 md:grid-flow-col gap-x-6 gap-y-3 text-sm font-semibold mb-8">
               {NAV_LINKS.map((link) => (
-                <Link key={link.to} to={link.to} className="underline hover:text-luxury-gold transition-colors break-words">
+                <Link key={link.to} to={link.to} className="underline hover:text-luxury-gold transition-colors whitespace-nowrap">
                   {link.label}
                 </Link>
               ))}
@@ -182,7 +193,11 @@ export const Footer = () => {
               <div className="flex-1 h-px bg-white/50"></div>
               <div className="flex gap-3">
                 <a href="https://www.facebook.com/fshirondelle" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-8 h-8 rounded-full border border-white flex items-center justify-center hover:bg-white/10 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.51 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.47h-1.26c-1.24 0-1.63.77-1.63 1.56v1.87h2.78l-.44 2.91h-2.34V22c4.78-.76 8.44-4.92 8.44-9.94z"/></svg>
+                  {/* Plain "f" glyph, not the self-contained circular
+                      facebook badge path - that one already draws its own
+                      outer ring, which doubled up with this wrapper's own
+                      border into a nested-circle look. */}
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9.198 21.5h4v-8.01h3.604l.396-3.98h-4V7.5a1 1 0 0 1 1-1h3v-4h-3a5 5 0 0 0-5 5v2.01h-2l-.396 3.98h2.396z"/></svg>
                 </a>
                 <a href="https://www.youtube.com/channel/UCOwo0Wh2zoX_7nyArBdk_IQ/videos" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="w-8 h-8 rounded-full border border-white flex items-center justify-center hover:bg-white/10 transition-colors">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M23.5 6.2a3.02 3.02 0 0 0-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.56A3.02 3.02 0 0 0 .5 6.2 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.8 3.02 3.02 0 0 0 2.12 2.14C4.5 20.5 12 20.5 12 20.5s7.5 0 9.38-.56a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.8zM9.75 15.5v-7l6.5 3.5-6.5 3.5z"/></svg>

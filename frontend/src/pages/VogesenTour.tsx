@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
 import { EventComments } from '../components/common/EventComments';
+import { GutscheinBox } from '../components/common/GutscheinBox';
 
 export const VogesenTour = () => {
   return (
@@ -87,9 +88,9 @@ export const VogesenTour = () => {
 
             {/* Badges */}
             <div className="flex flex-col gap-1 w-full font-semibold text-white text-center text-sm">
-              <div className="bg-[#e67e22] py-2">Streckenflugtraining</div>
-              <div className="bg-[#27ae60] py-2">Thermik- und Flugtechniktraining</div>
-              <div className="bg-[#8cc63f] py-2">Soaringtraining</div>
+              <div className="bg-[#E58E26] py-2">Streckenflugtraining</div>
+              <div className="bg-[#34963B] py-2">Thermik- und Flugtechniktraining</div>
+              <div className="bg-[#80C533] py-2">Soaringtraining</div>
             </div>
             
             {/* Booking Card */}
@@ -123,28 +124,17 @@ export const VogesenTour = () => {
               </Link>
             </div>
 
-            {/* Voucher Box */}
-            <div>
-               <h3 className="font-luxury text-2xl text-[#53a8c7] mb-4 uppercase tracking-wider border-b border-gray-200 pb-4">
-                 Tour Verschenken
-               </h3>
-               <p className="text-gray-500 font-light text-sm mb-4">
-                 Die Tour ist auch als Geschenk-Gutschein möglich
-               </p>
-               <div className="relative h-40 w-full rounded-sm overflow-hidden group cursor-pointer mb-4">
-                 <img src="/images/gutscheine/gutschein.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
-                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
-                 <div className="absolute right-0 top-0 bottom-0 w-16 bg-[#0088cc] flex items-center justify-center">
-                   <div className="rotate-[-90deg] text-white font-bold tracking-widest whitespace-nowrap">Gutschein</div>
-                 </div>
-               </div>
-            </div>
+            <GutscheinBox
+              heading="Tour Verschenken"
+              description="Die Tour ist auch als Geschenk-Gutschein möglich"
+              headingClassName="text-[#53a8c7]"
+            />
 
           </div>
           
         </div>
 
-        <div className="max-w-[1200px] mx-auto mt-12">
+        <div id="comments" className="max-w-[1200px] mx-auto mt-12">
           <EventComments pageSlug="vogesen-tour" />
         </div>
       </section>

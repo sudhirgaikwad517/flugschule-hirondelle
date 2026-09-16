@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Bird } from 'lucide-react';
+import { Bird, Search } from 'lucide-react';
 import { Banner } from '../components/common/Banner';
+import { useLightbox } from '../components/common/Lightbox';
 
 export const Ausbildung = () => {
+  const { open } = useLightbox();
   return (
     <div className="w-full bg-white">
       <Banner />
@@ -23,7 +25,7 @@ export const Ausbildung = () => {
               Wir begleiten euch von den ersten Hüpfern bis zu euren ersten Strecken- und Thermikflügen hier im Odenwald, in der Pfalz, im Kraichtal, im Nahetal und überall sonst auf der Welt.
             </p>
             <p>
-              Im Nachfolgenden sind die Ausbildungswege in der Flugschule Hirondelle vom <Link to="/ausbildung/schnupperkurs" className="text-luxury-gold hover:underline font-normal">Schnupper-/Einsteigerkurs</Link> über den <Link to="/ausbildung/l-schein" className="text-luxury-gold hover:underline font-normal">L-Schein</Link> und die <Link to="/ausbildung/a-schein" className="text-luxury-gold hover:underline font-normal">Höhenflugschulung (A-Schein)</Link> bis zum <Link to="/ausbildung/b-schein" className="text-luxury-gold hover:underline font-normal">unbeschränkten Luftfahrerschein (B-Schein)</Link> aufgelistet.
+              Im Nachfolgenden sind die Ausbildungswege in der Flugschule Hirondelle vom <Link to="/ausbildung/schnupperkurs" className="text-luxury-gold hover:underline font-bold">Schnupper-/Einsteigerkurs</Link> über den <Link to="/ausbildung/l-schein" className="text-luxury-gold hover:underline font-bold">L-Schein</Link> und die <Link to="/ausbildung/a-schein" className="text-luxury-gold hover:underline font-bold">Höhenflugschulung (A-Schein)</Link> bis zum <Link to="/ausbildung/b-schein" className="text-luxury-gold hover:underline font-bold">unbeschränkten Luftfahrerschein (B-Schein)</Link> aufgelistet, hier gelangt ihr zur <Link to="/ausbildung/ausbildungskonzept" className="text-luxury-gold hover:underline font-bold">Gesamtübersicht</Link>.
             </p>
           </div>
         </div>
@@ -36,38 +38,38 @@ export const Ausbildung = () => {
             <table className="w-full text-left border-collapse table-fixed">
               <thead>
                 <tr className="border-b border-gray-300 text-[11px] sm:text-sm">
-                  <th className="py-2 text-[#53a8c7] font-semibold w-[40%] pr-1">Kurse/Zeiten</th>
-                  <th className="py-2 text-[#53a8c7] font-semibold w-[40%] pr-1">Kursinhalt</th>
-                  <th className="py-2 text-[#53a8c7] font-semibold w-[20%] text-right">Kurspreis*</th>
+                  <th className="py-2 text-[#429cbf] font-semibold w-[40%] pr-1">Kurse/Zeiten</th>
+                  <th className="py-2 text-[#429cbf] font-semibold w-[40%] pr-1">Kursinhalt</th>
+                  <th className="py-2 text-[#429cbf] font-semibold w-[20%] text-right">Kurspreis*</th>
                 </tr>
               </thead>
               <tbody className="text-[11px] sm:text-sm">
-                <tr className="bg-[#78b846] text-black">
+                <tr className="bg-[#80c533] text-black">
                   <td className="py-2 px-1 sm:px-2 font-bold break-words pr-2">Schnupper-/Einsteigerkurs <br className="sm:hidden" /><span className="font-normal text-[10px] sm:text-sm">(1 – 2 Tage)</span></td>
                   <td className="py-2 px-1 sm:px-2 pr-2">Ausrüstung kennen lernen, die ersten Flüge</td>
                   <td className="py-2 px-1 sm:px-2 text-right font-semibold">ab 149,- €</td>
                 </tr>
-                <tr className="bg-[#388e3c] text-white">
+                <tr className="bg-[#34963b] text-black">
                   <td className="py-2 px-1 sm:px-2 font-bold break-words pr-2">L-Schein <br className="sm:hidden" /><span className="font-normal text-[10px] sm:text-sm">(3 – 4 Tage)</span></td>
                   <td className="py-2 px-1 sm:px-2 pr-2">15 Flüge am Grundkurs-Übungshang</td>
                   <td className="py-2 px-1 sm:px-2 text-right font-semibold">620,- €</td>
                 </tr>
-                <tr className="bg-[#fbc02d] text-black">
+                <tr className="bg-[#fff600] text-black">
                   <td className="py-2 px-1 sm:px-2 font-bold break-words pr-2">Windenschein <br className="sm:hidden" /><span className="font-normal text-[10px] sm:text-sm">(3 Tage)</span></td>
                   <td className="py-2 px-1 sm:px-2 pr-2">20 Flüge an der Winde</td>
                   <td className="py-2 px-1 sm:px-2 text-right font-semibold">450,- €</td>
                 </tr>
-                <tr className="bg-[#fb8c00] text-black">
+                <tr className="bg-[#ffd700] text-black">
                   <td className="py-2 px-1 sm:px-2 font-bold break-words pr-2">A-Schein <br className="sm:hidden" /><span className="font-normal text-[10px] sm:text-sm">(mind. 1 Woche)</span></td>
                   <td className="py-2 px-1 sm:px-2 pr-2">40 Höhenflüge</td>
                   <td className="py-2 px-1 sm:px-2 text-right font-semibold">ab 990,- €</td>
                 </tr>
-                <tr className="bg-[#ef6c00] text-white">
+                <tr className="bg-[#e58e26] text-black">
                   <td className="py-2 px-1 sm:px-2 font-bold break-words pr-2">B-Schein <br className="sm:hidden" /><span className="font-normal text-[10px] sm:text-sm">(mind. 1 Woche)</span></td>
                   <td className="py-2 px-1 sm:px-2 pr-2">20 Höhenflüge</td>
                   <td className="py-2 px-1 sm:px-2 text-right font-semibold">ab 990,- €</td>
                 </tr>
-                <tr className="bg-[#bdbdbd] text-black border-b border-gray-300">
+                <tr className="bg-[#c4c5ca] text-black border-b border-gray-300">
                   <td className="py-2 px-1 sm:px-2 font-bold break-words pr-2">Tandemschein <br className="sm:hidden" /><span className="font-normal text-[10px] sm:text-sm">(mind. 1 Woche)</span></td>
                   <td className="py-2 px-1 sm:px-2 pr-2">40 Höhenflüge mit einem Passagier</td>
                   <td className="py-2 px-1 sm:px-2 text-right font-semibold">ab 790,- €</td>
@@ -77,18 +79,23 @@ export const Ausbildung = () => {
             <p className="text-xs text-gray-500 mt-2">*exkl. Zusatzkosten vor Ort (z. B. Geländegebühren, Auffahrtskosten etc.)</p>
           </div>
 
-          {/* Graphic */}
+          {/* Graphic - old site's mediabox plugin puts a magnifier badge in
+              the bottom-right corner of every zoomable content image; this
+              one opens the same way as the course photos below. */}
           <div className="w-full lg:w-2/5 flex flex-col justify-end">
-            <img 
-              src="https://www.fs-hirondelle.de/images/inhalte/ausbildungswege.png" 
-              alt="Ausbildungswege Grafik" 
-              className="w-full object-contain mb-2"
-              onError={(e) => {
-                // Fallback if the original image fails to load
-                e.currentTarget.src = "https://picsum.photos/id/1018/800/400";
-                e.currentTarget.className = "w-full h-48 object-cover opacity-50 grayscale mb-2";
-              }}
-            />
+            <div
+              className="relative group/zoom cursor-zoom-in mb-2"
+              onClick={() => open('/images/inhalte/ausbildungswege.png', 'Ausbildungswege Grafik')}
+            >
+              <img
+                src="/images/inhalte/ausbildungswege.png"
+                alt="Ausbildungswege Grafik"
+                className="w-full object-contain"
+              />
+              <div className="absolute bottom-2 right-2 flex items-center justify-center">
+                <Search className="w-6 h-6 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]" />
+              </div>
+            </div>
             <p className="text-[13px] text-gray-600 text-center mb-6">
               hm = ca. Höhenmeter-Differenz zwischen Start- und Landeplatz
             </p>
@@ -119,7 +126,7 @@ export const Ausbildung = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="/images/ausbildung-1.jpg" alt="Schnupperkurs" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/ausbildung-1.jpg" alt="Schnupperkurs" onClick={() => open('/images/ausbildung-1.jpg', 'Schnupperkurs')} className="w-full h-[400px] object-cover cursor-zoom-in transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -140,7 +147,7 @@ export const Ausbildung = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="/images/ausbildung-2.jpg" alt="L-Schein" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/ausbildung-2.jpg" alt="L-Schein" onClick={() => open('/images/ausbildung-2.jpg', 'L-Schein')} className="w-full h-[400px] object-cover cursor-zoom-in transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -161,7 +168,7 @@ export const Ausbildung = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="/images/ausbildung-3.jpg" alt="A-Schein" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/ausbildung-3.jpg" alt="A-Schein" onClick={() => open('/images/ausbildung-3.jpg', 'A-Schein')} className="w-full h-[400px] object-cover cursor-zoom-in transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -182,7 +189,7 @@ export const Ausbildung = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="/images/ausbildung-4.jpg" alt="B-Schein" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/ausbildung-4.jpg" alt="B-Schein" onClick={() => open('/images/ausbildung-4.jpg', 'B-Schein')} className="w-full h-[400px] object-cover cursor-zoom-in transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -203,7 +210,7 @@ export const Ausbildung = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="/images/ausbildung-5.jpg" alt="Windenschein" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/ausbildung-5.jpg" alt="Windenschein" onClick={() => open('/images/ausbildung-5.jpg', 'Windenschein')} className="w-full h-[400px] object-cover cursor-zoom-in transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -224,7 +231,7 @@ export const Ausbildung = () => {
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="/images/ausbildung-6.jpg" alt="Tandemschein" className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-105" />
+                <img src="/images/ausbildung-6.jpg" alt="Tandemschein" onClick={() => open('/images/ausbildung-6.jpg', 'Tandemschein')} className="w-full h-[400px] object-cover cursor-zoom-in transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>

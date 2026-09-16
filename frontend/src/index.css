@@ -215,3 +215,11 @@ h1, h2, h3, h4, h5, h6, .nav-item {
   word-break: break-all !important;
   white-space: pre-wrap !important;
 }
+
+/* Lightbox slideshow progress bar - restarts (via the bar's `key` on the
+   current slide index) every time a new image comes in, so it always shows
+   how much time is left until the next auto-advance. */
+@keyframes lightbox-progress {
+  from { width: 0%; }
+  to { width: 100%; }
+}

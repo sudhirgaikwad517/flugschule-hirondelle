@@ -1,10 +1,20 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
-import { Check, Gift, Play } from 'lucide-react';
+import { Check, Search } from 'lucide-react';
+import { useLightbox } from '../components/common/Lightbox';
+import { GutscheinBox } from '../components/common/GutscheinBox';
+
+// Old site's actual "Simple Image Gallery" filenames for this page
+// (/images/bilder/1-groundhandling/*), in their real order.
+const GALLERY_FILES = [
+  '1Groundhandling_Platzhalter.jpg', 'DSC00352.jpg', 'DSC00438.jpg', 'DSC00439.jpg', 'DSC00440.jpg',
+  'DSC00451.jpg', 'DSC00455.jpg', 'DSC00456.jpg', 'DSC00473.jpg', 'DSC00510.jpg',
+  'DSC00511.jpg', 'DSC00525.jpg', 'DSC00531.jpg', 'groundhandling2.png', 'groundhandling4.png',
+  'IMG_6154.jpg',
+];
 
 export const Groundhandling = () => {
-  const [showVideo, setShowVideo] = useState(false);
+  const { openGallery } = useLightbox();
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -26,39 +36,16 @@ export const Groundhandling = () => {
               </h1>
             </div>
 
-            {/* Video */}
-            <div className="w-full h-[400px] relative overflow-hidden rounded-sm shadow-sm group bg-luxury-dark">
-              {showVideo ? (
-                <iframe
-                  className="w-full h-full"
-                  src="https://www.youtube.com/embed/qh9ORewDogc?autoplay=1"
-                  title="Groundhandling & Rückwärts aufziehen - So geht's! | Flugschule Hirondelle"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              ) : (
-                <button type="button" onClick={() => setShowVideo(true)} className="w-full h-full block cursor-pointer">
-                  <img
-                    src="/images/groundhandling/hero.jpg"
-                    alt="Groundhandling & Rückwärts aufziehen"
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-80"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-16 h-12 bg-red-600 rounded-lg flex items-center justify-center group-hover:bg-red-700 transition-colors shadow-lg">
-                      <Play className="w-6 h-6 text-white fill-white" />
-                    </div>
-                  </div>
-                  <div className="absolute top-4 left-4 right-4 flex items-center gap-4 text-left">
-                     <div className="w-10 h-10 rounded-full border border-white/50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-1">
-                       <img src="/google.png" className="w-full h-full object-contain brightness-0 invert" alt="Logo" />
-                     </div>
-                     <div>
-                        <h3 className="text-white font-semibold text-lg drop-shadow-md">Groundhandling & Rückwärts aufziehen - So geht's!</h3>
-                        <p className="text-white/80 text-sm drop-shadow-md">Flugschule Hirondelle</p>
-                     </div>
-                  </div>
-                </button>
-              )}
+            {/* Video - old site just embeds the iframe directly, no click-to-play
+                preview thumbnail, so this doesn't either. */}
+            <div className="w-full h-[400px] overflow-hidden rounded-sm shadow-sm">
+              <iframe
+                className="w-full h-full"
+                src="https://www.youtube-nocookie.com/embed/qh9ORewDogc?rel=0"
+                title="Groundhandling & Rückwärts aufziehen - So geht's! | Flugschule Hirondelle"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
             </div>
 
             {/* Content Blocks */}
@@ -120,7 +107,7 @@ export const Groundhandling = () => {
             <div className="bg-[#FAF9F7] p-8 border border-gray-100 shadow-sm relative overflow-hidden group">
               <div className="absolute top-0 left-0 w-full h-1 bg-luxury-gold transform origin-left transition-transform duration-500 scale-x-0 group-hover:scale-x-100"></div>
               
-              <div className="bg-[#53a8c7] text-white text-center py-2 mb-6 font-semibold text-sm">
+              <div className="bg-[#3274B7] text-white text-center py-2 mb-6 font-semibold text-sm">
                 Groundhandlingtraining Einzelschulung
               </div>
 
@@ -138,36 +125,16 @@ export const Groundhandling = () => {
 
               <Link 
                 to="/events?category=Groundhandlingkurs" 
-                className="w-full block bg-luxury-dark hover:bg-luxury-gold text-white text-center py-4 px-2 text-xs font-semibold transition-colors shadow-md leading-relaxed"
+                className="w-full block bg-[#526a75] hover:bg-luxury-gold text-white text-center py-4 px-2 text-xs font-semibold transition-colors shadow-md leading-relaxed"
               >
                 Termine werden über den Newsletter bekannt gegeben –<br/>meldet euch am Newsletter an
               </Link>
             </div>
 
-            {/* Voucher Box */}
-            <div>
-               <h3 className="font-luxury text-2xl text-luxury-dark mb-4 uppercase tracking-wider border-b border-gray-200 pb-4">
-                 Kurs Verschenken
-               </h3>
-               <p className="text-gray-500 font-light text-sm mb-4">
-                 Du suchst ein außergewöhnliches Geschenk? Warum nicht einmal einen Gutschein für einen Groundhandling-Kurs verschenken!
-               </p>
-               <div className="relative h-40 w-full rounded-sm overflow-hidden group cursor-pointer mb-4">
-                 <img src="/images/gutscheine/gutschein.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
-                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
-                 <div className="absolute right-0 top-0 bottom-0 w-16 bg-[#0088cc] flex items-center justify-center">
-                   <div className="rotate-[-90deg] text-white font-bold tracking-widest whitespace-nowrap">Gutschein</div>
-                 </div>
-               </div>
-               <div className="relative">
-                 <input 
-                   type="email" 
-                   placeholder="E-Mail für Gutschein..." 
-                   className="w-full border border-gray-300 p-3 pl-10 focus:outline-none focus:border-luxury-gold transition-colors text-sm font-light"
-                 />
-                 <Gift className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-               </div>
-            </div>
+            <GutscheinBox
+              heading="Kurs Verschenken"
+              description="Du suchst ein außergewöhnliches Geschenk? Warum nicht einmal einen Gutschein für einen Groundhandling-Kurs verschenken!"
+            />
 
             {/* Impressions Gallery */}
             <div>
@@ -175,13 +142,23 @@ export const Groundhandling = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {Array.from({ length: 12 }, (_, i) => i + 1).map((n, index) => (
-                   <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
+                 {GALLERY_FILES.map((file, index) => (
+                   <div
+                     key={file}
+                     className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
+                     onClick={() => openGallery(
+                       GALLERY_FILES.map((f) => ({ src: `/images/groundhandling/${f}`, alt: 'Impression' })),
+                       index
+                     )}
+                   >
                      <img
-                       src={`/images/groundhandling/gallery-${n}.jpg`}
+                       src={`/images/groundhandling/${file}`}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
+                     <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                       <Search className="w-5 h-5 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]" />
+                     </div>
                    </div>
                  ))}
                </div>

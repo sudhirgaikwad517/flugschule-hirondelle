@@ -333,7 +333,7 @@ export const Profil = () => {
                     <button
                       onClick={savePassword}
                       disabled={passwordSaving}
-                      className="px-6 py-2.5 bg-luxury-dark hover:bg-luxury-gold text-white rounded-sm text-sm font-semibold disabled:opacity-50 transition-colors"
+                      className="px-6 py-2.5 bg-[#526a75] hover:bg-luxury-gold text-white rounded-sm text-sm font-semibold disabled:opacity-50 transition-colors"
                     >
                       {passwordSaving ? 'Speichere...' : 'Passwort speichern'}
                     </button>

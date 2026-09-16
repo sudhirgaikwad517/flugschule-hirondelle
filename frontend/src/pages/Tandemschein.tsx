@@ -1,8 +1,17 @@
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
-import { Check, Info } from 'lucide-react';
+import { Check, Info, Search } from 'lucide-react';
+import { useLightbox } from '../components/common/Lightbox';
+import { GutscheinBox } from '../components/common/GutscheinBox';
+
+// Old site's actual "Simple Image Gallery" filenames for this page
+// (/images/bilder/1-tandem/*.jpg|png), in their real order.
+const GALLERY_FILES = [
+  '1PLatzhalterbildTandem.png', 'tandem1.jpg', 'tandem2.jpg', 'tandem3.jpg', 'tandem4.jpg',
+];
 
 export const Tandemschein = () => {
+  const { openGallery } = useLightbox();
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -163,45 +172,40 @@ export const Tandemschein = () => {
 
               <Link 
                 to="/events?category=Sonstiges" 
-                className="w-full block bg-luxury-dark hover:bg-luxury-gold text-white text-center py-4 px-2 text-sm font-semibold uppercase tracking-widest transition-colors leading-relaxed"
+                className="w-full block bg-[#526a75] hover:bg-luxury-gold text-white text-center py-4 px-2 text-sm font-semibold uppercase tracking-widest transition-colors leading-relaxed"
               >
                 Termine (im Rahmen der Höhenflugschulung):<br/>siehe Kalender
               </Link>
             </div>
 
-            {/* Voucher Box */}
-            <div>
-               <h3 className="font-luxury text-2xl text-luxury-dark mb-4 uppercase tracking-wider border-b border-gray-200 pb-4">
-                 Kurs Verschenken
-               </h3>
-               <p className="text-gray-500 font-light text-sm mb-4">
-                 Der Tandemschein ist auch als Geschenk-Gutschein möglich
-               </p>
-               <div className="w-full h-[180px] rounded-sm overflow-hidden shadow-sm relative group cursor-pointer border border-gray-200">
-                  <img src="/images/gutscheine/gutschein.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                  <div className="absolute bottom-4 left-4">
-                     <p className="text-white font-luxury text-3xl font-bold italic opacity-90 drop-shadow-md tracking-wider">GUTSCHEIN</p>
-                  </div>
-                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-sm">
-                     <p className="text-luxury-dark text-[10px] font-bold uppercase tracking-widest">Flugschule Hirondelle</p>
-                  </div>
-               </div>
-            </div>
+            <GutscheinBox
+              heading="Kurs Verschenken"
+              description="Der Tandemschein ist auch als Geschenk-Gutschein möglich"
+            />
 
             {/* Impressions Gallery (Right Column for this page) */}
             <div>
                <h3 className="font-luxury text-2xl text-luxury-dark mb-6 uppercase tracking-wider border-b border-gray-200 pb-4">
                  Impressionen
                </h3>
-               <div className="grid grid-cols-2 gap-2">
-                 {Array.from({ length: 4 }, (_, i) => i + 1).map((n, index) => (
-                   <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
+               <div className="grid grid-cols-3 gap-2">
+                 {GALLERY_FILES.map((file, index) => (
+                   <div
+                     key={file}
+                     className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
+                     onClick={() => openGallery(
+                       GALLERY_FILES.map((f) => ({ src: `/images/tandemschein/${f}`, alt: 'Impression' })),
+                       index
+                     )}
+                   >
                      <img
-                       src={`/images/tandemschein/gallery-${n}.jpg`}
+                       src={`/images/tandemschein/${file}`}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
+                     <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                       <Search className="w-5 h-5 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]" />
+                     </div>
                    </div>
                  ))}
                </div>

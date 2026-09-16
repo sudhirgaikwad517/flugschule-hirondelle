@@ -1,10 +1,20 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
-import { Check, Gift, Play } from 'lucide-react';
+import { Check, Search } from 'lucide-react';
+import { useLightbox } from '../components/common/Lightbox';
+import { GutscheinBox } from '../components/common/GutscheinBox';
+
+// Old site's actual "Simple Image Gallery" filenames for this page
+// (/images/bilder/1-grundkurs/*.jpg), in their real order.
+const GALLERY_FILES = [
+  'DSC00131', 'DSC00132', 'DSC00138', 'DSC00145', 'DSC00231',
+  'DSC00236', 'DSC00237', 'DSC00238', 'DSC00239', 'DSC00249',
+  'DSC00251', 'DSC00255', 'gruppenevents20', 'gruppenevents22', 'gruppenevents24',
+  'itemimg-grundkurs',
+];
 
 export const LSchein = () => {
-  const [showVideo, setShowVideo] = useState(false);
+  const { openGallery } = useLightbox();
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -26,39 +36,16 @@ export const LSchein = () => {
               </h1>
             </div>
 
-            {/* Video */}
-            <div className="w-full h-[400px] relative overflow-hidden rounded-sm shadow-sm group bg-luxury-dark">
-              {showVideo ? (
-                <iframe
-                  className="w-full h-full"
-                  src="https://www.youtube.com/embed/fEQXD2JxcBU?autoplay=1"
-                  title="Gleitschirm Grundkurs - Einblick in unsere Schulung | Flugschule Hirondelle"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              ) : (
-                <button type="button" onClick={() => setShowVideo(true)} className="w-full h-full block cursor-pointer">
-                  <img
-                    src="/images/grundkurs/hero.jpg"
-                    alt="L-Schein Grundkurs"
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-80"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-16 h-12 bg-red-600 rounded-lg flex items-center justify-center group-hover:bg-red-700 transition-colors shadow-lg">
-                      <Play className="w-6 h-6 text-white fill-white" />
-                    </div>
-                  </div>
-                  <div className="absolute top-4 left-4 right-4 flex items-center gap-4 text-left">
-                     <div className="w-10 h-10 rounded-full border border-white/50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-1">
-                       <img src="/google.png" className="w-full h-full object-contain brightness-0 invert" alt="Logo" />
-                     </div>
-                     <div>
-                        <h3 className="text-white font-semibold text-lg drop-shadow-md">Gleitschirm Grundkurs - Einblick in unsere Schulung</h3>
-                        <p className="text-white/80 text-sm drop-shadow-md">Flugschule Hirondelle</p>
-                     </div>
-                  </div>
-                </button>
-              )}
+            {/* Video - old site just embeds the iframe directly, no click-to-play
+                preview thumbnail, so this doesn't either. */}
+            <div className="w-full h-[400px] overflow-hidden rounded-sm shadow-sm">
+              <iframe
+                className="w-full h-full"
+                src="https://www.youtube.com/embed/fEQXD2JxcBU?rel=0"
+                title="Gleitschirm Grundkurs - Einblick in unsere Schulung | Flugschule Hirondelle"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
             </div>
 
             {/* Content Blocks */}
@@ -87,14 +74,14 @@ export const LSchein = () => {
               <div>
                 <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Organisatorisches...</h3>
                 <p>
-                  Ort und Uhrzeit der Kurstermine erfahrt ihr am Vortag bis ca. 15 Uhr per Newsletter. Die Termine finden flexibel an Wochenenden wie auch unter der Woche statt. Je nach Wetterlage (und vor allem Windrichtung) schulen wir an einem unserer Übungshänge im Odenwald, Kraichtal, Nahetal und der Pfalz. Die Wegbeschreibungen zu den jeweiligen <Link to="/infos#gelaende" className="text-luxury-gold hover:underline font-medium">Fluggeländen findet ihr hier</Link>. Das Skript zum Kurs und eine aktuelle Leihausrüstung sind wie beim <Link to="/ausbildung/schnupperkurs" className="text-luxury-gold hover:underline font-medium">Schnupperkurs</Link> im Preis inbegriffen.
+                  Ort und Uhrzeit der Kurstermine erfahrt ihr am Vortag bis ca. 15 Uhr per Newsletter. Die Termine finden flexibel an Wochenenden wie auch unter der Woche statt. Je nach Wetterlage (und vor allem Windrichtung) schulen wir an einem unserer Übungshänge im Odenwald, Kraichtal, Nahetal und der Pfalz. Die Wegbeschreibungen zu den jeweiligen <Link to="/infos/gelaende" className="text-luxury-gold hover:underline font-medium">Fluggeländen findet ihr hier</Link>. Das Skript zum Kurs und eine aktuelle Leihausrüstung sind wie beim <Link to="/ausbildung/schnupperkurs" className="text-luxury-gold hover:underline font-medium">Schnupperkurs</Link> im Preis inbegriffen.
                 </p>
               </div>
 
               <div>
                 <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Wie geht es weiter...</h3>
                 <p>
-                  Weiter geht's mit dem <Link to="/ausbildung#a-schein" className="text-luxury-gold hover:underline font-medium">A-Schein</Link> – dem Höhenflugausweis zum selbständigen Fliegen!
+                  Weiter geht's mit dem <Link to="/ausbildung/a-schein" className="text-luxury-gold hover:underline font-medium">A-Schein</Link> – dem Höhenflugausweis zum selbständigen Fliegen!
                 </p>
               </div>
             </div>
@@ -158,36 +145,23 @@ export const LSchein = () => {
 
                 <div className="pt-2">
                   <p className="text-gray-500 font-light text-xs italic leading-relaxed">
-                    *Kursgebühren mit bei uns gekaufter Ausrüstung / Leihausrüstung siehe <Link to="/infos#zusatzkosten" className="text-luxury-gold hover:underline">Zusatzkosten</Link> A-Schein
+                    *Kursgebühren mit bei uns gekaufter Ausrüstung / Leihausrüstung siehe <Link to="/ausbildung/a-schein#zusatzkosten" className="text-luxury-gold hover:underline">Zusatzkosten</Link> A-Schein
                   </p>
                 </div>
               </div>
 
               <Link 
                 to="/events?category=Grundkurs" 
-                className="w-full block bg-luxury-dark hover:bg-luxury-gold text-white text-center py-4 text-sm font-semibold uppercase tracking-widest transition-colors"
+                className="w-full block bg-[#526a75] hover:bg-luxury-gold text-white text-center py-4 text-sm font-semibold uppercase tracking-widest transition-colors"
               >
                 Termine &gt; Siehe Liste
               </Link>
             </div>
 
-            {/* Voucher Box */}
-            <div>
-               <h3 className="font-luxury text-2xl text-luxury-dark mb-4 uppercase tracking-wider border-b border-gray-200 pb-4">
-                 Grundkurs Verschenken
-               </h3>
-               <p className="text-gray-500 font-light text-sm mb-4">
-                 Der Grundkurs ist auch als Geschenk-Gutschein möglich
-               </p>
-               <div className="relative">
-                 <input 
-                   type="email" 
-                   placeholder="E-Mail für Gutschein..." 
-                   className="w-full border border-gray-300 p-3 pl-10 focus:outline-none focus:border-luxury-gold transition-colors text-sm font-light"
-                 />
-                 <Gift className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-               </div>
-            </div>
+            <GutscheinBox
+              heading="Grundkurs Verschenken"
+              description="Der Grundkurs ist auch als Geschenk-Gutschein möglich"
+            />
 
             {/* Impressions Gallery */}
             <div>
@@ -195,13 +169,23 @@ export const LSchein = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {Array.from({ length: 9 }, (_, i) => i + 1).map((n, index) => (
-                   <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
+                 {GALLERY_FILES.map((file, index) => (
+                   <div
+                     key={file}
+                     className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
+                     onClick={() => openGallery(
+                       GALLERY_FILES.map((f) => ({ src: `/images/grundkurs/${f}.jpg`, alt: 'Impression' })),
+                       index
+                     )}
+                   >
                      <img
-                       src={`/images/grundkurs/gallery-${n}.jpg`}
+                       src={`/images/grundkurs/${file}.jpg`}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
+                     <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                       <Search className="w-5 h-5 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]" />
+                     </div>
                    </div>
                  ))}
                </div>
@@ -212,8 +196,8 @@ export const LSchein = () => {
         </div>
 
         {/* Leistungen & Checkliste Grid (Full Width) */}
-        <div className="max-w-[1200px] mx-auto mt-16 lg:mt-24">
-          <hr className="border-gray-100 mb-16" />
+        <div className="max-w-[1200px] mx-auto mt-8">
+          <hr className="border-gray-100 mb-10" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24">
             <div>
               <h2 className="font-luxury text-3xl text-luxury-dark mb-8 uppercase">Unsere Leistungen</h2>

@@ -1,8 +1,21 @@
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
-import { Check, Gift } from 'lucide-react';
+import { Check, Search } from 'lucide-react';
+import { useLightbox } from '../components/common/Lightbox';
+import { GutscheinBox } from '../components/common/GutscheinBox';
+
+// Old site's actual "Simple Image Gallery" filenames for this page
+// (/images/bilder/1-schnuppern/*.jpg), in their real order - not the 9
+// generic placeholder photos this used to ship with.
+const GALLERY_FILES = [
+  '2-Platzhalterbild', 'DSC00007', 'DSC00011', 'DSC00068', 'DSC00070',
+  'DSC00076', 'DSC00081', 'DSC00082', 'DSC00098', 'DSC00106',
+  'DSC00111', 'DSC00150', 'DSC00154', 'DSC00193', 'DSC00228',
+  'itemimg-schnuppern',
+];
 
 export const Schnupperkurs = () => {
+  const { openGallery } = useLightbox();
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -52,14 +65,14 @@ export const Schnupperkurs = () => {
               <div>
                 <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Organisatorisches...</h3>
                 <p>
-                  Ort und Uhrzeit des Schnupperkurses erfahrt ihr am Vortag bis ca. 15 Uhr per Newsletter. Der eintägige Schnuppertag findet regulär samstags statt, je nach Wetter kann der Termin allerdings auch auf den Sonntag verschoben werden. Je nach Windrichtung schulen wir an einem unserer Übungshänge im Odenwald, Kraichtal, Nahetal und der Pfalz. Die Wegbeschreibungen zu den jeweiligen <Link to="/infos#gelaende" className="text-luxury-gold hover:underline">Fluggeländen findet ihr hier</Link>. Eine aktuelle und sichere Leihausrüstung sind im Preis inbegriffen. Wenn aufgrund der Wetterlage der Kurs ausfällt oder nicht vollständig absolviert werden kann, ist es möglich, diesen zu einem späteren Termin kostenlos nachzuholen, tragt euch dazu bitte an einem neuen Termin über unseren Buchungskalender ein.
+                  Ort und Uhrzeit des Schnupperkurses erfahrt ihr am Vortag bis ca. 15 Uhr per Newsletter. Der eintägige Schnuppertag findet regulär samstags statt, je nach Wetter kann der Termin allerdings auch auf den Sonntag verschoben werden. Je nach Windrichtung schulen wir an einem unserer Übungshänge im Odenwald, Kraichtal, Nahetal und der Pfalz. Die Wegbeschreibungen zu den jeweiligen <Link to="/infos/gelaende" className="text-luxury-gold hover:underline font-medium">Fluggeländen findet ihr hier</Link>. Eine aktuelle und sichere Leihausrüstung sind im Preis inbegriffen. Wenn aufgrund der Wetterlage der Kurs ausfällt oder nicht vollständig absolviert werden kann, ist es möglich, diesen zu einem späteren Termin kostenlos nachzuholen, tragt euch dazu bitte an einem neuen Termin über unseren Buchungskalender ein.
                 </p>
               </div>
 
               <div>
                 <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Wie geht es weiter...</h3>
                 <p>
-                  Weiter geht's mit dem <Link to="/ausbildung" className="text-luxury-gold hover:underline font-medium">Grundkurs</Link>! Die absolvierten Tage im Schnupperkurs sowie der anteilige Kurspreis werden euch hierfür angerechnet und abgezogen (gültig innerhalb der gleichen Saison!).
+                  Weiter geht's mit dem <Link to="/ausbildung/l-schein" className="text-luxury-gold hover:underline font-medium">Grundkurs</Link>! Die absolvierten Tage im Schnupperkurs sowie der anteilige Kurspreis werden euch hierfür angerechnet und abgezogen (gültig innerhalb der gleichen Saison!).
                 </p>
               </div>
             </div>
@@ -105,29 +118,16 @@ export const Schnupperkurs = () => {
 
               <Link 
                 to="/events?category=Schnupperkurs" 
-                className="w-full block bg-luxury-dark hover:bg-luxury-gold text-white text-center py-4 text-sm font-semibold uppercase tracking-widest transition-colors"
+                className="w-full block bg-[#526a75] hover:bg-luxury-gold text-white text-center py-4 text-sm font-semibold uppercase tracking-widest transition-colors"
               >
                 Termine &gt; Siehe Liste
               </Link>
             </div>
 
-            {/* Voucher Box */}
-            <div>
-               <h3 className="font-luxury text-2xl text-luxury-dark mb-4 uppercase tracking-wider border-b border-gray-200 pb-4">
-                 Schnupperkurs Verschenken
-               </h3>
-               <p className="text-gray-500 font-light text-sm mb-4">
-                 Der Schnupperkurs ist auch als Geschenk-Gutschein möglich
-               </p>
-               <div className="relative">
-                 <input 
-                   type="email" 
-                   placeholder="E-Mail für Gutschein..." 
-                   className="w-full border border-gray-300 p-3 pl-10 focus:outline-none focus:border-luxury-gold transition-colors text-sm font-light"
-                 />
-                 <Gift className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-               </div>
-            </div>
+            <GutscheinBox
+              heading="Schnupperkurs Verschenken"
+              description="Der Schnupperkurs ist auch als Geschenk-Gutschein möglich"
+            />
 
             {/* Impressions Gallery */}
             <div>
@@ -135,13 +135,23 @@ export const Schnupperkurs = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {Array.from({ length: 9 }, (_, i) => i + 1).map((n, index) => (
-                   <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
+                 {GALLERY_FILES.map((file, index) => (
+                   <div
+                     key={file}
+                     className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
+                     onClick={() => openGallery(
+                       GALLERY_FILES.map((f) => ({ src: `/images/schnupperkurs/${f}.jpg`, alt: 'Impression' })),
+                       index
+                     )}
+                   >
                      <img
-                       src={`/images/schnupperkurs/gallery-${n}.jpg`}
+                       src={`/images/schnupperkurs/${file}.jpg`}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
+                     <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                       <Search className="w-5 h-5 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]" />
+                     </div>
                    </div>
                  ))}
                </div>
@@ -152,8 +162,8 @@ export const Schnupperkurs = () => {
         </div>
 
         {/* Leistungen & Checkliste Grid (Full Width) */}
-        <div className="max-w-[1200px] mx-auto mt-16 lg:mt-24">
-          <hr className="border-gray-100 mb-16" />
+        <div className="max-w-[1200px] mx-auto mt-8">
+          <hr className="border-gray-100 mb-10" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24">
             <div>
               <h2 className="font-luxury text-3xl text-luxury-dark mb-8 uppercase">Unsere Leistungen</h2>

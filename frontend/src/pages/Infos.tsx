@@ -33,15 +33,14 @@ export const Infos = () => {
               </div>
 
               <div className="flex flex-col items-start mt-2">
-                <a href="https://maps.google.com/?q=Untergasse+27+69469+Weinheim" target="_blank" rel="noreferrer" className="flex flex-col items-center group">
-                  <div className="w-16 h-16 bg-luxury-light rounded-sm shadow-sm border border-luxury-gold flex items-center justify-center mb-3 group-hover:bg-luxury-gold transition-colors duration-300">
-                    <div className="relative">
-                      <div className="w-8 h-8 rounded-full border border-luxury-gold group-hover:border-white flex items-center justify-center transition-colors duration-300">
-                        <span className="text-[10px] font-bold text-luxury-gold group-hover:text-white uppercase tracking-wider transition-colors duration-300">Map</span>
-                      </div>
-                    </div>
-                  </div>
-                  <span className="text-[11px] text-luxury-gold text-center font-bold uppercase tracking-widest group-hover:text-luxury-dark transition-colors duration-300">Routenplaner</span>
+                {/* Old site's actual route-planner badge (Google_Routenplaner_Maps_org.gif)
+                    and its real short link, not a fabricated "Map" square
+                    pointing at a generic maps search. */}
+                <a href="https://maps.app.goo.gl/kA2dQXfCx8pgAAJ99" target="_blank" rel="noreferrer">
+                  <img src="/images/infos/google-routenplaner.gif" alt="Google Routenplaner Maps org" width="120" height="90" />
+                </a>
+                <a href="https://maps.app.goo.gl/kA2dQXfCx8pgAAJ99" target="_blank" rel="noreferrer" className="text-[13px] text-luxury-gold hover:underline mt-2">
+                  Routenplaner für Smartphones
                 </a>
               </div>
             </div>
@@ -75,7 +74,7 @@ export const Infos = () => {
             <h3 className="font-luxury text-2xl text-luxury-dark mb-4">Bankverbindung</h3>
             <div className="text-[15px] text-gray-500 font-light leading-relaxed bg-white p-6 border border-gray-100 shadow-sm rounded-sm">
               <p className="mb-2"><span className="text-gray-400 w-32 inline-block">Kontoinhaber:</span> <span className="text-gray-700 font-medium">Alexander Schlink</span></p>
-              <p className="mb-2"><span className="text-gray-400 w-32 inline-block">Bank:</span> <span className="text-gray-700">Sparkasse Südpfalz</span></p>
+              <p className="mb-2 text-gray-700">Sparkasse Südpfalz</p>
               <p className="mb-2"><span className="text-gray-400 w-32 inline-block">IBAN:</span> <span className="text-gray-700 font-medium tracking-wide">DE32 5485 0010 1700 1976 41</span></p>
               <p className="mb-4"><span className="text-gray-400 w-32 inline-block">BIC:</span> <span className="text-gray-700 tracking-wide">SOLADES1SUW</span></p>
               <p className="mb-2 text-[13px] text-gray-400"><span className="w-32 inline-block">Kontonummer:</span> 1700197641</p>
@@ -91,9 +90,9 @@ export const Infos = () => {
             <div className="w-12 h-px bg-luxury-gold mb-10"></div>
             
             <div className="w-full h-[600px] bg-gray-100 rounded-sm shadow-md overflow-hidden relative border border-gray-200">
-              <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2595.660155239922!2d8.6657929!3d49.5446328!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4797cf9286eb2973%3A0x1d5821cba50ef12!2sUntergasse%2027%2C%2069469%20Weinheim%2C%20Germany!5e0!3m2!1sen!2sus!4v1700000000000!5m2!1sen!2sus" 
-                width="100%" 
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d5063.258024241909!2d8.672182056413131!3d49.555676284748415!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4797db13e510f3f5%3A0xd6abf4967e8663e9!2sFlugschule%20Hirondelle!5e1!3m2!1sde!2sde!4v1588792949558!5m2!1sde!2sde"
+                width="100%"
                 height="100%" 
                 style={{ border: 0 }} 
                 allowFullScreen={true} 

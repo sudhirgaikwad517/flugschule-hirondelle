@@ -1,10 +1,20 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
-import { Check, Info, Play } from 'lucide-react';
+import { Check, Info, Search } from 'lucide-react';
+import { useLightbox } from '../components/common/Lightbox';
+import { GutscheinBox } from '../components/common/GutscheinBox';
+
+// Old site's actual "Simple Image Gallery" filenames for this page
+// (/images/bilder/1-winde/*.jpg), in their real order.
+const GALLERY_FILES = [
+  '1PlatzhalterbildWinde', 'Sarah_Winde_', 'winde', 'winde1', 'winde10',
+  'winde12', 'winde13', 'winde14', 'winde15', 'winde16',
+  'winde17', 'winde18', 'winde2', 'winde20', 'winde4',
+  'winde5', 'winde6.1', 'winde6', 'winde7', 'winde8',
+];
 
 export const Windenschein = () => {
-  const [showVideo, setShowVideo] = useState(false);
+  const { openGallery } = useLightbox();
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -26,39 +36,16 @@ export const Windenschein = () => {
               </h1>
             </div>
 
-            {/* Featured Video */}
-            <div className="w-full h-[400px] overflow-hidden rounded-sm shadow-sm relative group bg-black">
-              {showVideo ? (
-                <iframe
-                  className="w-full h-full"
-                  src="https://www.youtube.com/embed/KSdpddm3Rnw?autoplay=1"
-                  title="A-Schein Windenstarts - Paragliding lernen | Flugschule Hirondelle"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              ) : (
-                <button type="button" onClick={() => setShowVideo(true)} className="w-full h-full block cursor-pointer">
-                  <img
-                    src="/images/windenschein/hero.jpg"
-                    alt="Windenschlepp Video"
-                    className="w-full h-full object-cover opacity-70 transition-transform duration-1000 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-20 h-14 bg-red-600 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110">
-                      <Play className="text-white w-8 h-8 fill-current" />
-                    </div>
-                  </div>
-                  <div className="absolute top-4 left-4 right-4 text-white text-left">
-                    <h3 className="font-semibold text-lg drop-shadow-md">A-Schein Windenstarts - Paragliding lernen | Flugschule Hirondelle</h3>
-                  </div>
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-16">
-                     <h2 className="font-luxury text-7xl text-white font-bold tracking-widest drop-shadow-2xl opacity-90">WINDE</h2>
-                  </div>
-                  <div className="absolute bottom-4 right-4 bg-black/60 px-3 py-1 rounded text-white text-xs font-medium flex items-center gap-2">
-                     <span>Watch on YouTube</span>
-                  </div>
-                </button>
-              )}
+            {/* Featured Video - old site just embeds the iframe directly, no
+                click-to-play preview thumbnail, so this doesn't either. */}
+            <div className="w-full h-[400px] overflow-hidden rounded-sm shadow-sm">
+              <iframe
+                className="w-full h-full"
+                src="https://www.youtube-nocookie.com/embed/KSdpddm3Rnw?rel=0"
+                title="A-Schein Windenstarts - Paragliding lernen | Flugschule Hirondelle"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
             </div>
 
             {/* Content Blocks */}
@@ -98,10 +85,10 @@ export const Windenschein = () => {
                     Der Flugschule stehen mehrere Windenschleppgelände mit unterschiedlicher Wind-Ausrichtung zur Verfügung.
                   </p>
                   <p>
-                    Mitten in der Rheinebene befindet sich der Flugplatz <a href="#" className="text-[#53a8c7] hover:underline font-medium">Herrenteich</a>, der gut und schnell erreichbar ist.
+                    Mitten in der Rheinebene befindet sich der Flugplatz <Link to="/infos/gelaende/herrenteich" className="text-luxury-gold hover:underline font-medium">Herrenteich</Link>, der gut und schnell erreichbar ist.
                   </p>
                   <p>
-                    Bei Bad Kreuznach liegt das Schleppgelände <a href="#" className="text-[#53a8c7] hover:underline font-medium">Auf dem unteren Mergesfeld</a> des Drachen- und Gleitsegelclub Nahetal e.V „DGCN“.
+                    Bei Bad Kreuznach liegt das Schleppgelände <Link to="/infos/gelaende/bad-kreuznach" className="text-luxury-gold hover:underline font-medium">Auf dem unteren Mergesfeld</Link> des Drachen- und Gleitsegelclub Nahetal e.V „DGCN“.
                   </p>
                 </div>
               </div>
@@ -210,31 +197,16 @@ export const Windenschein = () => {
 
               <Link 
                 to="/events?category=Windenschulung" 
-                className="w-full block bg-luxury-dark hover:bg-luxury-gold text-white text-center py-4 text-sm font-semibold uppercase tracking-widest transition-colors"
+                className="w-full block bg-[#526a75] hover:bg-luxury-gold text-white text-center py-4 text-sm font-semibold uppercase tracking-widest transition-colors"
               >
                 Termine &gt; Zum Kalender
               </Link>
             </div>
 
-            {/* Voucher Box */}
-            <div>
-               <h3 className="font-luxury text-2xl text-luxury-dark mb-4 uppercase tracking-wider border-b border-gray-200 pb-4">
-                 Windenschein Verschenken
-               </h3>
-               <p className="text-gray-500 font-light text-sm mb-4">
-                 Der Windenschein ist auch als Geschenk-Gutschein möglich
-               </p>
-               <div className="w-full h-[180px] rounded-sm overflow-hidden shadow-sm relative group cursor-pointer border border-gray-200">
-                  <img src="/images/gutscheine/gutschein.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                  <div className="absolute bottom-4 left-4">
-                     <p className="text-white font-luxury text-3xl font-bold italic opacity-90 drop-shadow-md tracking-wider">GUTSCHEIN</p>
-                  </div>
-                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-sm">
-                     <p className="text-luxury-dark text-[10px] font-bold uppercase tracking-widest">Flugschule Hirondelle</p>
-                  </div>
-               </div>
-            </div>
+            <GutscheinBox
+              heading="Windenschein Verschenken"
+              description="Der Windenschein ist auch als Geschenk-Gutschein möglich"
+            />
 
             {/* Impressions Gallery */}
             <div>
@@ -242,13 +214,23 @@ export const Windenschein = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {Array.from({ length: 9 }, (_, i) => i + 1).map((n, index) => (
-                   <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
+                 {GALLERY_FILES.map((file, index) => (
+                   <div
+                     key={file}
+                     className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
+                     onClick={() => openGallery(
+                       GALLERY_FILES.map((f) => ({ src: `/images/windenschein/${f}.jpg`, alt: 'Impression' })),
+                       index
+                     )}
+                   >
                      <img
-                       src={`/images/windenschein/gallery-${n}.jpg`}
+                       src={`/images/windenschein/${file}.jpg`}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
+                     <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                       <Search className="w-5 h-5 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]" />
+                     </div>
                    </div>
                  ))}
                </div>
@@ -259,8 +241,8 @@ export const Windenschein = () => {
         </div>
 
         {/* Leistungen & Checkliste Grid (Full Width) */}
-        <div className="max-w-[1200px] mx-auto mt-16 lg:mt-24">
-          <hr className="border-gray-100 mb-16" />
+        <div className="max-w-[1200px] mx-auto mt-8">
+          <hr className="border-gray-100 mb-10" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24 mb-16">
             <div>
               <h2 className="font-luxury text-3xl text-luxury-dark mb-8 uppercase">Unsere Leistungen</h2>
@@ -282,8 +264,8 @@ export const Windenschein = () => {
               <ul className="space-y-3 mb-6">
                 {[
                   'Leihausrüstung über die Flugschule (350,- € / Kurs)',
-                  'E-Learning Prüffragen Gleitschirm-Windenschein vom DHV',
-                  'Prüfungsgebühren ab 03.04.2023 DHV'
+                  <>E-Learning Prüffragen <a href="https://shop.dhv.de/collections/prufungsfragen" target="_blank" rel="noopener noreferrer" className="text-luxury-gold hover:underline font-medium">Gleitschirm-Windenschein</a> vom DHV</>,
+                  <><a href="#" className="text-luxury-gold hover:underline font-medium">Prüfungsgebühren ab 03.04.2023</a> DHV</>
                 ].map((item, idx) => (
                   <li key={idx} className="flex gap-3 text-gray-600 font-light">
                     <Check className="w-5 h-5 text-luxury-gold shrink-0 mt-0.5" />

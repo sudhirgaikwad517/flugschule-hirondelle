@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect } from 'react';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { CookieConsent } from '../common/CookieConsent';
+import { LightboxProvider } from '../common/Lightbox';
 
 export const Layout = () => {
   const { pathname, hash } = useLocation();
@@ -32,14 +33,16 @@ export const Layout = () => {
   }, [pathname, hash]);
 
   return (
-    <div className="flex flex-col min-h-screen relative overflow-x-hidden">
-      <Header />
-      
-      <main className="flex-grow w-full pt-[40px]">
-        <Outlet />
-      </main>
-      <Footer />
-      <CookieConsent />
-    </div>
+    <LightboxProvider>
+      <div className="flex flex-col min-h-screen relative overflow-x-hidden">
+        <Header />
+
+        <main className="flex-grow w-full pt-[40px]">
+          <Outlet />
+        </main>
+        <Footer />
+        <CookieConsent />
+      </div>
+    </LightboxProvider>
   );
 };

@@ -1,8 +1,22 @@
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
-import { Check, Info } from 'lucide-react';
+import { Check, Info, Search } from 'lucide-react';
+import { useLightbox } from '../components/common/Lightbox';
+import { GutscheinBox } from '../components/common/GutscheinBox';
+
+// Old site's actual "Simple Image Gallery" filenames for this page
+// (/images/bilder/1-a-schein/*.jpg), in their real order.
+const GALLERY_FILES = [
+  '1.Platzhalterbild', 'a_schein1', 'a_schein10', 'a_schein11', 'a_schein12',
+  'a_schein13', 'a_schein14', 'a_schein15', 'a_schein16', 'a_schein17',
+  'a_schein18', 'a_schein19', 'a_schein2', 'a_schein20', 'a_schein21',
+  'a_schein22', 'a_schein23', 'a_schein24', 'a_schein25', 'a_schein26',
+  'a_schein27', 'a_schein3', 'a_schein4', 'a_schein5', 'a_schein6',
+  'a_schein7', 'a_schein8', 'a_schein9',
+];
 
 export const ASchein = () => {
+  const { openGallery } = useLightbox();
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -46,7 +60,7 @@ export const ASchein = () => {
                 <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Was dich erwartet beim Höhenflugkurs (A-Schein)...</h3>
                 <div className="space-y-4">
                   <p>
-                    Für den beschränkten Luftfahrerschein (A-Schein) benötigt man mind. 40 Flüge, in denen mind. 18.000 Höhenmeter erflogen werden. Die alpinen Höhenflüge finden im Rahmen unserer Höhenflugschulungen (i. d. R. in den Alpen) statt. Weitere Flüge können auch an der <Link to="/ausbildung/winde" className="text-luxury-gold hover:underline font-medium">Winde</Link> absolviert werden (Achtung Winde: dies ist ein separater Kurs, der sich aber super mit der A-Scheinausbildung kombinieren lässt! Der <Link to="/ausbildung/winde" className="text-luxury-gold hover:underline font-medium">Windenkurs</Link> spart unterm Strich Zeit und Geld!).
+                    Für den beschränkten Luftfahrerschein (A-Schein) benötigt man mind. 40 Flüge, in denen mind. 18.000 Höhenmeter erflogen werden. Die alpinen Höhenflüge finden im Rahmen unserer Höhenflugschulungen (i. d. R. in den Alpen) statt. Weitere Flüge können auch an der <Link to="/ausbildung/windenschein" className="text-luxury-gold hover:underline font-medium">Winde</Link> absolviert werden (Achtung Winde: dies ist ein separater Kurs, der sich aber super mit der A-Scheinausbildung kombinieren lässt! Der <Link to="/ausbildung/windenschein" className="text-luxury-gold hover:underline font-medium">Windenkurs</Link> spart unterm Strich Zeit und Geld!).
                   </p>
                   <p>
                     Für die Höhenflugschulung fahren wir regelmäßig nach Bassano / Italien, sowie nach Frankreich und Österreich – weitere Fluggebiete nutzen wir nach Bedarf!
@@ -70,7 +84,7 @@ export const ASchein = () => {
               <div>
                 <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Organisatorisches...</h3>
                 <p>
-                  Die Termine zur Höhenflugschulung findet ihr in unserem <Link to="/events?category=H%C3%B6henflugschulung%20(A-Schein)" className="text-luxury-gold hover:underline font-medium">Kalender</Link>. Bitte meldet euch hierüber an. Ort und genaue Uhrzeit der Kurstermine erfahrt ihr dann wie gewohnt vorab per Schulungs-Newsletter. Die Ausbildung zum Höhenflugausweis erfolgt wie gewohnt für jeden Piloten zeitoffen.
+                  Die Termine zur Höhenflugschulung findet ihr in unserem <Link to="/buchungskalender" className="text-luxury-gold hover:underline font-medium">Kalender</Link>. Bitte meldet euch hierüber an. Ort und genaue Uhrzeit der Kurstermine erfahrt ihr dann wie gewohnt vorab per Schulungs-Newsletter. Die Ausbildung zum Höhenflugausweis erfolgt wie gewohnt für jeden Piloten zeitoffen.
                 </p>
               </div>
 
@@ -163,7 +177,7 @@ export const ASchein = () => {
                   </div>
 
                   {/* Zusatzkosten Table */}
-                  <div className="pt-2">
+                  <div id="zusatzkosten" className="pt-2 scroll-mt-[100px]">
                     <div className="flex items-center gap-2 mb-4">
                       <Info className="w-4 h-4 text-[#53a8c7]" />
                       <p className="font-bold text-luxury-dark text-sm uppercase">Zusatzkosten</p>
@@ -207,31 +221,16 @@ export const ASchein = () => {
 
               <Link 
                 to="/events?category=H%C3%B6henflugschulung%20(A-Schein)" 
-                className="w-full block bg-luxury-dark hover:bg-luxury-gold text-white text-center py-4 text-sm font-semibold uppercase tracking-widest transition-colors"
+                className="w-full block bg-[#526a75] hover:bg-luxury-gold text-white text-center py-4 text-sm font-semibold uppercase tracking-widest transition-colors"
               >
                 Termine Höhenflugschulungen &gt; Siehe Liste
               </Link>
             </div>
 
-            {/* Voucher Box */}
-            <div>
-               <h3 className="font-luxury text-2xl text-luxury-dark mb-4 uppercase tracking-wider border-b border-gray-200 pb-4">
-                 A-Schein Verschenken
-               </h3>
-               <p className="text-gray-500 font-light text-sm mb-4">
-                 Der A-Schein ist auch als Geschenk-Gutschein möglich
-               </p>
-               <div className="w-full h-[180px] rounded-sm overflow-hidden shadow-sm relative group cursor-pointer border border-gray-200">
-                  <img src="/images/gutscheine/gutschein.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                  <div className="absolute bottom-4 left-4">
-                     <p className="text-white font-luxury text-3xl font-bold italic opacity-90 drop-shadow-md tracking-wider">GUTSCHEIN</p>
-                  </div>
-                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-sm">
-                     <p className="text-luxury-dark text-[10px] font-bold uppercase tracking-widest">Flugschule Hirondelle</p>
-                  </div>
-               </div>
-            </div>
+            <GutscheinBox
+              heading="A-Schein Verschenken"
+              description="Der A-Schein ist auch als Geschenk-Gutschein möglich"
+            />
 
             {/* Impressions Gallery */}
             <div>
@@ -239,13 +238,23 @@ export const ASchein = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {Array.from({ length: 12 }, (_, i) => i + 1).map((n, index) => (
-                   <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
+                 {GALLERY_FILES.map((file, index) => (
+                   <div
+                     key={file}
+                     className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
+                     onClick={() => openGallery(
+                       GALLERY_FILES.map((f) => ({ src: `/images/a-schein/${f}.jpg`, alt: 'Impression' })),
+                       index
+                     )}
+                   >
                      <img
-                       src={`/images/a-schein/gallery-${n}.jpg`}
+                       src={`/images/a-schein/${file}.jpg`}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
+                     <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                       <Search className="w-5 h-5 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]" />
+                     </div>
                    </div>
                  ))}
                </div>
@@ -256,8 +265,8 @@ export const ASchein = () => {
         </div>
 
         {/* Leistungen & Checkliste Grid (Full Width) */}
-        <div className="max-w-[1200px] mx-auto mt-16 lg:mt-24">
-          <hr className="border-gray-100 mb-16" />
+        <div className="max-w-[1200px] mx-auto mt-8">
+          <hr className="border-gray-100 mb-10" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24">
             <div>
               <h2 className="font-luxury text-3xl text-luxury-dark mb-8 uppercase">Unsere Leistungen</h2>
@@ -289,10 +298,10 @@ export const ASchein = () => {
                   </div>
                 </li>
                 {[
-                  <>Optional <Link to="/ausbildung/winde" className="text-luxury-gold hover:underline">Windenkurs</Link> zur Vervollständigung der 40 benötigten Flüge</>,
+                  'Optional Windenkurs zur Vervollständigung der 40 benötigten Flüge',
                   'Optional zusätzliche Teilnahme an weiteren Höhenflugschulungswochen (790,- € / Woche)',
-                  'E-Learning Prüffragen Gleitschirm-A-Schein vom DHV',
-                  'Prüfungsgebühren ab 03.04.2023 DHV'
+                  <>E-Learning Prüffragen <a href="https://shop.dhv.de/collections/prufungsfragen" target="_blank" rel="noopener noreferrer" className="text-luxury-gold hover:underline font-medium">Gleitschirm-A-Schein</a> vom DHV</>,
+                  <><a href="#" className="text-luxury-gold hover:underline font-medium">Prüfungsgebühren ab 03.04.2023</a> DHV</>
                 ].map((item, idx) => (
                   <li key={idx} className="flex gap-3 text-gray-600 font-light">
                     <Check className="w-5 h-5 text-luxury-gold shrink-0 mt-0.5" />

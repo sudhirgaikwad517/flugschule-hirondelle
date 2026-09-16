@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
-import { Check } from 'lucide-react';
+import { Check, Search } from 'lucide-react';
 import { useValidatedImageUrl, useValidatedImageList } from '../hooks/useValidatedImage';
+import { useLightbox } from '../components/common/Lightbox';
+import { GutscheinBox } from '../components/common/GutscheinBox';
 
 interface PageMedia {
   headerImageUrl: string | null;
@@ -42,6 +44,7 @@ function parseGalleryImages(value: string | null): string[] {
 
 export const Sicherheitstraining = () => {
   const [media, setMedia] = useState<PageMedia | null>(null);
+  const { openGallery } = useLightbox();
 
   useEffect(() => {
     fetch('/api/pagemedia/public/sicherheitstraining')
@@ -137,16 +140,16 @@ export const Sicherheitstraining = () => {
             
             {/* Quick Links Blocks */}
             <div className="flex flex-col">
-              <Link to="/performance" className="bg-[#e67e22] hover:opacity-90 text-white text-center py-3 font-semibold text-[15px] transition-opacity border-b border-white/20">
+              <Link to="/performance" className="bg-[#E58E26] hover:opacity-90 text-white text-center py-3 font-semibold text-[15px] transition-opacity border-b border-white/20">
                 Streckenflugtraining
               </Link>
-              <Link to="/performance/sicherheitstraining" className="bg-[#e74c3c] hover:opacity-90 text-white text-center py-3 font-semibold text-[15px] transition-opacity border-b border-white/20">
+              <Link to="/performance/sicherheitstraining" className="bg-[#D24F25] hover:opacity-90 text-white text-center py-3 font-semibold text-[15px] transition-opacity border-b border-white/20">
                 Sicherheitstraining
               </Link>
-              <Link to="/performance" className="bg-[#27ae60] hover:opacity-90 text-white text-center py-3 font-semibold text-[15px] transition-opacity border-b border-white/20">
+              <Link to="/performance" className="bg-[#34963B] hover:opacity-90 text-white text-center py-3 font-semibold text-[15px] transition-opacity border-b border-white/20">
                 Thermik- und Flugtechniktraining
               </Link>
-              <Link to="/performance" className="bg-[#53a8c7] hover:opacity-90 text-white text-center py-3 font-semibold text-[15px] transition-opacity">
+              <Link to="/performance/rettungsgeraetetraining" className="bg-[#59ABDE] hover:opacity-90 text-white text-center py-3 font-semibold text-[15px] transition-opacity">
                 Rettungsgerätetraining
               </Link>
             </div>
@@ -192,39 +195,35 @@ export const Sicherheitstraining = () => {
               </Link>
             </div>
 
-            {/* Voucher Box */}
-            <div>
-               <h3 className="font-luxury text-2xl text-[#53a8c7] mb-4 uppercase tracking-wider border-b border-gray-200 pb-4">
-                 Training Verschenken
-               </h3>
-               <p className="text-gray-500 font-light text-sm mb-4">
-                 Das Sicherheitstraining ist auch als Geschenk-Gutschein möglich.
-               </p>
-               <div className="w-full h-[180px] rounded-sm overflow-hidden shadow-sm relative group cursor-pointer border border-gray-200">
-                  <img src="/images/gutscheine/gutschein.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                  <div className="absolute bottom-4 left-4">
-                     <p className="text-white font-luxury text-3xl font-bold italic opacity-90 drop-shadow-md tracking-wider">GUTSCHEIN</p>
-                  </div>
-                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-sm">
-                     <p className="text-luxury-dark text-[10px] font-bold uppercase tracking-widest">Flugschule Hirondelle</p>
-                  </div>
-               </div>
-            </div>
+            <GutscheinBox
+              heading="Training Verschenken"
+              description="Das Sicherheitstraining ist auch als Geschenk-Gutschein möglich."
+              headingClassName="text-[#53a8c7]"
+            />
 
             {/* Impressions Gallery */}
             <div>
                <h3 className="font-luxury text-2xl text-[#53a8c7] mb-6 uppercase tracking-wider border-b border-gray-200 pb-4">
                  Impressionen
                </h3>
-               <div className="grid grid-cols-2 gap-2">
+               <div className="grid grid-cols-3 gap-2">
                  {galleryImages.map((img: string, index: number) => (
-                   <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
+                   <div
+                     key={index}
+                     className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
+                     onClick={() => openGallery(
+                       galleryImages.map((g: string) => ({ src: g, alt: 'Impression' })),
+                       index
+                     )}
+                   >
                      <img
                        src={img}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
+                     <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                       <Search className="w-5 h-5 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]" />
+                     </div>
                    </div>
                  ))}
                </div>
@@ -235,8 +234,8 @@ export const Sicherheitstraining = () => {
         </div>
 
         {/* Bottom Full-Width Content (To avoid empty right space) */}
-        <div className="max-w-[1200px] mx-auto mt-16 lg:mt-24">
-          <hr className="border-gray-100 mb-16" />
+        <div className="max-w-[1200px] mx-auto mt-8">
+          <hr className="border-gray-100 mb-10" />
           
           <div className="space-y-16 text-gray-600 font-light leading-relaxed text-justify">
             

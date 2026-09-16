@@ -1,8 +1,19 @@
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
-import { Check, Info } from 'lucide-react';
+import { Check, Info, Search } from 'lucide-react';
+import { useLightbox } from '../components/common/Lightbox';
+import { GutscheinBox } from '../components/common/GutscheinBox';
+
+// Old site's actual "Simple Image Gallery" filenames for this page
+// (/images/bilder/1-b-schein/*.jpg), in their real order.
+const GALLERY_FILES = [
+  '1Platzhalterbild', 'b_schein1', 'b_schein10', 'b_schein11', 'b_schein2',
+  'b_schein3', 'b_schein4', 'b_schein5', 'b_schein6', 'b_schein7',
+  'b_schein8', 'b_schein9',
+];
 
 export const BSchein = () => {
+  const { openGallery } = useLightbox();
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -61,7 +72,7 @@ export const BSchein = () => {
                     Der vorgeschriebene 15-Kilometer-Streckenflug für den unbeschränkten Luftfahrerschein wird für das Fluggelände besprochen und soll bei passender Wetterlage vom zukünftigen B-Scheinpiloten abgeflogen werden. Die Streckendokumentation erfolgt mit einem GPS und kann am Laptop vor Ort ausgelesen werden.
                   </p>
                   <p>
-                    Bevor es schlussendlich auf Strecke geht, muss auch noch ein <Link to="/ausbildung/rettungsgeraetetraining" className="text-luxury-gold hover:underline font-medium">Rettungsgerätetraining</Link> absolviert werden. Diese Trainings bieten wir mehrmals im Jahr für euch an.
+                    Bevor es schlussendlich auf Strecke geht, muss auch noch ein <Link to="/performance/rettungsgeraetetraining" className="text-luxury-gold hover:underline font-medium">Rettungsgerätetraining</Link> absolviert werden. Diese Trainings bieten wir mehrmals im Jahr für euch an.
                   </p>
                 </div>
               </div>
@@ -128,31 +139,16 @@ export const BSchein = () => {
 
               <Link 
                 to="/events?category=Unbeschr.%20LF-Schein%20(B-Schein)" 
-                className="w-full block bg-luxury-dark hover:bg-luxury-gold text-white text-center py-4 text-sm font-semibold uppercase tracking-widest transition-colors"
+                className="w-full block bg-[#526a75] hover:bg-luxury-gold text-white text-center py-4 text-sm font-semibold uppercase tracking-widest transition-colors"
               >
                 Theorie-Termine &gt; Siehe Liste
               </Link>
             </div>
 
-            {/* Voucher Box */}
-            <div>
-               <h3 className="font-luxury text-2xl text-luxury-dark mb-4 uppercase tracking-wider border-b border-gray-200 pb-4">
-                 B-Schein Verschenken
-               </h3>
-               <p className="text-gray-500 font-light text-sm mb-4">
-                 Der B-Schein ist auch als Geschenk-Gutschein möglich
-               </p>
-               <div className="w-full h-[180px] rounded-sm overflow-hidden shadow-sm relative group cursor-pointer border border-gray-200">
-                  <img src="/images/gutscheine/gutschein.jpg" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Gutschein" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                  <div className="absolute bottom-4 left-4">
-                     <p className="text-white font-luxury text-3xl font-bold italic opacity-90 drop-shadow-md tracking-wider">GUTSCHEIN</p>
-                  </div>
-                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-sm">
-                     <p className="text-luxury-dark text-[10px] font-bold uppercase tracking-widest">Flugschule Hirondelle</p>
-                  </div>
-               </div>
-            </div>
+            <GutscheinBox
+              heading="B-Schein Verschenken"
+              description="Der B-Schein ist auch als Geschenk-Gutschein möglich"
+            />
 
             {/* Impressions Gallery */}
             <div>
@@ -160,13 +156,23 @@ export const BSchein = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {Array.from({ length: 9 }, (_, i) => i + 1).map((n, index) => (
-                   <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-100">
+                 {GALLERY_FILES.map((file, index) => (
+                   <div
+                     key={file}
+                     className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
+                     onClick={() => openGallery(
+                       GALLERY_FILES.map((f) => ({ src: `/images/b-schein/${f}.jpg`, alt: 'Impression' })),
+                       index
+                     )}
+                   >
                      <img
-                       src={`/images/b-schein/gallery-${n}.jpg`}
+                       src={`/images/b-schein/${file}.jpg`}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
+                     <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                       <Search className="w-5 h-5 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]" />
+                     </div>
                    </div>
                  ))}
                </div>
@@ -177,8 +183,8 @@ export const BSchein = () => {
         </div>
 
         {/* Leistungen & Checkliste Grid (Full Width) */}
-        <div className="max-w-[1200px] mx-auto mt-16 lg:mt-24">
-          <hr className="border-gray-100 mb-16" />
+        <div className="max-w-[1200px] mx-auto mt-8">
+          <hr className="border-gray-100 mb-10" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24 mb-16">
             <div>
               <h2 className="font-luxury text-3xl text-luxury-dark mb-8 uppercase">Unsere Leistungen</h2>
@@ -199,9 +205,9 @@ export const BSchein = () => {
               <h4 className="font-medium text-luxury-dark mb-4 text-sm">Zusatzkosten können entstehen für:</h4>
               <ul className="space-y-3 mb-6">
                 {[
-                  <><Link to="/ausbildung/rettungsgeraetetraining" className="text-luxury-gold hover:underline">Rettungsgerätetraining</Link> (separat zu buchender Kurs)</>,
-                  'E-Learning Prüffragen Gleitschirm-B-Schein vom DHV',
-                  'Prüfungsgebühren ab 03.04.2023 DHV'
+                  <><Link to="/performance/rettungsgeraetetraining" className="text-luxury-gold hover:underline font-medium">Rettungsgerätetraining</Link> (separat zu buchender Kurs)</>,
+                  <>E-Learning Prüffragen <a href="https://shop.dhv.de/collections/prufungsfragen" target="_blank" rel="noopener noreferrer" className="text-luxury-gold hover:underline font-medium">Gleitschirm-B-Schein</a> vom DHV</>,
+                  <><a href="#" className="text-luxury-gold hover:underline font-medium">Prüfungsgebühren ab 03.04.2023</a> DHV</>
                 ].map((item, idx) => (
                   <li key={idx} className="flex gap-3 text-gray-600 font-light">
                     <Check className="w-5 h-5 text-luxury-gold shrink-0 mt-0.5" />
@@ -232,11 +238,11 @@ export const BSchein = () => {
           </div>
 
           {/* Large Blue Info Banner at bottom */}
-          <div className="bg-[#53a8c7] rounded-sm p-8 md:p-12 text-center shadow-md">
+          <Link to="/reisen" className="block bg-[#53a8c7] hover:bg-[#4396b5] rounded-sm p-8 md:p-12 text-center shadow-md transition-colors">
              <p className="text-white text-lg md:text-xl font-medium leading-relaxed max-w-4xl mx-auto">
                Die Praxisausbildung zum B-Schein findet im Rahmen unserer Reisen bzw. Höhenflugschulungen statt. Der Kurspreis für die Praxis orientiert sich am gewählten Training bzw. der gewählten Reise.
              </p>
-          </div>
+          </Link>
         </div>
       </section>
 
