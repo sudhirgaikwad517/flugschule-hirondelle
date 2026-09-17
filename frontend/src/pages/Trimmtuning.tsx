@@ -8,19 +8,22 @@ export const Trimmtuning = () => {
 
       {/* Main Content Section */}
       <section className="pt-16 md:pt-24 pb-8 md:pb-12 px-4">
-        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
-          
+        <div className="max-w-[1200px] mx-auto">
+
+          {/* Page Title (full width, above the two-column grid) */}
+          <div className="mb-12">
+            <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-3">
+              SERVICE
+            </p>
+            <h1 className="font-luxury text-4xl md:text-5xl text-luxury-dark uppercase">
+              Trimmtuning
+            </h1>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+
           {/* Left Column (Content) */}
-          <div className="lg:col-span-8 space-y-12">
-            
-            <div>
-              <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-3">
-                SERVICE
-              </p>
-              <h1 className="font-luxury text-4xl md:text-5xl text-luxury-dark uppercase">
-                Trimmtuning
-              </h1>
-            </div>
+          <div className="lg:col-span-7 space-y-12">
 
             {/* Main Image */}
             <div className="w-full h-[400px] relative overflow-hidden rounded-sm shadow-sm group cursor-pointer">
@@ -70,7 +73,7 @@ export const Trimmtuning = () => {
           </div>
 
           {/* Right Column (Sidebar) */}
-          <div className="lg:col-span-4 space-y-12">
+          <div className="lg:col-span-5 space-y-12">
 
             {/* Pricing Card */}
             <div className="bg-[#FAF9F7] p-8 border border-gray-100 shadow-sm relative overflow-hidden group">
@@ -116,7 +119,8 @@ export const Trimmtuning = () => {
             </div>
 
           </div>
-          
+
+          </div>
         </div>
       </section>
 

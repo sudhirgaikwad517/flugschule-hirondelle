@@ -22,11 +22,11 @@ export const Reisen = () => {
             "Die Hotspots der Fliegerszene erkunden mit Flugbetreuung."
           </h3>
           <p className="text-gray-500 leading-relaxed font-light mb-10 max-w-4xl">
-            Unsere Reisen führen uns in die bekannten Fluggebiet-Hotspots. So zählt Bassano – das Mekka der Gleitschirmszene – jährlich fest zum Programm. Aber auch entlegene Ziele wollen wir euch nicht vorenthalten und bieten euch Reisen nach Südafrika und weiteren besonderen Zielen weltweit an. Im Rahmen unserer Reisen könnt ihr unter Fluglehrerbetreuung sehr viel Erfahrung sammeln, eure Flugtechnik verbessern und zahlreiche großartige Flugstunden genießen.
+            Unsere <Link to="/reisen" className="text-luxury-gold hover:underline font-bold">Reisen</Link> führen uns in die bekannten Fluggebiet-Hotspots. So zählt <Link to="/reisen/bassano-tour" className="text-luxury-gold hover:underline font-bold">Bassano</Link> – das Mekka der Gleitschirmszene – jährlich fest zum Programm. Aber auch entlegene Ziele wollen wir euch nicht vorenthalten und bieten euch Reisen nach <Link to="/reisen/suedafrika-tour" className="text-luxury-gold hover:underline font-bold">Südafrika</Link> und weiteren besonderen Zielen weltweit an. Im Rahmen unserer <Link to="/reisen" className="text-luxury-gold hover:underline font-bold">Reisen</Link> könnt ihr unter Fluglehrerbetreuung sehr viel Erfahrung sammeln, eure Flugtechnik verbessern und zahlreiche großartige Flugstunden genießen.
           </p>
-          <button className="px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm">
+          <Link to="/buchungskalender" className="px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm">
             ZUR KALENDERÜBERSICHT
-          </button>
+          </Link>
         </div>
 
         {/* Tours List */}

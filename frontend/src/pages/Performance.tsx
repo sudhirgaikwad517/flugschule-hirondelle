@@ -25,12 +25,12 @@ export const Performance = () => {
           </div>
           <div className="w-full lg:w-1/2">
             <div className="grid grid-cols-2 gap-2 w-full">
-              <div className="bg-[#f09a37] text-white text-center py-4 px-3 text-[11px] sm:text-xs font-semibold cursor-pointer hover:opacity-90 rounded-sm shadow-sm transition-opacity uppercase tracking-wider">Streckenflugtraining</div>
-              <div className="bg-[#8ec254] text-white text-center py-4 px-3 text-[11px] sm:text-xs font-semibold cursor-pointer hover:opacity-90 rounded-sm shadow-sm transition-opacity uppercase tracking-wider">Soaringtraining</div>
-              <div className="bg-[#d95a28] text-white text-center py-4 px-3 text-[11px] sm:text-xs font-semibold cursor-pointer hover:opacity-90 rounded-sm shadow-sm transition-opacity uppercase tracking-wider">Sicherheitstraining</div>
-              <div className="bg-[#5c9ccc] text-white text-center py-4 px-3 text-[11px] sm:text-xs font-semibold cursor-pointer hover:opacity-90 rounded-sm shadow-sm transition-opacity uppercase tracking-wider">Rettungsgerätetraining</div>
-              <div className="bg-[#38a84c] text-white text-center py-4 px-3 text-[11px] sm:text-xs font-semibold cursor-pointer hover:opacity-90 rounded-sm shadow-sm transition-opacity uppercase tracking-wider">Thermik- und Flugtechniktraining</div>
-              <div className="bg-[#2978b5] text-white text-center py-4 px-3 text-[11px] sm:text-xs font-semibold cursor-pointer hover:opacity-90 rounded-sm shadow-sm transition-opacity uppercase tracking-wider">Groundhandlingtraining</div>
+              <div className="bg-[#E58E26] text-white text-center py-4 px-3 text-[11px] sm:text-xs font-semibold cursor-pointer hover:opacity-90 rounded-sm shadow-sm transition-opacity uppercase tracking-wider">Streckenflugtraining</div>
+              <div className="bg-[#80C533] text-white text-center py-4 px-3 text-[11px] sm:text-xs font-semibold cursor-pointer hover:opacity-90 rounded-sm shadow-sm transition-opacity uppercase tracking-wider">Soaringtraining</div>
+              <div className="bg-[#D24F25] text-white text-center py-4 px-3 text-[11px] sm:text-xs font-semibold cursor-pointer hover:opacity-90 rounded-sm shadow-sm transition-opacity uppercase tracking-wider">Sicherheitstraining</div>
+              <div className="bg-[#59ABDE] text-white text-center py-4 px-3 text-[11px] sm:text-xs font-semibold cursor-pointer hover:opacity-90 rounded-sm shadow-sm transition-opacity uppercase tracking-wider">Rettungsgerätetraining</div>
+              <div className="bg-[#34963B] text-white text-center py-4 px-3 text-[11px] sm:text-xs font-semibold cursor-pointer hover:opacity-90 rounded-sm shadow-sm transition-opacity uppercase tracking-wider">Thermik- und Flugtechniktraining</div>
+              <div className="bg-[#3274B7] text-white text-center py-4 px-3 text-[11px] sm:text-xs font-semibold cursor-pointer hover:opacity-90 rounded-sm shadow-sm transition-opacity uppercase tracking-wider">Groundhandlingtraining</div>
             </div>
           </div>
         </div>

@@ -27,19 +27,22 @@ export const GriechenlandTour = () => {
 
       {/* Main Content Section */}
       <section className="py-16 md:py-24 px-4">
-        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
-          
+        <div className="max-w-[1200px] mx-auto">
+
+          {/* Page Title (full width, above the two-column grid) */}
+          <div className="mb-12">
+            <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-3">
+              REISEN
+            </p>
+            <h1 className="font-luxury text-4xl md:text-5xl text-luxury-dark uppercase">
+              Griechenland-Tour
+            </h1>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+
           {/* Left Column (Content) */}
-          <div className="lg:col-span-8 space-y-12">
-            
-            <div>
-              <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-3">
-                REISEN
-              </p>
-              <h1 className="font-luxury text-4xl md:text-5xl text-luxury-dark uppercase">
-                Griechenland-Tour
-              </h1>
-            </div>
+          <div className="lg:col-span-7 space-y-12">
 
             {/* Video - old site just embeds the iframe directly, no click-to-play
                 preview thumbnail, so this doesn't either. */}
@@ -120,7 +123,7 @@ export const GriechenlandTour = () => {
           </div>
 
           {/* Right Column (Sidebar) */}
-          <div className="lg:col-span-4 space-y-12">
+          <div className="lg:col-span-5 space-y-12">
 
             {/* Badges */}
             <div className="flex flex-col gap-1 w-full font-semibold text-white text-center text-sm">
@@ -195,7 +198,8 @@ export const GriechenlandTour = () => {
             </div>
 
           </div>
-          
+
+          </div>
         </div>
 
         <div id="comments" className="max-w-[1200px] mx-auto mt-12">

@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
+import { Search } from 'lucide-react';
 import { Banner } from '../components/common/Banner';
+import { useLightbox } from '../components/common/Lightbox';
 
 export const Ausbildungskonzept = () => {
+  const { open } = useLightbox();
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -42,7 +45,7 @@ export const Ausbildungskonzept = () => {
                 </ul>
 
                 <p>
-                  Im Nachfolgenden sind die Ausbildungswege in der Flugschule Hirondelle vom <Link to="/ausbildung/schnupperkurs" className="text-[#53a8c7] hover:underline">Schnupperkurs</Link> über die <Link to="/ausbildung/a-schein" className="text-[#53a8c7] hover:underline">Höhenflugschulung</Link> bis zum <Link to="/ausbildung/b-schein" className="text-[#53a8c7] hover:underline">unbeschränkten Luftfahrerschein</Link> aufgelistet.
+                  Im Nachfolgenden sind die Ausbildungswege in der Flugschule Hirondelle vom <Link to="/ausbildung/schnupperkurs" className="text-luxury-gold hover:underline font-medium">Schnupperkurs</Link> über die <Link to="/ausbildung/a-schein" className="text-luxury-gold hover:underline font-medium">Höhenflugschulung</Link> bis zum <Link to="/ausbildung/b-schein" className="text-luxury-gold hover:underline font-medium">unbeschränkten Luftfahrerschein</Link> aufgelistet.
                 </p>
               </div>
             </div>
@@ -50,17 +53,22 @@ export const Ausbildungskonzept = () => {
             {/* Right Column (Graphic and Table) */}
             <div className="lg:col-span-7 flex flex-col items-end">
               
-              {/* Graphic */}
+              {/* Graphic - old site's mediabox plugin puts a magnifier badge in
+                  the bottom-right corner of every zoomable content image. */}
               <div className="w-full max-w-2xl mb-2">
-                <img 
-                  src="https://www.fs-hirondelle.de/images/inhalte/ausbildungswege.png" 
-                  alt="Ausbildungswege Grafik" 
-                  className="w-full object-contain"
-                  onError={(e) => {
-                    e.currentTarget.src = "https://picsum.photos/id/1018/800/400";
-                    e.currentTarget.className = "w-full h-48 object-cover opacity-50 grayscale";
-                  }}
-                />
+                <div
+                  className="relative group/zoom cursor-zoom-in"
+                  onClick={() => open('/images/inhalte/ausbildungswege.png', 'Ausbildungswege Grafik')}
+                >
+                  <img
+                    src="/images/inhalte/ausbildungswege.png"
+                    alt="Ausbildungswege Grafik"
+                    className="w-full object-contain"
+                  />
+                  <div className="absolute bottom-2 right-2 flex items-center justify-center">
+                    <Search className="w-6 h-6 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]" />
+                  </div>
+                </div>
                 <p className="text-center text-gray-500 text-sm mt-1">
                   hm = ca. Höhenmeter-Differenz zwischen Start- und Landeplatz
                 </p>
@@ -79,7 +87,7 @@ export const Ausbildungskonzept = () => {
                   <tbody className="text-sm">
                     
                     {/* Schnupperkurs */}
-                    <tr className="bg-[#aed581] text-black border-b border-white/20">
+                    <tr className="bg-[#80c533] text-black border-b border-white/20">
                       <td className="py-4 px-4 align-top">
                         <div className="font-bold">Schnupper-/Einsteigerkurs</div>
                         <div>1 – 2 Tage</div>
@@ -93,7 +101,7 @@ export const Ausbildungskonzept = () => {
                     </tr>
 
                     {/* L-Schein */}
-                    <tr className="bg-[#4caf50] text-black border-b border-white/20">
+                    <tr className="bg-[#34963b] text-black border-b border-white/20">
                       <td className="py-4 px-4 align-top">
                         <div className="font-bold">L-Schein</div>
                         <div>3 – 4 Tage</div>
@@ -108,7 +116,7 @@ export const Ausbildungskonzept = () => {
                     </tr>
 
                     {/* Winde */}
-                    <tr className="bg-[#fff176] text-black border-b border-white/20">
+                    <tr className="bg-[#fff600] text-black border-b border-white/20">
                       <td className="py-4 px-4 align-top">
                         <div className="font-bold">Windenschein</div>
                         <div>3 – 4 Tage</div>
@@ -122,7 +130,7 @@ export const Ausbildungskonzept = () => {
                     </tr>
 
                     {/* A-Schein */}
-                    <tr className="bg-[#ffd54f] text-black border-b border-white/20">
+                    <tr className="bg-[#ffd700] text-black border-b border-white/20">
                       <td className="py-4 px-4 align-top">
                         <div className="font-bold">A-Schein</div>
                         <div>Höhenflugschulung</div>
@@ -136,7 +144,7 @@ export const Ausbildungskonzept = () => {
                     </tr>
 
                     {/* B-Schein */}
-                    <tr className="bg-[#ffb74d] text-black border-b border-white/20">
+                    <tr className="bg-[#e58e26] text-black border-b border-white/20">
                       <td className="py-4 px-4 align-top">
                         <div className="font-bold">B-Schein</div>
                         <div>Integriert in eine Flugreise oder Fortbildung</div>
@@ -150,7 +158,7 @@ export const Ausbildungskonzept = () => {
                     </tr>
 
                     {/* Tandem */}
-                    <tr className="bg-[#e0e0e0] text-black">
+                    <tr className="bg-[#c4c5ca] text-black">
                       <td className="py-4 px-4 align-top">
                         <div className="font-bold mt-4">Tandemschein</div>
                       </td>

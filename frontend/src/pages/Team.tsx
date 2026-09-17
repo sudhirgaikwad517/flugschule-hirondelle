@@ -60,15 +60,13 @@ const TEAM_MEMBERS = [
   }
 ];
 
-// Ozone and Advance dropped: no real logo file exists in the old codebase
-// (only unrelated sample/partner photos), so a real Ozone/Advance asset
-// would need to be sourced fresh rather than ported - showing a fake stock
-// photo in their place would be worse than omitting them for now.
 const SHOP_BRANDS = [
-  { name: 'Niviuk', img: '/images/brands/niviuk.png' },
-  { name: 'Phi', img: '/images/brands/phi.png' },
-  { name: 'Independence', img: '/images/brands/independence.png' },
-  { name: 'Skyman', img: '/images/brands/skyman.png' },
+  { name: 'Ozone', img: '/images/brands/ozone.jpg', url: 'http://www.flyozone.com/' },
+  { name: 'Advance', img: '/images/brands/advance.png', url: 'http://www.advance.ch/' },
+  { name: 'Niviuk', img: '/images/brands/niviuk.png', url: 'http://www.niviuk-gliders.at/index.php/' },
+  { name: 'Phi', img: '/images/brands/phi.png', url: 'https://phi-air.com/de/' },
+  { name: 'Independence', img: '/images/brands/independence.png', url: 'http://www.independence-world.com/' },
+  { name: 'Skyman', img: '/images/brands/skyman.png', url: 'http://www.skyman.biz/de/' },
 ];
 
 export const Team = () => {
@@ -105,7 +103,7 @@ export const Team = () => {
                 <div>
                   <h3 className="text-xl font-luxury text-luxury-dark italic mb-4">Ausbildung & Performance</h3>
                   <p className="text-[14px] text-gray-600 font-light leading-relaxed">
-                    Unser Ziel ist es, unsere Schüler zu „selbständigen Piloten" auszubilden, die nach ihrer Ausbildung eigenständig fliegen und den Traum vom Fliegen wahr werden lassen können. Vom <Link to="/ausbildung/a-schein" className="text-[#53a8c7] hover:text-luxury-gold transition-colors font-medium">Grundkurs</Link> über den <Link to="/ausbildung/a-schein" className="text-[#53a8c7] hover:text-luxury-gold transition-colors font-medium">A-Schein</Link> bis zum <Link to="/ausbildung/b-schein" className="text-[#53a8c7] hover:text-luxury-gold transition-colors font-medium">B-Schein</Link> (Unbeschränkter Luftfahrerschein / Überlandflugberechtigung) werdet ihr von Fluglehrern aus unserem Team begleitet und profitiert durch die Trainervielfalt von deren unterschiedlichen Stärken sowie individueller Tipps und Erfahrungen. Wir bieten nicht die klassische 0-8-15-Ausbildung sondern eine individuelle Ausbildung nach Maß für jedermann.
+                    Unser Ziel ist es, unsere Schüler zu „selbständigen Piloten" auszubilden, die nach ihrer Ausbildung eigenständig fliegen und den Traum vom Fliegen wahr werden lassen können. Vom <Link to="/ausbildung/l-schein" className="text-luxury-gold hover:underline font-medium">Grundkurs</Link> über den <Link to="/ausbildung/a-schein" className="text-luxury-gold hover:underline font-medium">A-Schein</Link> bis zum <Link to="/ausbildung/b-schein" className="text-luxury-gold hover:underline font-medium">B-Schein</Link> (Unbeschränkter Luftfahrerschein / Überlandflugberechtigung) werdet ihr von Fluglehrern aus unserem Team begleitet und profitiert durch die Trainervielfalt von deren unterschiedlichen Stärken sowie individueller Tipps und Erfahrungen. Wir bieten nicht die klassische 0-8-15-Ausbildung sondern eine individuelle Ausbildung nach Maß für jedermann.
                   </p>
                 </div>
 
@@ -113,7 +111,7 @@ export const Team = () => {
                 <div>
                   <h3 className="text-xl font-luxury text-luxury-dark italic mb-4">Reisen</h3>
                   <p className="text-[14px] text-gray-600 font-light leading-relaxed">
-                    Unsere <Link to="/reisen" className="text-[#53a8c7] hover:text-luxury-gold transition-colors font-medium">Reisen</Link> führen uns in die bekannten Fluggebiet-Hotspots. So zählt <Link to="/reisen/bassano-tour" className="text-[#53a8c7] hover:text-luxury-gold transition-colors font-medium">Bassano</Link> – das Mekka der Gleitschirmszene – jährlich fest zum Programm. Aber auch entlegene Ziele wollen wir euch nicht vorenthalten und bieten euch Reisen nach <Link to="/reisen/suedafrika-tour" className="text-[#53a8c7] hover:text-luxury-gold transition-colors font-medium">Südafrika</Link> und weiteren besonderen Zielen weltweit an. Im Rahmen unserer <Link to="/reisen" className="text-[#53a8c7] hover:text-luxury-gold transition-colors font-medium">Reisen</Link> könnt ihr unter Fluglehrerbetreuung sehr viel Erfahrung sammeln, eure Flugtechnik verbessern und zahlreiche großartige Flugstunden genießen.
+                    Unsere <Link to="/reisen" className="text-luxury-gold hover:underline font-medium">Reisen</Link> führen uns in die bekannten Fluggebiet-Hotspots. So zählt <Link to="/reisen/bassano-tour" className="text-luxury-gold hover:underline font-medium">Bassano</Link> – das Mekka der Gleitschirmszene – jährlich fest zum Programm. Aber auch entlegene Ziele wollen wir euch nicht vorenthalten und bieten euch Reisen nach <Link to="/reisen/suedafrika-tour" className="text-luxury-gold hover:underline font-medium">Südafrika</Link> und weiteren besonderen Zielen weltweit an. Im Rahmen unserer <Link to="/reisen" className="text-luxury-gold hover:underline font-medium">Reisen</Link> könnt ihr unter Fluglehrerbetreuung sehr viel Erfahrung sammeln, eure Flugtechnik verbessern und zahlreiche großartige Flugstunden genießen.
                   </p>
                 </div>
 
@@ -130,9 +128,9 @@ export const Team = () => {
           </h2>
           <div className="w-24 h-px bg-luxury-gold mb-16"></div>
 
-          <div className="space-y-16">
+          <div className="space-y-8">
             {TEAM_MEMBERS.map((member, idx) => (
-              <div key={idx} className="grid grid-cols-1 lg:grid-cols-12 gap-12 border-b border-gray-100 pb-16 last:border-0 last:pb-0">
+              <div key={idx} className="grid grid-cols-1 lg:grid-cols-12 gap-12 border-b border-gray-100 pb-8 last:border-0 last:pb-0">
                 
                 {/* Profile Info (Left 8 cols) */}
                 <div className="lg:col-span-8 flex flex-col md:flex-row gap-8 items-start">
@@ -183,18 +181,24 @@ export const Team = () => {
           
           <div className="lg:col-span-8">
             <p className="text-[15px] text-gray-600 font-light leading-relaxed mb-10 max-w-4xl">
-              In unserem Shop findest du alles rund um deine Ausrüstung! Wir haben die Produkte der führenden Gleitschirmhersteller in unserem Programm. Gerne beraten wir dich in unserer Flugschule. Zu unseren <Link to="/infos#kontakt" className="text-[#53a8c7] hover:text-luxury-gold transition-colors font-medium">Öffnungszeiten...</Link>
+              In unserem Shop findest du alles rund um deine Ausrüstung! Wir haben die Produkte der führenden Gleitschirmhersteller in unserem Programm. Gerne beraten wir dich in unserer Flugschule. Zu unseren <Link to="/infos#kontakt" className="text-luxury-gold hover:underline font-medium">Öffnungszeiten...</Link>
             </p>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
               {SHOP_BRANDS.map((brand, idx) => (
-                <div key={idx} className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow rounded-sm p-4 flex items-center justify-center aspect-[3/2] group cursor-pointer">
-                  <img 
-                    src={brand.img} 
-                    alt={brand.name} 
+                <a
+                  key={idx}
+                  href={brand.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow rounded-sm p-4 flex items-center justify-center aspect-[3/2] group cursor-pointer"
+                >
+                  <img
+                    src={brand.img}
+                    alt={brand.name}
                     className="w-full h-full object-contain"
                   />
-                </div>
+                </a>
               ))}
             </div>
           </div>
