@@ -91,14 +91,9 @@ export const Buchungskalender = () => {
   // "Alle anzeigen"/"Alle ausblenden" pair plus a per-category toggle -
   // multiple categories can be shown/hidden independently at once, not a
   // single-select filter.
-  const [hiddenCategories, setHiddenCategories] = useState<Set<Category>>(new Set());
+  const [visibleCategories, setVisibleCategories] = useState<Set<Category>>(new Set(ALL_CATEGORIES));
   const toggleCategory = (cat: Category) => {
-    setHiddenCategories(prev => {
-      const next = new Set(prev);
-      if (next.has(cat)) next.delete(cat);
-      else next.add(cat);
-      return next;
-    });
+    setVisibleCategories(new Set([cat]));
   };
   const [activeYear, setActiveYear] = useState<number>(new Date().getFullYear());
   const [selectedEventForBooking, setSelectedEventForBooking] = useState<CalendarEvent | null>(null);
@@ -141,7 +136,7 @@ export const Buchungskalender = () => {
         appendTo: document.body,
       });
     }
-  }, [loading, events, hiddenCategories, activeYear]);
+  }, [loading, events, visibleCategories, activeYear]);
 
   // Generate calendar months for the active year
   const months = Array.from({ length: 12 }, (_, i) => {
@@ -156,8 +151,9 @@ export const Buchungskalender = () => {
   });
 
   const getFilteredEvents = () => {
-    if (hiddenCategories.size === 0) return events;
-    return events.filter(e => !hiddenCategories.has(e.category));
+    if (visibleCategories.size === ALL_CATEGORIES.length) return events;
+    if (visibleCategories.size === 0) return [];
+    return events.filter(e => visibleCategories.has(e.category as Category));
   };
 
   const filteredEvents = getFilteredEvents();
@@ -273,13 +269,13 @@ export const Buchungskalender = () => {
             <div className="w-full">
               <div className="grid grid-cols-2 gap-2 mb-2">
                 <button
-                  onClick={() => setHiddenCategories(new Set())}
+                  onClick={() => setVisibleCategories(new Set(ALL_CATEGORIES))}
                   className="w-full py-2 text-[14px] font-bold tracking-widest uppercase transition-opacity hover:opacity-90 rounded-sm bg-luxury-slate text-white"
                 >
                   Alle anzeigen
                 </button>
                 <button
-                  onClick={() => setHiddenCategories(new Set(ALL_CATEGORIES))}
+                  onClick={() => setVisibleCategories(new Set())}
                   className="w-full py-2 text-[14px] font-bold tracking-widest uppercase transition-opacity hover:opacity-90 rounded-sm bg-gray-300 text-gray-700"
                 >
                   Alle ausblenden
@@ -292,7 +288,7 @@ export const Buchungskalender = () => {
                     <button
                       key={cat}
                       onClick={() => toggleCategory(cat as Category)}
-                      className={`w-full py-2.5 px-2 text-[14px] font-bold tracking-widest uppercase truncate transition-all hover:opacity-90 rounded-sm ${hiddenCategories.has(cat as Category) ? 'opacity-30 line-through' : ''}`}
+                      className={`w-full py-2.5 px-2 text-[14px] font-bold tracking-widest uppercase truncate transition-all hover:opacity-90 rounded-sm ${!visibleCategories.has(cat as Category) ? 'opacity-30 line-through' : ''}`}
                       style={{ backgroundColor: categoryColors[cat as Category].bg, color: categoryColors[cat as Category].text }}
                     >
                       {cat}
@@ -305,7 +301,7 @@ export const Buchungskalender = () => {
                     <button
                       key={cat}
                       onClick={() => toggleCategory(cat as Category)}
-                      className={`w-full py-2.5 px-2 text-[14px] font-bold tracking-widest uppercase truncate transition-all hover:opacity-90 rounded-sm ${hiddenCategories.has(cat as Category) ? 'opacity-30 line-through' : ''}`}
+                      className={`w-full py-2.5 px-2 text-[14px] font-bold tracking-widest uppercase truncate transition-all hover:opacity-90 rounded-sm ${!visibleCategories.has(cat as Category) ? 'opacity-30 line-through' : ''}`}
                       style={{ backgroundColor: categoryColors[cat as Category].bg, color: categoryColors[cat as Category].text }}
                     >
                       {cat}
