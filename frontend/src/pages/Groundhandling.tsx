@@ -22,19 +22,22 @@ export const Groundhandling = () => {
 
       {/* Main Content Section */}
       <section className="py-16 md:py-24 px-4">
-        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
-          
+        <div className="max-w-[1200px] mx-auto">
+
+          {/* Page Title (full width, above the two-column grid) */}
+          <div className="mb-12">
+            <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-3">
+              PERFORMANCE
+            </p>
+            <h1 className="font-luxury text-4xl md:text-5xl text-luxury-dark uppercase">
+              Groundhandling Kurs
+            </h1>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+
           {/* Left Column (Content) */}
-          <div className="lg:col-span-8 space-y-12">
-            
-            <div>
-              <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-3">
-                PERFORMANCE
-              </p>
-              <h1 className="font-luxury text-4xl md:text-5xl text-luxury-dark uppercase">
-                Groundhandling Kurs
-              </h1>
-            </div>
+          <div className="lg:col-span-7 space-y-12">
 
             {/* Video - old site just embeds the iframe directly, no click-to-play
                 preview thumbnail, so this doesn't either. */}
@@ -101,13 +104,13 @@ export const Groundhandling = () => {
           </div>
 
           {/* Right Column (Sidebar) */}
-          <div className="lg:col-span-4 space-y-12">
+          <div className="lg:col-span-5 space-y-12">
             
             {/* Booking Card */}
             <div className="bg-[#FAF9F7] p-8 border border-gray-100 shadow-sm relative overflow-hidden group">
               <div className="absolute top-0 left-0 w-full h-1 bg-luxury-gold transform origin-left transition-transform duration-500 scale-x-0 group-hover:scale-x-100"></div>
               
-              <div className="bg-[#3274B7] text-white text-center py-2 mb-6 font-semibold text-sm">
+              <div className="bg-[#53a8c7] text-white text-center py-2 mb-6 font-semibold text-sm">
                 Groundhandlingtraining Einzelschulung
               </div>
 
@@ -166,6 +169,7 @@ export const Groundhandling = () => {
 
           </div>
 
+          </div>
         </div>
       </section>
 

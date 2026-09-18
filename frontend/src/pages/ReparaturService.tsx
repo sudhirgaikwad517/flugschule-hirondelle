@@ -9,19 +9,22 @@ export const ReparaturService = () => {
 
       {/* Main Content Section */}
       <section className="pt-16 md:pt-24 pb-8 md:pb-12 px-4">
-        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
-          
+        <div className="max-w-[1200px] mx-auto">
+
+          {/* Page Title (full width, above the two-column grid) */}
+          <div className="mb-12">
+            <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-3">
+              SERVICE
+            </p>
+            <h1 className="font-luxury text-4xl md:text-5xl text-luxury-dark uppercase">
+              Reparatur-Service
+            </h1>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+
           {/* Left Column (Content) */}
-          <div className="lg:col-span-8 space-y-12">
-            
-            <div>
-              <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-3">
-                SERVICE
-              </p>
-              <h1 className="font-luxury text-4xl md:text-5xl text-luxury-dark uppercase">
-                Reparatur-Service
-              </h1>
-            </div>
+          <div className="lg:col-span-7 space-y-12">
 
             {/* Main Image */}
             <div className="w-full h-[400px] relative overflow-hidden rounded-sm shadow-sm group cursor-pointer">
@@ -36,8 +39,8 @@ export const ReparaturService = () => {
             <div className="flex flex-col md:flex-row gap-6">
               <div className="md:w-1/3 flex-shrink-0">
                 <div className="w-full h-[250px] relative overflow-hidden rounded-sm shadow-sm group cursor-pointer">
-                  <img 
-                    src="/images/service/reparatur.jpg"
+                  <img
+                    src="/images/service/werkstatt.jpg"
                     alt="Werkstatt"
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                   />
@@ -49,7 +52,7 @@ export const ReparaturService = () => {
                   Du hast einen Defekt an deiner Ausrüstung? Einen Riß in deinem Gleitschirm? Wir retten was noch zu retten ist ;-)
                 </h3>
                 <p>
-                  Wir bieten euch einen professionellen Reparatur-Service für eure Ausrüstung an. Die notwendigen Reparatur-Arbeiten führen wir in unserer Service-Werkstätte mit größter Sorgfalt und modernster Technik durch – damit ihr schnell wieder sicher abheben könnt! Nach Absprache führen wir auch gerne Teile des <Link to="/service/2-jahres-check" className="text-[#53a8c7] hover:underline">2-Jahres-Checks</Link> im Rahmen der Reparatur durch.
+                  Wir bieten euch einen professionellen Reparatur-Service für eure Ausrüstung an. Die notwendigen Reparatur-Arbeiten führen wir in unserer Service-Werkstätte mit größter Sorgfalt und modernster Technik durch – damit ihr schnell wieder sicher abheben könnt! Nach Absprache führen wir auch gerne Teile des <Link to="/service/2-jahres-check" className="text-luxury-gold hover:underline font-medium">2-Jahres-Checks</Link> im Rahmen der Reparatur durch.
                 </p>
               </div>
             </div>
@@ -57,7 +60,7 @@ export const ReparaturService = () => {
           </div>
 
           {/* Right Column (Sidebar) */}
-          <div className="lg:col-span-4 space-y-12">
+          <div className="lg:col-span-5 space-y-12">
 
             {/* Pricing Card */}
             <div className="bg-[#FAF9F7] p-8 border border-gray-100 shadow-sm relative overflow-hidden group">
@@ -74,7 +77,7 @@ export const ReparaturService = () => {
                 </div>
                 
                 <p className="text-gray-500 italic text-xs leading-relaxed">
-                  Bitte vereinbare für den Reparaturservice einen Termin mit uns. Hierzu könnt ihr in der <Link to="/infos#kontakt" className="text-[#53a8c7] hover:underline">Flugschule</Link> vorbeischauen oder ihr meldet euch telefonisch unter 0151 18836000
+                  Bitte vereinbare für den Reparaturservice einen Termin mit uns. Hierzu könnt ihr in der <Link to="/infos#kontakt" className="text-luxury-gold hover:underline font-medium">Flugschule</Link> vorbeischauen oder ihr meldet euch telefonisch unter 0151 18836000
                 </p>
               </div>
 
@@ -84,7 +87,8 @@ export const ReparaturService = () => {
             </div>
 
           </div>
-          
+
+          </div>
         </div>
       </section>
 

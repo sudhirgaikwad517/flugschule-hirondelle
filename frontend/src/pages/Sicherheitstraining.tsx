@@ -65,17 +65,20 @@ export const Sicherheitstraining = () => {
 
       {/* Main Content Section */}
       <section className="py-16 md:py-24 px-4">
-        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
-          
+        <div className="max-w-[1200px] mx-auto">
+
+          {/* Page Title (full width, above the two-column grid) */}
+          <div className="mb-12">
+            <h1 className="font-luxury text-4xl md:text-5xl text-[#53a8c7] uppercase tracking-wider mb-2">
+              SICHERHEITSTRAINING - GARDASEE
+            </h1>
+            <div className="w-full h-px bg-[#53a8c7]/30"></div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+
           {/* Left Column (Content) */}
-          <div className="lg:col-span-8 space-y-12">
-            
-            <div>
-              <h1 className="font-luxury text-4xl md:text-5xl text-[#53a8c7] uppercase tracking-wider mb-2">
-                SICHERHEITSTRAINING - GARDASEE
-              </h1>
-              <div className="w-full h-px bg-[#53a8c7]/30"></div>
-            </div>
+          <div className="lg:col-span-7 space-y-12">
 
             {/* Featured Image or Video Slot */}
             <div className="w-full min-h-[400px] overflow-hidden rounded-sm shadow-sm group">
@@ -136,7 +139,7 @@ export const Sicherheitstraining = () => {
           </div>
 
           {/* Right Column (Sidebar) */}
-          <div className="lg:col-span-4 space-y-12 mt-12 lg:mt-0">
+          <div className="lg:col-span-5 space-y-12 mt-12 lg:mt-0">
             
             {/* Quick Links Blocks */}
             <div className="flex flex-col">
@@ -189,7 +192,7 @@ export const Sicherheitstraining = () => {
 
               <Link 
                 to="/events?category=Performance%20Training" 
-                className="w-full block bg-[#394553] hover:bg-luxury-gold text-white text-center py-4 px-2 text-sm font-semibold transition-colors leading-relaxed"
+                className="w-full block bg-[#526a75] hover:bg-luxury-gold text-white text-center py-4 px-2 text-sm font-semibold transition-colors leading-relaxed"
               >
                 Termin siehe Kalender
               </Link>
@@ -231,6 +234,7 @@ export const Sicherheitstraining = () => {
 
           </div>
 
+          </div>
         </div>
 
         {/* Bottom Full-Width Content (To avoid empty right space) */}

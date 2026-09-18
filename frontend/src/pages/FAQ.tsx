@@ -13,10 +13,10 @@ const FAQ_ITEMS: FaqItem[] = [
     question: 'Wann bzw. wie fange ich Gleitschirmfliegen an?',
     answer: (
       <>
-        Die Ausbildung beginnt mit dem <Link to="/ausbildung/l-schein" className="text-[#53a8c7] hover:underline">Grundkurs</Link> oder optional davor mit einem{' '}
-        <Link to="/ausbildung/schnupperkurs" className="text-[#53a8c7] hover:underline">Schnupperkurs</Link>. Danach folgt die Höhenflugschulung mit abschließender Prüfung zum{' '}
-        <Link to="/ausbildung/a-schein" className="text-[#53a8c7] hover:underline">A-Schein</Link>, mit dem du dann selbständig fliegen darfst. Gerne beraten wir dich zum Ausbildungsverlauf in unserer{' '}
-        <Link to="/infos#kontakt" className="text-[#53a8c7] hover:underline">Flugschule</Link> oder auch per Telefon, den Kurs buchen kannst du dann direkt online.
+        Die Ausbildung beginnt mit dem <Link to="/ausbildung/l-schein" className="text-luxury-gold hover:underline font-medium">Grundkurs</Link> oder optional davor mit einem{' '}
+        <Link to="/ausbildung/schnupperkurs" className="text-luxury-gold hover:underline font-medium">Schnupperkurs</Link>. Danach folgt die Höhenflugschulung mit abschließender Prüfung zum{' '}
+        <Link to="/ausbildung/a-schein" className="text-luxury-gold hover:underline font-medium">A-Schein</Link>, mit dem du dann selbständig fliegen darfst. Gerne beraten wir dich zum Ausbildungsverlauf in unserer{' '}
+        <Link to="/infos#kontakt" className="text-luxury-gold hover:underline font-medium">Flugschule</Link> oder auch per Telefon, den Kurs buchen kannst du dann direkt online.
       </>
     )
   },
@@ -25,7 +25,7 @@ const FAQ_ITEMS: FaqItem[] = [
     answer: (
       <>
         Das Mindestalter für die Teilnahme an Kursen liegt bei 14 Jahren, wobei bei Teilnahme Minderjähriger eine schriftliche Einverständniserklärung beider Erziehungsberechtigten erforderlich ist. Nach oben hin gibt es keine Altersgrenze! Noch unsicher? Unser{' '}
-        <Link to="/ausbildung/schnupperkurs" className="text-[#53a8c7] hover:underline">Schnupperkurs</Link> bietet dir die Möglichkeit, Gleitschirmfliegen unverbindlich zu testen.
+        <Link to="/ausbildung/schnupperkurs" className="text-luxury-gold hover:underline font-medium">Schnupperkurs</Link> bietet dir die Möglichkeit, Gleitschirmfliegen unverbindlich zu testen.
       </>
     )
   },
@@ -33,7 +33,7 @@ const FAQ_ITEMS: FaqItem[] = [
     question: 'Wo finden die Kurse statt?',
     answer: (
       <>
-        Alle unsere Fluggelände findet ihr <Link to="/infos/gelaende" className="text-[#53a8c7] hover:underline">hier</Link>.
+        Alle unsere Fluggelände findet ihr <Link to="/infos/gelaende" className="text-luxury-gold hover:underline font-medium">hier</Link>.
       </>
     )
   },
@@ -41,7 +41,7 @@ const FAQ_ITEMS: FaqItem[] = [
     question: 'Wie lange dauert ein Schnupperkurs?',
     answer: (
       <>
-        Der <Link to="/ausbildung/schnupperkurs" className="text-[#53a8c7] hover:underline">Schnupperkurs</Link> findet in der Regel am Wochenende (Samstag & Sonntag) statt. Wir beginnen meist früh um 8.00 Uhr und schulen bis Nachmittags (15.00 bis 17.00 Uhr) – solange es das Wetter zulässt.
+        Der <Link to="/ausbildung/schnupperkurs" className="text-luxury-gold hover:underline font-medium">Schnupperkurs</Link> findet in der Regel am Wochenende (Samstag & Sonntag) statt. Wir beginnen meist früh um 8.00 Uhr und schulen bis Nachmittags (15.00 bis 17.00 Uhr) – solange es das Wetter zulässt.
       </>
     )
   },
@@ -49,7 +49,7 @@ const FAQ_ITEMS: FaqItem[] = [
     question: 'Was muss ich zum Schnupperkurs mitbringen?',
     answer: (
       <>
-        Wichtigste Voraussetzung für den <Link to="/ausbildung/schnupperkurs" className="text-[#53a8c7] hover:underline">Schnupperkurs</Link> sind <strong>feste, überknöchelhohe (Wander-)Schuhe</strong>, lange Hosen, Sonnencreme, Getränke/Verpflegung und jede Menge gute Laune.
+        Wichtigste Voraussetzung für den <Link to="/ausbildung/schnupperkurs" className="text-luxury-gold hover:underline font-medium">Schnupperkurs</Link> sind <strong>feste, überknöchelhohe (Wander-)Schuhe</strong>, lange Hosen, Sonnencreme, Getränke/Verpflegung und jede Menge gute Laune.
       </>
     )
   },
@@ -58,8 +58,8 @@ const FAQ_ITEMS: FaqItem[] = [
     answer: (
       <>
         Zum Gleitschirmfliegen benötigst du zunächst nur feste, überknöchelhohe (Wander-)Schuhe sowie normale (Outdoor-)Kleidung. Alles weitere wie Gleitschirm, Gurtzeug etc. wird beim{' '}
-        <Link to="/ausbildung/schnupperkurs" className="text-[#53a8c7] hover:underline">Schnupperkurs</Link> und <Link to="/ausbildung/l-schein" className="text-[#53a8c7] hover:underline">Grundkurs</Link> von uns gestellt. Danach fliegt ihr mit eigener Ausrüstung oder alternativ mit Leihausrüstung, hier beraten wir euch gerne bei uns in der{' '}
-        <Link to="/infos#kontakt" className="text-[#53a8c7] hover:underline">Flugschule</Link>.
+        <Link to="/ausbildung/schnupperkurs" className="text-luxury-gold hover:underline font-medium">Schnupperkurs</Link> und <Link to="/ausbildung/l-schein" className="text-luxury-gold hover:underline font-medium">Grundkurs</Link> von uns gestellt. Danach fliegt ihr mit eigener Ausrüstung oder alternativ mit Leihausrüstung, hier beraten wir euch gerne bei uns in der{' '}
+        <Link to="/infos#kontakt" className="text-luxury-gold hover:underline font-medium">Flugschule</Link>.
       </>
     )
   },
@@ -67,8 +67,8 @@ const FAQ_ITEMS: FaqItem[] = [
     question: 'Was kann ich nach Abschluss des Grundkurses im Gleitschirmfliegen?',
     answer: (
       <>
-        Der <Link to="/ausbildung/l-schein" className="text-[#53a8c7] hover:underline">Grundkurs</Link> bildet die Basis für die Teilnahme an der Höhenflugschulung ({' '}
-        <Link to="/ausbildung/a-schein" className="text-[#53a8c7] hover:underline">A-Schein</Link>). Hauptlernziele sind Starten, Steuern, Landen.
+        Der <Link to="/ausbildung/l-schein" className="text-luxury-gold hover:underline font-medium">Grundkurs</Link> bildet die Basis für die Teilnahme an der Höhenflugschulung ({' '}
+        <Link to="/ausbildung/a-schein" className="text-luxury-gold hover:underline font-medium">A-Schein</Link>). Hauptlernziele sind Starten, Steuern, Landen.
       </>
     )
   },
@@ -77,7 +77,7 @@ const FAQ_ITEMS: FaqItem[] = [
     answer: (
       <>
         Da wir abhängig vom Wetter sind, kann man schwer sagen, wie lange es genau dauert. Geht man davon aus, jeden Tag passendes Wetter und Zeit zu haben, kann man für die{' '}
-        <Link to="/ausbildung/a-schein" className="text-[#53a8c7] hover:underline">A-Schein-Ausbildung</Link> ca. 1 bis 3 Wochen einplanen. Kann aber auch länger dauern.
+        <Link to="/ausbildung/a-schein" className="text-luxury-gold hover:underline font-medium">A-Schein-Ausbildung</Link> ca. 1 bis 3 Wochen einplanen. Kann aber auch länger dauern.
       </>
     )
   },
@@ -85,7 +85,7 @@ const FAQ_ITEMS: FaqItem[] = [
     question: 'Ich bin Pilot/in, aber schon längere Zeit nicht mehr geflogen und möchte wieder anfangen.',
     answer: (
       <>
-        Für alle, die längere Zeit nicht geflogen sind, bieten wir <Link to="/performance/refresher" className="text-[#53a8c7] hover:underline">Refresher-Kurse</Link> an. So gelingt ein sicherer und erfolgreicher Wiedereinstieg mit Fluglehrerbetreuung.
+        Für alle, die längere Zeit nicht geflogen sind, bieten wir <Link to="/performance/refresher" className="text-luxury-gold hover:underline font-medium">Refresher-Kurse</Link> an. So gelingt ein sicherer und erfolgreicher Wiedereinstieg mit Fluglehrerbetreuung.
       </>
     )
   }
@@ -162,7 +162,7 @@ export const FAQ = () => {
                     69469 Weinheim / Germany
                   </p>
                   <p>
-                    <a href="mailto:info@fs-hirondelle.de" className="text-[#53a8c7] hover:underline">info@fs-hirondelle.de</a>
+                    <a href="mailto:info@fs-hirondelle.de" className="text-luxury-gold hover:underline font-medium">info@fs-hirondelle.de</a>
                   </p>
                 </div>
               </div>

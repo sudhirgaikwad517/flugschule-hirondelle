@@ -1,15 +1,21 @@
+import { Search } from 'lucide-react';
 import { Banner } from '../components/common/Banner';
+import { useLightbox } from '../components/common/Lightbox';
 
-const IMPRESSIONS = [
-  '/images/gruppenevents/gallery-1.jpg',
-  '/images/gruppenevents/gallery-2.jpg',
-  '/images/gruppenevents/gallery-3.jpg',
-  '/images/gruppenevents/gallery-4.jpg',
-  '/images/gruppenevents/gallery-5.jpg',
-  '/images/gruppenevents/gallery-6.jpg',
+// Old site's actual "Simple Image Gallery" filenames for this page
+// (/images/bilder/1-firmenevents/*), in their real order (no 13 - skipped
+// on the old site too).
+const GALLERY_FILES = [
+  'gruppenevents1', 'gruppenevents2', 'gruppenevents3', 'gruppenevents4', 'gruppenevents5',
+  'gruppenevents6', 'gruppenevents7', 'gruppenevents8', 'gruppenevents9', 'gruppenevents10',
+  'gruppenevents11', 'gruppenevents12', 'gruppenevents14', 'gruppenevents15', 'gruppenevents16',
+  'gruppenevents17', 'gruppenevents18', 'gruppenevents19', 'gruppenevents20', 'platzhalterbild',
 ];
 
+const MAILTO = 'mailto:info@fs-hirondelle.de?subject=Gleitschirm%20Event%20vereinbaren';
+
 export const Gruppenevents = () => {
+  const { openGallery } = useLightbox();
   return (
     <div className="w-full bg-white font-luxurysans pb-20">
       <Banner />
@@ -32,7 +38,7 @@ export const Gruppenevents = () => {
               {/* Main Image */}
               <div className="w-full mb-10 overflow-hidden shadow-lg border border-gray-100">
                 <img
-                  src="/images/gruppenevents/hero.jpg"
+                  src="/images/gruppenevents/platzhalterbild.jpg"
                   alt="Gruppenevent Paragliding"
                   className="w-full h-auto object-cover"
                 />
@@ -67,10 +73,10 @@ export const Gruppenevents = () => {
               {/* Contact Card */}
               <div className="bg-[#f2f2f2] rounded-md p-6 md:p-8 shadow-sm border border-gray-200">
                 
-                {/* Header Button (Decorative) */}
-                <div className="w-full bg-[#53a8c7] text-white text-center py-2.5 rounded-full mb-8 shadow-sm">
+                {/* Header Button */}
+                <a href={MAILTO} className="block w-full bg-[#53a8c7] hover:bg-[#4396b5] text-white text-center py-2.5 rounded-full mb-8 shadow-sm transition-colors">
                   <span className="text-sm md:text-base tracking-wide">Sprechen Sie uns an</span>
-                </div>
+                </a>
 
                 <div className="flex justify-between items-center text-sm md:text-[15px] text-gray-700 mb-8 px-2 font-medium">
                   <span>Firmen oder Gruppen Events</span>
@@ -86,9 +92,9 @@ export const Gruppenevents = () => {
                 </p>
 
                 {/* Footer Button */}
-                <button className="w-full bg-slate-500 hover:bg-slate-600 text-white text-center py-3 rounded-md transition-colors duration-300 shadow-sm text-sm tracking-wide uppercase">
+                <a href={MAILTO} className="block w-full bg-slate-500 hover:bg-slate-600 text-white text-center py-3 rounded-md transition-colors duration-300 shadow-sm text-sm tracking-wide uppercase">
                   Termin vereinbaren
-                </button>
+                </a>
               </div>
 
               {/* Impressionen Gallery */}
@@ -100,15 +106,24 @@ export const Gruppenevents = () => {
                   <div className="w-full h-px bg-[#53a8c7] opacity-40"></div>
                 </div>
 
-                {/* 3x2 Grid */}
-                <div className="grid grid-cols-3 gap-0 border border-black overflow-hidden bg-black">
-                  {IMPRESSIONS.map((src, idx) => (
-                    <div key={idx} className="aspect-square relative group overflow-hidden">
-                      <img 
-                        src={src} 
-                        alt={`Impression ${idx + 1}`} 
-                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                <div className="grid grid-cols-3 gap-2">
+                  {GALLERY_FILES.map((file, index) => (
+                    <div
+                      key={file}
+                      className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
+                      onClick={() => openGallery(
+                        GALLERY_FILES.map((f) => ({ src: `/images/gruppenevents/${f}.jpg`, alt: 'Impression' })),
+                        index
+                      )}
+                    >
+                      <img
+                        src={`/images/gruppenevents/${file}.jpg`}
+                        alt={`Impression ${index + 1}`}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       />
+                      <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Search className="w-5 h-5 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]" />
+                      </div>
                     </div>
                   ))}
                 </div>

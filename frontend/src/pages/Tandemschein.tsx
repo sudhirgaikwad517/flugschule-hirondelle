@@ -19,19 +19,22 @@ export const Tandemschein = () => {
 
       {/* Main Content Section */}
       <section className="py-16 md:py-24 px-4">
-        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
-          
+        <div className="max-w-[1200px] mx-auto">
+
+          {/* Page Title (full width, above the two-column grid) */}
+          <div className="mb-12">
+            <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-3">
+              AUSBILDUNG
+            </p>
+            <h1 className="font-luxury text-4xl md:text-5xl text-luxury-dark uppercase">
+              Tandemschein
+            </h1>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+
           {/* Left Column (Content) */}
-          <div className="lg:col-span-8 space-y-12">
-            
-            <div>
-              <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-3">
-                AUSBILDUNG
-              </p>
-              <h1 className="font-luxury text-4xl md:text-5xl text-luxury-dark uppercase">
-                Tandemschein
-              </h1>
-            </div>
+          <div className="lg:col-span-7 space-y-12">
 
             {/* Featured Image */}
             <div className="w-full h-[400px] overflow-hidden rounded-sm shadow-sm group">
@@ -93,9 +96,9 @@ export const Tandemschein = () => {
                     </div>
                   </li>
                   {[
-                    <>Optional <Link to="/ausbildung/windenschein" className="text-luxury-gold hover:underline">Windenkurs</Link> zur Vervollständigung der 40 benötigten Flüge</>,
-                    'E-Learning Prüffragen Gleitschirm-Tandemschein vom DHV',
-                    'Prüfungsgebühren ab 03.04.2023 DHV'
+                    <>Optional <Link to="/ausbildung/windenschein" className="text-luxury-gold hover:underline font-medium">Windenkurs</Link> zur Vervollständigung der 40 benötigten Flüge</>,
+                    <>E-Learning Prüffragen <a href="https://shop.dhv.de/collections/prufungsfragen" target="_blank" rel="noopener noreferrer" className="text-luxury-gold hover:underline font-medium">Gleitschirm-Tandemschein</a> vom DHV</>,
+                    <><a href="#" className="text-luxury-gold hover:underline font-medium">Prüfungsgebühren ab 03.04.2023</a> DHV</>
                   ].map((item, idx) => (
                     <li key={idx} className="flex gap-3 text-gray-600 font-light">
                       <Check className="w-5 h-5 text-luxury-gold shrink-0 mt-0.5" />
@@ -124,7 +127,7 @@ export const Tandemschein = () => {
           </div>
 
           {/* Right Column (Sidebar) */}
-          <div className="lg:col-span-4 space-y-12">
+          <div className="lg:col-span-5 space-y-12">
             
             {/* Booking Card */}
             <div className="bg-[#FAF9F7] border border-gray-100 shadow-sm relative overflow-hidden group">
@@ -213,6 +216,7 @@ export const Tandemschein = () => {
 
           </div>
 
+          </div>
         </div>
       </section>
 

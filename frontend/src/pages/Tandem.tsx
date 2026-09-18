@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
+import { Search } from 'lucide-react';
 import { Banner } from '../components/common/Banner';
+import { useLightbox } from '../components/common/Lightbox';
+
+// Old site's actual "Simple Image Gallery" filenames for this page
+// (/images/bilder/1-passagier/*), in their real order.
+const GALLERY_FILES = [
+  '1PLatzhalterbildTandem.png', 'bild.jpg', 'tandem1.jpg', 'tandem2.jpg', 'tandem3.jpg',
+];
 
 export const Tandem = () => {
-  const [showVideo, setShowVideo] = useState(false);
+  const { openGallery } = useLightbox();
   return (
     <div className="w-full bg-white pb-20">
       <Banner />
@@ -20,38 +27,16 @@ export const Tandem = () => {
         <div className="flex flex-col lg:flex-row gap-12 mb-16">
           {/* Left Column (Video & Text) */}
           <div className="w-full lg:w-3/5">
-            {/* Video */}
-            <div className="relative w-full aspect-video bg-black mb-12 group overflow-hidden rounded-sm shadow-xl">
-              {showVideo ? (
-                <iframe
-                  className="w-full h-full"
-                  src="https://www.youtube.com/embed/o1MzMmYM_ls?autoplay=1"
-                  title="Tandemflug in der Pfalz - Flugschule Hirondelle"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              ) : (
-                <button type="button" onClick={() => setShowVideo(true)} className="w-full h-full block cursor-pointer">
-                  <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                  <img
-                    src="/images/tandem-page/hero.jpg"
-                    alt="Tandemflug in der Pfalz"
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center transition-colors group-hover:bg-black/20">
-                    <div className="w-20 h-20 rounded-full border border-white/80 flex items-center justify-center backdrop-blur-sm group-hover:border-luxury-gold transition-colors">
-                      <div className="w-0 h-0 border-t-[12px] border-t-transparent border-l-[20px] border-l-white border-b-[12px] border-b-transparent ml-2 group-hover:border-l-luxury-gold transition-colors"></div>
-                    </div>
-                  </div>
-                  <div className="absolute top-6 left-6 flex items-center gap-4 z-20 text-left">
-                    <div className="w-12 h-12 bg-luxury-gold/80 rounded-full flex items-center justify-center text-white font-luxury text-2xl backdrop-blur-sm border border-white/30">A</div>
-                    <div className="text-white drop-shadow-md">
-                      <div className="font-luxury text-xl tracking-wide">Tandemflug in der Pfalz</div>
-                      <div className="text-xs uppercase tracking-widest opacity-90">Alexander Schlink</div>
-                    </div>
-                  </div>
-                </button>
-              )}
+            {/* Video - old site just embeds the iframe directly, no
+                click-to-play preview thumbnail, so this doesn't either. */}
+            <div className="w-full aspect-video overflow-hidden rounded-sm shadow-xl mb-12">
+              <iframe
+                className="w-full h-full"
+                src="https://www.youtube-nocookie.com/embed/o1MzMmYM_ls?rel=0"
+                title="Tandemflug in der Pfalz - Flugschule Hirondelle"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
             </div>
 
             <h3 className="text-xl md:text-2xl italic text-luxury-heading font-luxury mb-6 leading-relaxed max-w-4xl">
@@ -71,7 +56,7 @@ export const Tandem = () => {
           <div className="w-full lg:w-2/5">
             {/* Pricing Box */}
             <div className="mb-8 border border-gray-200 rounded-sm overflow-hidden shadow-sm">
-              <div className="bg-luxury-slate text-luxury-gold text-center py-4 uppercase tracking-widest font-semibold text-[11px]">
+              <div className="bg-[#53a8c7] text-white text-center py-4 uppercase tracking-widest font-semibold text-[11px]">
                 TANDEMFLÜGE
               </div>
               <div className="bg-white p-6 flex justify-between items-center text-gray-800 border-b border-luxury-gold">
@@ -93,11 +78,26 @@ export const Tandem = () => {
               <h3 className="font-luxury text-2xl text-luxury-dark mb-4 uppercase tracking-wide">IMPRESSIONEN</h3>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
               
-              <div className="grid grid-cols-2 gap-4">
-                <div className="overflow-hidden rounded-sm relative group"><div className="absolute inset-2 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div><img src="/images/tandem-page/gallery-1.jpg" alt="Impression 1" className="w-full h-auto transition-transform duration-1000 group-hover:scale-105" /></div>
-                <div className="overflow-hidden rounded-sm mt-8 relative group"><div className="absolute inset-2 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div><img src="/images/tandem-page/gallery-2.jpg" alt="Impression 2" className="w-full h-auto transition-transform duration-1000 group-hover:scale-105" /></div>
-                <div className="overflow-hidden rounded-sm -mt-8 relative group"><div className="absolute inset-2 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div><img src="/images/tandem-page/gallery-3.jpg" alt="Impression 3" className="w-full h-auto transition-transform duration-1000 group-hover:scale-105" /></div>
-                <div className="overflow-hidden rounded-sm relative group"><div className="absolute inset-2 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div><img src="/images/tandem-page/gallery-4.jpg" alt="Impression 4" className="w-full h-auto transition-transform duration-1000 group-hover:scale-105" /></div>
+              <div className="grid grid-cols-3 gap-2">
+                {GALLERY_FILES.map((file, index) => (
+                  <div
+                    key={file}
+                    className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
+                    onClick={() => openGallery(
+                      GALLERY_FILES.map((f) => ({ src: `/images/tandem-page/${f}`, alt: 'Impression' })),
+                      index
+                    )}
+                  >
+                    <img
+                      src={`/images/tandem-page/${file}`}
+                      alt={`Impression ${index + 1}`}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Search className="w-5 h-5 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]" />
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

@@ -1,8 +1,16 @@
-import { useState } from 'react';
+import { Search } from 'lucide-react';
 import { Banner } from '../components/common/Banner';
+import { useLightbox } from '../components/common/Lightbox';
+
+// Old site's actual "Simple Image Gallery" filenames for this page
+// (/images/bilder/3-zweijahres-check/*), in their real order.
+const GALLERY_FILES = [
+  'Lufttchtigkeit.jpg', 'Spanien_6555_2000.jpg', 'Spanien_6558_2000.jpg',
+  'Spanien_6560_2000.jpg', '_wsb_258x193_Fasching09u.franzi096.jpg', '_wsb_301x226_Leinen.jpg',
+];
 
 export const ZweiJahresCheck = () => {
-  const [showVideo, setShowVideo] = useState(false);
+  const { openGallery } = useLightbox();
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -10,52 +18,33 @@ export const ZweiJahresCheck = () => {
 
       {/* Main Content Section */}
       <section className="pt-16 md:pt-24 pb-8 md:pb-12 px-4">
-        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
-          
-          {/* Left Column (Content) */}
-          <div className="lg:col-span-8 space-y-12">
-            
-            <div>
-              <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-3">
-                SERVICE
-              </p>
-              <h1 className="font-luxury text-4xl md:text-5xl text-luxury-dark uppercase">
-                2-Jahres-Check
-              </h1>
-            </div>
+        <div className="max-w-[1200px] mx-auto">
 
-            {/* Video */}
-            <div className="w-full h-[400px] relative overflow-hidden rounded-sm shadow-sm group bg-black">
-              {showVideo ? (
-                <iframe
-                  className="w-full h-full"
-                  src="https://www.youtube.com/embed/wZH9ouLjNG8?autoplay=1"
-                  title="Gleitschirm Check - So läuft ein Schirmcheck ab! | PART 1 - Flugschule Hirondelle"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              ) : (
-                <button type="button" onClick={() => setShowVideo(true)} className="w-full h-full block cursor-pointer">
-                  <img
-                    src="/images/service/check.jpg"
-                    alt="Gleitschirm Check Video"
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center transition-colors group-hover:bg-black/10">
-                    <div className="w-16 h-16 bg-[#ff0000] rounded-xl flex items-center justify-center shadow-lg">
-                      <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                    </div>
-                  </div>
-                  <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border border-white/40 flex items-center justify-center overflow-hidden">
-                        <img src="/logo.svg" alt="Logo" className="w-full h-full object-cover" />
-                      </div>
-                      <h3 className="text-white font-bold text-lg text-shadow-sm text-left">Gleitschirm Check - So läuft ein Schirmcheck ab! | PART 1 - ...</h3>
-                    </div>
-                  </div>
-                </button>
-              )}
+          {/* Page Title (full width, above the two-column grid) */}
+          <div className="mb-12">
+            <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-3">
+              SERVICE
+            </p>
+            <h1 className="font-luxury text-4xl md:text-5xl text-luxury-dark uppercase">
+              2-Jahres-Check
+            </h1>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+
+          {/* Left Column (Content) */}
+          <div className="lg:col-span-7 space-y-12">
+
+            {/* Video - old site just embeds the iframe directly, no
+                click-to-play preview thumbnail, so this doesn't either. */}
+            <div className="w-full h-[400px] overflow-hidden rounded-sm shadow-sm">
+              <iframe
+                className="w-full h-full"
+                src="https://www.youtube-nocookie.com/embed/wZH9ouLjNG8?rel=0"
+                title="Gleitschirm Check - So läuft ein Schirmcheck ab! | PART 1 - Flugschule Hirondelle"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
             </div>
 
             {/* Content Blocks */}
@@ -99,7 +88,7 @@ export const ZweiJahresCheck = () => {
 
             {/* Formular Button */}
             <div className="pt-4">
-              <button className="w-full bg-[#53a8c7] hover:bg-[#4396b5] text-white text-center py-4 rounded-full text-lg font-semibold transition-colors shadow-md">
+              <button className="w-full bg-[#53a8c7] hover:bg-[#4396b5] text-white text-center py-4 rounded-sm text-lg font-semibold transition-colors shadow-md">
                 Um deinen Gleitschirm Check durchzuführen, benötigen wir das ausgefüllte Formular
               </button>
             </div>
@@ -111,25 +100,10 @@ export const ZweiJahresCheck = () => {
               </p>
             </div>
 
-            {/* Impressions Gallery */}
-            <div className="pt-8 pb-12">
-               <div className="grid grid-cols-4 gap-1 bg-black p-1">
-                 {Array.from({ length: 8 }, (_, i) => (i % 5) + 1).map((n, index) => (
-                   <div key={index} className="aspect-square overflow-hidden group cursor-pointer bg-gray-900">
-                     <img
-                       src={`/images/service-check/gallery-${n}.jpg`}
-                       alt={`Impression ${index + 1}`}
-                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                     />
-                   </div>
-                 ))}
-               </div>
-            </div>
-
           </div>
 
           {/* Right Column (Sidebar) */}
-          <div className="lg:col-span-4 space-y-12">
+          <div className="lg:col-span-5 space-y-12">
 
             {/* Pricing Card */}
             <div className="bg-[#FAF9F7] p-8 border border-gray-100 shadow-sm relative overflow-hidden group">
@@ -183,8 +157,37 @@ export const ZweiJahresCheck = () => {
                </div>
             </div>
 
+            {/* Impressions Gallery */}
+            <div>
+               <h3 className="font-luxury text-2xl text-luxury-dark mb-6 uppercase tracking-wider border-b border-gray-200 pb-4">
+                 Impressionen
+               </h3>
+               <div className="grid grid-cols-3 gap-2">
+                 {GALLERY_FILES.map((file, index) => (
+                   <div
+                     key={file}
+                     className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
+                     onClick={() => openGallery(
+                       GALLERY_FILES.map((f) => ({ src: `/images/service-check/${f}`, alt: 'Impression' })),
+                       index
+                     )}
+                   >
+                     <img
+                       src={`/images/service-check/${file}`}
+                       alt={`Impression ${index + 1}`}
+                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                     />
+                     <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                       <Search className="w-5 h-5 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]" />
+                     </div>
+                   </div>
+                 ))}
+               </div>
+            </div>
+
           </div>
-          
+
+          </div>
         </div>
       </section>
 
