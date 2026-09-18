@@ -96,9 +96,9 @@ export const Tandemschein = () => {
                     </div>
                   </li>
                   {[
-                    <>Optional <Link to="/ausbildung/windenschein" className="text-luxury-gold hover:underline font-medium">Windenkurs</Link> zur Vervollständigung der 40 benötigten Flüge</>,
-                    <>E-Learning Prüffragen <a href="https://shop.dhv.de/collections/prufungsfragen" target="_blank" rel="noopener noreferrer" className="text-luxury-gold hover:underline font-medium">Gleitschirm-Tandemschein</a> vom DHV</>,
-                    <><a href="#" className="text-luxury-gold hover:underline font-medium">Prüfungsgebühren ab 03.04.2023</a> DHV</>
+                    <>Optional <Link to="/ausbildung/windenschein" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Windenkurs</Link> zur Vervollständigung der 40 benötigten Flüge</>,
+                    <>E-Learning Prüffragen <a href="https://shop.dhv.de/collections/prufungsfragen" target="_blank" rel="noopener noreferrer" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Gleitschirm-Tandemschein</a> vom DHV</>,
+                    <><a href="#" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Prüfungsgebühren ab 03.04.2023</a> DHV</>
                   ].map((item, idx) => (
                     <li key={idx} className="flex gap-3 text-gray-600 font-light">
                       <Check className="w-5 h-5 text-luxury-gold shrink-0 mt-0.5" />

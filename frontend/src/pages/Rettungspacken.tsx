@@ -69,7 +69,7 @@ export const Rettungspacken = () => {
                 Rettung packen leicht gemacht
               </h3>
               <p className="text-gray-600 font-light leading-relaxed text-justify">
-                Schaut einfach mal bei einem unserer <Link to="/performance/rettungsgeraetetraining" className="text-luxury-gold hover:underline font-medium">Rettungsgerätetrainings</Link> vorbei. Dort lernt ihr, wie die Rettung im Notfall geworfen wird und wir zeigen euch, wie ihr die Rettung selbst packen könnt! Wenn ihr auf Nummer Sicher gehen wollt oder auch keine Lust drauf habt, packen wir die Rettung natürlich auch weiterhin für euch ;-). Nähere Details zum Rettungsgerätetraining findet ihr <Link to="/performance/rettungsgeraetetraining" className="text-luxury-gold hover:underline font-medium">hier</Link>.
+                Schaut einfach mal bei einem unserer <Link to="/performance/rettungsgeraetetraining" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Rettungsgerätetrainings</Link> vorbei. Dort lernt ihr, wie die Rettung im Notfall geworfen wird und wir zeigen euch, wie ihr die Rettung selbst packen könnt! Wenn ihr auf Nummer Sicher gehen wollt oder auch keine Lust drauf habt, packen wir die Rettung natürlich auch weiterhin für euch ;-). Nähere Details zum Rettungsgerätetraining findet ihr <Link to="/performance/rettungsgeraetetraining" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">hier</Link>.
               </p>
             </div>
 

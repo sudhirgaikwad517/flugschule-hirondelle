@@ -146,7 +146,7 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                   {event.locationId ? (
-                    <Link to={`/veranstaltungsort/${event.locationId}`} className="hover:text-luxury-gold hover:underline transition-colors">{event.location}</Link>
+                    <Link to={`/veranstaltungsort/${event.locationId}`} className="hover:text-[#2a6496] hover:underline transition-colors font-bold">{event.location}</Link>
                   ) : (
                     <span>{event.location}</span>
                   )}
@@ -346,7 +346,7 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
             </div>
             <div className="p-5">
               {event.organizerId ? (
-                <Link to={`/veranstalter/${event.organizerId}`} className="text-luxury-gold hover:underline font-semibold">
+                <Link to={`/veranstalter/${event.organizerId}`} className="text-[#428bca] hover:text-[#2a6496] hover:underline font-semibold">
                   {event.organizer || 'Flugschule Hirondelle'}
                 </Link>
               ) : (
@@ -366,7 +366,7 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
                   <button
                     key={d.id}
                     onClick={() => onSelectAdditionalDate?.(d.id)}
-                    className="text-left text-luxury-gold hover:underline text-sm"
+                    className="text-left text-[#428bca] hover:text-[#2a6496] hover:underline text-sm font-bold"
                   >
                     {new Date(d.start).toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC' })}, {new Date(d.start).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}
                   </button>

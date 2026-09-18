@@ -103,7 +103,7 @@ export const Team = () => {
                 <div>
                   <h3 className="text-xl font-luxury text-luxury-dark italic mb-4">Ausbildung & Performance</h3>
                   <p className="text-[14px] text-gray-600 font-light leading-relaxed">
-                    Unser Ziel ist es, unsere Schüler zu „selbständigen Piloten" auszubilden, die nach ihrer Ausbildung eigenständig fliegen und den Traum vom Fliegen wahr werden lassen können. Vom <Link to="/ausbildung/l-schein" className="text-luxury-gold hover:underline font-medium">Grundkurs</Link> über den <Link to="/ausbildung/a-schein" className="text-luxury-gold hover:underline font-medium">A-Schein</Link> bis zum <Link to="/ausbildung/b-schein" className="text-luxury-gold hover:underline font-medium">B-Schein</Link> (Unbeschränkter Luftfahrerschein / Überlandflugberechtigung) werdet ihr von Fluglehrern aus unserem Team begleitet und profitiert durch die Trainervielfalt von deren unterschiedlichen Stärken sowie individueller Tipps und Erfahrungen. Wir bieten nicht die klassische 0-8-15-Ausbildung sondern eine individuelle Ausbildung nach Maß für jedermann.
+                    Unser Ziel ist es, unsere Schüler zu „selbständigen Piloten" auszubilden, die nach ihrer Ausbildung eigenständig fliegen und den Traum vom Fliegen wahr werden lassen können. Vom <Link to="/ausbildung/l-schein" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Grundkurs</Link> über den <Link to="/ausbildung/a-schein" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">A-Schein</Link> bis zum <Link to="/ausbildung/b-schein" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">B-Schein</Link> (Unbeschränkter Luftfahrerschein / Überlandflugberechtigung) werdet ihr von Fluglehrern aus unserem Team begleitet und profitiert durch die Trainervielfalt von deren unterschiedlichen Stärken sowie individueller Tipps und Erfahrungen. Wir bieten nicht die klassische 0-8-15-Ausbildung sondern eine individuelle Ausbildung nach Maß für jedermann.
                   </p>
                 </div>
 
@@ -111,7 +111,7 @@ export const Team = () => {
                 <div>
                   <h3 className="text-xl font-luxury text-luxury-dark italic mb-4">Reisen</h3>
                   <p className="text-[14px] text-gray-600 font-light leading-relaxed">
-                    Unsere <Link to="/reisen" className="text-luxury-gold hover:underline font-medium">Reisen</Link> führen uns in die bekannten Fluggebiet-Hotspots. So zählt <Link to="/reisen/bassano-tour" className="text-luxury-gold hover:underline font-medium">Bassano</Link> – das Mekka der Gleitschirmszene – jährlich fest zum Programm. Aber auch entlegene Ziele wollen wir euch nicht vorenthalten und bieten euch Reisen nach <Link to="/reisen/suedafrika-tour" className="text-luxury-gold hover:underline font-medium">Südafrika</Link> und weiteren besonderen Zielen weltweit an. Im Rahmen unserer <Link to="/reisen" className="text-luxury-gold hover:underline font-medium">Reisen</Link> könnt ihr unter Fluglehrerbetreuung sehr viel Erfahrung sammeln, eure Flugtechnik verbessern und zahlreiche großartige Flugstunden genießen.
+                    Unsere <Link to="/reisen" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Reisen</Link> führen uns in die bekannten Fluggebiet-Hotspots. So zählt <Link to="/reisen/bassano-tour" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Bassano</Link> – das Mekka der Gleitschirmszene – jährlich fest zum Programm. Aber auch entlegene Ziele wollen wir euch nicht vorenthalten und bieten euch Reisen nach <Link to="/reisen/suedafrika-tour" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Südafrika</Link> und weiteren besonderen Zielen weltweit an. Im Rahmen unserer <Link to="/reisen" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Reisen</Link> könnt ihr unter Fluglehrerbetreuung sehr viel Erfahrung sammeln, eure Flugtechnik verbessern und zahlreiche großartige Flugstunden genießen.
                   </p>
                 </div>
 
@@ -181,7 +181,7 @@ export const Team = () => {
           
           <div className="lg:col-span-8">
             <p className="text-[15px] text-gray-600 font-light leading-relaxed mb-10 max-w-4xl">
-              In unserem Shop findest du alles rund um deine Ausrüstung! Wir haben die Produkte der führenden Gleitschirmhersteller in unserem Programm. Gerne beraten wir dich in unserer Flugschule. Zu unseren <Link to="/infos#kontakt" className="text-luxury-gold hover:underline font-medium">Öffnungszeiten...</Link>
+              In unserem Shop findest du alles rund um deine Ausrüstung! Wir haben die Produkte der führenden Gleitschirmhersteller in unserem Programm. Gerne beraten wir dich in unserer Flugschule. Zu unseren <Link to="/infos#kontakt" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Öffnungszeiten...</Link>
             </p>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">

@@ -68,14 +68,14 @@ export const Schnupperkurs = () => {
               <div>
                 <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Organisatorisches...</h3>
                 <p>
-                  Ort und Uhrzeit des Schnupperkurses erfahrt ihr am Vortag bis ca. 15 Uhr per Newsletter. Der eintägige Schnuppertag findet regulär samstags statt, je nach Wetter kann der Termin allerdings auch auf den Sonntag verschoben werden. Je nach Windrichtung schulen wir an einem unserer Übungshänge im Odenwald, Kraichtal, Nahetal und der Pfalz. Die Wegbeschreibungen zu den jeweiligen <Link to="/infos/gelaende" className="text-luxury-gold hover:underline font-medium">Fluggeländen findet ihr hier</Link>. Eine aktuelle und sichere Leihausrüstung sind im Preis inbegriffen. Wenn aufgrund der Wetterlage der Kurs ausfällt oder nicht vollständig absolviert werden kann, ist es möglich, diesen zu einem späteren Termin kostenlos nachzuholen, tragt euch dazu bitte an einem neuen Termin über unseren Buchungskalender ein.
+                  Ort und Uhrzeit des Schnupperkurses erfahrt ihr am Vortag bis ca. 15 Uhr per Newsletter. Der eintägige Schnuppertag findet regulär samstags statt, je nach Wetter kann der Termin allerdings auch auf den Sonntag verschoben werden. Je nach Windrichtung schulen wir an einem unserer Übungshänge im Odenwald, Kraichtal, Nahetal und der Pfalz. Die Wegbeschreibungen zu den jeweiligen <Link to="/infos/gelaende" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Fluggeländen findet ihr hier</Link>. Eine aktuelle und sichere Leihausrüstung sind im Preis inbegriffen. Wenn aufgrund der Wetterlage der Kurs ausfällt oder nicht vollständig absolviert werden kann, ist es möglich, diesen zu einem späteren Termin kostenlos nachzuholen, tragt euch dazu bitte an einem neuen Termin über unseren Buchungskalender ein.
                 </p>
               </div>
 
               <div>
                 <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Wie geht es weiter...</h3>
                 <p>
-                  Weiter geht's mit dem <Link to="/ausbildung/l-schein" className="text-luxury-gold hover:underline font-medium">Grundkurs</Link>! Die absolvierten Tage im Schnupperkurs sowie der anteilige Kurspreis werden euch hierfür angerechnet und abgezogen (gültig innerhalb der gleichen Saison!).
+                  Weiter geht's mit dem <Link to="/ausbildung/l-schein" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Grundkurs</Link>! Die absolvierten Tage im Schnupperkurs sowie der anteilige Kurspreis werden euch hierfür angerechnet und abgezogen (gültig innerhalb der gleichen Saison!).
                 </p>
               </div>
             </div>

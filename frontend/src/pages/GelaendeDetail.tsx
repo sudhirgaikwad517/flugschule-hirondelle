@@ -19,7 +19,7 @@ export const GelaendeDetail = () => {
         <div className="container mx-auto px-4 max-w-[1200px]">
           <Link
             to="/infos/gelaende"
-            className="inline-block text-sm text-luxury-gold hover:underline mb-8 font-semibold tracking-wide uppercase"
+            className="inline-block text-sm text-[#428bca] hover:text-[#2a6496] hover:underline mb-8 font-semibold tracking-wide uppercase"
           >
             ← Zurück zur Geländeübersicht
           </Link>
@@ -40,7 +40,7 @@ export const GelaendeDetail = () => {
                   [&_h2]:font-luxury [&_h2]:text-2xl [&_h2]:text-luxury-dark [&_h2]:mb-4 [&_h2]:mt-2
                   [&_p]:mb-4 [&_strong]:text-gray-800 [&_strong]:font-semibold
                   [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-4 [&_li]:mb-2
-                  [&_a]:text-luxury-gold [&_a]:underline hover:[&_a]:text-luxury-dark
+                  [&_a]:text-[#428bca] [&_a]:underline [&_a]:font-bold hover:[&_a]:text-[#2a6496]
                   [&_a.boxblau]:inline-block [&_a.boxblau]:bg-luxury-gold [&_a.boxblau]:text-white
                   [&_a.boxblau]:no-underline [&_a.boxblau]:px-5 [&_a.boxblau]:py-2.5
                   [&_a.boxblau]:rounded-sm [&_a.boxblau]:font-semibold [&_a.boxblau]:my-2

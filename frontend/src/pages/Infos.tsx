@@ -39,7 +39,7 @@ export const Infos = () => {
                 <a href="https://maps.app.goo.gl/kA2dQXfCx8pgAAJ99" target="_blank" rel="noreferrer">
                   <img src="/images/infos/google-routenplaner.gif" alt="Google Routenplaner Maps org" width="120" height="90" />
                 </a>
-                <a href="https://maps.app.goo.gl/kA2dQXfCx8pgAAJ99" target="_blank" rel="noreferrer" className="text-[13px] text-luxury-gold hover:underline mt-2">
+                <a href="https://maps.app.goo.gl/kA2dQXfCx8pgAAJ99" target="_blank" rel="noreferrer" className="text-[13px] text-[#428bca] hover:text-[#2a6496] hover:underline mt-2 font-bold">
                   Routenplaner für Smartphones
                 </a>
               </div>
@@ -53,7 +53,7 @@ export const Infos = () => {
 
             <div className="text-[15px] text-gray-500 font-light leading-relaxed mb-12">
               <p>Telefon: <span className="text-gray-700">+49 (0)6201 8452097</span></p>
-              <p>E-Mail: <a href="mailto:info@fs-hirondelle.de" className="text-luxury-gold hover:underline">info@fs-hirondelle.de</a></p>
+              <p>E-Mail: <a href="mailto:info@fs-hirondelle.de" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-bold">info@fs-hirondelle.de</a></p>
             </div>
 
             <h3 className="font-luxury text-2xl text-luxury-dark mb-4">Öffnungszeiten</h3>
