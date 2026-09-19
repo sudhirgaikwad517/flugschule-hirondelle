@@ -166,7 +166,14 @@ const EventBulkActionButtons = () => {
 
     return (
         <>
-            <RaButton label="Aktionen" onClick={handleClick} disabled={busy}>
+            {/* MUI Button always paints its own color prop (primary.main,
+                a medium blue) regardless of the parent bar's
+                color: 'primary.contrastText' - unlike the plain Typography/
+                IconButton siblings here, it doesn't inherit that, so it was
+                rendering as barely-visible blue-on-light-blue text. Forcing
+                the same contrastText color makes it readable like the rest
+                of the bar. */}
+            <RaButton label="Aktionen" onClick={handleClick} disabled={busy} sx={{ color: 'primary.contrastText' }}>
                 <ExpandMoreIcon />
             </RaButton>
             <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
