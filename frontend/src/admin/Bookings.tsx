@@ -289,15 +289,17 @@ export const BookingList = () => (
                 <BookingListActions />
             </Box>
             <div className="booking-table-scroll" style={{ width: '100%', overflowX: 'auto' }}>
-                {/* bulkActionsToolbar={false} (not bulkActionButtons={<></>})
-                    is what actually disables react-admin's own built-in
-                    sliding "N selected" toolbar - passing an empty fragment
-                    to bulkActionButtons still renders that toolbar (just
-                    with no buttons inside), which is what was popping up
-                    over BookingListActions above and then sliding back
-                    behind the table. Row-selection checkboxes/selectedIds
-                    still work for BookingListActions either way. */}
-                <Datagrid rowClick="show" bulkActionsToolbar={false}>
+                {/* bulkActionButtons must stay truthy (any non-false value,
+                    an empty fragment is fine) - that's what keeps
+                    hasBulkActions true so the selection checkboxes render
+                    at all; drop it entirely and Datagrid falls back to its
+                    own default (false, since bookings aren't deletable),
+                    which silently hides the checkboxes. bulkActionsToolbar
+                    ={false} is the separate prop that disables react-admin's
+                    own sliding "N selected" toolbar - the thing that was
+                    popping up over BookingListActions and sliding back
+                    behind the table. Both are needed together. */}
+                <Datagrid rowClick="show" bulkActionButtons={<></>} bulkActionsToolbar={false}>
                     <TextField source="shortId" label="ID" sortBy="id" sx={{ display: 'inline-block', maxWidth: 80, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title="ID" />
                     <TextField source="customerName" label="Name" sortable={false} sx={{ whiteSpace: 'nowrap' }} />
                     <TextField source="customerEmail" label="E-Mail" sortable={false} sx={{ display: 'inline-block', maxWidth: 150, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title="E-Mail" />

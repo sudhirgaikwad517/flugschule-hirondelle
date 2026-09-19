@@ -247,6 +247,16 @@ const EventListContent = () => {
             )}
             <Datagrid
                 rowClick="edit"
+                // bulkActionButtons must stay truthy (any non-false value) -
+                // that's what keeps hasBulkActions true so the selection
+                // checkboxes render at all; without it, Datagrid falls back
+                // to its own default (a plain BulkDeleteButton if the
+                // resource is deletable, otherwise literally false), which
+                // was silently hiding the checkboxes entirely just now.
+                // bulkActionsToolbar={false} is the separate prop that
+                // actually disables react-admin's own sliding toolbar -
+                // both are needed together.
+                bulkActionButtons={<></>}
                 bulkActionsToolbar={false}
                 expand={<EventRowExpand />}
             >
