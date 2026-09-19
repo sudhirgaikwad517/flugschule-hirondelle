@@ -3,16 +3,23 @@ import { Banner } from '../components/common/Banner';
 import { Check, Search } from 'lucide-react';
 import { useLightbox } from '../components/common/Lightbox';
 import { GutscheinBox } from '../components/common/GutscheinBox';
+import { usePageGallery } from '../hooks/usePageGallery';
 
 // Old site's actual "Simple Image Gallery" filenames for this page
 // (/images/bilder/1-refresher/*), in their real order.
-const GALLERY_FILES = [
+// Used only as a fallback now - see usePageGallery below - so the page keeps
+// looking exactly like this until an admin configures a gallery for the
+// "refresher" slug in Admin > Seitenmedien.
+const FALLBACK_GALLERY = [
   '19796867335_b24c8e36a4_o', '1Platzhalterbild', 'DSC_0072', 'DSC01324', 'DSC01376',
   'DSC01389', 'DSC01390', 'DSC01395',
-];
+].map((f) => `/images/refresher/${f}.jpg`);
 
 export const Refresher = () => {
   const { openGallery } = useLightbox();
+  // Admin-managed gallery (falls back to FALLBACK_GALLERY above) - see
+  // frontend/src/hooks/usePageGallery.ts
+  const galleryImages = usePageGallery('refresher', FALLBACK_GALLERY);
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -156,17 +163,17 @@ export const Refresher = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {GALLERY_FILES.map((file, index) => (
+                 {galleryImages.map((img, index) => (
                    <div
-                     key={file}
+                     key={img}
                      className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
                      onClick={() => openGallery(
-                       GALLERY_FILES.map((f) => ({ src: `/images/refresher/${f}.jpg`, alt: 'Impression' })),
+                       galleryImages.map((g) => ({ src: g, alt: 'Impression' })),
                        index
                      )}
                    >
                      <img
-                       src={`/images/refresher/${file}.jpg`}
+                       src={img}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />

@@ -4,20 +4,27 @@ import { Check, Search } from 'lucide-react';
 import { EventComments } from '../components/common/EventComments';
 import { useLightbox } from '../components/common/Lightbox';
 import { GutscheinBox } from '../components/common/GutscheinBox';
+import { usePageGallery } from '../hooks/usePageGallery';
 
 // Old site's actual "Simple Image Gallery" filenames for this page
 // (/images/bilder/2-tour-brasilien/*), in their real order.
-const GALLERY_FILES = [
+// Used only as a fallback now - see usePageGallery below - so the page keeps
+// looking exactly like this until an admin configures a gallery for the
+// "brasilien-tour" slug in Admin > Seitenmedien.
+const FALLBACK_GALLERY = [
   '02.jpg', '119027365.jpg', '1805480917_19bfc27fff_b.jpg', '66c446_fec66a0550624432bd47a23ba920334a_mv2.jpg', 'DSCN5647.jpg',
   'Divulgao-Sol-Store.jpg', 'IMG_2593.jpg', 'IMG_2596.jpg', 'IMG_2599.jpg', 'IMG_2601.jpg',
   'IMG_2602.jpg', 'IMG_2606.jpg', 'IMG_2608.jpg', 'IMG_2676.jpg', 'IMG_2766.jpg',
   'MG_-_Pico_da_Ibituruna_-_Governador_Valadares.jpg', 'Parapente-bh-parapente-belohorizonte-escola-de-parapente-bh-116.jpg', 'Rampa_voo_livre__Cachoeira_Alta_Alfredo_Chaves_foto_Weverson_Roccio.jpg', 'castelo_2.jpg', 'cropped-monstrinho-1.jpg',
   'espao-bomvoo_sampaio-correa-saquarema_2.jpg', 'foto1.jpg', 'g_foto1_371.jpg', 'maxresdefault.jpg', 'maxresdefault_1.jpg',
   'p4-23.jpg', 'pancas.jpg', 'rampa_uba-3741934.jpg', 'sampaio.jpg', 'slide_principal.jpg',
-];
+].map((f) => `/images/tour-brasilien/${f}`);
 
 export const BrasilienTour = () => {
   const { openGallery } = useLightbox();
+  // Admin-managed gallery (falls back to FALLBACK_GALLERY above) - see
+  // frontend/src/hooks/usePageGallery.ts
+  const galleryImages = usePageGallery('brasilien-tour', FALLBACK_GALLERY);
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -178,17 +185,17 @@ export const BrasilienTour = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {GALLERY_FILES.map((file, index) => (
+                 {galleryImages.map((img, index) => (
                    <div
-                     key={file}
+                     key={img}
                      className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
                      onClick={() => openGallery(
-                       GALLERY_FILES.map((f) => ({ src: `/images/tour-brasilien/${f}`, alt: 'Impression' })),
+                       galleryImages.map((g) => ({ src: g, alt: 'Impression' })),
                        index
                      )}
                    >
                      <img
-                       src={`/images/tour-brasilien/${file}`}
+                       src={img}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />

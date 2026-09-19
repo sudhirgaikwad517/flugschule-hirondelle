@@ -3,20 +3,27 @@ import { Banner } from '../components/common/Banner';
 import { Check, Info, Search } from 'lucide-react';
 import { useLightbox } from '../components/common/Lightbox';
 import { GutscheinBox } from '../components/common/GutscheinBox';
+import { usePageGallery } from '../hooks/usePageGallery';
 
 // Old site's actual "Simple Image Gallery" filenames for this page
 // (/images/bilder/1-a-schein/*.jpg), in their real order.
-const GALLERY_FILES = [
+// Used only as a fallback now - see usePageGallery below - so the page keeps
+// looking exactly like this until an admin configures a gallery for the
+// "a-schein" slug in Admin > Seitenmedien.
+const FALLBACK_GALLERY = [
   '1.Platzhalterbild', 'a_schein1', 'a_schein10', 'a_schein11', 'a_schein12',
   'a_schein13', 'a_schein14', 'a_schein15', 'a_schein16', 'a_schein17',
   'a_schein18', 'a_schein19', 'a_schein2', 'a_schein20', 'a_schein21',
   'a_schein22', 'a_schein23', 'a_schein24', 'a_schein25', 'a_schein26',
   'a_schein27', 'a_schein3', 'a_schein4', 'a_schein5', 'a_schein6',
   'a_schein7', 'a_schein8', 'a_schein9',
-];
+].map((f) => `/images/a-schein/${f}.jpg`);
 
 export const ASchein = () => {
   const { openGallery } = useLightbox();
+  // Admin-managed gallery (falls back to FALLBACK_GALLERY above) - see
+  // frontend/src/hooks/usePageGallery.ts
+  const galleryImages = usePageGallery('a-schein', FALLBACK_GALLERY);
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -241,17 +248,17 @@ export const ASchein = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {GALLERY_FILES.map((file, index) => (
+                 {galleryImages.map((img, index) => (
                    <div
-                     key={file}
+                     key={img}
                      className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
                      onClick={() => openGallery(
-                       GALLERY_FILES.map((f) => ({ src: `/images/a-schein/${f}.jpg`, alt: 'Impression' })),
+                       galleryImages.map((g) => ({ src: g, alt: 'Impression' })),
                        index
                      )}
                    >
                      <img
-                       src={`/images/a-schein/${file}.jpg`}
+                       src={img}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />

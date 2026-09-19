@@ -4,17 +4,24 @@ import { Search } from 'lucide-react';
 import { EventComments } from '../components/common/EventComments';
 import { useLightbox } from '../components/common/Lightbox';
 import { GutscheinBox } from '../components/common/GutscheinBox';
+import { usePageGallery } from '../hooks/usePageGallery';
 
 // Old site's actual "Simple Image Gallery" filenames for this page
 // (/images/bilder/2-tour-pfalz/*), in their real order.
-const GALLERY_FILES = [
+// Used only as a fallback now - see usePageGallery below - so the page keeps
+// looking exactly like this until an admin configures a gallery for the
+// "pfalz-tour" slug in Admin > Seitenmedien.
+const FALLBACK_GALLERY = [
   'GP020005.jpg', 'IMG_7770.jpg', 'Pfalztour.jpg', 'Platzhalterbild.jpg', 'pfalz1.jpg',
   'pfalz111.jpg', 'pfalz18.jpg', 'pfalz2.jpg', 'pfalz3.jpg', 'pfalz5.jpg',
   'pfalz7.jpg', 'pfalz9.jpg',
-];
+].map((f) => `/images/tour-pfalz/${f}`);
 
 export const PfalzTour = () => {
   const { openGallery } = useLightbox();
+  // Admin-managed gallery (falls back to FALLBACK_GALLERY above) - see
+  // frontend/src/hooks/usePageGallery.ts
+  const galleryImages = usePageGallery('pfalz-tour', FALLBACK_GALLERY);
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -157,17 +164,17 @@ export const PfalzTour = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {GALLERY_FILES.map((file, index) => (
+                 {galleryImages.map((img, index) => (
                    <div
-                     key={file}
+                     key={img}
                      className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
                      onClick={() => openGallery(
-                       GALLERY_FILES.map((f) => ({ src: `/images/tour-pfalz/${f}`, alt: 'Impression' })),
+                       galleryImages.map((g) => ({ src: g, alt: 'Impression' })),
                        index
                      )}
                    >
                      <img
-                       src={`/images/tour-pfalz/${file}`}
+                       src={img}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />

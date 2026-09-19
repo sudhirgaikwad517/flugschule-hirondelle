@@ -3,18 +3,25 @@ import { Banner } from '../components/common/Banner';
 import { Check, Info, Search } from 'lucide-react';
 import { useLightbox } from '../components/common/Lightbox';
 import { GutscheinBox } from '../components/common/GutscheinBox';
+import { usePageGallery } from '../hooks/usePageGallery';
 
 // Old site's actual "Simple Image Gallery" filenames for this page
 // (/images/bilder/1-winde/*.jpg), in their real order.
-const GALLERY_FILES = [
+// Used only as a fallback now - see usePageGallery below - so the page keeps
+// looking exactly like this until an admin configures a gallery for the
+// "windenschein" slug in Admin > Seitenmedien.
+const FALLBACK_GALLERY = [
   '1PlatzhalterbildWinde', 'Sarah_Winde_', 'winde', 'winde1', 'winde10',
   'winde12', 'winde13', 'winde14', 'winde15', 'winde16',
   'winde17', 'winde18', 'winde2', 'winde20', 'winde4',
   'winde5', 'winde6.1', 'winde6', 'winde7', 'winde8',
-];
+].map((f) => `/images/windenschein/${f}.jpg`);
 
 export const Windenschein = () => {
   const { openGallery } = useLightbox();
+  // Admin-managed gallery (falls back to FALLBACK_GALLERY above) - see
+  // frontend/src/hooks/usePageGallery.ts
+  const galleryImages = usePageGallery('windenschein', FALLBACK_GALLERY);
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -217,17 +224,17 @@ export const Windenschein = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {GALLERY_FILES.map((file, index) => (
+                 {galleryImages.map((img, index) => (
                    <div
-                     key={file}
+                     key={img}
                      className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
                      onClick={() => openGallery(
-                       GALLERY_FILES.map((f) => ({ src: `/images/windenschein/${f}.jpg`, alt: 'Impression' })),
+                       galleryImages.map((g) => ({ src: g, alt: 'Impression' })),
                        index
                      )}
                    >
                      <img
-                       src={`/images/windenschein/${file}.jpg`}
+                       src={img}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />

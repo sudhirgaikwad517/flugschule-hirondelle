@@ -4,16 +4,23 @@ import { Search } from 'lucide-react';
 import { EventComments } from '../components/common/EventComments';
 import { useLightbox } from '../components/common/Lightbox';
 import { GutscheinBox } from '../components/common/GutscheinBox';
+import { usePageGallery } from '../hooks/usePageGallery';
 
 // Old site's actual "Simple Image Gallery" filenames for this page
 // (/images/bilder/2-tour-savoyer/*), in their real order.
-const GALLERY_FILES = [
+// Used only as a fallback now - see usePageGallery below - so the page keeps
+// looking exactly like this until an admin configures a gallery for the
+// "savoye-tour" slug in Admin > Seitenmedien.
+const FALLBACK_GALLERY = [
   'Allevard 2015-10.jpg', 'Allevard 2015-14.jpg', 'Allevard 2015-26.jpg', 'Allevard 2015-27.jpg', 'Allevard 2015-43.jpg',
   'Allevard 2015-45.jpg', 'IMG_20140505_190420.jpg', 'IMG_2869.jpg', 'IMG_2890.jpg', 'itemimg-alpen.jpg',
-];
+].map((f) => `/images/tour-savoye/${f}`);
 
 export const SavoyeTour = () => {
   const { openGallery } = useLightbox();
+  // Admin-managed gallery (falls back to FALLBACK_GALLERY above) - see
+  // frontend/src/hooks/usePageGallery.ts
+  const galleryImages = usePageGallery('savoye-tour', FALLBACK_GALLERY);
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -153,17 +160,17 @@ export const SavoyeTour = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {GALLERY_FILES.map((file, index) => (
+                 {galleryImages.map((img, index) => (
                    <div
-                     key={file}
+                     key={img}
                      className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
                      onClick={() => openGallery(
-                       GALLERY_FILES.map((f) => ({ src: `/images/tour-savoye/${f}`, alt: 'Impression' })),
+                       galleryImages.map((g) => ({ src: g, alt: 'Impression' })),
                        index
                      )}
                    >
                      <img
-                       src={`/images/tour-savoye/${file}`}
+                       src={img}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
