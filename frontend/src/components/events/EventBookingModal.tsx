@@ -132,23 +132,34 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
   };
 
   // Preview only - the server independently recomputes this from scratch and
-  // never trusts what the client sends, this is just so the customer sees the
-  // discount before submitting.
+  // never trusts what the client sends, this just lets the customer see the
+  // adjustment before submitting. Matukio's different_fees_override supports
+  // both a discount (isDiscount: true, price cut) and a surcharge
+  // (isDiscount: false, e.g. a "Premium Paket" upgrade costing MORE than the
+  // base fee) - see administrator/components/com_matukio/helpers/fees.php's
+  // getDifferentFeeValue() in the old codebase, which adds the value when
+  // discount is falsy. Both directions must be honored, not just discounts.
+  const isRegisteredUser = !!localStorage.getItem('token');
   const applicableTieredFee = React.useMemo(() => {
     if (!event.tieredFees || !Array.isArray(event.eventTieredFees)) return null;
     const now = new Date();
     return event.eventTieredFees.find((fee: any) => {
-      if (!fee || !fee.isDiscount) return false;
+      if (!fee) return false;
+      if (fee.bookableFor === 'registered' && !isRegisteredUser) return false;
       if (fee.validFrom && now < new Date(fee.validFrom)) return false;
       if (fee.validUntil && now > new Date(fee.validUntil)) return false;
       return true;
     }) || null;
-  }, [event.tieredFees, event.eventTieredFees]);
+  }, [event.tieredFees, event.eventTieredFees, isRegisteredUser]);
 
   const priceAfterTieredFee = applicableTieredFee ? Math.max(0,
     applicableTieredFee.isPercentage
-      ? totalPrice * (1 - Number(applicableTieredFee.value) / 100)
-      : totalPrice - Number(applicableTieredFee.value)
+      ? (applicableTieredFee.isDiscount
+        ? totalPrice * (1 - Number(applicableTieredFee.value) / 100)
+        : totalPrice * (1 + Number(applicableTieredFee.value) / 100))
+      : (applicableTieredFee.isDiscount
+        ? totalPrice - Number(applicableTieredFee.value)
+        : totalPrice + Number(applicableTieredFee.value))
   ) : totalPrice;
 
   const finalPrice = Math.max(0, voucherDiscount ? (
@@ -619,8 +630,8 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
               <div className="mt-12 flex justify-end">
                 <div className="text-right w-full">
                   {applicableTieredFee && (
-                    <p className="text-sm text-green-600 mb-1">
-                      {applicableTieredFee.title || 'Rabatt'}: - {applicableTieredFee.isPercentage ? `${applicableTieredFee.value}%` : `€ ${Number(applicableTieredFee.value).toFixed(2)}`}
+                    <p className={`text-sm mb-1 ${applicableTieredFee.isDiscount ? 'text-green-600' : 'text-gray-600'}`}>
+                      {applicableTieredFee.title || (applicableTieredFee.isDiscount ? 'Rabatt' : 'Zuschlag')}: {applicableTieredFee.isDiscount ? '-' : '+'} {applicableTieredFee.isPercentage ? `${applicableTieredFee.value}%` : `€ ${Number(applicableTieredFee.value).toFixed(2)}`}
                     </p>
                   )}
                   {voucherDiscount && (

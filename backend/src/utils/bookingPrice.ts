@@ -24,16 +24,21 @@ interface PriceResult {
   finalPrice: number;
 }
 
-// Finds the first tiered fee (early-bird style discount) on this event that is
-// currently within its valid window, matches the caller's registration status,
-// and is flagged as a discount (not a surcharge) - mirrors Matukio's own
-// "tiered fees are relative to the standard fee" behavior.
+// Finds the first tiered fee (Matukio's "different fee") on this event that is
+// currently within its valid window and matches the caller's registration
+// status. Matukio's own different_fees_override supports both a discount
+// (isDiscount: true, e.g. an early-bird price cut) AND a surcharge
+// (isDiscount: false, e.g. a "Premium Paket" upgrade costing more than the
+// base fee) - see administrator/components/com_matukio/helpers/fees.php's
+// getDifferentFeeValue(), which adds the value when $f->discount is falsy and
+// subtracts it when truthy. Both directions must be honored here, not just
+// discounts, to match that behavior.
 function findApplicableTieredFee(event: any, isRegisteredUser: boolean): TieredFeeEntry | null {
   if (!event.tieredFees || !Array.isArray(event.eventTieredFees)) return null;
 
   const now = new Date();
   for (const fee of event.eventTieredFees as TieredFeeEntry[]) {
-    if (!fee || !fee.isDiscount) continue;
+    if (!fee) continue;
     if (fee.bookableFor === 'registered' && !isRegisteredUser) continue;
     if (fee.validFrom && now < new Date(fee.validFrom)) continue;
     if (fee.validUntil && now > new Date(fee.validUntil)) continue;
@@ -42,9 +47,13 @@ function findApplicableTieredFee(event: any, isRegisteredUser: boolean): TieredF
   return null;
 }
 
-function applyDiscount(amount: number, value: number, isPercentage: boolean): number {
-  const discount = isPercentage ? amount * (value / 100) : value;
-  return Math.min(Math.max(0, discount), amount);
+// Returns the price ADJUSTMENT to apply: positive reduces the running total
+// (a discount), negative increases it (a surcharge) - mirrors Matukio's
+// getDifferentFeeValue exactly (percent scales off the current amount,
+// absolute uses the raw value; sign flips on isDiscount either way).
+function applyTieredFee(amount: number, value: number, isPercentage: boolean, isDiscount: boolean): number {
+  const delta = isPercentage ? amount * (value / 100) : value;
+  return isDiscount ? Math.min(Math.max(0, delta), amount) : -delta;
 }
 
 // Server-side authoritative price calculation - never trust a client-submitted
@@ -78,9 +87,11 @@ export async function calculateBookingPrice(
   let runningTotal = baseTotal;
 
   const tieredFee = findApplicableTieredFee(event, isRegisteredUser);
+  // Positive = discount (price reduced), negative = surcharge (price
+  // increased) - see applyTieredFee's own comment.
   let tieredDiscount = 0;
   if (tieredFee) {
-    tieredDiscount = applyDiscount(runningTotal, Number(tieredFee.value) || 0, !!tieredFee.isPercentage);
+    tieredDiscount = applyTieredFee(runningTotal, Number(tieredFee.value) || 0, !!tieredFee.isPercentage, !!tieredFee.isDiscount);
     runningTotal -= tieredDiscount;
   }
 
