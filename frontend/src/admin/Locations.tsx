@@ -109,12 +109,12 @@ const LocationFilter = (props: any) => (
 export const LocationList = () => (
     <List filters={<LocationFilter />}>
         <Datagrid rowClick="edit" bulkActionButtons={<LocationBulkActionButtons />}>
-            <TextField source="id" label="ID" />
+            <TextField source="id" label="ID" sx={{ display: 'inline-block', maxWidth: 80, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title="ID" />
             <TextField source="title" label="Titel des Veranstaltungsort" />
             <TextField source="name" label="Veranstaltungsort" />
-            <TextField source="email" label="E-Mail" emptyText="-" />
-            <TextField source="phone" label="Telefon" emptyText="-" />
-            <TextField source="googleMapsUrl" label="Google Maps" emptyText="-" />
+            <TextField source="email" label="E-Mail" emptyText="-" sx={{ whiteSpace: 'nowrap' }} />
+            <TextField source="phone" label="Telefon" emptyText="-" sx={{ whiteSpace: 'nowrap' }} />
+            <TextField source="googleMapsUrl" label="Google Maps" emptyText="-" sx={{ display: 'inline-block', maxWidth: 200, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title="Google Maps URL" />
             <BooleanField source="published" label="Freigegeben" />
             <EditButton />
         </Datagrid>

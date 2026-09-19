@@ -22,7 +22,7 @@ import { Box, Chip, Typography } from '@mui/material';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 
-const StatusIconField = ({ source }: { source: string }) => {
+const StatusIconField = ({ source, label: _label }: { source: string, label?: string }) => {
     const record = useRecordContext();
     if (!record) return null;
     const isPublished = record[source] === 'PUBLISHED';
@@ -33,7 +33,7 @@ const StatusIconField = ({ source }: { source: string }) => {
     );
 };
 
-const TitleField = () => {
+const TitleField = (_props: any) => {
     const record = useRecordContext();
     if (!record) return null;
     return (
@@ -101,8 +101,8 @@ export const CategoryList = () => (
   <List filters={categoryFilters} actions={<CategoryListActions />} exporter={false} title="Kategorien" perPage={20}>
       <Datagrid rowClick="edit">
           <TextField source="id" label="ID" />
-          <StatusIconField source="status" />
-          <TitleField />
+          <StatusIconField source="status" label="Status" />
+          <TitleField source="title" label="Titel" />
           <BadgeField source="publishedCount" color="#4caf50" label="Veröffentlicht" />
           <BadgeField source="hiddenCount" color="#f44336" label="Versteckt" />
           <BadgeField source="archivedCount" color="#3f51b5" label="Archiviert" />

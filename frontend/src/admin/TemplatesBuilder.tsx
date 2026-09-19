@@ -12,6 +12,8 @@ import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import HelpIcon from '@mui/icons-material/Help';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useNavigate } from 'react-router-dom';
 
 export const TemplatesBuilder = () => {
     const { data, isLoading, error } = useGetOne('templatesConfig', { id: 'default' });
@@ -19,6 +21,7 @@ export const TemplatesBuilder = () => {
     const refresh = useRefresh();
     const [update, { isLoading: isUpdating }] = useUpdate();
     const [tabIndex, setTabIndex] = useState(0);
+    const navigate = useNavigate();
 
     if (isLoading) return <CircularProgress sx={{ m: 4 }} />;
     if (error) return <div>Fehler beim Laden der Vorlagen-Konfiguration</div>;
@@ -48,7 +51,10 @@ export const TemplatesBuilder = () => {
             <Form record={data} onSubmit={save}>
                 {/* Top Action Bar (like Joomla) */}
                 <Box sx={{ p: 2, bgcolor: '#1e293b', color: 'white', display: 'flex', gap: 2, alignItems: 'center', borderTopLeftRadius: 4, borderTopRightRadius: 4 }}>
-                    <Typography variant="h6" sx={{ flexGrow: 1, ml: 1 }}>Vorlagen</Typography>
+                    <Button onClick={() => navigate(-1)} sx={{ color: 'white', minWidth: 'auto', mr: 1 }} title="Zurück">
+                        <ArrowBackIcon />
+                    </Button>
+                    <Typography variant="h6" sx={{ flexGrow: 1 }}>Vorlagen</Typography>
                     
                     <Button 
                         type="submit" 

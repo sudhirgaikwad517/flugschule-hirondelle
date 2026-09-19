@@ -50,7 +50,6 @@ interface Item {
 }
 
 const TOP_ITEMS: Item[] = [
-    { label: 'Dashboard', to: '/admin', icon: <DashboardIcon fontSize="small" /> },
     { label: 'Benutzer', to: '/admin/users', icon: <PeopleIcon fontSize="small" /> },
 ];
 

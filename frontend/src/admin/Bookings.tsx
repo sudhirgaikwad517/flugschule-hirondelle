@@ -230,7 +230,7 @@ const BookingListActions = () => {
     );
 };
 
-const PaidToggle = () => {
+const PaidToggle = ({ source, label: _label }: { source?: string, label?: string }) => {
     const record = useRecordContext();
     const notify = useNotify();
     const refresh = useRefresh();
@@ -264,7 +264,7 @@ const PaidToggle = () => {
     );
 };
 
-const StatusChip = () => {
+const StatusChip = ({ source, label: _label }: { source?: string, label?: string }) => {
     const record = useRecordContext();
     if (!record) return null;
     const map: Record<string, { label: string; color: any }> = {
@@ -279,40 +279,31 @@ const StatusChip = () => {
 };
 
 export const BookingList = () => (
-    <List filters={<BookingFilter />} actions={<BookingListActions />} filterDefaultValues={{ status: 'activeandpending' }} sort={{ field: 'createdAt', order: 'DESC' }}>
-        {/* bulkActionButtons must be a truthy, non-false value for the
-            row-selection checkboxes to render at all - `false` here
-            previously disabled them outright, which meant
-            BookingListActions' Aktivieren/Ausstehend/Ablehnen/... row could
-            never actually have any selectedIds to act on. An empty fragment
-            keeps the checkboxes (and react-admin's small built-in "N
-            ausgewählt" / select-all-matching bar) without pulling in
-            react-admin's own default Delete button, since deletion here
-            goes through the dedicated Papierkorb flow instead. */}
-        {/* A plain wrapper div with an inline overflowX style, not just
-            sx on the Datagrid: overriding react-admin's own
-            RaDatagrid-tableWrapper via an external stylesheet (even with
-            !important) did not reliably produce a working scrollbar, for
-            the same reason the toolbar override above didn't - something
-            in how its runtime-injected styles interact keeps winning in
-            practice despite DevTools showing our rule as matching. Owning
-            the scroll boundary directly, with no react-admin styled
-            component in between, removes that uncertainty entirely. */}
-        <div className="booking-table-scroll" style={{ width: '100%', overflowX: 'auto' }}>
-            <Datagrid rowClick="show" bulkActionButtons={<></>}>
-                <TextField source="shortId" label="ID" />
-                <TextField source="customerName" label="Name" />
-                <TextField source="customerEmail" label="E-Mail" />
-                <FunctionField label="Event" render={(r: any) => r.event?.title || '—'} />
-                <DateField source="createdAt" label="Buchungsdatum" showTime />
-                <NumberField source="bookedSeats" label="Plätze" />
-                <PaidToggle label="Bezahlt" />
-                <BooleanField source="certificated" label="Zertifikat" />
-                <StatusChip label="Status" />
-                <NumberField source="totalPrice" label="Gesamtpreis (€)" options={{ style: 'currency', currency: 'EUR' }} />
-                <ShowButton />
-            </Datagrid>
-        </div>
+    <List filters={<BookingFilter />} filterDefaultValues={{ status: 'activeandpending' }} sort={{ field: 'createdAt', order: 'DESC' }} actions={false}>
+        {/* We place the actions here inside the List context rather than in the
+            actions prop so they can wrap freely. The grid wrapper with minmax(0, 1fr)
+            prevents the wide Datagrid from forcing the parent Card to expand horizontally,
+            which was previously giving the flex container too much space and preventing wrapping. */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', width: '100%' }}>
+            <Box sx={{ mb: 2 }}>
+                <BookingListActions />
+            </Box>
+            <div className="booking-table-scroll" style={{ width: '100%', overflowX: 'auto' }}>
+                <Datagrid rowClick="show" bulkActionButtons={<></>}>
+                    <TextField source="shortId" label="ID" sortBy="id" sx={{ display: 'inline-block', maxWidth: 80, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title="ID" />
+                    <TextField source="customerName" label="Name" sortable={false} sx={{ whiteSpace: 'nowrap' }} />
+                    <TextField source="customerEmail" label="E-Mail" sortable={false} sx={{ display: 'inline-block', maxWidth: 150, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title="E-Mail" />
+                    <FunctionField label="Event" render={(r: any) => r.event?.title || '—'} sortable={false} sx={{ display: 'inline-block', maxWidth: 150, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} />
+                    <DateField source="createdAt" label="Buchungsdatum" showTime sx={{ whiteSpace: 'nowrap' }} />
+                    <NumberField source="bookedSeats" label="Plätze" sortable={false} />
+                    <PaidToggle source="paid" label="Bezahlt" />
+                    <BooleanField source="certificated" label="Zertifikat" />
+                    <StatusChip source="status" label="Status" />
+                    <NumberField source="totalPrice" label="Gesamtpreis (€)" options={{ style: 'currency', currency: 'EUR' }} sx={{ whiteSpace: 'nowrap' }} />
+                    <ShowButton />
+                </Datagrid>
+            </div>
+        </Box>
     </List>
 );
 
@@ -332,7 +323,7 @@ const NameTagButton = () => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `Namensschild_${record.shortId || record.id.split('-')[0]}.pdf`;
+                a.download = `Namensschild_${record.shortId || String(record.id).split('-')[0]}.pdf`;
                 a.click();
             });
     };
@@ -365,7 +356,7 @@ const ParticipantFields = ({ value, onChange, label }: { value: any; onChange: (
                     <MuiTextField fullWidth margin="dense" size="small" label="Name" value={value.fullName || ''} onChange={setField('fullName')} />
                 </Grid>
                 <Grid size={{ xs: 6 }}>
-                    <MuiTextField fullWidth margin="dense" size="small" label="Geburtsdatum" type="date" InputLabelProps={{ shrink: true }} value={value.birthDate ? String(value.birthDate).slice(0, 10) : ''} onChange={setField('birthDate')} />
+                    <MuiTextField fullWidth margin="dense" size="small" label="Geburtsdatum" type="date" slotProps={{ inputLabel: { shrink: true } }} value={value.birthDate ? String(value.birthDate).slice(0, 10) : ''} onChange={setField('birthDate')} />
                 </Grid>
                 <Grid size={{ xs: 6 }}>
                     <MuiTextField fullWidth margin="dense" size="small" label="Größe/Gewicht" value={value.sizeWeight || ''} onChange={setField('sizeWeight')} />

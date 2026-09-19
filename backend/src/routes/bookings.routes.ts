@@ -243,7 +243,12 @@ router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
 
     const skip = _start ? Number(_start) : 0;
     const take = _end ? Number(_end) - skip : 100;
-    const orderBy: any = _sort ? { [String(_sort)]: _order === 'DESC' ? 'desc' : 'asc' } : { createdAt: 'desc' };
+    let sortField = String(_sort || 'createdAt');
+    if (sortField === 'shortId') sortField = 'id';
+    const validSortFields = ['id', 'status', 'totalPrice', 'createdAt', 'updatedAt', 'paid', 'certificated', 'checkedIn', 'eventId', 'userId'];
+    if (!validSortFields.includes(sortField)) sortField = 'createdAt';
+
+    const orderBy: any = { [sortField]: _order === 'DESC' ? 'desc' : 'asc' };
 
     const [bookings, total] = await Promise.all([
       prisma.booking.findMany({

@@ -47,7 +47,42 @@ import { PaymentConfigPage } from './PaymentConfigPage';
 import { LegalPageList, LegalPageEdit } from './LegalPages';
 import { UserList, UserEdit, UserCreate } from './Users';
 
-const i18nProvider = polyglotI18nProvider(() => germanMessages, 'de');
+const customGermanMessages = {
+    ...germanMessages,
+    ra: {
+        ...germanMessages.ra,
+        page: {
+            ...germanMessages.ra?.page,
+            empty: 'Noch keine Einträge.',
+        },
+    },
+    RA: {
+        SORT: {
+            SORT_BY: 'Sortieren nach',
+        },
+    },
+    resources: {
+        events: { empty: 'Noch keine Veranstaltungen vorhanden.' },
+        customFields: { empty: 'Noch keine benutzerdefinierten Felder vorhanden.' },
+        locations: { empty: 'Noch keine Veranstaltungsorte vorhanden.' },
+        vouchers: { empty: 'Noch keine Gutscheine vorhanden.' },
+        tieredFees: { empty: 'Noch keine gestaffelten Gebühren vorhanden.' },
+        taxRates: { empty: 'Noch keine Steuersätze vorhanden.' },
+        currencies: { empty: 'Noch keine Währungen vorhanden.' },
+        organizers: { empty: 'Noch keine Veranstalter vorhanden.' },
+        categories: { empty: 'Noch keine Kategorien vorhanden.' },
+        news: { empty: 'Noch keine Neuigkeiten vorhanden.' },
+        downloadcategories: { empty: 'Noch keine Download-Kategorien vorhanden.' },
+        files: { empty: 'Noch keine Downloads vorhanden.' },
+        weblinkcategories: { empty: 'Noch keine Link-Kategorien vorhanden.' },
+        links: { empty: 'Noch keine Links vorhanden.' },
+        banners: { empty: 'Noch keine Werbebanner vorhanden.' },
+        pagemedia: { empty: 'Noch keine Seitenmedien vorhanden.' },
+        legalPages: { empty: 'Noch keine rechtlichen Seiten vorhanden.' },
+    }
+};
+
+const i18nProvider = polyglotI18nProvider(() => customGermanMessages, 'de');
 
 const httpClient = (url: string, options: fetchUtils.Options = {}) => {
     if (!options.headers) {

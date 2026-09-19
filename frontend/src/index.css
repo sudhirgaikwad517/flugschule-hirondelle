@@ -218,8 +218,204 @@ h1, h2, h3, h4, h5, h6, .nav-item {
 
 /* Lightbox slideshow progress bar - restarts (via the bar's `key` on the
    current slide index) every time a new image comes in, so it always shows
+   hidden quietly became its own scrolling box distinct from the viewport
+   (regardless of what overflow-y was explicitly set to), which is exactly
+   why position:fixed/sticky admin header+sidebar kept scrolling away: they
+   were pinning relative to a scroller that itself wasn't the one visibly
+   moving. Leaving body's overflow completely alone avoids the whole
+   footgun - html's own overflow-x:hidden already keeps wide content from
+   ever widening the actual page horizontally. */
+html {
+  overflow-x: hidden;
+}
+html, body {
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+/* Diagnosed via a live console check on the actual admin Bookings page:
+   html/body's own clientWidth measured far narrower than window.innerWidth
+   (e.g. 702px vs a real 1667px viewport), even though `width: 100%` above
+   should resolve against the viewport for the root element - everything
+   INSIDE (the sidebar+content layout) was still rendering at the full,
+   correct width and simply overflowing past html's undersized box, where
+   overflow-x:hidden then silently clipped it with no scrollbar. #root (React's
+   actual mount point, and the true root of everything this app renders) gets
+   its own explicit viewport-unit width here as a second, independent way to
+   size it - `vw` is computed straight from the viewport's own dimensions,
+   not through whatever percentage-resolution path was producing the wrong
+   answer for html/body's `width: 100%` above.
+   Deliberately NOT setting overflow-x here (same reasoning as body above):
+   a non-visible overflow-x on an element with the default overflow-y:
+   visible gets silently upgraded to overflow-y:auto too, turning #root
+   into its own scroll container - which is exactly what broke the fixed
+   admin sidebar/header before (see appBarAlwaysOn note below). html's own
+   overflow-x:hidden is still the one and only horizontal clipping
+   boundary; this rule only fixes #root's WIDTH. */
+#root {
+  width: 100vw;
+  max-width: 100vw;
+}
+
+body.admin-root .RaLayout-root {
+  min-width: 0;
+}
+body.admin-root .RaLayout-contentWithSidebar {
+  min-width: 0;
+}
+body.admin-root #main-content {
+  min-width: 0;
+}
+/* This was the actual missing link the whole time: react-admin's <List>
+   renders .list-page (flex row) > .RaList-main (flex column, flex:1 1
+   auto) > .RaList-content (flex item, stretched to fill). None of these
+   three had min-width:0, so each one kept its browser-default "automatic
+   minimum size" - a flex item is never allowed to shrink below its
+   content's own min-content width unless min-width:0 overrides that.
+   A wide Datagrid's min-content width (driven by its widest unbreakable
+   cell) forced EVERY ancestor in this chain to grow to match it instead
+   of staying bounded to the viewport, so the overflow never reached any
+   of the overflow-x:auto boundaries below (RaList-content, or the
+   booking-table-scroll wrapper in Bookings.tsx) - it sailed straight past
+   all of them and only got caught (silently, no scrollbar) by html's
+   overflow-x:hidden at the very top. min-width:0 here is what finally lets
+   the inner scroll containers actually see the overflow they're supposed
+   to catch. */
+body.admin-root .list-page {
+  min-width: 0;
+}
+body.admin-root .RaList-main {
+  min-width: 0;
+}
+/* This is the actual Card react-admin wraps each <List>'s content in - the
+   real scroll boundary needs to live here (not further up the tree), or the
+   overflow gets clipped away with nowhere to scroll to. react-admin's
+   Datagrid renders a bare <table>, not a MUI TableContainer, so nothing
+   provides this automatically. */
+body.admin-root .RaList-content {
+  overflow-x: auto !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Overriding react-admin's RaDatagrid-tableWrapper via an external
+   stylesheet (even with !important, confirmed matching/winning in
+   DevTools) turned out not to reliably produce a working scrollbar in
+   practice - the same unresolved issue as the admin toolbar below. Wide
+   list pages now own their scroll boundary directly instead (see the
+   .booking-table-scroll wrapper div in Bookings.tsx) rather than fighting
+   react-admin's internal structure from outside it. This nice-looking
+   scrollbar styling only ever applies to elements that opt into it via
+   that class - it can't compete with anything since nothing else targets
+   it. */
+.booking-table-scroll {
+  scrollbar-width: auto;
+  scrollbar-color: #9aa5b1 #eef1f4;
+}
+.booking-table-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+.booking-table-scroll::-webkit-scrollbar-track {
+  background: #eef1f4;
+}
+.booking-table-scroll::-webkit-scrollbar-thumb {
+  background-color: #9aa5b1;
+  border-radius: 6px;
+}
+
+/* react-admin's ListToolbar (filters + the custom bulk-action buttons row,
+   e.g. Bookings' "Aktivieren/Ausstehend/Ablehnen/..." toolbar) only wraps
+   below the md breakpoint - above it, filters and actions share one nowrap
+   flex row by design, so a page with many filters/buttons runs its actions
+   off the right edge of the screen instead of wrapping, with nothing to
+   scroll them into view. Forcing wrap at all widths fixes that everywhere
+   in the admin, not just on Bookings.
+   NOTE: the actual DOM class here is RaList-actions (ListView.js passes it
+   in explicitly as a plain className prop) - RaListToolbar-root is only the
+   `name` used internally for MUI theme style-override matching and is never
+   attached to the rendered element, so targeting it does nothing. */
+body.admin-root .RaList-actions {
+  flex-wrap: wrap !important;
+  row-gap: 8px;
+  max-width: 100% !important;
+}
+/* Wrapping the outer row only helps once the actions toolbar has its own
+   line - but react-admin's TopToolbar itself is `flex: 0 1 auto`, meaning
+   its width is sized to fit ALL of its buttons unshrunk (browsers don't
+   shrink a wrapped flex item below its content's natural width just
+   because it *could* reflow internally). Its own flexWrap:'wrap' (set via
+   sx on BookingListActions) never gets a chance to trigger because the box
+   itself never becomes narrower than the viewport - it just runs past it.
+   Forcing it to actually take the full row width makes its internal wrap
+   have something real to wrap against.
+   Belt-and-suspenders: also give it its own horizontal scrollbar as a
+   fallback, so even if some other override stops the wrap from actually
+   happening, the hidden buttons are still reachable instead of silently
+   clipped off-screen with no way to reach them at all. */
+body.admin-root .RaList-actions .MuiToolbar-root {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  flex: 1 1 100% !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+  overflow-x: auto !important;
+  row-gap: 4px;
+}
+
+/* CustomAppBar.tsx locks the admin header to exactly 64px - react-admin's
+   own appFrame margin-top assumes its shorter stock app bar, so it under-
+   compensates here and lets content/filter rows render under the fixed
+   header. 64px is the exact clearance the fixed app bar needs. */
+body.admin-root .RaLayout-appFrame {
+  margin-top: 64px !important;
+}
+
+/* The real bug behind "sidebar disappears while scrolling" was NOT a
+   fixed-positioning problem: react-admin's Sidebar applies a negative
+   margin-top (RaSidebar-appBarCollapsed) once the page scrolls past ~100px
+   (via MUI's useScrollTrigger), assuming the app bar hides/collapses on
+   scroll to compensate. CustomLayout.tsx now passes appBarAlwaysOn to
+   <Layout>, which stops that class from ever being applied - the stock
+   position:fixed sidebar-pinning trick (RaSidebar-fixed) works correctly
+   on its own once that interference is gone, so no CSS override is needed
+   here any more. */
+
+/* The visible breathing room the user actually asked for: only between the
+   header and each tab's own content, not the sidebar (which stays flush
+   against the header per the fix above). */
+body.admin-root #main-content > * {
+  padding-top: 20px;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: #333333;
+  background-color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6, .nav-item {
+  font-family: var(--font-condensed);
+}
+
+/* Fix for long unbroken strings in React Admin TextAreas and RichText editors */
+.MuiInputBase-inputMultiline,
+.ProseMirror,
+.tiptap {
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  word-break: break-all !important;
+  white-space: pre-wrap !important;
+}
+
+/* Lightbox slideshow progress bar - restarts (via the bar's `key` on the
+   current slide index) every time a new image comes in, so it always shows
    how much time is left until the next auto-advance. */
 @keyframes lightbox-progress {
   from { width: 0%; }
   to { width: 100%; }
 }
+.RaBulkActionsToolbar-collapsed { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }

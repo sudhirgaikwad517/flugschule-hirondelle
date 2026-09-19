@@ -28,10 +28,12 @@ import {
 } from 'react-admin';
 import { useState } from 'react';
 import { RichTextInput } from 'ra-input-rich-text';
-import { Grid, Box, Typography, Chip, IconButton } from '@mui/material';
+import { Grid, Box, Typography, Chip, IconButton, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import CloseIcon from '@mui/icons-material/Close';
 import { EventDatesManager } from './EventDatesManager';
 import { EventRowExpand } from './EventRowExpand';
 import { MCard, MTipsCard, MButtonGroupInput } from './matukioStyle';
@@ -114,8 +116,18 @@ const EventBulkActionButtons = () => {
     const refresh = useRefresh();
     const unselectAll = useUnselectAll(resource);
     const [busy, setBusy] = useState(false);
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
+
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
 
     const setPublished = async (published: boolean) => {
+        handleClose();
         setBusy(true);
         try {
             const token = localStorage.getItem('auth');
@@ -137,6 +149,7 @@ const EventBulkActionButtons = () => {
     };
 
     const handleDuplicate = async () => {
+        handleClose();
         setBusy(true);
         try {
             const token = localStorage.getItem('auth');
@@ -153,15 +166,23 @@ const EventBulkActionButtons = () => {
 
     return (
         <>
-            <RaButton label="Veröffentlichen" onClick={() => setPublished(true)} disabled={busy}>
-                <VisibilityIcon />
+            <RaButton label="Aktionen" onClick={handleClick} disabled={busy}>
+                <ExpandMoreIcon />
             </RaButton>
-            <RaButton label="Verstecken" onClick={() => setPublished(false)} disabled={busy}>
-                <VisibilityOffIcon />
-            </RaButton>
-            <RaButton label="Duplizieren" onClick={handleDuplicate} disabled={busy}>
-                <ContentCopyIcon />
-            </RaButton>
+            <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+                <MenuItem onClick={() => setPublished(true)} disabled={busy}>
+                    <ListItemIcon><VisibilityIcon fontSize="small" /></ListItemIcon>
+                    <ListItemText>Veröffentlichen</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={() => setPublished(false)} disabled={busy}>
+                    <ListItemIcon><VisibilityOffIcon fontSize="small" /></ListItemIcon>
+                    <ListItemText>Verstecken</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={handleDuplicate} disabled={busy}>
+                    <ListItemIcon><ContentCopyIcon fontSize="small" /></ListItemIcon>
+                    <ListItemText>Duplizieren</ListItemText>
+                </MenuItem>
+            </Menu>
             <BulkDeleteButton label="Löschen" />
         </>
     );
@@ -202,21 +223,45 @@ const EventFilter = (props: any) => (
     </Filter>
 );
 
+const EventListContent = () => {
+    const { selectedIds, resource } = useListContext();
+    const unselectAll = useUnselectAll(resource);
+
+    return (
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', width: '100%' }}>
+            {selectedIds && selectedIds.length > 0 && (
+                <Box sx={{ display: 'flex', alignItems: 'center', p: 1, gap: 2, bgcolor: 'primary.light', color: 'primary.contrastText', borderRadius: 1, mb: 1 }}>
+                    <IconButton size="small" onClick={() => unselectAll()} color="inherit">
+                        <CloseIcon />
+                    </IconButton>
+                    <Typography variant="subtitle1" sx={{ flexGrow: 1 }}>{selectedIds.length} Elemente ausgewählt</Typography>
+                    <EventBulkActionButtons />
+                </Box>
+            )}
+            <Datagrid
+                rowClick="edit"
+                bulkActionsToolbar={false}
+                expand={<EventRowExpand />}
+            >
+                <TextField source="id" label="#" sx={{ display: 'inline-block', maxWidth: 80, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title="ID" />
+                <DateField source="startDate" label="Dates" showTime />
+                <TextField source="title" label="Titel" />
+                <ReferenceField source="categoryId" reference="categories" label="Kategorie">
+                    <TextField source="title" />
+                </ReferenceField>
+                <ReferenceField source="locationId" reference="locations" label="Veranstaltungsort" emptyText="-">
+                    <TextField source="title" />
+                </ReferenceField>
+                <PublishToggleField label="Veröffentlicht" />
+                <CancelledField label="Status" />
+            </Datagrid>
+        </Box>
+    );
+};
+
 export const EventList = () => (
     <List title="Veranstaltungen" filters={<EventFilter />}>
-        <Datagrid rowClick="edit" bulkActionButtons={<EventBulkActionButtons />} expand={<EventRowExpand />}>
-            <TextField source="id" label="#" />
-            <DateField source="startDate" label="Dates" showTime />
-            <TextField source="title" label="Titel" />
-            <ReferenceField source="categoryId" reference="categories" label="Kategorie">
-                <TextField source="title" />
-            </ReferenceField>
-            <ReferenceField source="locationId" reference="locations" label="Veranstaltungsort" emptyText="-">
-                <TextField source="title" />
-            </ReferenceField>
-            <PublishToggleField label="Veröffentlicht" />
-            <CancelledField label="Status" />
-        </Datagrid>
+        <EventListContent />
     </List>
 );
 

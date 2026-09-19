@@ -94,11 +94,11 @@ export const EventsDashboard = () => {
             {preset === 'custom' && (
                 <>
                     <TextField
-                        size="small" label="Von" type="date" InputLabelProps={{ shrink: true }}
+                        size="small" label="Von" type="date" slotProps={{ inputLabel: { shrink: true } }}
                         value={customFrom} onChange={(e) => setCustomFrom(e.target.value)}
                     />
                     <TextField
-                        size="small" label="Bis" type="date" InputLabelProps={{ shrink: true }}
+                        size="small" label="Bis" type="date" slotProps={{ inputLabel: { shrink: true } }}
                         value={customTo} onChange={(e) => setCustomTo(e.target.value)}
                     />
                     {rangeSwapped && (

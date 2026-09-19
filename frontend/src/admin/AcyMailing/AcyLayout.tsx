@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
@@ -8,7 +8,8 @@ import {
   Mail, 
   AlignLeft,
   BarChart2,
-  Settings 
+  Settings,
+  ArrowLeft
 } from 'lucide-react';
 
 interface AcyLayoutProps {
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
 
 export const AcyLayout = ({ children, title }: AcyLayoutProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   return (
     <div className="flex h-[calc(100vh-64px)] w-full bg-[#f4f6f8] text-[#334155] font-sans">
@@ -68,9 +70,14 @@ export const AcyLayout = ({ children, title }: AcyLayoutProps) => {
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#f4f6f8]">
         {/* Top Header */}
         <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-8 flex-shrink-0">
-          <h1 className="text-2xl font-semibold text-slate-800">
-            {title || NAV_ITEMS.find(n => location.pathname.startsWith(n.path))?.label || 'AcyMailing'}
-          </h1>
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500 hover:text-slate-800" title="Zurück">
+              <ArrowLeft size={20} />
+            </button>
+            <h1 className="text-2xl font-semibold text-slate-800">
+              {title || NAV_ITEMS.find(n => location.pathname.startsWith(n.path))?.label || 'AcyMailing'}
+            </h1>
+          </div>
           <div className="flex items-center gap-4 text-sm text-slate-500">
             <span>AcyMailing Starter 11.0.4 Clone</span>
           </div>
