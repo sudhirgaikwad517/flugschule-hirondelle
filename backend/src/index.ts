@@ -35,6 +35,7 @@ import newsletterListsRoutes from './routes/newsletterlists.routes';
 import searchRoutes from './routes/search.routes';
 import uploadRoutes from './routes/upload.routes';
 import pagemediaRoutes from './routes/pagemedia.routes';
+import pagegalleryRoutes from './routes/pagegallery.routes'; // NEW - standalone Galerie feature, separate from pagemedia
 import legalPagesRoutes from './routes/legalPages.routes';
 import serviceOrdersRoutes from './routes/serviceorders.routes';
 import trackRoutes from './routes/track.routes';
@@ -123,6 +124,7 @@ app.use('/api/banners', bannersRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/pagemedia', pagemediaRoutes);
+app.use('/api/pagegallery', pagegalleryRoutes); // NEW - standalone Galerie feature
 app.use('/api/legalPages', legalPagesRoutes);
 app.use('/api/serviceorders', serviceOrdersRoutes);
 app.use('/api/newsletterlists', newsletterListsRoutes);

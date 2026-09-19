@@ -36,7 +36,7 @@ export const Gutscheine = () => {
               </div>
 
               <p className="text-[15px] text-gray-700 font-light leading-relaxed mb-12">
-                Bei uns erhältst du Gutscheine für alle Kurse, Weiterbildungen, Reisen oder auch für Tandemflüge.
+                Bei uns erhälst du Gutscheine für alle Kurse, Weiterbildungen, Reisen oder auch für Tandemflüge.
               </p>
 
               {/* Subheading */}
@@ -57,14 +57,14 @@ export const Gutscheine = () => {
               <ul className="space-y-8 text-[15px] text-gray-600 font-light leading-relaxed list-disc pl-5 marker:text-gray-400 marker:text-sm">
                 <li>
                   <span className="font-medium text-gray-800">Schnupperkurs:</span> Bei der Einlösung der Gutscheine für den{' '}
-                  <Link to="/ausbildung/schnupperkurs" className="text-[#53a8c7] hover:text-luxury-gold transition-colors">
+                  <Link to="/ausbildung/schnupperkurs" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">
                     Schnupperkurs
                   </Link>
                   {' '}könnt ihr euch einen Termin in unserem Kalender aussuchen und bequem online buchen. Ihr habt über den Kalender euren Wunschtermin gebucht – dann werdet ihr über unseren Schulungsnewsletter 1 Tag im voraus informiert, dass das Wetter passt und wo der Schnupperkurs stattfindet [hierfür müsst ihr euch spätestens 3 Tage vor Kursbeginn in den Schulungsnewsletter eintragen].
                 </li>
                 <li>
                   <span className="font-medium text-gray-800">Tandemflüge:</span> Bei der Einlösung der Gutscheine für einen Tandemflug erfolgt die Terminvergabe über unsere Tandem-Newsletter [bitte in unseren Tandem-Newsletter unten Links eintragen]. Wir informieren euch über unseren Tandem-Newsletter 1 bis 2 Tage im voraus, dass das Wetter passt und wo wir mit euch fliegen können. Weitere Infos zu unseren Tandemflügen findet ihr{' '}
-                  <Link to="/tandem" className="text-[#53a8c7] hover:text-luxury-gold transition-colors">
+                  <Link to="/tandem" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">
                     hier
                   </Link>
                   .
@@ -75,13 +75,18 @@ export const Gutscheine = () => {
 
             {/* Right Column (Image) */}
             <div className="lg:col-span-5 pt-4">
-              <div className="w-full">
+              <a
+                href="https://shop.flugschule-hirondelle.de/GUTSCHEINE/Gutschein-Tandemflug-und-Schnuppertag.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full"
+              >
                 <img
                   src="/images/gutscheine/gutschein.jpg"
                   alt="Geschenk-Gutschein"
                   className="w-full h-auto object-cover shadow-sm border border-gray-100 rounded-sm"
                 />
-              </div>
+              </a>
             </div>
 
           </div>

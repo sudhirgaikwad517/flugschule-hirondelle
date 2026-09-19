@@ -31,6 +31,7 @@ import ViewCarouselIcon from '@mui/icons-material/ViewCarousel';
 import PermMediaIcon from '@mui/icons-material/PermMedia';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import PaymentIcon from '@mui/icons-material/Payment';
+import ExtensionIcon from '@mui/icons-material/Extension'; // NEW - "Komponenten" section icon
 
 // A fully custom sidebar (plain MUI + react-router NavLink, no react-admin
 // <Menu>/<MenuItemLink>) - same approach already used successfully in the
@@ -87,6 +88,14 @@ const BOTTOM_ITEMS: Item[] = [
     { label: 'Cookie-Hinweis', to: '/admin/cookie-consent', icon: <CookieIcon fontSize="small" /> },
 ];
 
+// NEW - a Joomla-"Components"-style group for site-wide content tools that
+// aren't tied to Flugschule Events. Currently just Galerie; more of this
+// kind of feature can be added here later without inventing another
+// top-level sidebar section each time.
+const COMPONENT_ITEMS: Item[] = [
+    { label: 'Galerie', to: '/admin/pagegallery', icon: <ViewCarouselIcon fontSize="small" /> },
+];
+
 // Inline `style` for color (not just `sx`) so nothing in the app's global
 // CSS can ever compete with it, regardless of specificity or layer order.
 const SidebarLink = ({ item, isActive, indent }: { item: Item; isActive: boolean; indent?: boolean }) => (
@@ -122,9 +131,59 @@ const SidebarLink = ({ item, isActive, indent }: { item: Item; isActive: boolean
     </Box>
 );
 
+// Extracted from the inline "Flugschule Events" toggle block so the NEW
+// "Komponenten" group below can reuse the same collapsible-header behavior
+// instead of duplicating this JSX a second time.
+const CollapsibleGroup = ({ label, icon, items, open, onToggle, isActivePath }: {
+    label: string;
+    icon: ReactNode;
+    items: Item[];
+    open: boolean;
+    onToggle: () => void;
+    isActivePath: (to: string) => boolean;
+}) => (
+    <>
+        <Box
+            onClick={onToggle}
+            style={{ color: TEXT_COLOR }}
+            sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                px: 2,
+                py: 1,
+                mx: 0.5,
+                mb: 0.25,
+                borderRadius: '6px',
+                cursor: 'pointer',
+                '&:hover': { bgcolor: '#f1f5f9' }
+            }}
+        >
+            <Box sx={{ display: 'flex' }} style={{ color: ICON_COLOR }}>{icon}</Box>
+            <Typography
+                variant="body2"
+                style={{ color: TEXT_COLOR, fontWeight: 600 }}
+                sx={{ flex: 1, fontSize: '0.92rem' }}
+            >
+                {label}
+            </Typography>
+            <ExpandMore sx={{ fontSize: 20, transform: open ? 'rotate(180deg)' : 'rotate(0)', transition: '0.2s' }} style={{ color: ICON_COLOR }} />
+        </Box>
+
+        <Collapse in={open} timeout="auto" unmountOnExit sx={{ bgcolor: SIDEBAR_BG }}>
+            <Box sx={{ bgcolor: SIDEBAR_BG }}>
+                {items.map(item => (
+                    <SidebarLink key={item.to} item={item} isActive={isActivePath(item.to)} indent />
+                ))}
+            </Box>
+        </Collapse>
+    </>
+);
+
 export const CustomMenu = () => {
     const location = useLocation();
     const [openEvents, setOpenEvents] = useState(true);
+    const [openComponents, setOpenComponents] = useState(true); // NEW - "Komponenten" group, defaults open like Events
 
     const isActivePath = (to: string) => {
         if (to === '/admin') return location.pathname === '/admin' || location.pathname === '/admin/';
@@ -144,40 +203,26 @@ export const CustomMenu = () => {
                 <SidebarLink key={item.to} item={item} isActive={isActivePath(item.to)} />
             ))}
 
-            <Box
-                onClick={() => setOpenEvents(!openEvents)}
-                style={{ color: TEXT_COLOR }}
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1.5,
-                    px: 2,
-                    py: 1,
-                    mx: 0.5,
-                    mb: 0.25,
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    '&:hover': { bgcolor: '#f1f5f9' }
-                }}
-            >
-                <Box sx={{ display: 'flex' }} style={{ color: ICON_COLOR }}><EventIcon fontSize="small" /></Box>
-                <Typography
-                    variant="body2"
-                    style={{ color: TEXT_COLOR, fontWeight: 600 }}
-                    sx={{ flex: 1, fontSize: '0.92rem' }}
-                >
-                    Flugschule Events
-                </Typography>
-                <ExpandMore sx={{ fontSize: 20, transform: openEvents ? 'rotate(180deg)' : 'rotate(0)', transition: '0.2s' }} style={{ color: ICON_COLOR }} />
-            </Box>
+            <CollapsibleGroup
+                label="Flugschule Events"
+                icon={<EventIcon fontSize="small" />}
+                items={EVENT_ITEMS}
+                open={openEvents}
+                onToggle={() => setOpenEvents(!openEvents)}
+                isActivePath={isActivePath}
+            />
 
-            <Collapse in={openEvents} timeout="auto" unmountOnExit sx={{ bgcolor: SIDEBAR_BG }}>
-                <Box sx={{ bgcolor: SIDEBAR_BG }}>
-                    {EVENT_ITEMS.map(item => (
-                        <SidebarLink key={item.to} item={item} isActive={isActivePath(item.to)} indent />
-                    ))}
-                </Box>
-            </Collapse>
+            <Box sx={{ borderTop: `1px solid ${SIDEBAR_BORDER}`, my: 1, mx: 2 }} />
+
+            {/* NEW - Joomla-"Components"-style group; see COMPONENT_ITEMS above */}
+            <CollapsibleGroup
+                label="Komponenten"
+                icon={<ExtensionIcon fontSize="small" />}
+                items={COMPONENT_ITEMS}
+                open={openComponents}
+                onToggle={() => setOpenComponents(!openComponents)}
+                isActivePath={isActivePath}
+            />
 
             <Box sx={{ borderTop: `1px solid ${SIDEBAR_BORDER}`, my: 1, mx: 2 }} />
 

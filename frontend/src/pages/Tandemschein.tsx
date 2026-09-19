@@ -3,15 +3,22 @@ import { Banner } from '../components/common/Banner';
 import { Check, Info, Search } from 'lucide-react';
 import { useLightbox } from '../components/common/Lightbox';
 import { GutscheinBox } from '../components/common/GutscheinBox';
+import { usePageGallery } from '../hooks/usePageGallery';
 
 // Old site's actual "Simple Image Gallery" filenames for this page
 // (/images/bilder/1-tandem/*.jpg|png), in their real order.
-const GALLERY_FILES = [
+// Used only as a fallback now - see usePageGallery below - so the page keeps
+// looking exactly like this until an admin configures a gallery for the
+// "tandemschein" slug in Admin > Seitenmedien.
+const FALLBACK_GALLERY = [
   '1PLatzhalterbildTandem.png', 'tandem1.jpg', 'tandem2.jpg', 'tandem3.jpg', 'tandem4.jpg',
-];
+].map((f) => `/images/tandemschein/${f}`);
 
 export const Tandemschein = () => {
   const { openGallery } = useLightbox();
+  // Admin-managed gallery (falls back to FALLBACK_GALLERY above) - see
+  // frontend/src/hooks/usePageGallery.ts
+  const galleryImages = usePageGallery('tandemschein', FALLBACK_GALLERY);
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -96,9 +103,9 @@ export const Tandemschein = () => {
                     </div>
                   </li>
                   {[
-                    <>Optional <Link to="/ausbildung/windenschein" className="text-luxury-gold hover:underline font-medium">Windenkurs</Link> zur Vervollständigung der 40 benötigten Flüge</>,
-                    <>E-Learning Prüffragen <a href="https://shop.dhv.de/collections/prufungsfragen" target="_blank" rel="noopener noreferrer" className="text-luxury-gold hover:underline font-medium">Gleitschirm-Tandemschein</a> vom DHV</>,
-                    <><a href="#" className="text-luxury-gold hover:underline font-medium">Prüfungsgebühren ab 03.04.2023</a> DHV</>
+                    <>Optional <Link to="/ausbildung/windenschein" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Windenkurs</Link> zur Vervollständigung der 40 benötigten Flüge</>,
+                    <>E-Learning Prüffragen <a href="https://shop.dhv.de/collections/prufungsfragen" target="_blank" rel="noopener noreferrer" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Gleitschirm-Tandemschein</a> vom DHV</>,
+                    <><a href="#" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Prüfungsgebühren ab 03.04.2023</a> DHV</>
                   ].map((item, idx) => (
                     <li key={idx} className="flex gap-3 text-gray-600 font-light">
                       <Check className="w-5 h-5 text-luxury-gold shrink-0 mt-0.5" />
@@ -192,17 +199,17 @@ export const Tandemschein = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {GALLERY_FILES.map((file, index) => (
+                 {galleryImages.map((img, index) => (
                    <div
-                     key={file}
+                     key={img}
                      className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
                      onClick={() => openGallery(
-                       GALLERY_FILES.map((f) => ({ src: `/images/tandemschein/${f}`, alt: 'Impression' })),
+                       galleryImages.map((g) => ({ src: g, alt: 'Impression' })),
                        index
                      )}
                    >
                      <img
-                       src={`/images/tandemschein/${file}`}
+                       src={img}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />

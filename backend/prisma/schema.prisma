@@ -544,6 +544,21 @@ model PageMedia {
   updatedAt         DateTime @updatedAt
 }
 
+// NEW MODEL - standalone "Galerie" admin feature (separate from PageMedia
+// on purpose, so PageMedia's existing header/content-image behavior stays
+// untouched). Lets an admin manage the "Impressionen" gallery for a given
+// page slug, editable via Admin > Galerie and consumed by
+// frontend/src/hooks/usePageGallery.ts. To revert: drop this model, delete
+// backend/src/routes/pagegallery.routes.ts, and point usePageGallery.ts back
+// at whatever it used before.
+model PageGallery {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  images    String?  @db.Text // JSON string array of image URLs
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 // Admin-editable static legal text pages (Matukio's agb_text/revoke_text
 // config fields) - slug is "agb" or "widerruf".
 model LegalPage {

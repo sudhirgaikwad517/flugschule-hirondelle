@@ -4,10 +4,14 @@ import { Search } from 'lucide-react';
 import { EventComments } from '../components/common/EventComments';
 import { useLightbox } from '../components/common/Lightbox';
 import { GutscheinBox } from '../components/common/GutscheinBox';
+import { usePageGallery } from '../hooks/usePageGallery';
 
 // Old site's actual "Simple Image Gallery" filenames for this page
 // (/images/2-tour-griechenland-safari/*), in their real order.
-const GALLERY_FILES = [
+// Used only as a fallback now - see usePageGallery below - so the page keeps
+// looking exactly like this until an admin configures a gallery for the
+// "griechenland-tour" slug in Admin > Seitenmedien.
+const FALLBACK_GALLERY = [
   'Griechenland_0936', 'Griechenland_0939', 'Griechenland_0948', 'Griechenland_0951', 'Griechenland_0955',
   'Griechenland_1140', 'Griechenland_1213', 'Griechenland_1214', 'Griechenland_1229', 'Griechenland_1239',
   'Griechenland_1243', 'Griechenland_1266', 'Griechenland_3999', 'Griechenland_4074', 'Griechenland_4105',
@@ -16,10 +20,13 @@ const GALLERY_FILES = [
   'Griechenland_5501', 'Griechenland_7909', 'Griechenland_7932', 'Griechenland_7933', 'Griechenland_7996',
   'Griechenland_8050', 'Griechenland_8055', 'Griechenland_8063', 'Griechenland_8095', 'Griechenland_8156',
   'Griechenland_8162',
-];
+].map((f) => `/images/tour-griechenland/${f}.jpg`);
 
 export const GriechenlandTour = () => {
   const { openGallery } = useLightbox();
+  // Admin-managed gallery (falls back to FALLBACK_GALLERY above) - see
+  // frontend/src/hooks/usePageGallery.ts
+  const galleryImages = usePageGallery('griechenland-tour', FALLBACK_GALLERY);
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -175,17 +182,17 @@ export const GriechenlandTour = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {GALLERY_FILES.map((file, index) => (
+                 {galleryImages.map((img, index) => (
                    <div
-                     key={file}
+                     key={img}
                      className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
                      onClick={() => openGallery(
-                       GALLERY_FILES.map((f) => ({ src: `/images/tour-griechenland/${f}.jpg`, alt: 'Impression' })),
+                       galleryImages.map((g) => ({ src: g, alt: 'Impression' })),
                        index
                      )}
                    >
                      <img
-                       src={`/images/tour-griechenland/${file}.jpg`}
+                       src={img}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />

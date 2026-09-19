@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
 import { Check, Search } from 'lucide-react';
-import { useValidatedImageUrl, useValidatedImageList } from '../hooks/useValidatedImage';
+import { useValidatedImageUrl } from '../hooks/useValidatedImage';
+import { usePageGallery } from '../hooks/usePageGallery';
 import { useLightbox } from '../components/common/Lightbox';
 import { GutscheinBox } from '../components/common/GutscheinBox';
 
@@ -11,12 +12,12 @@ interface PageMedia {
   contentMediaType: 'IMAGE' | 'VIDEO';
   contentImageUrl: string | null;
   contentYoutubeUrl: string | null;
-  galleryImages: string | null;
 }
 
 // Real photos ported from the old site (images/1-sicherheit_gardasee/) -
-// used whenever no admin gallery is configured via the pagemedia API, so
-// the page never falls back to an unrelated stock photo.
+// used as a fallback until an admin configures a gallery for the
+// "sicherheitstraining" slug in Admin > Galerie, so the page never falls
+// back to an unrelated stock photo.
 const FALLBACK_HERO_IMAGE = '/images/performance/sicherheitstraining.jpg';
 const FALLBACK_GALLERY = [
   '/images/sicherheitstraining/gallery/gallery-1.jpg',
@@ -29,23 +30,12 @@ const FALLBACK_GALLERY = [
   '/images/sicherheitstraining/gallery/gallery-8.jpg',
 ];
 
-// The API's galleryImages column is stored as a JSON string, but may come
-// back already-parsed depending on how it was written - handle both.
-function parseGalleryImages(value: string | null): string[] {
-  if (!value) return [];
-  if (Array.isArray(value)) return value;
-  try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
 export const Sicherheitstraining = () => {
   const [media, setMedia] = useState<PageMedia | null>(null);
   const { openGallery } = useLightbox();
 
+  // Header/content image still come from Page Media (Seitenmedien) -
+  // unrelated to and untouched by the Galerie feature below.
   useEffect(() => {
     fetch('/api/pagemedia/public/sicherheitstraining')
       .then(res => res.json())
@@ -56,7 +46,9 @@ export const Sicherheitstraining = () => {
   }, []);
 
   const heroImage = useValidatedImageUrl(media?.contentImageUrl, FALLBACK_HERO_IMAGE);
-  const galleryImages = useValidatedImageList(parseGalleryImages(media?.galleryImages ?? null), FALLBACK_GALLERY);
+  // Gallery now comes from the standalone Galerie feature (Admin > Galerie)
+  // instead of Page Media's galleryImages field - see usePageGallery.ts.
+  const galleryImages = usePageGallery('sicherheitstraining', FALLBACK_GALLERY);
 
   return (
     <div className="w-full bg-white font-luxurysans">

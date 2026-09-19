@@ -4,20 +4,27 @@ import { Search } from 'lucide-react';
 import { EventComments } from '../components/common/EventComments';
 import { useLightbox } from '../components/common/Lightbox';
 import { GutscheinBox } from '../components/common/GutscheinBox';
+import { usePageGallery } from '../hooks/usePageGallery';
 
 // Old site's actual "Simple Image Gallery" filenames for this page
 // (/images/bilder/2-tour-bergamo/*), in their real order.
-const GALLERY_FILES = [
+// Used only as a fallback now - see usePageGallery below - so the page keeps
+// looking exactly like this until an admin configures a gallery for the
+// "bergamo-tour" slug in Admin > Seitenmedien.
+const FALLBACK_GALLERY = [
   '03f0d2a6-4c66-49c0-bd99-872b02771702.jpg', '078fa6dc-5afc-486f-8b15-87c1abb22ee7.jpg', 'Bergamo_1389.jpg', 'Bergamo_1655.jpg', 'Bergamo_2477.jpg',
   'Bergamo_2798.jpg', 'Bergamo_4039.jpg', 'Bergamo_4411.jpg', 'Bergamo_4700.jpg', 'Bergamo_5418.jpg',
   'Bergamo_5595.jpg', 'Bergamo_7045.jpg', 'Bergamo_7542.jpg', 'Bergamo_7825.jpg', 'Bergamo_7955.jpg',
   'Bergamo_8375.jpg', 'Bergamo_8503.jpg', 'Bergamo_8774.jpg', 'Bergamo_8999.jpg', 'IMG_6817.jpg',
   'IMG_6821.jpg', 'IMG_6824.jpg', 'IMG_6829.jpg', 'IMG_6840.jpg', 'IMG_6847.jpg',
   'IMG_6849.jpg', 'IMG_6854.jpg',
-];
+].map((f) => `/images/tour-bergamo/${f}`);
 
 export const BergamoTour = () => {
   const { openGallery } = useLightbox();
+  // Admin-managed gallery (falls back to FALLBACK_GALLERY above) - see
+  // frontend/src/hooks/usePageGallery.ts
+  const galleryImages = usePageGallery('bergamo-tour', FALLBACK_GALLERY);
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -162,17 +169,17 @@ export const BergamoTour = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {GALLERY_FILES.map((file, index) => (
+                 {galleryImages.map((img, index) => (
                    <div
-                     key={file}
+                     key={img}
                      className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
                      onClick={() => openGallery(
-                       GALLERY_FILES.map((f) => ({ src: `/images/tour-bergamo/${f}`, alt: 'Impression' })),
+                       galleryImages.map((g) => ({ src: g, alt: 'Impression' })),
                        index
                      )}
                    >
                      <img
-                       src={`/images/tour-bergamo/${file}`}
+                       src={img}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />

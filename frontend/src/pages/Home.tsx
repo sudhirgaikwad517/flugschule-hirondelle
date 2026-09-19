@@ -402,22 +402,26 @@ export const Home = () => {
           <div className="w-full lg:w-7/12 flex flex-col">
             <div className="mb-10">
               <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-3">
-                ...mit dem Team Hirondelle
+                ...mit dem <Link to="/infos/team" className="hover:underline">Team Hirondelle</Link>
               </p>
               <h2 className="font-luxury text-4xl md:text-5xl text-luxury-dark">HOCH HINAUS</h2>
             </div>
 
             <div className="font-sans text-gray-500 font-light leading-relaxed text-sm md:text-base space-y-6 mb-16">
               <p>
-                Willkommen bei der Flugschule Hirondelle, der Gleitschirmschule im Rhein-Main-Neckar Dreieck. Fliegen lernen mit dem Team Hirondelle heißt: Persönliche und individuelle auf den Schüler zugeschnittene Ausbildung. Unser Team besteht aus sehr erfahrenen und ambitionierten Fluglehrern.
+                Willkommen bei der Flugschule Hirondelle, der Gleitschirmschule im Rhein-Main-Neckar Dreieck. Fliegen lernen mit dem <Link to="/infos/team" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-bold">Team Hirondelle</Link> heißt: Persönliche und individuelle auf den Schüler zugeschnittene Ausbildung. Unser Team besteht aus sehr erfahrenen und ambitionierten Fluglehrern.
               </p>
               <p>
                 Alles natürlich an genialen Schulungshängen im Raum Odenwald, Kraichtal, Nahetal und in der Pfalz.
               </p>
             </div>
 
-            {/* Team Members - top row: Alex & Sarah, bottom row: the rest */}
-            <div className="flex flex-col gap-y-12">
+            {/* Team Members - top row: Alex & Sarah, bottom row: the rest.
+                Wrapped in a Link to /infos/team (matching the old site and
+                the other Home boxes above that link out to their detail
+                pages) - each member already had cursor-pointer styling with
+                nowhere to go before this. */}
+            <Link to="/infos/team" className="flex flex-col gap-y-12">
               <div className="flex justify-center gap-x-10 sm:gap-x-16">
                 <div className="flex flex-col items-center group cursor-pointer">
                   <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
@@ -452,7 +456,7 @@ export const Home = () => {
                   <span className="font-luxury text-lg text-luxury-dark tracking-wide">Markus</span>
                 </div>
               </div>
-            </div>
+            </Link>
 
           </div>
         </div>

@@ -3,18 +3,25 @@ import { Banner } from '../components/common/Banner';
 import { Check, Info, Search } from 'lucide-react';
 import { useLightbox } from '../components/common/Lightbox';
 import { GutscheinBox } from '../components/common/GutscheinBox';
+import { usePageGallery } from '../hooks/usePageGallery';
 
 // Old site's actual "Simple Image Gallery" filenames for this page
 // (/images/bilder/1-winde/*.jpg), in their real order.
-const GALLERY_FILES = [
+// Used only as a fallback now - see usePageGallery below - so the page keeps
+// looking exactly like this until an admin configures a gallery for the
+// "windenschein" slug in Admin > Seitenmedien.
+const FALLBACK_GALLERY = [
   '1PlatzhalterbildWinde', 'Sarah_Winde_', 'winde', 'winde1', 'winde10',
   'winde12', 'winde13', 'winde14', 'winde15', 'winde16',
   'winde17', 'winde18', 'winde2', 'winde20', 'winde4',
   'winde5', 'winde6.1', 'winde6', 'winde7', 'winde8',
-];
+].map((f) => `/images/windenschein/${f}.jpg`);
 
 export const Windenschein = () => {
   const { openGallery } = useLightbox();
+  // Admin-managed gallery (falls back to FALLBACK_GALLERY above) - see
+  // frontend/src/hooks/usePageGallery.ts
+  const galleryImages = usePageGallery('windenschein', FALLBACK_GALLERY);
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -64,7 +71,7 @@ export const Windenschein = () => {
                 <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Ausbildung</h3>
                 <div className="space-y-4">
                   <p>
-                    20 Flüge unter Fluglehreraufsicht benötigt ihr zur Erlangung der Windenschleppstartberechtigung. Nach erfolgreich abgelegter flugschulinterner Theorie- und Praxisprüfung für den Windenschlepp darfst du dann selbständig an der Winde fliegen (Voraussetzung <Link to="/ausbildung/a-schein" className="text-luxury-gold hover:underline font-medium">A-Schein</Link>!). Die Ausbildungsdauer beträgt je nach Wetterlage und persönlicher Kondition ca. 2 bis 3 Tage.
+                    20 Flüge unter Fluglehreraufsicht benötigt ihr zur Erlangung der Windenschleppstartberechtigung. Nach erfolgreich abgelegter flugschulinterner Theorie- und Praxisprüfung für den Windenschlepp darfst du dann selbständig an der Winde fliegen (Voraussetzung <Link to="/ausbildung/a-schein" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">A-Schein</Link>!). Die Ausbildungsdauer beträgt je nach Wetterlage und persönlicher Kondition ca. 2 bis 3 Tage.
                   </p>
                   <p>
                     Für den beschränkten Luftfahrerschein können anstelle einer Höhenflugschulung auch alle 40 Flüge an der Winde absolviert werden. Der Pilot erhält dann nach der Prüfung den beschränkten Luftfahrerschein mit der Startart Windenschlepp. Später kann er 15 Flüge in entsprechenden Höhenfluggeländen machen und die Startart Hang in seinen Luftfahrerschein eintragen lassen.
@@ -88,10 +95,10 @@ export const Windenschein = () => {
                     Der Flugschule stehen mehrere Windenschleppgelände mit unterschiedlicher Wind-Ausrichtung zur Verfügung.
                   </p>
                   <p>
-                    Mitten in der Rheinebene befindet sich der Flugplatz <Link to="/infos/gelaende/herrenteich" className="text-luxury-gold hover:underline font-medium">Herrenteich</Link>, der gut und schnell erreichbar ist.
+                    Mitten in der Rheinebene befindet sich der Flugplatz <Link to="/infos/gelaende/herrenteich" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Herrenteich</Link>, der gut und schnell erreichbar ist.
                   </p>
                   <p>
-                    Bei Bad Kreuznach liegt das Schleppgelände <Link to="/infos/gelaende/bad-kreuznach" className="text-luxury-gold hover:underline font-medium">Auf dem unteren Mergesfeld</Link> des Drachen- und Gleitsegelclub Nahetal e.V „DGCN“.
+                    Bei Bad Kreuznach liegt das Schleppgelände <Link to="/infos/gelaende/bad-kreuznach" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Auf dem unteren Mergesfeld</Link> des Drachen- und Gleitsegelclub Nahetal e.V „DGCN“.
                   </p>
                 </div>
               </div>
@@ -217,17 +224,17 @@ export const Windenschein = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {GALLERY_FILES.map((file, index) => (
+                 {galleryImages.map((img, index) => (
                    <div
-                     key={file}
+                     key={img}
                      className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
                      onClick={() => openGallery(
-                       GALLERY_FILES.map((f) => ({ src: `/images/windenschein/${f}.jpg`, alt: 'Impression' })),
+                       galleryImages.map((g) => ({ src: g, alt: 'Impression' })),
                        index
                      )}
                    >
                      <img
-                       src={`/images/windenschein/${file}.jpg`}
+                       src={img}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
@@ -268,8 +275,8 @@ export const Windenschein = () => {
               <ul className="space-y-3 mb-6">
                 {[
                   'Leihausrüstung über die Flugschule (350,- € / Kurs)',
-                  <>E-Learning Prüffragen <a href="https://shop.dhv.de/collections/prufungsfragen" target="_blank" rel="noopener noreferrer" className="text-luxury-gold hover:underline font-medium">Gleitschirm-Windenschein</a> vom DHV</>,
-                  <><a href="#" className="text-luxury-gold hover:underline font-medium">Prüfungsgebühren ab 03.04.2023</a> DHV</>
+                  <>E-Learning Prüffragen <a href="https://shop.dhv.de/collections/prufungsfragen" target="_blank" rel="noopener noreferrer" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Gleitschirm-Windenschein</a> vom DHV</>,
+                  <><a href="#" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Prüfungsgebühren ab 03.04.2023</a> DHV</>
                 ].map((item, idx) => (
                   <li key={idx} className="flex gap-3 text-gray-600 font-light">
                     <Check className="w-5 h-5 text-luxury-gold shrink-0 mt-0.5" />

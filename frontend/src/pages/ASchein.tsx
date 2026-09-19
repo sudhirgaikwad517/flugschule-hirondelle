@@ -3,20 +3,27 @@ import { Banner } from '../components/common/Banner';
 import { Check, Info, Search } from 'lucide-react';
 import { useLightbox } from '../components/common/Lightbox';
 import { GutscheinBox } from '../components/common/GutscheinBox';
+import { usePageGallery } from '../hooks/usePageGallery';
 
 // Old site's actual "Simple Image Gallery" filenames for this page
 // (/images/bilder/1-a-schein/*.jpg), in their real order.
-const GALLERY_FILES = [
+// Used only as a fallback now - see usePageGallery below - so the page keeps
+// looking exactly like this until an admin configures a gallery for the
+// "a-schein" slug in Admin > Seitenmedien.
+const FALLBACK_GALLERY = [
   '1.Platzhalterbild', 'a_schein1', 'a_schein10', 'a_schein11', 'a_schein12',
   'a_schein13', 'a_schein14', 'a_schein15', 'a_schein16', 'a_schein17',
   'a_schein18', 'a_schein19', 'a_schein2', 'a_schein20', 'a_schein21',
   'a_schein22', 'a_schein23', 'a_schein24', 'a_schein25', 'a_schein26',
   'a_schein27', 'a_schein3', 'a_schein4', 'a_schein5', 'a_schein6',
   'a_schein7', 'a_schein8', 'a_schein9',
-];
+].map((f) => `/images/a-schein/${f}.jpg`);
 
 export const ASchein = () => {
   const { openGallery } = useLightbox();
+  // Admin-managed gallery (falls back to FALLBACK_GALLERY above) - see
+  // frontend/src/hooks/usePageGallery.ts
+  const galleryImages = usePageGallery('a-schein', FALLBACK_GALLERY);
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -55,7 +62,7 @@ export const ASchein = () => {
               <div>
                 <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Du wirst endlich lizenzierter Pilot</h3>
                 <p>
-                  Auf den <Link to="/ausbildung/l-schein" className="text-luxury-gold hover:underline font-medium">Grundkurs</Link> aufbauend, werden für den A-Schein die Kenntnisse vertieft. Kurvenflug, Schirmkontrolle und vielleicht schon das erste Rückwärtsaufziehen an dem Übungshang sind einige der Lerninhalte, die in diesem Kurs neben den Höhenflügen auf dem Lehrplan stehen. Mit der vorgeschriebenen Ausbildung in Theorie und Praxis machen wir aus dir einen sicheren und umsichtigen Piloten. Nach erfolgreich bestandener Theorieprüfung und Erreichen von mind. 40 Höhenflügen sowie 18.000 Höhenmetern kannst du dann auch die praktische Prüfung ablegen. Mit dem A-Schein in deinen Händen, warten die zugelassenen Gelände in ganz Deutschland und darüber hinaus von dir erflogen zu werden!
+                  Auf den <Link to="/ausbildung/l-schein" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Grundkurs</Link> aufbauend, werden für den A-Schein die Kenntnisse vertieft. Kurvenflug, Schirmkontrolle und vielleicht schon das erste Rückwärtsaufziehen an dem Übungshang sind einige der Lerninhalte, die in diesem Kurs neben den Höhenflügen auf dem Lehrplan stehen. Mit der vorgeschriebenen Ausbildung in Theorie und Praxis machen wir aus dir einen sicheren und umsichtigen Piloten. Nach erfolgreich bestandener Theorieprüfung und Erreichen von mind. 40 Höhenflügen sowie 18.000 Höhenmetern kannst du dann auch die praktische Prüfung ablegen. Mit dem A-Schein in deinen Händen, warten die zugelassenen Gelände in ganz Deutschland und darüber hinaus von dir erflogen zu werden!
                 </p>
               </div>
 
@@ -63,7 +70,7 @@ export const ASchein = () => {
                 <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Was dich erwartet beim Höhenflugkurs (A-Schein)...</h3>
                 <div className="space-y-4">
                   <p>
-                    Für den beschränkten Luftfahrerschein (A-Schein) benötigt man mind. 40 Flüge, in denen mind. 18.000 Höhenmeter erflogen werden. Die alpinen Höhenflüge finden im Rahmen unserer Höhenflugschulungen (i. d. R. in den Alpen) statt. Weitere Flüge können auch an der <Link to="/ausbildung/windenschein" className="text-luxury-gold hover:underline font-medium">Winde</Link> absolviert werden (Achtung Winde: dies ist ein separater Kurs, der sich aber super mit der A-Scheinausbildung kombinieren lässt! Der <Link to="/ausbildung/windenschein" className="text-luxury-gold hover:underline font-medium">Windenkurs</Link> spart unterm Strich Zeit und Geld!).
+                    Für den beschränkten Luftfahrerschein (A-Schein) benötigt man mind. 40 Flüge, in denen mind. 18.000 Höhenmeter erflogen werden. Die alpinen Höhenflüge finden im Rahmen unserer Höhenflugschulungen (i. d. R. in den Alpen) statt. Weitere Flüge können auch an der <Link to="/ausbildung/windenschein" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Winde</Link> absolviert werden (Achtung Winde: dies ist ein separater Kurs, der sich aber super mit der A-Scheinausbildung kombinieren lässt! Der <Link to="/ausbildung/windenschein" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Windenkurs</Link> spart unterm Strich Zeit und Geld!).
                   </p>
                   <p>
                     Für die Höhenflugschulung fahren wir regelmäßig nach Bassano / Italien, sowie nach Frankreich und Österreich – weitere Fluggebiete nutzen wir nach Bedarf!
@@ -80,14 +87,14 @@ export const ASchein = () => {
               <div>
                 <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Der Kurs...</h3>
                 <p>
-                  Neue Lerninhalte wie Landeeinteilung, Vollkreis, Kurven mit unterschiedlicher Schräglage sowie Abstiegshilfen werden dem Flugschüler in diesem Ausbildungsabschnitt vermittelt. Auch die erste Thermikerfahrung sammelt ihr im Rahmen der Ausbildung zum A-Schein. Ständige Funkbegleitung versteht sich von selbst! Untermauert wird die Ausbildung mit insgesamt 20 Unterrichtsstunden Theorie (à 45 min.) in den Fächern: Meteorologie, Luftrecht, Gerätekunde, Flugtechnik und Verhalten in besonderen Fällen. Nach dem Kurs muss der Flugschüler eine offizielle Theorieprüfung in den vorher vermittelten Theoriefächern vor einem Prüfer des <a href="https://www.dhv.de/" target="_blank" rel="noopener noreferrer" className="text-luxury-gold hover:underline font-medium">DHV</a> abzulegen - dies kann jederzeit in der Flugschule bei Alex erfolgen.
+                  Neue Lerninhalte wie Landeeinteilung, Vollkreis, Kurven mit unterschiedlicher Schräglage sowie Abstiegshilfen werden dem Flugschüler in diesem Ausbildungsabschnitt vermittelt. Auch die erste Thermikerfahrung sammelt ihr im Rahmen der Ausbildung zum A-Schein. Ständige Funkbegleitung versteht sich von selbst! Untermauert wird die Ausbildung mit insgesamt 20 Unterrichtsstunden Theorie (à 45 min.) in den Fächern: Meteorologie, Luftrecht, Gerätekunde, Flugtechnik und Verhalten in besonderen Fällen. Nach dem Kurs muss der Flugschüler eine offizielle Theorieprüfung in den vorher vermittelten Theoriefächern vor einem Prüfer des <a href="https://www.dhv.de/" target="_blank" rel="noopener noreferrer" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">DHV</a> abzulegen - dies kann jederzeit in der Flugschule bei Alex erfolgen.
                 </p>
               </div>
 
               <div>
                 <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Organisatorisches...</h3>
                 <p>
-                  Die Termine zur Höhenflugschulung findet ihr in unserem <Link to="/buchungskalender" className="text-luxury-gold hover:underline font-medium">Kalender</Link>. Bitte meldet euch hierüber an. Ort und genaue Uhrzeit der Kurstermine erfahrt ihr dann wie gewohnt vorab per Schulungs-Newsletter. Die Ausbildung zum Höhenflugausweis erfolgt wie gewohnt für jeden Piloten zeitoffen.
+                  Die Termine zur Höhenflugschulung findet ihr in unserem <Link to="/buchungskalender" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Kalender</Link>. Bitte meldet euch hierüber an. Ort und genaue Uhrzeit der Kurstermine erfahrt ihr dann wie gewohnt vorab per Schulungs-Newsletter. Die Ausbildung zum Höhenflugausweis erfolgt wie gewohnt für jeden Piloten zeitoffen.
                 </p>
               </div>
 
@@ -241,17 +248,17 @@ export const ASchein = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {GALLERY_FILES.map((file, index) => (
+                 {galleryImages.map((img, index) => (
                    <div
-                     key={file}
+                     key={img}
                      className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
                      onClick={() => openGallery(
-                       GALLERY_FILES.map((f) => ({ src: `/images/a-schein/${f}.jpg`, alt: 'Impression' })),
+                       galleryImages.map((g) => ({ src: g, alt: 'Impression' })),
                        index
                      )}
                    >
                      <img
-                       src={`/images/a-schein/${file}.jpg`}
+                       src={img}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
@@ -304,8 +311,8 @@ export const ASchein = () => {
                 {[
                   'Optional Windenkurs zur Vervollständigung der 40 benötigten Flüge',
                   'Optional zusätzliche Teilnahme an weiteren Höhenflugschulungswochen (790,- € / Woche)',
-                  <>E-Learning Prüffragen <a href="https://shop.dhv.de/collections/prufungsfragen" target="_blank" rel="noopener noreferrer" className="text-luxury-gold hover:underline font-medium">Gleitschirm-A-Schein</a> vom DHV</>,
-                  <><a href="#" className="text-luxury-gold hover:underline font-medium">Prüfungsgebühren ab 03.04.2023</a> DHV</>
+                  <>E-Learning Prüffragen <a href="https://shop.dhv.de/collections/prufungsfragen" target="_blank" rel="noopener noreferrer" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Gleitschirm-A-Schein</a> vom DHV</>,
+                  <><a href="#" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Prüfungsgebühren ab 03.04.2023</a> DHV</>
                 ].map((item, idx) => (
                   <li key={idx} className="flex gap-3 text-gray-600 font-light">
                     <Check className="w-5 h-5 text-luxury-gold shrink-0 mt-0.5" />

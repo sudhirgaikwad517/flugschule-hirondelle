@@ -3,17 +3,24 @@ import { Banner } from '../components/common/Banner';
 import { Check, Info, Search } from 'lucide-react';
 import { useLightbox } from '../components/common/Lightbox';
 import { GutscheinBox } from '../components/common/GutscheinBox';
+import { usePageGallery } from '../hooks/usePageGallery';
 
 // Old site's actual "Simple Image Gallery" filenames for this page
 // (/images/bilder/1-b-schein/*.jpg), in their real order.
-const GALLERY_FILES = [
+// Used only as a fallback now - see usePageGallery below - so the page keeps
+// looking exactly like this until an admin configures a gallery for the
+// "b-schein" slug in Admin > Seitenmedien.
+const FALLBACK_GALLERY = [
   '1Platzhalterbild', 'b_schein1', 'b_schein10', 'b_schein11', 'b_schein2',
   'b_schein3', 'b_schein4', 'b_schein5', 'b_schein6', 'b_schein7',
   'b_schein8', 'b_schein9',
-];
+].map((f) => `/images/b-schein/${f}.jpg`);
 
 export const BSchein = () => {
   const { openGallery } = useLightbox();
+  // Admin-managed gallery (falls back to FALLBACK_GALLERY above) - see
+  // frontend/src/hooks/usePageGallery.ts
+  const galleryImages = usePageGallery('b-schein', FALLBACK_GALLERY);
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -56,7 +63,7 @@ export const BSchein = () => {
                     Wer weiter fliegen will als vom Start- zum Landeplatz braucht den unbeschränkten Luftfahrerschein (B-Schein). Dieser ist auch Voraussetzung zum Befliegen einiger Fluggelände in unserer Region und weltweit.
                   </p>
                   <p>
-                    Im Rahmen der Praxisausbildung zum B-Schein sind vom Piloten (Voraussetzung: <Link to="/ausbildung/a-schein" className="text-luxury-gold hover:underline font-medium">A-Schein</Link>) 20 Flüge zu absolvieren. Davon müssen 10 Flüge eine Mindestdauer von über 30 Minuten vorweisen sowie ein Flug über eine Strecke von 15 km (inkl. 500 m Höhenzugewinn) geflogen werden. Die Praxisausbildung zum B-Schein findet im Rahmen unserer (einwöchigen) Reisen bzw. der Höhenflugschulungen im Rahmen der A-Scheinausbildung statt. Die Preise orientieren sich an den jeweiligen Touren.
+                    Im Rahmen der Praxisausbildung zum B-Schein sind vom Piloten (Voraussetzung: <Link to="/ausbildung/a-schein" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">A-Schein</Link>) 20 Flüge zu absolvieren. Davon müssen 10 Flüge eine Mindestdauer von über 30 Minuten vorweisen sowie ein Flug über eine Strecke von 15 km (inkl. 500 m Höhenzugewinn) geflogen werden. Die Praxisausbildung zum B-Schein findet im Rahmen unserer (einwöchigen) Reisen bzw. der Höhenflugschulungen im Rahmen der A-Scheinausbildung statt. Die Preise orientieren sich an den jeweiligen Touren.
                   </p>
                 </div>
               </div>
@@ -64,7 +71,7 @@ export const BSchein = () => {
               <div>
                 <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Streckenplanung in der Theorie...</h3>
                 <p>
-                  In einer zweitägigen Theorieausbildung werden die für den B-Schein relevanten Inhalte und Kenntnisse vermittelt. In insgesamt 15 Unterrichtsstunden Theorie (à 45 Min.) werden die Inhalte aus der A-Scheinausbildung vertieft und erweitert. Maßgeblich bereiten euch die Themen Meteorologie und Navigation auf eure selbständigen Streckenflüge vor. Nach dem Kurs muss der Flugschüler eine offizielle Theorieprüfung in den vorher vermittelten Theoriefächern vor einem Prüfer des <a href="https://www.dhv.de/" target="_blank" rel="noopener noreferrer" className="text-luxury-gold hover:underline font-medium">DHV</a> abzulegen.
+                  In einer zweitägigen Theorieausbildung werden die für den B-Schein relevanten Inhalte und Kenntnisse vermittelt. In insgesamt 15 Unterrichtsstunden Theorie (à 45 Min.) werden die Inhalte aus der A-Scheinausbildung vertieft und erweitert. Maßgeblich bereiten euch die Themen Meteorologie und Navigation auf eure selbständigen Streckenflüge vor. Nach dem Kurs muss der Flugschüler eine offizielle Theorieprüfung in den vorher vermittelten Theoriefächern vor einem Prüfer des <a href="https://www.dhv.de/" target="_blank" rel="noopener noreferrer" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">DHV</a> abzulegen.
                 </p>
               </div>
 
@@ -75,7 +82,7 @@ export const BSchein = () => {
                     Der vorgeschriebene 15-Kilometer-Streckenflug für den unbeschränkten Luftfahrerschein wird für das Fluggelände besprochen und soll bei passender Wetterlage vom zukünftigen B-Scheinpiloten abgeflogen werden. Die Streckendokumentation erfolgt mit einem GPS und kann am Laptop vor Ort ausgelesen werden.
                   </p>
                   <p>
-                    Bevor es schlussendlich auf Strecke geht, muss auch noch ein <Link to="/performance/rettungsgeraetetraining" className="text-luxury-gold hover:underline font-medium">Rettungsgerätetraining</Link> absolviert werden. Diese Trainings bieten wir mehrmals im Jahr für euch an.
+                    Bevor es schlussendlich auf Strecke geht, muss auch noch ein <Link to="/performance/rettungsgeraetetraining" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Rettungsgerätetraining</Link> absolviert werden. Diese Trainings bieten wir mehrmals im Jahr für euch an.
                   </p>
                 </div>
               </div>
@@ -159,17 +166,17 @@ export const BSchein = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {GALLERY_FILES.map((file, index) => (
+                 {galleryImages.map((img, index) => (
                    <div
-                     key={file}
+                     key={img}
                      className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
                      onClick={() => openGallery(
-                       GALLERY_FILES.map((f) => ({ src: `/images/b-schein/${f}.jpg`, alt: 'Impression' })),
+                       galleryImages.map((g) => ({ src: g, alt: 'Impression' })),
                        index
                      )}
                    >
                      <img
-                       src={`/images/b-schein/${file}.jpg`}
+                       src={img}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />
@@ -209,9 +216,9 @@ export const BSchein = () => {
               <h4 className="font-medium text-luxury-dark mb-4 text-sm">Zusatzkosten können entstehen für:</h4>
               <ul className="space-y-3 mb-6">
                 {[
-                  <><Link to="/performance/rettungsgeraetetraining" className="text-luxury-gold hover:underline font-medium">Rettungsgerätetraining</Link> (separat zu buchender Kurs)</>,
-                  <>E-Learning Prüffragen <a href="https://shop.dhv.de/collections/prufungsfragen" target="_blank" rel="noopener noreferrer" className="text-luxury-gold hover:underline font-medium">Gleitschirm-B-Schein</a> vom DHV</>,
-                  <><a href="#" className="text-luxury-gold hover:underline font-medium">Prüfungsgebühren ab 03.04.2023</a> DHV</>
+                  <><Link to="/performance/rettungsgeraetetraining" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Rettungsgerätetraining</Link> (separat zu buchender Kurs)</>,
+                  <>E-Learning Prüffragen <a href="https://shop.dhv.de/collections/prufungsfragen" target="_blank" rel="noopener noreferrer" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Gleitschirm-B-Schein</a> vom DHV</>,
+                  <><a href="#" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Prüfungsgebühren ab 03.04.2023</a> DHV</>
                 ].map((item, idx) => (
                   <li key={idx} className="flex gap-3 text-gray-600 font-light">
                     <Check className="w-5 h-5 text-luxury-gold shrink-0 mt-0.5" />

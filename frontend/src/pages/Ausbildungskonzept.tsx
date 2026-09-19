@@ -45,7 +45,7 @@ export const Ausbildungskonzept = () => {
                 </ul>
 
                 <p>
-                  Im Nachfolgenden sind die Ausbildungswege in der Flugschule Hirondelle vom <Link to="/ausbildung/schnupperkurs" className="text-luxury-gold hover:underline font-medium">Schnupperkurs</Link> über die <Link to="/ausbildung/a-schein" className="text-luxury-gold hover:underline font-medium">Höhenflugschulung</Link> bis zum <Link to="/ausbildung/b-schein" className="text-luxury-gold hover:underline font-medium">unbeschränkten Luftfahrerschein</Link> aufgelistet.
+                  Im Nachfolgenden sind die Ausbildungswege in der Flugschule Hirondelle vom <Link to="/ausbildung/schnupperkurs" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Schnupperkurs</Link> über die <Link to="/ausbildung/a-schein" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Höhenflugschulung</Link> bis zum <Link to="/ausbildung/b-schein" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">unbeschränkten Luftfahrerschein</Link> aufgelistet.
                 </p>
               </div>
             </div>

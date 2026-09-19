@@ -52,7 +52,7 @@ export const ReparaturService = () => {
                   Du hast einen Defekt an deiner Ausrüstung? Einen Riß in deinem Gleitschirm? Wir retten was noch zu retten ist ;-)
                 </h3>
                 <p>
-                  Wir bieten euch einen professionellen Reparatur-Service für eure Ausrüstung an. Die notwendigen Reparatur-Arbeiten führen wir in unserer Service-Werkstätte mit größter Sorgfalt und modernster Technik durch – damit ihr schnell wieder sicher abheben könnt! Nach Absprache führen wir auch gerne Teile des <Link to="/service/2-jahres-check" className="text-luxury-gold hover:underline font-medium">2-Jahres-Checks</Link> im Rahmen der Reparatur durch.
+                  Wir bieten euch einen professionellen Reparatur-Service für eure Ausrüstung an. Die notwendigen Reparatur-Arbeiten führen wir in unserer Service-Werkstätte mit größter Sorgfalt und modernster Technik durch – damit ihr schnell wieder sicher abheben könnt! Nach Absprache führen wir auch gerne Teile des <Link to="/service/2-jahres-check" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">2-Jahres-Checks</Link> im Rahmen der Reparatur durch.
                 </p>
               </div>
             </div>
@@ -77,7 +77,7 @@ export const ReparaturService = () => {
                 </div>
                 
                 <p className="text-gray-500 italic text-xs leading-relaxed">
-                  Bitte vereinbare für den Reparaturservice einen Termin mit uns. Hierzu könnt ihr in der <Link to="/infos#kontakt" className="text-luxury-gold hover:underline font-medium">Flugschule</Link> vorbeischauen oder ihr meldet euch telefonisch unter 0151 18836000
+                  Bitte vereinbare für den Reparaturservice einen Termin mit uns. Hierzu könnt ihr in der <Link to="/infos#kontakt" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Flugschule</Link> vorbeischauen oder ihr meldet euch telefonisch unter 0151 18836000
                 </p>
               </div>
 

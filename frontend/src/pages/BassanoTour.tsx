@@ -4,19 +4,26 @@ import { Search } from 'lucide-react';
 import { EventComments } from '../components/common/EventComments';
 import { useLightbox } from '../components/common/Lightbox';
 import { GutscheinBox } from '../components/common/GutscheinBox';
+import { usePageGallery } from '../hooks/usePageGallery';
 
 // Old site's actual "Simple Image Gallery" filenames for this page
 // (/images/bilder/2-tour-bassano/*), in their real order.
-const GALLERY_FILES = [
+// Used only as a fallback now - see usePageGallery below - so the page keeps
+// looking exactly like this until an admin configures a gallery for the
+// "bassano-tour" slug in Admin > Seitenmedien.
+const FALLBACK_GALLERY = [
   'Bassano_3331.jpg', 'Bassano_3356.jpg', 'Bassano_3407.jpg', 'Bassano_3447.jpg', 'Bassano_3477.jpg',
   'Bassano_3503.jpg', 'Bassano_3516.jpg', 'Bassano_3525.jpg', 'Bassano_3674.jpg', 'Bassano_3679.jpg',
   'Bassano_3721.jpg', 'Bassano_3729.jpg', 'Bassano_3733.jpg', 'Bassano_6516.jpg', 'DSC03562.jpg',
   'DSC03619.jpg', 'DSC03657.jpg', 'DSC03674.jpg', 'IMG_4950.jpg', 'IMG_4952.jpg',
   'IMG_7386.JPG', 'IMG_7389.JPG', 'IMG_7413.JPG', 'itemimg-bassano.jpg',
-];
+].map((f) => `/images/tour-bassano/${f}`);
 
 export const BassanoTour = () => {
   const { openGallery } = useLightbox();
+  // Admin-managed gallery (falls back to FALLBACK_GALLERY above) - see
+  // frontend/src/hooks/usePageGallery.ts
+  const galleryImages = usePageGallery('bassano-tour', FALLBACK_GALLERY);
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -176,17 +183,17 @@ export const BassanoTour = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {GALLERY_FILES.map((file, index) => (
+                 {galleryImages.map((img, index) => (
                    <div
-                     key={file}
+                     key={img}
                      className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
                      onClick={() => openGallery(
-                       GALLERY_FILES.map((f) => ({ src: `/images/tour-bassano/${f}`, alt: 'Impression' })),
+                       galleryImages.map((g) => ({ src: g, alt: 'Impression' })),
                        index
                      )}
                    >
                      <img
-                       src={`/images/tour-bassano/${file}`}
+                       src={img}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />

@@ -3,18 +3,25 @@ import { Banner } from '../components/common/Banner';
 import { Check, Search } from 'lucide-react';
 import { useLightbox } from '../components/common/Lightbox';
 import { GutscheinBox } from '../components/common/GutscheinBox';
+import { usePageGallery } from '../hooks/usePageGallery';
 
 // Old site's actual "Simple Image Gallery" filenames for this page
 // (/images/bilder/1-grundkurs/*.jpg), in their real order.
-const GALLERY_FILES = [
+// Used only as a fallback now - see usePageGallery below - so the page keeps
+// looking exactly like this until an admin configures a gallery for the
+// "l-schein" slug in Admin > Seitenmedien.
+const FALLBACK_GALLERY = [
   'DSC00131', 'DSC00132', 'DSC00138', 'DSC00145', 'DSC00231',
   'DSC00236', 'DSC00237', 'DSC00238', 'DSC00239', 'DSC00249',
   'DSC00251', 'DSC00255', 'gruppenevents20', 'gruppenevents22', 'gruppenevents24',
   'itemimg-grundkurs',
-];
+].map((f) => `/images/grundkurs/${f}.jpg`);
 
 export const LSchein = () => {
   const { openGallery } = useLightbox();
+  // Admin-managed gallery (falls back to FALLBACK_GALLERY above) - see
+  // frontend/src/hooks/usePageGallery.ts
+  const galleryImages = usePageGallery('l-schein', FALLBACK_GALLERY);
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -56,35 +63,35 @@ export const LSchein = () => {
               <div>
                 <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Du legst den Grundstein...</h3>
                 <p>
-                  Aufbauend auf den <Link to="/ausbildung/schnupperkurs" className="text-luxury-gold hover:underline font-medium">Schnupperkurs</Link> werden im Grundkurs die fehlenden Flüge zur Erlangung des L-Scheins absolviert. Ziel des Kurses ist es, mindestens 15 Flüge am Hang oder an der <Link to="/ausbildung/winde" className="text-luxury-gold hover:underline font-medium">Winde</Link> zu absolvieren, bei denen die Höhendifferenz schon bis zu 200 Meter betragen kann. Kurvenflug und Schirmkontrolle sind einige der Lerninhalte, die in diesem Kurs auf dem Lehrplan stehen. In der Ausbildung erlernst du das Grundwissen in Theorie und Praxis. Mit dem erlangten Lernausweis könnt ihr dann später an den Übungshängen, an denen ihr im Grundkurs mindestens 5 Flüge absolviert habt, auch selbständig fliegen.
+                  Aufbauend auf den <Link to="/ausbildung/schnupperkurs" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Schnupperkurs</Link> werden im Grundkurs die fehlenden Flüge zur Erlangung des L-Scheins absolviert. Ziel des Kurses ist es, mindestens 15 Flüge am Hang oder an der <Link to="/ausbildung/winde" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Winde</Link> zu absolvieren, bei denen die Höhendifferenz schon bis zu 200 Meter betragen kann. Kurvenflug und Schirmkontrolle sind einige der Lerninhalte, die in diesem Kurs auf dem Lehrplan stehen. In der Ausbildung erlernst du das Grundwissen in Theorie und Praxis. Mit dem erlangten Lernausweis könnt ihr dann später an den Übungshängen, an denen ihr im Grundkurs mindestens 5 Flüge absolviert habt, auch selbständig fliegen.
                 </p>
               </div>
 
               <div>
                 <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Was dich beim Grundkurs erwartet...</h3>
                 <p>
-                  Steigst du direkt mit dem Grundkurs ein (ohne vorherigen <Link to="/ausbildung/schnupperkurs" className="text-luxury-gold hover:underline font-medium">Schnupperkurs</Link>), beginnen wir zunächst mit Aufzieh- und Laufübungen im flachen Gelände und arbeiten uns dann immer weiter den Hang hinauf. Bei den 15 für den Grundkurs benötigten Flügen verfeinern wir Start, Flug-, Steuer- und Landetechnik mit Hilfe ständiger Funkbetreuung. Außerdem werden die theoretischen Lerninhalte des <Link to="/ausbildung/schnupperkurs" className="text-luxury-gold hover:underline font-medium">Schnupperkurses</Link> vertieft und ergänzt. Das Wechselspiel zwischen kurzen theoretischen Erklärungen und der direkten praktischen Umsetzung am Übungshang lassen eure Flugtechnik schnell Fortschritte machen.
+                  Steigst du direkt mit dem Grundkurs ein (ohne vorherigen <Link to="/ausbildung/schnupperkurs" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Schnupperkurs</Link>), beginnen wir zunächst mit Aufzieh- und Laufübungen im flachen Gelände und arbeiten uns dann immer weiter den Hang hinauf. Bei den 15 für den Grundkurs benötigten Flügen verfeinern wir Start, Flug-, Steuer- und Landetechnik mit Hilfe ständiger Funkbetreuung. Außerdem werden die theoretischen Lerninhalte des <Link to="/ausbildung/schnupperkurs" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Schnupperkurses</Link> vertieft und ergänzt. Das Wechselspiel zwischen kurzen theoretischen Erklärungen und der direkten praktischen Umsetzung am Übungshang lassen eure Flugtechnik schnell Fortschritte machen.
                 </p>
               </div>
 
               <div>
                 <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Alles nach Plan...</h3>
                 <p>
-                  Bei den Flügen werden die Lerninhalte aus dem Lehrplan abgearbeitet und falls erforderlich für die Fluggelände ergänzt. Der Lehrplan wird den Flugschulen vom <a href="https://www.dhv.de/" target="_blank" rel="noopener noreferrer" className="text-luxury-gold hover:underline font-medium">Deutschen Hängegleiterverband (DHV)</a> vorgegeben und ist für die Gleitschirmausbildung verpflichtend. Da jeder Schüler das Gelernte unterschiedlich schnell umsetzt, kann jeder seine Flüge innerhalb des Kurses in eigenem Tempo absolvieren. Das heißt, ihr kommt so oft dazu, bis ihr die 15 Flüge voll habt. Im Kurspreis sind 2-4 Tage inkludiert, weitere notwendige Tage können gegen einen geringen Aufpreis dazu gebucht werden. Uns ist wichtig, dass euch die Gleitschirmschulung Spaß macht und sie fundiert und sicher abläuft. Habt ihr vorher einen <Link to="/ausbildung/schnupperkurs" className="text-luxury-gold hover:underline font-medium">Schnupperkurs</Link> absolviert, so werden die absolvierten Tage sowie der anteilige Kurspreis beim Grundkurs verrechnet und abgezogen (gültig innerhalb der gleichen Saison!).
+                  Bei den Flügen werden die Lerninhalte aus dem Lehrplan abgearbeitet und falls erforderlich für die Fluggelände ergänzt. Der Lehrplan wird den Flugschulen vom <a href="https://www.dhv.de/" target="_blank" rel="noopener noreferrer" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Deutschen Hängegleiterverband (DHV)</a> vorgegeben und ist für die Gleitschirmausbildung verpflichtend. Da jeder Schüler das Gelernte unterschiedlich schnell umsetzt, kann jeder seine Flüge innerhalb des Kurses in eigenem Tempo absolvieren. Das heißt, ihr kommt so oft dazu, bis ihr die 15 Flüge voll habt. Im Kurspreis sind 2-4 Tage inkludiert, weitere notwendige Tage können gegen einen geringen Aufpreis dazu gebucht werden. Uns ist wichtig, dass euch die Gleitschirmschulung Spaß macht und sie fundiert und sicher abläuft. Habt ihr vorher einen <Link to="/ausbildung/schnupperkurs" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Schnupperkurs</Link> absolviert, so werden die absolvierten Tage sowie der anteilige Kurspreis beim Grundkurs verrechnet und abgezogen (gültig innerhalb der gleichen Saison!).
                 </p>
               </div>
 
               <div>
                 <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Organisatorisches...</h3>
                 <p>
-                  Ort und Uhrzeit der Kurstermine erfahrt ihr am Vortag bis ca. 15 Uhr per Newsletter. Die Termine finden flexibel an Wochenenden wie auch unter der Woche statt. Je nach Wetterlage (und vor allem Windrichtung) schulen wir an einem unserer Übungshänge im Odenwald, Kraichtal, Nahetal und der Pfalz. Die Wegbeschreibungen zu den jeweiligen <Link to="/infos/gelaende" className="text-luxury-gold hover:underline font-medium">Fluggeländen findet ihr hier</Link>. Das Skript zum Kurs und eine aktuelle Leihausrüstung sind wie beim <Link to="/ausbildung/schnupperkurs" className="text-luxury-gold hover:underline font-medium">Schnupperkurs</Link> im Preis inbegriffen.
+                  Ort und Uhrzeit der Kurstermine erfahrt ihr am Vortag bis ca. 15 Uhr per Newsletter. Die Termine finden flexibel an Wochenenden wie auch unter der Woche statt. Je nach Wetterlage (und vor allem Windrichtung) schulen wir an einem unserer Übungshänge im Odenwald, Kraichtal, Nahetal und der Pfalz. Die Wegbeschreibungen zu den jeweiligen <Link to="/infos/gelaende" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Fluggeländen findet ihr hier</Link>. Das Skript zum Kurs und eine aktuelle Leihausrüstung sind wie beim <Link to="/ausbildung/schnupperkurs" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Schnupperkurs</Link> im Preis inbegriffen.
                 </p>
               </div>
 
               <div>
                 <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Wie geht es weiter...</h3>
                 <p>
-                  Weiter geht's mit dem <Link to="/ausbildung/a-schein" className="text-luxury-gold hover:underline font-medium">A-Schein</Link> – dem Höhenflugausweis zum selbständigen Fliegen!
+                  Weiter geht's mit dem <Link to="/ausbildung/a-schein" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">A-Schein</Link> – dem Höhenflugausweis zum selbständigen Fliegen!
                 </p>
               </div>
             </div>
@@ -148,7 +155,7 @@ export const LSchein = () => {
 
                 <div className="pt-2">
                   <p className="text-gray-500 font-light text-xs italic leading-relaxed">
-                    *Kursgebühren mit bei uns gekaufter Ausrüstung / Leihausrüstung siehe <Link to="/ausbildung/a-schein#zusatzkosten" className="text-luxury-gold hover:underline">Zusatzkosten</Link> A-Schein
+                    *Kursgebühren mit bei uns gekaufter Ausrüstung / Leihausrüstung siehe <Link to="/ausbildung/a-schein#zusatzkosten" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-bold">Zusatzkosten</Link> A-Schein
                   </p>
                 </div>
               </div>
@@ -172,17 +179,17 @@ export const LSchein = () => {
                  Impressionen
                </h3>
                <div className="grid grid-cols-3 gap-2">
-                 {GALLERY_FILES.map((file, index) => (
+                 {galleryImages.map((img, index) => (
                    <div
-                     key={file}
+                     key={img}
                      className="relative aspect-square overflow-hidden group cursor-zoom-in bg-gray-100"
                      onClick={() => openGallery(
-                       GALLERY_FILES.map((f) => ({ src: `/images/grundkurs/${f}.jpg`, alt: 'Impression' })),
+                       galleryImages.map((g) => ({ src: g, alt: 'Impression' })),
                        index
                      )}
                    >
                      <img
-                       src={`/images/grundkurs/${file}.jpg`}
+                       src={img}
                        alt={`Impression ${index + 1}`}
                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      />

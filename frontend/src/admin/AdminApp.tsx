@@ -36,6 +36,7 @@ import { DownloadCategoryList, DownloadCategoryEdit, DownloadCategoryCreate, Dow
 import { WebLinkCategoryList, WebLinkCategoryEdit, WebLinkCategoryCreate, WebLinkList, WebLinkEdit, WebLinkCreate } from './WebLinks';
 import { AdBannerList, AdBannerEdit, AdBannerCreate } from './Banners';
 import { PageMediaList, PageMediaEdit, PageMediaCreate } from './PageMedia';
+import { GalleryList, GalleryEdit, GalleryCreate } from './Gallery'; // NEW - standalone Galerie feature, separate from PageMedia
 import { ServiceOrderList, ServiceOrderShow } from './ServiceOrders';
 import { TemplatesBuilder } from './TemplatesBuilder';
 import { CustomLayout } from './CustomLayout';
@@ -190,6 +191,8 @@ export const AdminApp = () => {
         <Resource name="links" options={{ label: 'Links' }} list={WebLinkList} edit={WebLinkEdit} create={WebLinkCreate} />
         <Resource name="banners" options={{ label: 'Werbebanner' }} list={AdBannerList} edit={AdBannerEdit} create={AdBannerCreate} />
         <Resource name="pagemedia" options={{ label: 'Seitenmedien' }} list={PageMediaList} edit={PageMediaEdit} create={PageMediaCreate} />
+        {/* NEW - standalone Galerie feature, separate resource/table from pagemedia above */}
+        <Resource name="pagegallery" options={{ label: 'Galerie' }} list={GalleryList} edit={GalleryEdit} create={GalleryCreate} />
         <Resource name="serviceorders" options={{ label: 'Service Aufträge' }} list={ServiceOrderList} show={ServiceOrderShow} />
         <Resource name="legalPages" options={{ label: 'Rechtliche Seiten' }} list={LegalPageList} edit={LegalPageEdit} />
     </Admin>
