@@ -457,6 +457,62 @@ router.put('/:id/paid', authenticateJWT, authorizeAdmin, async (req, res) => {
 
 // --- Exports / print views ---
 
+// Old Matukio's real booking-status labels (administrator/components/
+// com_matukio/helpers/booking.php's getBookingStatusName(), cross-checked
+// against actual language strings) - COMPLETED here stands in for old's
+// DELETED status, per the same mapping migrate_old_data.ts already uses.
+const OLD_STYLE_STATUS_LABEL: Record<string, string> = {
+  PENDING: 'Schwebend',
+  CONFIRMED: 'Teilnahme gesichert',
+  WAITLIST: 'Buchung auf Warteliste',
+  COMPLETED: 'Gelöscht',
+};
+
+// Old's own currency formatter has a literal comment: "Work around for
+// fucked up Euro symbol" - it deliberately outputs the HTML entity instead
+// of the real character (administrator/components/com_matukio/helpers/
+// events.php's getFormatedCurrency()). Matched here for byte-for-byte
+// parity with the old CSV export's actual output, not a mistake.
+function formatEuroOldStyle(value: number): string {
+  return `&euro; ${value.toFixed(2)}`;
+}
+
+// Old's own MAT_BOOKING_EXTRA_PAYMENT_OPTIONS token (templates.php ~line
+// 668-691): one <table> with one <tr><td colspan="4"> row per selected
+// extra, or the fixed "no options" text when none were selected.
+function renderExtraOptionsHtml(selectedExtras: any[] | undefined): string {
+  if (!selectedExtras || selectedExtras.length === 0) return 'Keine Optionen gebucht';
+  const rows = selectedExtras
+    .map((e) => {
+      const perPlace = e.perPlace ? ' pro Platz' : '';
+      return `<tr><td colspan="4">${e.title} (${formatEuroOldStyle(Number(e.value) || 0)}${perPlace})</td></tr>`;
+    })
+    .join('');
+  return `<table class="table table-striped" cellpadding="2" border="0" width="100%">${rows}</table>`;
+}
+
+// Old's own CSV export always semicolon-separates single-quoted fields
+// (not the RFC4180 double-quote/comma style csvEscape() uses elsewhere in
+// this file) - replicated here for exact parity with what admins already
+// know from the old system. Old itself only replaces a literal semicolon
+// inside a value with a space (to avoid breaking columns) and never
+// escapes embedded single quotes at all; doubling them here is a small,
+// invisible-to-normal-data safety improvement so a customer's apostrophe
+// in e.g. a remark can't corrupt the row structure.
+//
+// Only applied to genuine free-text values (names, addresses, remarks);
+// NOT to our own programmatically-built strings like the "&euro; 12.34"
+// currency format or the extras <table> markup, both of which contain
+// real semicolons/quotes on purpose that must survive untouched.
+function csvFieldOldStyle(value: unknown): string {
+  const str = String(value ?? '').replace(/;/g, ' ').replace(/'/g, "''");
+  return `'${str}'`;
+}
+
+function csvFieldOldStyleRaw(value: string): string {
+  return `'${value.replace(/'/g, "''")}'`;
+}
+
 router.get('/export/csv', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
     const whereClause = buildBookingWhereClause(req.query);
@@ -469,38 +525,64 @@ router.get('/export/csv', authenticateJWT, authorizeAdmin, async (req, res) => {
     const templatesConfig = await prisma.templatesConfig.findUnique({ where: { id: 'default' } });
     const csvTemplate = (templatesConfig?.csvXml as any)?.csvTemplate as string | undefined;
 
-    let header: string[];
-    let rows: string[][];
+    let csv: string;
 
     if (csvTemplate && csvTemplate.trim()) {
       // Admin-configured template (Vorlagen > CSV und XML): a single row of
       // MAT_* tokens, e.g. "MAT_BOOKING_NAME;MAT_BOOKING_EMAIL;MAT_EVENT_TITLE".
       const tokens = parseCsvTemplateTokens(csvTemplate);
-      header = tokens.map(friendlyColumnName);
-      rows = bookings.map((b) => {
+      const header = tokens.map(friendlyColumnName);
+      const rows = bookings.map((b) => {
         const placeholders = buildBookingPlaceholders(b);
         return tokens.map((t) => placeholders[t] ?? t);
       });
+      csv = [header, ...rows].map((r) => r.map(csvEscape).join(';')).join('\r\n');
     } else {
-      header = ['ID', 'Name', 'E-Mail', 'Event', 'Buchungsdatum', 'Plätze', 'Bezahlt', 'Status', 'Gesamtpreis'];
-      rows = bookings.map((b) => {
+      // Matches old Matukio's real, live production CSV export template
+      // (hiron_matukio_templates.tmpl_name = 'export_csv') field-for-field:
+      // Buchungsnummer;Veranstaltungstitel;[Gebuchte Plätze;Anrede;
+      // Vorname Nachname;Geburtsdatum;Gewicht in kg;Telefon/Mobil;E-Mail;
+      // Straße;Postleitzahl;Ort;Bemerkung/Gutscheincode];
+      // Gebühren (Brutto);Name;Zahlungsmethode;Status;
+      // Zusätzliche auswählbare Gebühren/Optionen;Zahlungs-Status (Erweitert)
+      const header = [
+        'Buchungsnummer', 'Veranstaltungstitel', 'Gebuchte Plätze', 'Anrede',
+        'Vorname Nachname', 'Geburtsdatum', 'Gewicht in kg', 'Telefon / Mobil',
+        'E-Mail', 'Straße', 'Postleitzahl', 'Ort', 'Bemerkung / Gutscheincode',
+        'Gebühren (Brutto)', 'Name', 'Zahlungsmethode', 'Status',
+        'Zusätzliche auswählbare Gebühren / Optionen', 'Zahlungs-Status (Erweitert)',
+      ];
+      const rows = bookings.map((b) => {
         const { name, email } = resolveBookingCustomer(b);
+        const details = (b.customerDetails as any) || {};
         const seats = b.items.reduce((s, i) => s + i.quantity, 0);
         return [
-          b.id,
-          name,
-          email || '',
+          b.id.replace(/-/g, '').slice(0, 10).toUpperCase(),
           b.event.title,
-          new Date(b.createdAt).toLocaleString('de-DE'),
           String(seats),
-          b.paid ? 'Ja' : 'Nein',
-          b.status,
-          b.totalPrice.toFixed(2),
+          details.salutation || '',
+          details.fullName || name,
+          details.birthDate || '',
+          details.sizeWeight || '',
+          details.phone || '',
+          email || '',
+          details.street || '',
+          details.zip || '',
+          details.city || '',
+          b.remarks || '',
+          formatEuroOldStyle(b.totalPrice),
+          details.fullName || name,
+          b.paymentMethod || '',
+          OLD_STYLE_STATUS_LABEL[b.status] || b.status,
+          renderExtraOptionsHtml(details.selectedExtras),
+          'P', // old's own payment_status column - verified always 'P' across every historical booking, never varies
         ];
       });
+      const RAW_COLUMN_INDICES = new Set([13, 17]); // Gebühren (Brutto), Zusätzliche Optionen - our own built HTML/currency, not user text
+      csv = [header, ...rows]
+        .map((r) => r.map((v, i) => (RAW_COLUMN_INDICES.has(i) ? csvFieldOldStyleRaw(String(v)) : csvFieldOldStyle(v))).join(';'))
+        .join('\r\n');
     }
-
-    const csv = [header, ...rows].map((r) => r.map(csvEscape).join(';')).join('\r\n');
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename=buchungen.csv');
