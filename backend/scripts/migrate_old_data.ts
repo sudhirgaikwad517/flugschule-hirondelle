@@ -276,8 +276,12 @@ async function migrateEventsAndBookings(
         const overrides = JSON.parse(row.different_fees_override);
         for (const o of overrides as any[]) {
           const value = parseFloat(o.value) || 0;
-          const isPercent = o.percent === true || o.percent === 'true' || o.percent === 1;
-          const isDiscount = o.discount === true || o.discount === 'true' || o.discount === 1;
+          // Old data mixes native JSON booleans with stringified "1"/"0" for
+          // these two flags, sometimes within the same event's override list -
+          // verified against real historical payment_brutto amounts for both
+          // representations (see fix_alternate_ticket_prices_2026-09-20.js).
+          const isPercent = [true, 'true', 1, '1'].includes(o.percent);
+          const isDiscount = [true, 'true', 1, '1'].includes(o.discount);
           let price = fee;
           if (isPercent) price = isDiscount ? fee * (1 - value / 100) : fee * (1 + value / 100);
           else price = isDiscount ? fee - value : fee + value;
