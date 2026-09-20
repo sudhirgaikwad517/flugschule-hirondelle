@@ -446,6 +446,9 @@ export const Buchungskalender = () => {
                                 onClick={() => navigate(`/buchungskalender/${item.event.id}`)}
                                 data-tippy-content={DOMPurify.sanitize(`
                                   <div class='p-5 text-left bg-white font-sans'>
+                                    ${(item.event.detailImageUrl || item.event.imageUrl) ? `
+                                    <img src='${item.event.detailImageUrl || item.event.imageUrl}' class='w-full h-32 object-cover rounded-sm mb-4' />
+                                    ` : ''}
                                     <h4 class='font-luxury text-2xl text-luxury-dark mb-1'>${item.event.title}${item.event.cancelled ? " <span class='text-red-700 text-xs uppercase font-bold align-middle bg-red-100 px-2 py-1 rounded-sm'>Storniert</span>" : ''}</h4>
                                     <div class='flex flex-col gap-1 mb-4 pb-4 border-b border-gray-100'>
                                       <div class='flex items-center gap-2 text-[12px] text-gray-500 font-semibold'>
@@ -464,8 +467,8 @@ export const Buchungskalender = () => {
                                       ${item.event.description ? item.event.description.replace(/\\n/g, '<br/>') : 'Keine Beschreibung verfügbar.'}
                                     </div>
 
-                                    <a href='/reisen/${item.event.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}' class='text-luxury-gold text-[12px] uppercase tracking-widest font-bold hover:text-luxury-dark transition-colors inline-flex items-center gap-2'>
-                                      Zur Reisebeschreibung
+                                    <a href='/buchungskalender/${item.event.id}' class='text-luxury-gold text-[12px] uppercase tracking-widest font-bold hover:text-luxury-dark transition-colors inline-flex items-center gap-2'>
+                                      Mehr erfahren
                                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                                     </a>
                                   </div>

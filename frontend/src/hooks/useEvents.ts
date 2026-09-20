@@ -15,20 +15,24 @@ export type Category =
   | 'Sonstiges'
   | 'Rettungsgerätetraining';
 
+// Exact hex values from old Matukio's own $categoryColors dictionary
+// (components/com_matukio/views/brcalendar/tmpl/default.php) - this is only
+// the fallback used when an event has no per-event calendarBgColor of its
+// own, same as in the old system.
 export const categoryColors: Record<Category, { bg: string, text: string }> = {
-  'ALLE ANZEIGEN': { bg: '#d1d5db', text: '#374151' }, // gray-300
-  'Schnupperkurs': { bg: '#8bc34a', text: '#ffffff' },
+  'ALLE ANZEIGEN': { bg: '#d1d5db', text: '#374151' }, // gray-300 (not part of old's dict - UI-only "show all" filter chip)
+  'Schnupperkurs': { bg: '#80C533', text: '#ffffff' },
   'Grundkurs': { bg: '#008000', text: '#ffffff' },
-  'Höhenflugschulung (A-Schein)': { bg: '#ffc107', text: '#000000' },
-  'Groundhandlingkurs': { bg: '#2980b9', text: '#ffffff' },
-  'Reisen': { bg: '#488ac7', text: '#ffffff' }, // Blue matching screenshots
-  'Performance Training': { bg: '#d35400', text: '#ffffff' },
-  'Refresherkurs': { bg: '#663399', text: '#ffffff' },
-  'Unbeschr. LF-Schein (B-Schein)': { bg: '#e67e22', text: '#ffffff' },
-  'Windenschulung': { bg: '#ffee00', text: '#000000' },
-  'Thermik- und Streckenseminar': { bg: '#28a745', text: '#ffffff' },
-  'Sonstiges': { bg: '#bdc3c7', text: '#374151' },
-  'Rettungsgerätetraining': { bg: '#5bc0de', text: '#ffffff' },
+  'Höhenflugschulung (A-Schein)': { bg: '#FFCD00', text: '#000000' },
+  'Groundhandlingkurs': { bg: '#3274B7', text: '#ffffff' },
+  'Reisen': { bg: '#429CBF', text: '#ffffff' },
+  'Performance Training': { bg: '#D24F25', text: '#ffffff' },
+  'Refresherkurs': { bg: '#4F0C9B', text: '#ffffff' },
+  'Unbeschr. LF-Schein (B-Schein)': { bg: '#E58E26', text: '#ffffff' },
+  'Windenschulung': { bg: '#FFF000', text: '#000000' },
+  'Thermik- und Streckenseminar': { bg: '#34963B', text: '#ffffff' },
+  'Sonstiges': { bg: '#C4C5CA', text: '#374151' },
+  'Rettungsgerätetraining': { bg: '#59ABDE', text: '#ffffff' },
 };
 
 export interface Ticket {
@@ -53,6 +57,7 @@ export interface CalendarEvent {
   locationId?: string;
   registrationDeadline?: string;
   imageUrl?: string;
+  detailImageUrl?: string;
   organizer?: string;
   organizerId?: string;
   maxParticipants?: number;
@@ -100,6 +105,7 @@ export const useEvents = () => {
           locationId: e.locationId,
           registrationDeadline: e.registrationDeadline,
           imageUrl: e.imageUrl,
+          detailImageUrl: e.detailImageUrl,
           organizer: e.organizer,
           organizerId: e.organizerId,
           maxParticipants: e.maxParticipants,
