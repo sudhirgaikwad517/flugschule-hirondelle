@@ -20,7 +20,7 @@ interface Campaign {
 export const AcyEmails = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('Geplant');
+  const [activeTab, setActiveTab] = useState('Planned');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('date');
@@ -110,11 +110,19 @@ export const AcyEmails = () => {
   };
 
   const filteredCampaigns = campaigns.filter(c => {
+    // Compare against the tabs[] `id` values (English) that setActiveTab
+    // actually receives via onClick={() => setActiveTab(tab.id)} - this
+    // used to compare against the German `label` text instead, so every
+    // tab click after the initial render fell through to the `else`
+    // branch and silently showed every campaign regardless of which tab
+    // was selected.
     let tabMatch = false;
-    if (activeTab === 'Geplant') {
+    if (activeTab === 'Planned') {
       tabMatch = c.status === 'SCHEDULED' || c.status === 'DRAFT';
-    } else if (activeTab === 'Gesendet') {
+    } else if (activeTab === 'Sent') {
       tabMatch = c.status === 'SENT';
+    } else if (activeTab === 'Draft') {
+      tabMatch = c.status === 'DRAFT';
     } else {
       tabMatch = true;
     }

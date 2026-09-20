@@ -91,7 +91,11 @@ router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
     const { _sort, _order, _start, _end } = req.query;
     const skip = _start ? Number(_start) : 0;
-    const take = _end ? Number(_end) - skip : 100;
+    // No explicit range (the AcyMailing "E-Mails" admin page fetches with
+    // no query params at all, same as newsletters.routes.ts's subscriber
+    // list) - the old hardcoded `100` default silently hid every campaign
+    // past the 100 most recent, with no pagination UI to reach the rest.
+    const take = _end ? Number(_end) - skip : undefined;
     const orderBy: any = _sort ? { [_sort as string]: _order ? (_order as string).toLowerCase() : 'asc' } : { createdAt: 'desc' };
 
     const [campaigns, total] = await Promise.all([
