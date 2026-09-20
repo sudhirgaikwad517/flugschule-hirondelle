@@ -206,6 +206,9 @@ async function migrateEventsAndBookings(
   // Per event: the fee-tier plan derived from Matukio's different_fees_override JSON,
   // keyed by the same "type" index Matukio stores on each booking (0 = base/"Normal").
   const eventTierPlans = new Map<string, { typeIndex: string; name: string; price: number }[]>();
+  // Per event: the raw extra_fee_options array, used to resolve each
+  // booking's own extra_fees index selections into real {title,value,perPlace}.
+  const eventExtraOptions = new Map<string, any[]>();
 
   for (const row of rows as any[]) {
     const alias = `${row.alias}-${row.recurring_id}`;
@@ -292,6 +295,14 @@ async function migrateEventsAndBookings(
       }
     }
     eventTierPlans.set(event.id, tiers);
+
+    if (row.extra_fee_options) {
+      try {
+        eventExtraOptions.set(event.id, JSON.parse(row.extra_fee_options));
+      } catch (e) {
+        console.warn(`Could not parse extra_fee_options for event ${row.id}:`, e);
+      }
+    }
   }
   console.log(`Events migrated: ${recurringIdToNewEventId.size}`);
 
@@ -362,13 +373,72 @@ async function migrateEventsAndBookings(
       }
 
       const totalPrice = parseFloat(b.payment_brutto) || 0;
+
+      // The standard registration-form answers (salutation, name, birth
+      // date, size/weight, phone, address) live in `newfields`, a JSON blob
+      // keyed by the booking form's numeric field id - never in their own
+      // columns. Same for the real remarks/voucher-code text: `comment` is
+      // empty for virtually every booking, the real text is newfields[16].
+      // See backfill_booking_customer_details_2026-09-20.js for the id
+      // meanings and how this was verified against the live field config.
+      const NEWFIELD_MAP: Record<string, string> = {
+        2: 'salutation', 4: 'fullName', 7: 'street', 8: 'zip', 9: 'city',
+        13: 'phone', 17: 'sizeWeight', 18: 'birthDate',
+      };
+      const extraDetails: Record<string, string> = {};
+      let remarksFromNewfields: string | null = null;
+      if (b.newfields) {
+        try {
+          const parsed = JSON.parse(b.newfields);
+          for (const [fieldId, key] of Object.entries(NEWFIELD_MAP)) {
+            const val = cleanText(parsed[fieldId]);
+            if (val !== null) extraDetails[key] = val;
+          }
+          remarksFromNewfields = cleanText(parsed[16]);
+        } catch { /* leave extraDetails/remarks at defaults below */ }
+      }
+
+      // Old's payment_method is a plugin element name (cash, banktransfer,
+      // ...); the human label actually shown is that plugin's own
+      // site-configured display name (hiron_extensions.params.plugin_name),
+      // not a generic translation - "cash" really does show as "Gutschein"
+      // on this site, not "Barzahlung". See
+      // backfill_booking_payment_method_2026-09-20.js for how this was
+      // verified.
+      const PAYMENT_METHOD_LABEL: Record<string, string> = {
+        cash: 'Gutschein', payment_cash: 'Gutschein',
+        banktransfer: 'Überweisung', payment_banktransfer: 'Überweisung',
+        postfinance: 'Postfinance', girocheckout: 'girocheckout',
+      };
+      const rawPaymentMethod = cleanText(b.payment_method);
+      const paymentMethod = rawPaymentMethod ? (PAYMENT_METHOD_LABEL[rawPaymentMethod] || rawPaymentMethod) : null;
+
+      // Resolve this booking's own extra_fee_options selections (indices
+      // into the event's own list) into the same {title,value,perPlace}
+      // shape the live booking flow stores.
+      let selectedExtras: { title: string; value: number; perPlace: boolean }[] | undefined;
+      if (b.extra_fees) {
+        try {
+          const indices = JSON.parse(b.extra_fees);
+          const options = eventExtraOptions.get(newEventId);
+          if (Array.isArray(indices) && indices.length && options) {
+            const resolved = indices
+              .map((nr: string) => options[Number(nr)])
+              .filter(Boolean)
+              .map((o: any) => ({ title: o.title, value: parseFloat(o.value) || 0, perPlace: !!o.perPlace }));
+            if (resolved.length) selectedExtras = resolved;
+          }
+        } catch { /* leave selectedExtras unset */ }
+      }
+
       await prisma.booking.create({
         data: {
           eventId: newEventId,
           status: STATUS_MAP[b.status] || 'PENDING',
           totalPrice,
-          paymentMethod: cleanText(b.payment_method),
-          remarks: cleanText(b.comment),
+          paymentMethod,
+          remarks: remarksFromNewfields || cleanText(b.comment),
+          certificated: !!b.certificated,
           createdAt: b.bookingdate && b.bookingdate.getFullYear() > 1970 ? b.bookingdate : new Date(),
           customerDetails: {
             name: cleanText(b.name),
@@ -377,7 +447,9 @@ async function migrateEventsAndBookings(
             paid: !!b.paid,
             checkedIn: !!b.checked_in,
             source: 'migrated_from_matukio',
-            oldBookingId: b.id
+            oldBookingId: b.id,
+            ...extraDetails,
+            ...(selectedExtras ? { selectedExtras } : {}),
           },
           items: {
             create: Array.from(typeCounts.entries()).map(([ticketId, quantity]) => ({ ticketId, quantity }))

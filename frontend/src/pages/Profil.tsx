@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
 import { Download, Calendar, Pencil, X, User as UserIcon, Lock } from 'lucide-react';
+import { formatBirthDateForInput } from '../utils/birthDate';
 
 const ACCOUNT_FIELDS = [
   { key: 'name', label: 'Name' },
@@ -459,7 +460,7 @@ export const Profil = () => {
                 <input className="border border-gray-300 rounded-sm px-3 py-2 text-sm" placeholder="Name" value={editForm.fullName || ''} onChange={e => setEditForm({ ...editForm, fullName: e.target.value })} />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <input type="date" className="border border-gray-300 rounded-sm px-3 py-2 text-sm" placeholder="Geburtsdatum" value={editForm.birthDate ? String(editForm.birthDate).slice(0, 10) : ''} onChange={e => setEditForm({ ...editForm, birthDate: e.target.value })} />
+                <input type="date" className="border border-gray-300 rounded-sm px-3 py-2 text-sm" placeholder="Geburtsdatum" value={formatBirthDateForInput(editForm.birthDate)} onChange={e => setEditForm({ ...editForm, birthDate: e.target.value })} />
                 <input className="border border-gray-300 rounded-sm px-3 py-2 text-sm" placeholder="Größe/Gewicht" value={editForm.sizeWeight || ''} onChange={e => setEditForm({ ...editForm, sizeWeight: e.target.value })} />
               </div>
               <input className="w-full border border-gray-300 rounded-sm px-3 py-2 text-sm" placeholder="E-Mail" value={editForm.email || ''} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />

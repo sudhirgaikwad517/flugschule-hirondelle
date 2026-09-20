@@ -34,6 +34,7 @@ import PrintIcon from '@mui/icons-material/Print';
 import BadgeIcon from '@mui/icons-material/Badge';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { formatBirthDateDisplay, formatBirthDateForInput } from '../utils/birthDate';
 
 const salutationChoices = ['Bitte wählen', 'Herr', 'Frau', 'Divers'];
 
@@ -396,7 +397,7 @@ const ParticipantFields = ({ value, onChange, label }: { value: any; onChange: (
                     <MuiTextField fullWidth margin="dense" size="small" label="Name" value={value.fullName || ''} onChange={setField('fullName')} />
                 </Grid>
                 <Grid size={{ xs: 6 }}>
-                    <MuiTextField fullWidth margin="dense" size="small" label="Geburtsdatum" type="date" slotProps={{ inputLabel: { shrink: true } }} value={value.birthDate ? String(value.birthDate).slice(0, 10) : ''} onChange={setField('birthDate')} />
+                    <MuiTextField fullWidth margin="dense" size="small" label="Geburtsdatum" type="date" slotProps={{ inputLabel: { shrink: true } }} value={formatBirthDateForInput(value.birthDate)} onChange={setField('birthDate')} />
                 </Grid>
                 <Grid size={{ xs: 6 }}>
                     <MuiTextField fullWidth margin="dense" size="small" label="Größe/Gewicht" value={value.sizeWeight || ''} onChange={setField('sizeWeight')} />
@@ -657,7 +658,7 @@ const CustomBookingDetails = () => {
                                 <TableCell>
                                     {record.customerDetails.salutation && record.customerDetails.salutation !== 'Bitte wählen' ? `${record.customerDetails.salutation} ` : ''}
                                     {record.customerDetails.fullName || `${record.customerDetails.firstName || ''} ${record.customerDetails.lastName || ''}`.trim() || record.customerDetails.name}<br />
-                                    {record.customerDetails.birthDate && <>Geburtsdatum: {new Date(record.customerDetails.birthDate).toLocaleDateString('de-DE')}<br /></>}
+                                    {record.customerDetails.birthDate && <>Geburtsdatum: {formatBirthDateDisplay(record.customerDetails.birthDate)}<br /></>}
                                     {record.customerDetails.sizeWeight && <>Größe/Gewicht: {record.customerDetails.sizeWeight}<br /></>}
                                     {record.customerDetails.street}<br />
                                     {record.customerDetails.zip} {record.customerDetails.city}<br />
@@ -676,7 +677,7 @@ const CustomBookingDetails = () => {
                                         {record.customerDetails.additionalParticipants.map((p: any, idx: number) => (
                                             <li key={idx}>
                                                 {p.salutation && p.salutation !== 'Bitte wählen' ? `${p.salutation} ` : ''}{p.fullName}
-                                                {p.birthDate ? ` — geb. ${new Date(p.birthDate).toLocaleDateString('de-DE')}` : ''}
+                                                {p.birthDate ? ` — geb. ${formatBirthDateDisplay(p.birthDate)}` : ''}
                                                 {p.sizeWeight ? ` — ${p.sizeWeight}` : ''}
                                             </li>
                                         ))}
