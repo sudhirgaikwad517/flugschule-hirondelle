@@ -34,6 +34,7 @@ model Category {
   title       String
   alias       String     @unique
   description String?    @db.Text
+  imageUrl    String?
   parentId    String?
   status      String     @default("PUBLISHED")
   accessLevel String     @default("PUBLIC")

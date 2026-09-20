@@ -30,6 +30,12 @@ export async function sendBookingConfirmationEmail(bookingId: string) {
 
     if (!template) {
       console.warn('Booking confirmation template missing in DB. Using fallback template.');
+      // Matches old Matukio's real, live mail_booking template content
+      // (hiron_matukio_templates.tmpl_name='mail_booking') - not generic
+      // placeholder text. The payment terms, waitlist policy, bank details
+      // and insurance recommendation are actual business content every
+      // customer needs, not decoration; the earlier default text here
+      // silently dropped all of it.
       template = {
         subject: 'Buchungsbestätigung: {EVENT_TITLE}',
         bodyHtml: `
@@ -41,6 +47,17 @@ export async function sendBookingConfirmationEmail(bookingId: string) {
           {BOOKING_DETAILS}
           <br/>
           <p>Im Anhang finden Sie Ihre Rechnung und Ihr Ticket.</p>
+          <hr/>
+          <p>Die Kursgebühr wird 4 Wochen vor Kursbeginn fällig. Bei Kurzfristbuchungen (ab vier Wochen vor Kursbeginn) wird der gesamte Kurspreis sofort fällig.</p>
+          <p>Wir führen eine echte Warteliste (der Kurs ist dann tatsächlich ausgebucht). Buchungen auf Warteliste sind daher erst zu bezahlen, wenn die Teilnahme auch sicher - und der Platz verbindlich bestätigt ist.</p>
+          <p><strong>Bankverbindung</strong><br/>
+          Kontoinhaber: Alexander Schlink<br/>
+          Sparkasse Südpfalz<br/>
+          IBAN: DE32 5485 0010 1700 1976 41<br/>
+          BIC: SOLADES1SUW</p>
+          <hr/>
+          <p style="color: #ff0000;">Wir empfehlen zur Absicherung für Stornos / Absagen den Abschluss einer Seminarversicherung bzw. für unsere mehrtätigen Kurse / Reisen zusätzlich eine Reiseversicherung. Infos dazu findet ihr auf unserer Seite <a href="https://www.fs-hirondelle.de/infos/versicherungen" style="color: #ff0000;">https://www.fs-hirondelle.de/infos/versicherungen</a>.</p>
+          <hr/>
           <p>Mit freundlichen Grüßen,<br/>Ihr Team der Flugschule Hirondelle</p>
         `
       };

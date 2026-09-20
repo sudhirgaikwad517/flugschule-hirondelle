@@ -19,6 +19,7 @@ import {
 } from 'react-admin';
 import { RichTextInput } from 'ra-input-rich-text';
 import { Box, Chip, Typography } from '@mui/material';
+import { ImageUploadInput } from './ImageUploadInput';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 
@@ -122,24 +123,26 @@ export const CategoryEdit = () => (
               <TextInput source="alias" label="Alias" helperText="Automatisch aus Titel generieren" fullWidth />
               
               <RichTextInput source="description" label="Beschreibung" />
-              
+
+              <ImageUploadInput source="imageUrl" label="Bild" />
+
               <ReferenceInput source="parentId" reference="categories">
                   <SelectInput optionText="title" label="Übergeordnete Kategorie" fullWidth emptyText="- Kein übergeordnetes Element -" />
               </ReferenceInput>
-              
+
               <SelectInput source="status" label="Status" choices={[
                   { id: 'PUBLISHED', name: 'Veröffentlicht' },
                   { id: 'HIDDEN', name: 'Versteckt' },
                   { id: 'ARCHIVED', name: 'Archiviert' },
                   { id: 'TRASH', name: 'Papierkorb' },
               ]} defaultValue="PUBLISHED" fullWidth />
-              
+
               <SelectInput source="accessLevel" label="Zugriffsebene" choices={[
                   { id: 'PUBLIC', name: 'Öffentlich' },
                   { id: 'REGISTERED', name: 'Registriert' },
                   { id: 'SPECIAL', name: 'Spezial' },
               ]} defaultValue="PUBLIC" fullWidth />
-              
+
               <TextInput source="tags" label="Schlagwörter" helperText="Schlagwort eingeben oder auswählen" fullWidth />
               <TextInput source="note" label="Notiz" fullWidth />
           </FormTab>
@@ -164,24 +167,26 @@ export const CategoryCreate = () => (
               <TextInput source="alias" label="Alias" helperText="Automatisch aus Titel generieren" fullWidth />
               
               <RichTextInput source="description" label="Beschreibung" />
-              
+
+              <ImageUploadInput source="imageUrl" label="Bild" />
+
               <ReferenceInput source="parentId" reference="categories">
                   <SelectInput optionText="title" label="Übergeordnete Kategorie" fullWidth emptyText="- Kein übergeordnetes Element -" />
               </ReferenceInput>
-              
+
               <SelectInput source="status" label="Status" choices={[
                   { id: 'PUBLISHED', name: 'Veröffentlicht' },
                   { id: 'HIDDEN', name: 'Versteckt' },
                   { id: 'ARCHIVED', name: 'Archiviert' },
                   { id: 'TRASH', name: 'Papierkorb' },
               ]} defaultValue="PUBLISHED" fullWidth />
-              
+
               <SelectInput source="accessLevel" label="Zugriffsebene" choices={[
                   { id: 'PUBLIC', name: 'Öffentlich' },
                   { id: 'REGISTERED', name: 'Registriert' },
                   { id: 'SPECIAL', name: 'Spezial' },
               ]} defaultValue="PUBLIC" fullWidth />
-              
+
               <TextInput source="tags" label="Schlagwörter" helperText="Schlagwort eingeben oder auswählen" fullWidth />
               <TextInput source="note" label="Notiz" fullWidth />
           </FormTab>
