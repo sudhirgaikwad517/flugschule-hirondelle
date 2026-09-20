@@ -45,6 +45,7 @@ import { Import } from './Import';
 import { EcwidConfigPage } from './EcwidConfigPage';
 import { CookieConsentConfigPage } from './CookieConsentConfigPage';
 import { PaymentConfigPage } from './PaymentConfigPage';
+import { SettingsConfigPage } from './SettingsConfigPage';
 import { LegalPageList, LegalPageEdit } from './LegalPages';
 import { UserList, UserEdit, UserCreate } from './Users';
 
@@ -164,6 +165,7 @@ export const AdminApp = () => {
             <Route path="/ecwid-config" element={<Authenticated><EcwidConfigPage /></Authenticated>} />
             <Route path="/cookie-consent" element={<Authenticated><CookieConsentConfigPage /></Authenticated>} />
             <Route path="/payment-config" element={<Authenticated><PaymentConfigPage /></Authenticated>} />
+            <Route path="/settings-config" element={<Authenticated><SettingsConfigPage /></Authenticated>} />
             {/* Redirect old newsletter routes */}
             <Route path="/newsletters/*" element={<Navigate to="/acymailing/dashboard" replace />} />
             <Route path="/newslettercampaigns/*" element={<Navigate to="/acymailing/dashboard" replace />} />

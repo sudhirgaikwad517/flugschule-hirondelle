@@ -31,6 +31,7 @@ import ViewCarouselIcon from '@mui/icons-material/ViewCarousel';
 import PermMediaIcon from '@mui/icons-material/PermMedia';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import PaymentIcon from '@mui/icons-material/Payment';
+import SettingsIcon from '@mui/icons-material/Settings';
 import ExtensionIcon from '@mui/icons-material/Extension'; // NEW - "Komponenten" section icon
 
 // A fully custom sidebar (plain MUI + react-router NavLink, no react-admin
@@ -70,6 +71,7 @@ const EVENT_ITEMS: Item[] = [
     { label: 'Kategorien', to: '/admin/categories', icon: <CategoryIcon fontSize="small" /> },
     { label: 'Buchungen', to: '/admin/bookings', icon: <BookOnlineIcon fontSize="small" /> },
     { label: 'PayPal-Einstellungen', to: '/admin/payment-config', icon: <PaymentIcon fontSize="small" /> },
+    { label: 'Einstellungen', to: '/admin/settings-config', icon: <SettingsIcon fontSize="small" /> },
 ];
 
 const BOTTOM_ITEMS: Item[] = [

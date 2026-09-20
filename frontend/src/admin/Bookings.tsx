@@ -133,6 +133,15 @@ const BookingListActions = () => {
     const refresh = useRefresh();
     const [rejectOpen, setRejectOpen] = useState(false);
     const [contactOpen, setContactOpen] = useState(false);
+    // old: rejection_subject - the admin-configured default subject for the
+    // "Ablehnen" compose dialog (Einstellungen page).
+    const [rejectionSubject, setRejectionSubject] = useState('Ihre Buchung für {EVENT_TITLE}');
+    useEffect(() => {
+        fetch('/api/settingsConfig', { headers: authHeaders() })
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => { if (data?.rejectionSubject) setRejectionSubject(data.rejectionSubject); })
+            .catch(() => {});
+    }, []);
 
     const run = async (path: string, body: any, successMsg?: string) => {
         if (!selectedIds || selectedIds.length === 0) {
@@ -246,7 +255,7 @@ const BookingListActions = () => {
             <ComposeDialog
                 open={rejectOpen}
                 title="Buchungen ablehnen"
-                defaultSubject="Ihre Buchung für {EVENT_TITLE}"
+                defaultSubject={rejectionSubject}
                 onClose={() => setRejectOpen(false)}
                 onSend={(subject, message) => run('/bulk/reject', { ids: selectedIds, subject, message }, 'Buchungen abgelehnt und benachrichtigt.')}
             />

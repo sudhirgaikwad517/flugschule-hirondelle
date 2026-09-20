@@ -3,6 +3,7 @@ import { prisma } from '../utils/prisma';
 import { generateInvoicePDF, generateTicketPDF } from './pdf.service';
 import { getNewsletterTransporter } from '../utils/newsletterTransporter';
 import { resolveBookingCustomer } from '../utils/bookingCustomer';
+import { getSettingsConfig } from '../routes/settingsConfig.routes';
 
 export async function sendBookingConfirmationEmail(bookingId: string) {
   try {
@@ -20,9 +21,33 @@ export async function sendBookingConfirmationEmail(bookingId: string) {
       return;
     }
 
-    // Generate PDFs
-    const invoiceBuffer = await generateInvoicePDF(bookingId);
-    const ticketBuffer = await generateTicketPDF(bookingId);
+    // old: sendmail_teilnehmer - matches this session's Settings audit finding
+    // that the new app had no way to turn the customer's own confirmation
+    // email off, unlike old's real admin capability.
+    const settings = await getSettingsConfig();
+    if (!settings.sendmailTeilnehmer) {
+      console.log('Booking confirmation email skipped: sendmailTeilnehmer is disabled in Settings.');
+    } else {
+      await sendCustomerConfirmationEmail(booking, settings);
+    }
+
+    // old: sendmail_owner - a copy of every new booking sent to the school
+    // itself, off by default on the real site (and here) since it has no
+    // meaningful default recipient until an admin sets one.
+    if (settings.sendmailOwner && settings.ownerNotificationEmail) {
+      await sendOwnerNotificationEmail(booking, settings.ownerNotificationEmail).catch(console.error);
+    }
+  } catch (error) {
+    console.error('Error in sendBookingConfirmationEmail:', error);
+  }
+}
+
+async function sendCustomerConfirmationEmail(booking: any, settings: { sendmailInvoice: boolean; sendmailTicket: boolean }) {
+  try {
+    const bookingId = booking.id;
+    // Generate PDFs - only the ones the admin has actually enabled sending.
+    const invoiceBuffer = settings.sendmailInvoice ? await generateInvoicePDF(bookingId) : null;
+    const ticketBuffer = settings.sendmailTicket ? await generateTicketPDF(bookingId) : null;
 
     let config = await prisma.templatesConfig.findUnique({ where: { id: 'default' } });
     
@@ -85,7 +110,7 @@ export async function sendBookingConfirmationEmail(bookingId: string) {
 
     let ticketRows = '';
     let itemsTotal = 0;
-    booking.items.forEach(item => {
+    booking.items.forEach((item: any) => {
       itemsTotal += item.quantity * item.ticket.price;
       ticketRows += `<li>${item.quantity}x ${item.ticket.name} (${item.ticket.price} €)</li>`;
     });
@@ -111,24 +136,17 @@ export async function sendBookingConfirmationEmail(bookingId: string) {
       .replace(/{EVENT_DETAILS}/g, eventDetails)
       .replace(/{BOOKING_DETAILS}/g, bookingDetails);
 
+    const attachments: { filename: string; content: Buffer; contentType: string }[] = [];
+    if (invoiceBuffer) attachments.push({ filename: `Rechnung_${booking.id.split('-')[0].toUpperCase()}.pdf`, content: invoiceBuffer, contentType: 'application/pdf' });
+    if (ticketBuffer) attachments.push({ filename: `Ticket_${booking.id.split('-')[0].toUpperCase()}.pdf`, content: ticketBuffer, contentType: 'application/pdf' });
+
     const { transporter, isTestMode, testAccountUser, config: mailConfig } = await getNewsletterTransporter();
     const info = await transporter.sendMail({
       from: mailConfig?.fromEmail ? `"${mailConfig.fromName || 'Flugschule Hirondelle'}" <${mailConfig.fromEmail}>` : '"Flugschule Hirondelle" <info@fs-hirondelle.de>',
       to: customerEmail,
       subject: subject,
       html: bodyHtml,
-      attachments: [
-        {
-          filename: `Rechnung_${booking.id.split('-')[0].toUpperCase()}.pdf`,
-          content: invoiceBuffer,
-          contentType: 'application/pdf'
-        },
-        {
-          filename: `Ticket_${booking.id.split('-')[0].toUpperCase()}.pdf`,
-          content: ticketBuffer,
-          contentType: 'application/pdf'
-        }
-      ]
+      attachments
     });
 
     console.log('Booking confirmation email sent: %s', info.messageId);
@@ -139,6 +157,27 @@ export async function sendBookingConfirmationEmail(bookingId: string) {
   } catch (error) {
     console.error('Error sending booking confirmation email:', error);
   }
+}
+
+// old: sendmail_owner - a plain internal-facing copy of a new booking, no
+// PDF attachments or old's own MAT_* template needed for this since it's
+// just an operational alert, not customer-facing correspondence.
+async function sendOwnerNotificationEmail(booking: any, ownerEmail: string) {
+  const { name: customerName, email: customerEmail } = resolveBookingCustomer(booking);
+  const { transporter, config: mailConfig } = await getNewsletterTransporter();
+  await transporter.sendMail({
+    from: mailConfig?.fromEmail ? `"${mailConfig.fromName || 'Flugschule Hirondelle'}" <${mailConfig.fromEmail}>` : '"Flugschule Hirondelle" <info@fs-hirondelle.de>',
+    to: ownerEmail,
+    subject: `Neue Buchung: ${booking.event.title}`,
+    html: `
+      <p>Neue Buchung eingegangen:</p>
+      <p><strong>Veranstaltung:</strong> ${booking.event.title}<br/>
+      <strong>Kunde:</strong> ${customerName} (${customerEmail || 'keine E-Mail'})<br/>
+      <strong>Gesamtpreis:</strong> ${booking.totalPrice} €<br/>
+      <strong>Buchungs-ID:</strong> ${booking.id}</p>
+    `,
+  });
+  console.log('Owner notification email sent to', ownerEmail);
 }
 
 // templateKey 'userCancellation' - the customer cancelled their own booking;

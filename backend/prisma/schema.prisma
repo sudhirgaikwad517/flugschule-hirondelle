@@ -632,6 +632,38 @@ model PaymentConfig {
   updatedAt          DateTime @updatedAt
 }
 
+// Old Matukio's real, live "Settings" admin page (JComponentHelper::
+// getParams('com_matukio'), 165 total keys) had no equivalent anywhere in
+// the new app - this covers the subset that was found to have a genuine,
+// non-default, real-world effect on this site during a full admin audit
+// (email notification toggles, the cancellation-deadline window, and the
+// booking-rejection email's default subject line). The rest of old's 165
+// keys were confirmed either dead/default (cron jobs all disabled, CSV
+// export settings already hardcoded correctly matching real values) or
+// already covered elsewhere (AGB legal text, PayPal credentials).
+model SettingsConfig {
+  id                         String   @id @default("default")
+  // old: sendmail_teilnehmer - the customer's own booking-confirmation email
+  sendmailTeilnehmer         Boolean  @default(true)
+  // old: notify_participants_publish / notify_participants_cancel
+  notifyParticipantsPublish  Boolean  @default(true)
+  notifyParticipantsCancel   Boolean  @default(true)
+  // old: sendmail_owner - a copy of every new booking to the school itself
+  sendmailOwner              Boolean  @default(false)
+  ownerNotificationEmail     String?
+  // old: sendmail_invoice / sendmail_ticket / sendmail_certificate - whether
+  // the confirmation email actually attaches these PDFs
+  sendmailInvoice            Boolean  @default(true)
+  sendmailTicket             Boolean  @default(true)
+  sendmailCertificate        Boolean  @default(false)
+  // old: booking_stornotage - cancellation/payment-deadline window, in days
+  bookingStornotage          Int      @default(28)
+  // old: rejection_subject - default subject line for the admin's
+  // booking-rejection email compose dialog
+  rejectionSubject           String   @default("Ihre Buchungsanfrage")
+  updatedAt                  DateTime @updatedAt
+}
+
 model CookieConsentConfig {
   id                  String   @id @default("default")
   enabled             Boolean  @default(true)
