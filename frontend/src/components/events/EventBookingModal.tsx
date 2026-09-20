@@ -14,6 +14,29 @@ interface EventBookingModalProps {
   initialQuantities?: Record<string, number>;
 }
 
+// The 9 standard registration fields (old Matukio's "Standard Booking
+// Form" admin capability - hiron_matukio_bookingform_field, formId=1,
+// used in ~99% of all historical bookings, per this session's earlier
+// migration audit). Label text, required/optional and field order are
+// admin-configurable via Buchungs-Formular > BookingFormConfig; this is
+// the fallback used if that config can't be loaded, and also defines
+// which field ids are recognized (an admin can reorder/relabel/require
+// these, but adding a genuinely new field belongs in the separate,
+// already-working Benutzerdefinierte Felder system instead - this form
+// doesn't have a mechanism for a brand new field's data to reach the
+// booking record).
+const STANDARD_FIELD_DEFS: { id: string; type: string; label: string; required: boolean }[] = [
+  { id: 'salutation', type: 'select', label: 'Anrede', required: true },
+  { id: 'fullName', type: 'text', label: 'Vorname Nachname', required: true },
+  { id: 'birthDate', type: 'text', label: 'Geburtsdatum', required: true },
+  { id: 'sizeWeight', type: 'text', label: 'Größe in cm / Gewicht in kg', required: true },
+  { id: 'phone', type: 'text', label: 'Telefon / Mobil', required: true },
+  { id: 'email', type: 'email', label: 'E-Mail', required: true },
+  { id: 'street', type: 'text', label: 'Straße', required: true },
+  { id: 'zip', type: 'text', label: 'Postleitzahl', required: true },
+  { id: 'city', type: 'text', label: 'Ort', required: true },
+];
+
 export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, onClose, event, initialQuantities = {} }) => {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,6 +61,7 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
   const [customFields, setCustomFields] = useState<any[]>([]);
   const [dynamicFormData, setDynamicFormData] = useState<Record<string, any>>({});
   const [participants, setParticipants] = useState<any[]>([]);
+  const [standardFields, setStandardFields] = useState(STANDARD_FIELD_DEFS);
 
   // Old Matukio's real "Additional Selectable Fee Options" - flat bolt-on
   // add-ons (e.g. a hotel room) the customer opts into themselves, on top
@@ -119,6 +143,21 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
           }
         })
         .catch(err => console.error("Failed to load custom fields", err));
+
+      // Admin-configurable standard-field labels/required/order (Buchungs-
+      // Formular). Only trust it if it actually contains recognized field
+      // ids - anything else (empty, malformed, a genuinely new field id
+      // with no data-path to reach the booking) falls back to the
+      // hardcoded defaults above rather than silently dropping fields.
+      fetch('/api/bookingFormConfig/public')
+        .then(res => res.json())
+        .then(config => {
+          const step = config?.steps?.find((s: any) => s.id === 'step-1') || config?.steps?.[0];
+          const knownIds = new Set(STANDARD_FIELD_DEFS.map(f => f.id));
+          const fields = Array.isArray(step?.fields) ? step.fields.filter((f: any) => knownIds.has(f.id)) : [];
+          if (fields.length > 0) setStandardFields(fields);
+        })
+        .catch(err => console.error("Failed to load booking form config, using defaults", err));
     }
   }, [isOpen, event, initialQuantities]);
 
@@ -228,7 +267,12 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
   const handleNextStep = (e: React.FormEvent) => {
     e.preventDefault();
     if (step === 1) {
-      if (formData.salutation === 'Bitte wählen' || !formData.fullName || !formData.birthDate || !formData.sizeWeight || !formData.phone || !formData.email || !formData.street || !formData.zip || !formData.city) {
+      const missingRequiredField = standardFields.some((field) => {
+        if (!field.required) return false;
+        const value = (formData as any)[field.id];
+        return field.id === 'salutation' ? value === 'Bitte wählen' : !value;
+      });
+      if (missingRequiredField) {
         alert("Bitte füllen Sie alle Pflichtfelder aus.");
         return;
       }
@@ -383,63 +427,34 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
               </div>
 
               <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Anrede *</label>
-                  <select 
-                    name="salutation" 
-                    value={formData.salutation} 
-                    onChange={handleInputChange}
-                    className="w-full p-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-luxury-gold bg-white"
-                    required
-                  >
-                    <option value="Bitte wählen">Bitte wählen</option>
-                    <option value="Herr">Herr</option>
-                    <option value="Frau">Frau</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Vorname Nachname *</label>
-                  <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} required className="w-full p-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-luxury-gold" />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Geburtsdatum *</label>
-                    <input type="text" placeholder="TT.MM.JJJJ" name="birthDate" value={formData.birthDate} onChange={handleInputChange} required className="w-full p-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-luxury-gold" />
+                {standardFields.map((field) => (
+                  <div key={field.id}>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">{field.label}{field.required ? ' *' : ''}</label>
+                    {field.id === 'salutation' ? (
+                      <select
+                        name="salutation"
+                        value={formData.salutation}
+                        onChange={handleInputChange}
+                        className="w-full p-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-luxury-gold bg-white"
+                        required={field.required}
+                      >
+                        <option value="Bitte wählen">Bitte wählen</option>
+                        <option value="Herr">Herr</option>
+                        <option value="Frau">Frau</option>
+                      </select>
+                    ) : (
+                      <input
+                        type={field.id === 'email' ? 'email' : field.id === 'phone' ? 'tel' : 'text'}
+                        placeholder={field.id === 'birthDate' ? 'TT.MM.JJJJ' : undefined}
+                        name={field.id}
+                        value={(formData as any)[field.id] || ''}
+                        onChange={handleInputChange}
+                        required={field.required}
+                        className="w-full p-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-luxury-gold"
+                      />
+                    )}
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Größe in cm / Gewicht in kg *</label>
-                    <input type="text" name="sizeWeight" value={formData.sizeWeight} onChange={handleInputChange} required className="w-full p-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-luxury-gold" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Telefon / Mobil *</label>
-                    <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} required className="w-full p-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-luxury-gold" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">E-Mail *</label>
-                    <input type="email" name="email" value={formData.email} onChange={handleInputChange} required className="w-full p-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-luxury-gold" />
-                  </div>
-                </div>
-
-                <div className="border-t border-gray-200 pt-6 mt-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Straße *</label>
-                  <input type="text" name="street" value={formData.street} onChange={handleInputChange} required className="w-full p-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-luxury-gold mb-6" />
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr] gap-6">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">Postleitzahl *</label>
-                      <input type="text" name="zip" value={formData.zip} onChange={handleInputChange} required className="w-full p-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-luxury-gold" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">Ort *</label>
-                      <input type="text" name="city" value={formData.city} onChange={handleInputChange} required className="w-full p-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-luxury-gold" />
-                    </div>
-                  </div>
-                </div>
+                ))}
 
                 {participants.length > 0 && (
                   <div className="border-t border-gray-200 pt-6 mt-2 space-y-6">

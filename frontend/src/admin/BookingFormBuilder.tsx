@@ -1,40 +1,40 @@
 import {
-    Edit,
-    SimpleForm,
+    Form,
     TextInput,
     BooleanInput,
     ArrayInput,
     SimpleFormIterator,
-    SelectInput,
-    NumberInput,
+    ResourceContextProvider,
     useGetOne,
     useUpdate,
     useNotify,
     useRefresh,
-    SaveButton,
-    Toolbar
 } from 'react-admin';
-import { Typography, Card, CardContent, CircularProgress } from '@mui/material';
+import { Typography, Card, CardContent, CircularProgress, Alert, Box, Button } from '@mui/material';
+import SaveIcon from '@mui/icons-material/Save';
 
-const CustomToolbar = (props: any) => (
-    <Toolbar {...props}>
-        <SaveButton label="Speichern" />
-    </Toolbar>
-);
-
+// Uses the same plain <Form record={...} onSubmit={...}> pattern already
+// proven working in TemplatesBuilder.tsx, not <Edit><SimpleForm>: nesting
+// SimpleForm's onSubmit override inside <Edit record={...}> (the original
+// version of this component) never actually fired a save request at all -
+// <Edit> normally drives its own record-fetching/submission via an
+// EditController and doesn't cleanly support a raw record prop override,
+// so the "Speichern" button silently did nothing. That bug, not just a
+// missing downstream integration, is why this admin page's changes never
+// affected anything: it was never possible to actually save a change here.
 export const BookingFormBuilder = () => {
     const { data, isLoading, error } = useGetOne('bookingFormConfig', { id: 'default' });
     const notify = useNotify();
     const refresh = useRefresh();
-    const [update] = useUpdate();
+    const [update, { isLoading: isSaving }] = useUpdate();
 
-    if (isLoading) return <CircularProgress />;
+    if (isLoading) return <CircularProgress sx={{ m: 4 }} />;
     if (error) return <div>Error loading configuration</div>;
 
-    const save = (data: any) => {
+    const save = (formData: any) => {
         update(
             'bookingFormConfig',
-            { id: 'default', data, previousData: data },
+            { id: 'default', data: formData, previousData: data },
             {
                 onSuccess: () => {
                     notify('Buchungs-Formular gespeichert', { type: 'success' });
@@ -50,53 +50,48 @@ export const BookingFormBuilder = () => {
     return (
         <Card sx={{ mt: 2, mb: 4, maxWidth: '1000px', mx: 'auto' }}>
             <CardContent>
-                <Typography variant="h5" gutterBottom>
-                    Buchungs-Formular (Booking Form Builder)
-                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                    <Typography variant="h5" gutterBottom>
+                        Buchungs-Formular (Standard Booking Form)
+                    </Typography>
+                </Box>
                 <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                    Hier können Sie die Schritte und Felder des Buchungsformulars konfigurieren. 
-                    Sie können festlegen, ob ein Feld ein Ticket ist, den Preis ändert oder für Person 1/2 gilt.
+                    Hier können Sie Beschriftung, Pflichtfeld-Status und Reihenfolge der Standard-Anmeldefelder
+                    ändern - diese Änderungen wirken sich direkt auf das echte Buchungsformular aus, das Kunden sehen.
                 </Typography>
-                
-                <Edit record={data} resource="bookingFormConfig" id="default" redirect={false} mutationMode="pessimistic" transform={(data) => data}>
-                    <SimpleForm onSubmit={save} toolbar={<CustomToolbar />}>
+                <Alert severity="warning" sx={{ mb: 3 }}>
+                    Ein Feld hier zu <strong>entfernen</strong> bedeutet, dass diese Angabe von Kunden nicht mehr
+                    abgefragt wird. Ein neues, unbekanntes Feld hinzuzufügen hat <strong>keine Wirkung</strong> - für
+                    zusätzliche, komplett neue Felder nutzen Sie bitte "Benutzerdefinierte Felder". Die Feld-ID
+                    (z.B. "phone", "email") sollte nicht verändert werden, da sie festlegt, welche echte Angabe
+                    gemeint ist. Ticket-Auswahl und Zahlungsmethode werden bereits an anderer Stelle verwaltet
+                    (Gestaffelte Gebühren / Zusätzliche buchbare Optionen) und sind hier nicht enthalten.
+                </Alert>
+
+                <ResourceContextProvider value="bookingFormConfig">
+                    <Form record={data} onSubmit={save}>
                         <ArrayInput source="steps" label="Formular-Schritte (Steps)">
                             <SimpleFormIterator getItemLabel={(index) => `Schritt ${index + 1}`}>
                                 <TextInput source="id" label="Schritt ID (z.B. step-1)" required />
                                 <TextInput source="title" label="Schritt Titel" required fullWidth />
-                                
-                                <ArrayInput source="fields" label="Felder in diesem Schritt">
+
+                                <ArrayInput source="fields" label="Felder in diesem Schritt (Reihenfolge = Anzeigereihenfolge)">
                                     <SimpleFormIterator getItemLabel={(index) => `Feld ${index + 1}`}>
-                                        <TextInput source="id" label="Feld ID (z.B. firstName)" required />
+                                        <TextInput source="id" label="Feld ID" helperText="z.B. salutation, fullName, birthDate, sizeWeight, phone, email, street, zip, city" required />
                                         <TextInput source="label" label="Feld Label (Anzeigename)" required />
-                                        
-                                        <SelectInput source="type" label="Feld Typ" choices={[
-                                            { id: 'text', name: 'Text' },
-                                            { id: 'email', name: 'Email' },
-                                            { id: 'textarea', name: 'Textbereich (Textarea)' },
-                                            { id: 'checkbox', name: 'Checkbox (Ja/Nein)' },
-                                            { id: 'select', name: 'Dropdown (Select)' },
-                                            { id: 'number', name: 'Zahl (Number)' },
-                                        ]} required />
-                                        
                                         <BooleanInput source="required" label="Pflichtfeld?" defaultValue={true} />
-                                        
-                                        <Typography variant="subtitle2" style={{ marginTop: '16px' }}>Erweiterte Ticket- & Preis-Einstellungen</Typography>
-                                        
-                                        <NumberInput source="priceModifier" label="Preis-Modifikator (€)" helperText="Positiver Wert fügt hinzu, negativer zieht ab (z.B. -10 für Rabatt)" defaultValue={0} />
-                                        <BooleanInput source="isTicket" label="Ist das ein Ticket?" defaultValue={false} />
-                                        <BooleanInput source="perTicket" label="Wird dies pro Ticket berechnet?" defaultValue={false} />
-                                        <SelectInput source="linkedToPerson" label="Gilt für Person?" choices={[
-                                            { id: 0, name: 'Alle / Keine' },
-                                            { id: 1, name: 'Person 1' },
-                                            { id: 2, name: 'Person 2' },
-                                        ]} defaultValue={0} />
                                     </SimpleFormIterator>
                                 </ArrayInput>
                             </SimpleFormIterator>
                         </ArrayInput>
-                    </SimpleForm>
-                </Edit>
+
+                        <Box sx={{ mt: 3 }}>
+                            <Button type="submit" variant="contained" color="success" startIcon={<SaveIcon />} disabled={isSaving}>
+                                Speichern
+                            </Button>
+                        </Box>
+                    </Form>
+                </ResourceContextProvider>
             </CardContent>
         </Card>
     );
