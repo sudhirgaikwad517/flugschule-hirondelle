@@ -1,3 +1,18 @@
+// Must be set before anything else in the process touches Date/Intl -
+// this app is entirely for a German business (Flugschule Hirondelle) and
+// every "today"/date-bucket calculation in this codebase uses the
+// server's local time as the German business's local time. Without this,
+// that assumption only happens to hold if the server's own OS timezone is
+// already Europe/Berlin; on any other host (this dev machine is IST, and
+// plenty of real hosting defaults to UTC) "today" silently means the
+// server's today, not Germany's - which is exactly the class of bug found
+// and fixed in stats.routes.ts. Setting TZ here makes Date's own local
+// getters (getFullYear/getMonth/getDate/getHours/toLocaleString(...))
+// always mean Germany's calendar day, regardless of the underlying OS/
+// container timezone, without having to thread a timezone through every
+// date calculation individually.
+process.env.TZ = 'Europe/Berlin';
+
 import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/auth.routes';
