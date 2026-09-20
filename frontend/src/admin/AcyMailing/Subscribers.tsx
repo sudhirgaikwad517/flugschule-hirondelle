@@ -179,7 +179,12 @@ export const AcySubscribers = () => {
     // Filter by date
     let dateMatch = true;
     if (filterDate) {
-      const subDate = new Date(s.subscribedAt).toISOString().split('T')[0];
+      // Local date components, not toISOString() (UTC) - otherwise a
+      // subscriber's local calendar day shifts back by one in any
+      // positive-UTC-offset timezone and never matches the date the
+      // admin actually picked.
+      const d = new Date(s.subscribedAt);
+      const subDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       dateMatch = subDate === filterDate;
     }
 

@@ -4,6 +4,24 @@ import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware'
 
 const router = Router();
 
+// `date.toISOString().split('T')[0]` converts to UTC first - for a
+// LOCAL-midnight Date (e.g. built via setDate/setHours(0,0,0,0)) on a
+// server running in any positive-UTC-offset timezone (IST here; also true
+// for the real CET/CEST production server for roughly half the day), that
+// shift lands on the PREVIOUS calendar day, e.g. local Aug 21 00:00
+// becomes "2026-08-20" - every date bucket in both dashboards below was
+// silently off by one day, and the most recent bucket ("today") was
+// dropped entirely instead of being the last, most relevant point. Use
+// the Date's own local getters instead so the label always matches the
+// calendar day the server (and its timezone-matched real-world admin)
+// actually means.
+function toLocalDateKey(date: Date): string {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
 router.get('/dashboard', authenticateJWT, authorizeAdmin, async (req, res) => {
     try {
         // Accepts either a `days` preset (7/30/90/365, default 30) or an
@@ -75,7 +93,7 @@ router.get('/dashboard', authenticateJWT, authorizeAdmin, async (req, res) => {
         for (let i = 0; i <= numDays; i++) {
             const date = new Date(rangeStart);
             date.setDate(date.getDate() + i);
-            const dateStr = date.toISOString().split('T')[0];
+            const dateStr = toLocalDateKey(date);
             historyMap.set(dateStr, {
                 date: dateStr,
                 bookings: 0,
@@ -88,7 +106,7 @@ router.get('/dashboard', authenticateJWT, authorizeAdmin, async (req, res) => {
         let totalBookings = 0;
         let totalRevenue = 0;
         bookings.forEach(b => {
-            const dateStr = b.createdAt.toISOString().split('T')[0];
+            const dateStr = toLocalDateKey(b.createdAt);
             if (historyMap.has(dateStr)) {
                 historyMap.get(dateStr).bookings += 1;
                 historyMap.get(dateStr).revenue += b.totalPrice || 0;
@@ -100,7 +118,7 @@ router.get('/dashboard', authenticateJWT, authorizeAdmin, async (req, res) => {
         // Aggregate events
         let totalEvents = 0;
         events.forEach(e => {
-            const dateStr = e.startDate.toISOString().split('T')[0];
+            const dateStr = toLocalDateKey(e.startDate);
             if (historyMap.has(dateStr)) {
                 historyMap.get(dateStr).events += 1;
                 totalEvents += 1;
@@ -147,7 +165,7 @@ router.get('/acymailing', authenticateJWT, authorizeAdmin, async (req, res) => {
         for (let i = 0; i <= 30; i++) {
             const date = new Date(thirtyDaysAgo);
             date.setDate(date.getDate() + i);
-            const dateStr = date.toISOString().split('T')[0];
+            const dateStr = toLocalDateKey(date);
             historyMap.set(dateStr, {
                 date: dateStr,
                 sent: 0
@@ -155,7 +173,7 @@ router.get('/acymailing', authenticateJWT, authorizeAdmin, async (req, res) => {
         }
 
         sentHistory.forEach(item => {
-            const dateStr = item.scheduledAt.toISOString().split('T')[0];
+            const dateStr = toLocalDateKey(item.scheduledAt);
             if (historyMap.has(dateStr)) {
                 historyMap.get(dateStr).sent += 1;
             }

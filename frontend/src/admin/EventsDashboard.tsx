@@ -11,7 +11,15 @@ const RANGE_PRESETS = [
     { id: 'custom', label: 'Benutzerdefiniert' },
 ];
 
-const toDateInputValue = (d: Date) => d.toISOString().split('T')[0];
+// Not toISOString().split('T')[0] - that converts to UTC first, which for
+// any positive-UTC-offset timezone shifts a local date back by one day
+// (e.g. "today" showing as yesterday in the custom-range date pickers).
+const toDateInputValue = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+};
 
 export const EventsDashboard = () => {
     const dataProvider = useDataProvider();
