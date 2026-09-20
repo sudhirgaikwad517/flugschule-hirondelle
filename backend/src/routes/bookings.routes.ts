@@ -586,7 +586,13 @@ router.get('/export/csv', authenticateJWT, authorizeAdmin, async (req, res) => {
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename=buchungen.csv');
-    res.send('﻿' + csv); // BOM so Excel opens UTF-8 correctly
+    // sep=; as the literal first line is an Excel-specific hint: without it,
+    // double-clicking the file makes Excel split columns using the
+    // Windows-regional "list separator" (comma on an English-locale
+    // machine) instead of the semicolon this file actually uses, dumping
+    // every column into cell A. The BOM must still come first so Excel
+    // also opens the UTF-8 umlauts/euro-sign correctly.
+    res.send('﻿sep=;\r\n' + csv);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });
