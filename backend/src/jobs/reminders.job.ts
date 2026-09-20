@@ -14,6 +14,10 @@ async function resolveLocationName(event: { location: string | null; locationId:
 
 // Run every day at 08:00 AM
 export const startCronJobs = () => {
+  // Explicit timezone (not relying solely on process.env.TZ propagating
+  // through node-cron's own scheduling) - this is meant to fire at 8am for
+  // a German business's customers, not 8am in whatever timezone the host
+  // OS happens to be set to.
   cron.schedule('0 8 * * *', async () => {
     console.log('Running daily reminder cron job...');
 
@@ -123,5 +127,5 @@ export const startCronJobs = () => {
     } catch (error) {
       console.error('Error running reminder cron job:', error);
     }
-  });
+  }, { timezone: 'Europe/Berlin' });
 };
