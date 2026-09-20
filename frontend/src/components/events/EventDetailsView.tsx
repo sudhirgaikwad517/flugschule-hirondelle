@@ -50,6 +50,14 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
     }
   }, [event?.id]);
 
+  // Old Matukio's hiron_matukio_recurring.hits counter - incremented once
+  // per real visit to this page. Fire-and-forget: a failure here should
+  // never affect the visitor's actual page.
+  React.useEffect(() => {
+    if (!event?.id) return;
+    fetch(`/api/events/${event.id}/view`, { method: 'POST' }).catch(() => {});
+  }, [event?.id]);
+
   // Most migrated events have no registrationDeadline set at all (null), so
   // isPastDeadline alone never catches an event whose own date has simply
   // already happened - that let a "Jetzt buchen" button show for events
@@ -261,9 +269,9 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
                 {event.description ? event.description.replace(/\\n/g, '\n') : 'Keine Beschreibung verfügbar.'}
               </div>
               
-              {event.imageUrl && (
-                <img 
-                  src={event.imageUrl} 
+              {(event.detailImageUrl || event.imageUrl) && (
+                <img
+                  src={event.detailImageUrl || event.imageUrl}
                   alt={event.title}
                   className="w-full h-auto rounded-sm object-cover shadow-md mb-8"
                   style={{ maxHeight: '500px' }}

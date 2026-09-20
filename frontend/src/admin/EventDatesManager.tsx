@@ -85,7 +85,7 @@ export const EventDatesManager = () => {
 
     const [addForm, setAddForm] = useState({
         startDate: '', endDate: '', registrationDeadline: '',
-        titleOverride: '', capacityOverride: '', locationOverride: ''
+        titleOverride: '', capacityOverride: '', locationOverride: '', bookingNumber: ''
     });
 
     const [recurForm, setRecurForm] = useState({
@@ -95,10 +95,13 @@ export const EventDatesManager = () => {
         endMode: 'count' as 'date' | 'count',
         endDate: '',
         count: 4,
+        interval: 1,
         beginTime: '09:00',
         endTime: '17:00',
         bookingDeadlineTime: ''
     });
+    const [previewDates, setPreviewDates] = useState<string[] | null>(null);
+    const [previewing, setPreviewing] = useState(false);
 
     const seriesId = record?.seriesId;
 
@@ -137,7 +140,7 @@ export const EventDatesManager = () => {
             startDate: toLocalInput(record.startDate),
             endDate: toLocalInput(record.endDate),
             registrationDeadline: toLocalInput(record.registrationDeadline),
-            titleOverride: '', capacityOverride: '', locationOverride: ''
+            titleOverride: '', capacityOverride: '', locationOverride: '', bookingNumber: ''
         });
         setAddOpen(true);
     };
@@ -150,10 +153,12 @@ export const EventDatesManager = () => {
             endMode: 'count',
             endDate: '',
             count: 4,
+            interval: 1,
             beginTime: toTimeInput(record.startDate, '09:00'),
             endTime: toTimeInput(record.endDate, '17:00'),
             bookingDeadlineTime: ''
         });
+        setPreviewDates(null);
         setRecurOpen(true);
     };
 
@@ -170,7 +175,8 @@ export const EventDatesManager = () => {
                     registrationDeadline: addForm.registrationDeadline ? new Date(addForm.registrationDeadline).toISOString() : null,
                     titleOverride: addForm.titleOverride || undefined,
                     capacityOverride: addForm.capacityOverride || undefined,
-                    locationOverride: addForm.locationOverride || undefined
+                    locationOverride: addForm.locationOverride || undefined,
+                    bookingNumber: addForm.bookingNumber || undefined
                 })
             });
             if (res.ok) {
@@ -186,6 +192,43 @@ export const EventDatesManager = () => {
         }
     };
 
+    const buildRecurrencePayload = () => ({
+        recurrence: {
+            type: recurForm.type,
+            weekdays: recurForm.weekdays,
+            startDate: recurForm.startDate,
+            endMode: recurForm.endMode,
+            endDate: recurForm.endMode === 'date' ? recurForm.endDate : undefined,
+            count: recurForm.endMode === 'count' ? Number(recurForm.count) : undefined,
+            interval: Number(recurForm.interval) || 1
+        },
+        beginTime: recurForm.beginTime,
+        endTime: recurForm.endTime,
+        bookingDeadlineTime: recurForm.bookingDeadlineTime || undefined
+    });
+
+    const previewRecurring = async () => {
+        if (!recurForm.startDate) { notify('Bitte ein Startdatum angeben', { type: 'warning' }); return; }
+        if (recurForm.endMode === 'date' && !recurForm.endDate) { notify('Bitte ein Enddatum angeben', { type: 'warning' }); return; }
+        setPreviewing(true);
+        try {
+            const res = await fetch(`${API}/events/${record.id}/add-recurring-dates?preview=true`, {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify(buildRecurrencePayload())
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setPreviewDates(data.dates);
+            } else {
+                const err = await res.json().catch(() => ({}));
+                notify(err.message || 'Fehler bei der Vorschau', { type: 'error' });
+            }
+        } finally {
+            setPreviewing(false);
+        }
+    };
+
     const submitRecurring = async () => {
         if (!recurForm.startDate) { notify('Bitte ein Startdatum angeben', { type: 'warning' }); return; }
         if (recurForm.endMode === 'date' && !recurForm.endDate) { notify('Bitte ein Enddatum angeben', { type: 'warning' }); return; }
@@ -194,19 +237,7 @@ export const EventDatesManager = () => {
             const res = await fetch(`${API}/events/${record.id}/add-recurring-dates`, {
                 method: 'POST',
                 headers: authHeaders(),
-                body: JSON.stringify({
-                    recurrence: {
-                        type: recurForm.type,
-                        weekdays: recurForm.weekdays,
-                        startDate: recurForm.startDate,
-                        endMode: recurForm.endMode,
-                        endDate: recurForm.endMode === 'date' ? recurForm.endDate : undefined,
-                        count: recurForm.endMode === 'count' ? Number(recurForm.count) : undefined
-                    },
-                    beginTime: recurForm.beginTime,
-                    endTime: recurForm.endTime,
-                    bookingDeadlineTime: recurForm.bookingDeadlineTime || undefined
-                })
+                body: JSON.stringify(buildRecurrencePayload())
             });
             if (res.ok) {
                 const data = await res.json();
@@ -294,11 +325,13 @@ export const EventDatesManager = () => {
                 <Table size="small">
                     <TableHead>
                         <TableRow>
+                            <TableCell>Nummer</TableCell>
                             <TableCell>Datum</TableCell>
                             <TableCell>Titel</TableCell>
                             <TableCell>Ort</TableCell>
                             <TableCell align="right">Kapazität</TableCell>
                             <TableCell align="right">Buchungen</TableCell>
+                            <TableCell align="right">Aufrufe</TableCell>
                             <TableCell>Status</TableCell>
                             <TableCell align="right">Aktionen</TableCell>
                         </TableRow>
@@ -311,11 +344,23 @@ export const EventDatesManager = () => {
                                 hover
                                 sx={{ borderLeft: `3px solid ${dateStatusColor(d)}` }}
                             >
+                                <TableCell>{d.bookingNumber || '-'}</TableCell>
                                 <TableCell>{new Date(d.startDate).toLocaleString('de-DE')}</TableCell>
                                 <TableCell>{d.titleOverride || d.title}</TableCell>
                                 <TableCell>{d.location || '-'}</TableCell>
                                 <TableCell align="right">{d.capacity}</TableCell>
-                                <TableCell align="right">{d.bookingsCount}</TableCell>
+                                <TableCell align="right">
+                                    <Tooltip title="Buchungen dieses Termins ansehen">
+                                        <Box
+                                            component="span"
+                                            onClick={() => navigate(`/bookings?filter=${encodeURIComponent(JSON.stringify({ eventId: d.id }))}`)}
+                                            sx={{ cursor: 'pointer', color: 'primary.main', textDecoration: 'underline' }}
+                                        >
+                                            {d.bookingsCount}
+                                        </Box>
+                                    </Tooltip>
+                                </TableCell>
+                                <TableCell align="right">{d.views ?? 0}</TableCell>
                                 <TableCell>
                                     {d.cancelled && <Chip label="Storniert" color="error" size="small" sx={{ mr: 0.5 }} />}
                                     <Chip label={d.published ? 'Veröffentlicht' : 'Versteckt'} color={d.published ? 'success' : 'default'} size="small" />
@@ -385,6 +430,12 @@ export const EventDatesManager = () => {
                         value={addForm.locationOverride}
                         onChange={e => setAddForm(f => ({ ...f, locationOverride: e.target.value }))}
                     />
+                    <MuiTextField
+                        label="Nummer (optional)" fullWidth
+                        helperText="Veranstaltungs-Nummer für diesen Termin, z.B. 5/26"
+                        value={addForm.bookingNumber}
+                        onChange={e => setAddForm(f => ({ ...f, bookingNumber: e.target.value }))}
+                    />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setAddOpen(false)}>Abbrechen</Button>
@@ -408,6 +459,15 @@ export const EventDatesManager = () => {
                             <ToggleButton value="years">Jährlich</ToggleButton>
                         </ToggleButtonGroup>
                     </FormControl>
+
+                    <MuiTextField
+                        label={`Alle X ${{ days: 'Tage', weeks: 'Wochen', months: 'Monate', years: 'Jahre' }[recurForm.type]}`}
+                        type="number" fullWidth
+                        slotProps={{ htmlInput: { min: 1 } }}
+                        value={recurForm.interval}
+                        onChange={e => { setRecurForm(f => ({ ...f, interval: Number(e.target.value) })); setPreviewDates(null); }}
+                        helperText="Abstand zwischen den Terminen, z.B. 2 = jede zweite Woche"
+                    />
 
                     {(recurForm.type === 'weeks' || recurForm.type === 'months') && (
                         <FormControl>
@@ -478,6 +538,21 @@ export const EventDatesManager = () => {
                             onChange={e => setRecurForm(f => ({ ...f, endDate: e.target.value }))}
                             slotProps={{ inputLabel: { shrink: true } }}
                         />
+                    )}
+
+                    {/* Old Matukio's batch-generation step shows the actual
+                        resulting date list before anything is committed -
+                        this mirrors that with a dedicated preview call. */}
+                    <Button variant="outlined" onClick={previewRecurring} disabled={previewing} sx={{ alignSelf: 'flex-start' }}>
+                        {previewing ? 'Lädt Vorschau...' : 'Vorschau anzeigen'}
+                    </Button>
+                    {previewDates && (
+                        <Box sx={{ border: 1, borderColor: 'divider', p: 1.5, maxHeight: 180, overflowY: 'auto' }}>
+                            <Typography variant="body2" sx={{ mb: 1 }}>{previewDates.length} Termine werden erzeugt:</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                {previewDates.map(d => new Date(`${d}T00:00:00`).toLocaleDateString('de-DE')).join(', ')}
+                            </Typography>
+                        </Box>
                     )}
                 </DialogContent>
                 <DialogActions>

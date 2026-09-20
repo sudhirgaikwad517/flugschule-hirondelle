@@ -72,6 +72,11 @@ export interface CalendarEvent {
     validFrom?: string;
     validUntil?: string;
   }[];
+  extraFeeOptions?: {
+    title?: string;
+    value?: number;
+    perPlace?: boolean;
+  }[];
 }
 
 export const useEvents = () => {
@@ -105,7 +110,8 @@ export const useEvents = () => {
           seriesId: e.seriesId,
           cancelled: e.cancelled,
           tieredFees: e.tieredFees,
-          eventTieredFees: e.eventTieredFees
+          eventTieredFees: e.eventTieredFees,
+          extraFeeOptions: e.extraFeeOptions
         }));
         setEvents(parsed);
         setLoading(false);

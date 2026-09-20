@@ -15,10 +15,17 @@ interface PriceItem {
   quantity: number;
 }
 
+interface ExtraFeeOption {
+  title?: string;
+  value?: number | string;
+  perPlace?: boolean;
+}
+
 interface PriceResult {
   baseTotal: number;
   tieredDiscount: number;
   appliedTieredFee: string | null;
+  extrasTotal: number;
   voucherDiscount: number;
   appliedVoucherCode: string | null;
   finalPrice: number;
@@ -56,6 +63,13 @@ function applyTieredFee(amount: number, value: number, isPercentage: boolean, is
   return isDiscount ? Math.min(Math.max(0, delta), amount) : -delta;
 }
 
+// Vouchers are always a discount (no surcharge direction), so this is
+// simpler than applyTieredFee: just clamp to [0, amount].
+function applyDiscount(amount: number, value: number, isPercentage: boolean): number {
+  const discount = isPercentage ? amount * (value / 100) : value;
+  return Math.min(Math.max(0, discount), amount);
+}
+
 // Server-side authoritative price calculation - never trust a client-submitted
 // totalPrice. Re-derives ticket prices fresh from the DB, then applies any
 // eligible tiered-fee discount and voucher discount in that order.
@@ -63,12 +77,14 @@ export async function calculateBookingPrice(
   eventId: string,
   items: PriceItem[] | undefined,
   voucherCode: string | undefined,
-  isRegisteredUser: boolean
+  isRegisteredUser: boolean,
+  selectedExtraOptions?: number[]
 ): Promise<PriceResult> {
   const event = await prisma.event.findUnique({ where: { id: eventId } });
   if (!event) throw new Error('Event not found');
 
   let baseTotal = 0;
+  let totalQuantity = 0;
   if (items && items.length > 0) {
     const ticketIds = items.map(i => i.ticketId);
     // Scoped to this eventId so a ticket belonging to a different event never
@@ -80,7 +96,10 @@ export async function calculateBookingPrice(
     for (const item of items) {
       const ticket = ticketMap.get(item.ticketId);
       const quantity = Number(item.quantity);
-      if (ticket && Number.isInteger(quantity) && quantity > 0) baseTotal += ticket.price * quantity;
+      if (ticket && Number.isInteger(quantity) && quantity > 0) {
+        baseTotal += ticket.price * quantity;
+        totalQuantity += quantity;
+      }
     }
   }
 
@@ -94,6 +113,22 @@ export async function calculateBookingPrice(
     tieredDiscount = applyTieredFee(runningTotal, Number(tieredFee.value) || 0, !!tieredFee.isPercentage, !!tieredFee.isDiscount);
     runningTotal -= tieredDiscount;
   }
+
+  // Old Matukio's "Additional Selectable Fee Options" - flat bolt-on
+  // add-ons the customer opted into themselves (e.g. a hotel room),
+  // re-validated against the event's own stored options rather than
+  // trusting whatever price the client displayed for them.
+  let extrasTotal = 0;
+  if (Array.isArray(selectedExtraOptions) && Array.isArray(event.extraFeeOptions)) {
+    const options = event.extraFeeOptions as unknown as ExtraFeeOption[];
+    for (const index of selectedExtraOptions) {
+      const opt = options[index];
+      if (!opt) continue;
+      const value = Number(opt.value) || 0;
+      extrasTotal += opt.perPlace ? value * totalQuantity : value;
+    }
+  }
+  runningTotal += extrasTotal;
 
   let voucherDiscount = 0;
   let appliedVoucherCode: string | null = null;
@@ -118,6 +153,7 @@ export async function calculateBookingPrice(
     baseTotal,
     tieredDiscount,
     appliedTieredFee: tieredFee?.title || null,
+    extrasTotal,
     voucherDiscount,
     appliedVoucherCode,
     finalPrice: Math.max(0, runningTotal)

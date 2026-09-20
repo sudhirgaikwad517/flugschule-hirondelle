@@ -39,6 +39,11 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
   const [dynamicFormData, setDynamicFormData] = useState<Record<string, any>>({});
   const [participants, setParticipants] = useState<any[]>([]);
 
+  // Old Matukio's real "Additional Selectable Fee Options" - flat bolt-on
+  // add-ons (e.g. a hotel room) the customer opts into themselves, on top
+  // of whichever ticket they already picked.
+  const [selectedExtras, setSelectedExtras] = useState<Set<number>>(new Set());
+
   const [voucherCode, setVoucherCode] = useState('');
   const [voucherDiscount, setVoucherDiscount] = useState<{ amount: number, isPercentage: boolean } | null>(null);
   const [voucherMessage, setVoucherMessage] = useState<{ type: 'error' | 'success', text: string } | null>(null);
@@ -140,7 +145,7 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
   // getDifferentFeeValue() in the old codebase, which adds the value when
   // discount is falsy. Both directions must be honored, not just discounts.
   const isRegisteredUser = !!localStorage.getItem('token');
-  const applicableTieredFee = React.useMemo(() => {
+  const applicableTieredFee = (() => {
     if (!event.tieredFees || !Array.isArray(event.eventTieredFees)) return null;
     const now = new Date();
     return event.eventTieredFees.find((fee: any) => {
@@ -150,7 +155,7 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
       if (fee.validUntil && now > new Date(fee.validUntil)) return false;
       return true;
     }) || null;
-  }, [event.tieredFees, event.eventTieredFees, isRegisteredUser]);
+  })();
 
   const priceAfterTieredFee = applicableTieredFee ? Math.max(0,
     applicableTieredFee.isPercentage
@@ -162,11 +167,26 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
         : totalPrice + Number(applicableTieredFee.value))
   ) : totalPrice;
 
+  const extrasTotal = (event.extraFeeOptions || []).reduce((sum: number, opt: any, i: number) => {
+    if (!selectedExtras.has(i)) return sum;
+    return sum + (opt.perPlace ? Number(opt.value) * totalTickets : Number(opt.value));
+  }, 0);
+  const priceAfterExtras = priceAfterTieredFee + extrasTotal;
+
   const finalPrice = Math.max(0, voucherDiscount ? (
     voucherDiscount.isPercentage
-      ? priceAfterTieredFee * (1 - voucherDiscount.amount / 100)
-      : priceAfterTieredFee - voucherDiscount.amount
-  ) : priceAfterTieredFee);
+      ? priceAfterExtras * (1 - voucherDiscount.amount / 100)
+      : priceAfterExtras - voucherDiscount.amount
+  ) : priceAfterExtras);
+
+  const toggleExtra = (index: number) => {
+    setSelectedExtras(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  };
 
   const handleValidateVoucher = async () => {
     if (!voucherCode.trim()) {
@@ -230,11 +250,13 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
       .map(([ticketId, qty]) => ({ ticketId, quantity: qty }));
 
     try {
+      const selectedExtraOptions = Array.from(selectedExtras);
       const payload = {
         eventId: event.id,
         items,
         totalPrice: finalPrice,
         voucherCode: voucherDiscount ? voucherCode : undefined,
+        selectedExtraOptions,
         customerDetails: {
           salutation: formData.salutation,
           fullName: formData.fullName,
@@ -246,7 +268,8 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
           zip: formData.zip,
           city: formData.city,
           additionalParticipants: participants,
-          customFields: dynamicFormData
+          customFields: dynamicFormData,
+          selectedExtras: selectedExtraOptions.map(i => event.extraFeeOptions?.[i]).filter(Boolean)
         },
         paymentMethod: formData.paymentMethod,
         remarks: formData.remarks
@@ -613,6 +636,20 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
                   )}
                 </div>
 
+                {event.extraFeeOptions && event.extraFeeOptions.length > 0 && (
+                  <div className="border-t border-gray-200 pt-8 mt-8">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Zusätzliche buchbare Optionen</label>
+                    <div className="space-y-2">
+                      {event.extraFeeOptions.map((opt: any, i: number) => (
+                        <label key={i} className="flex items-center gap-2 text-sm text-gray-700">
+                          <input type="checkbox" checked={selectedExtras.has(i)} onChange={() => toggleExtra(i)} />
+                          {opt.title} (+ € {Number(opt.value).toFixed(2)}{opt.perPlace ? ' pro Person' : ''})
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="border-t border-gray-200 pt-8 mt-8">
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Anzahl</label>
                   <input 
@@ -634,6 +671,11 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
                       {applicableTieredFee.title || (applicableTieredFee.isDiscount ? 'Rabatt' : 'Zuschlag')}: {applicableTieredFee.isDiscount ? '-' : '+'} {applicableTieredFee.isPercentage ? `${applicableTieredFee.value}%` : `€ ${Number(applicableTieredFee.value).toFixed(2)}`}
                     </p>
                   )}
+                  {extrasTotal > 0 && (
+                    <p className="text-sm text-gray-600 mb-1">
+                      Zusätzliche Optionen: + € {extrasTotal.toFixed(2)}
+                    </p>
+                  )}
                   {voucherDiscount && (
                     <p className="text-sm text-green-600 mb-1">
                       Gutschein: - {voucherDiscount.isPercentage ? `${voucherDiscount.amount}%` : `€ ${voucherDiscount.amount.toFixed(2)}`}
@@ -641,7 +683,7 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
                   )}
                   <p className="text-gray-600 mb-4 font-bold text-lg">Gesamtpreis: € {finalPrice.toFixed(2)}</p>
                   <div className="flex justify-end gap-4 border-t border-gray-200 pt-4">
-                    <button 
+                    <button
                       type="button"
                       onClick={() => setStep(1)}
                       className="px-6 py-2 border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors rounded-sm shadow-sm"
@@ -718,6 +760,12 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
                       <div className="grid grid-cols-[1fr_auto] gap-y-1 text-sm text-green-600 mt-2">
                         <div>{applicableTieredFee.title || 'Rabatt'}</div>
                         <div className="text-right">- {applicableTieredFee.isPercentage ? `${applicableTieredFee.value}%` : `€ ${Number(applicableTieredFee.value).toFixed(2)}`}</div>
+                      </div>
+                    )}
+                    {extrasTotal > 0 && (
+                      <div className="grid grid-cols-[1fr_auto] gap-y-1 text-sm text-gray-600 mt-2">
+                        <div>Zusätzliche Optionen</div>
+                        <div className="text-right">+ € {extrasTotal.toFixed(2)}</div>
                       </div>
                     )}
                     {voucherDiscount && (

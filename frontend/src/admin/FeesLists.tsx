@@ -22,11 +22,14 @@ interface DraftState {
 // of the Fees tab.
 export const TieredFeesList = () => {
     const { control } = useFormContext();
-    const { fields, append, remove, update } = useFieldArray({ control, name: 'eventTieredFees' });
+    const { fields, append, remove, update } = useFieldArray({ control, name: 'eventTieredFees', keyName: '_rhfKey' });
     const [draft, setDraft] = useState<DraftState | null>(null);
 
     const openAdd = () => setDraft({ index: null, values: { title: '', value: 0, bookableFor: 'public', isPercentage: false, isDiscount: true, validFrom: '', validUntil: '' } });
-    const openEdit = (index: number) => setDraft({ index, values: { ...fields[index] } });
+    const openEdit = (index: number) => {
+        const { _rhfKey, ...values } = fields[index] as any;
+        setDraft({ index, values });
+    };
     const cancel = () => setDraft(null);
     const apply = () => {
         if (!draft) return;
@@ -53,7 +56,7 @@ export const TieredFeesList = () => {
                     </TableHead>
                     <TableBody>
                         {fields.map((f: any, i) => (
-                            <TableRow key={f.id} sx={{ bgcolor: ROW_BG, '&:hover': { bgcolor: ROW_BG_HOVER } }}>
+                            <TableRow key={f._rhfKey} sx={{ bgcolor: ROW_BG, '&:hover': { bgcolor: ROW_BG_HOVER } }}>
                                 <TableCell>{f.title}</TableCell>
                                 <TableCell>{f.value}</TableCell>
                                 <TableCell>{f.bookableFor === 'registered' ? 'Registriert' : 'Public'}</TableCell>
@@ -133,13 +136,28 @@ export const TieredFeesList = () => {
     );
 };
 
-export const OptionalExtrasList = () => {
+// Old Matukio's booking form gives customers a real dropdown of alternate
+// bookable course/ticket variants (see requests/tmpl/default.php's
+// getnewfeerow/getTypeSelect) - e.g. "Tandem" vs "Kombikurs" vs the base
+// price, each its own selectable product with its own capacity. That's
+// exactly what `tickets` already models here; this editor was previously
+// mislabeled as old's separate "Additional Selectable Fee Options" section
+// (a different concept - see AdditionalOptionsList below for that one).
+export const TicketsList = () => {
     const { control } = useFormContext();
-    const { fields, append, remove, update } = useFieldArray({ control, name: 'tickets' });
+    // Ticket rows carry a real EventTicket.id (matched against real Booking
+    // data server-side). useFieldArray defaults to overwriting any "id" key
+    // on each item with its own internal tracking key - keyName moves that
+    // tracking key elsewhere so the real database id survives edit/apply
+    // round-trips instead of silently getting clobbered.
+    const { fields, append, remove, update } = useFieldArray({ control, name: 'tickets', keyName: '_rhfKey' });
     const [draft, setDraft] = useState<DraftState | null>(null);
 
     const openAdd = () => setDraft({ index: null, values: { name: '', price: 0, capacity: 20, description: '' } });
-    const openEdit = (index: number) => setDraft({ index, values: { ...fields[index] } });
+    const openEdit = (index: number) => {
+        const { _rhfKey, ...values } = fields[index] as any;
+        setDraft({ index, values });
+    };
     const cancel = () => setDraft(null);
     const apply = () => {
         if (!draft) return;
@@ -151,7 +169,7 @@ export const OptionalExtrasList = () => {
     return (
         <Box>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                Additional services can be offered with the bookable options (e.g. hotel rooms, etc.).
+                Die tatsächlich buchbaren Ticket-/Kurs-Varianten dieser Veranstaltung (z.B. "Normal", "Tandem", "Kombikurs") - jede mit eigenem Preis und eigener Kapazität, wählbar beim Buchen.
             </Typography>
             {fields.length > 0 && (
                 <Table size="small" sx={{ mb: 2 }}>
@@ -165,7 +183,7 @@ export const OptionalExtrasList = () => {
                     </TableHead>
                     <TableBody>
                         {fields.map((f: any, i) => (
-                            <TableRow key={f.id} sx={{ bgcolor: ROW_BG, '&:hover': { bgcolor: ROW_BG_HOVER } }}>
+                            <TableRow key={f._rhfKey} sx={{ bgcolor: ROW_BG, '&:hover': { bgcolor: ROW_BG_HOVER } }}>
                                 <TableCell>{f.name}</TableCell>
                                 <TableCell>€ {Number(f.price).toFixed(2)}</TableCell>
                                 <TableCell>{f.capacity}</TableCell>
@@ -210,6 +228,95 @@ export const OptionalExtrasList = () => {
                         onChange={e => setDraft({ ...draft, values: { ...draft.values, description: e.target.value } })}
                     />
                     <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Button variant="outlined" onClick={cancel}>Cancel</Button>
+                        <Button variant="contained" onClick={apply} sx={{ bgcolor: MATUKIO_BLUE, '&:hover': { bgcolor: MATUKIO_BLUE } }}>Apply</Button>
+                    </Box>
+                </Box>
+            )}
+        </Box>
+    );
+};
+
+// Old Matukio's real "Additional Selectable Fee Options" (extra_fee_options,
+// administrator/components/com_matukio/helpers/fees.php:761-863) - a flat
+// bolt-on add-on price (e.g. a hotel room) a customer can opt into on top of
+// whichever ticket/course variant they picked, independent of ticket choice.
+// perPlace mirrors old's own flag: charged once per booked seat instead of
+// once per booking.
+export const AdditionalOptionsList = () => {
+    const { control } = useFormContext();
+    const { fields, append, remove, update } = useFieldArray({ control, name: 'extraFeeOptions', keyName: '_rhfKey' });
+    const [draft, setDraft] = useState<DraftState | null>(null);
+
+    const openAdd = () => setDraft({ index: null, values: { title: '', value: 0, perPlace: false } });
+    const openEdit = (index: number) => {
+        const { _rhfKey, ...values } = fields[index] as any;
+        setDraft({ index, values });
+    };
+    const cancel = () => setDraft(null);
+    const apply = () => {
+        if (!draft) return;
+        if (draft.index === null) append(draft.values);
+        else update(draft.index, draft.values);
+        setDraft(null);
+    };
+
+    return (
+        <Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                Additional services can be offered with the bookable options (e.g. hotel rooms, etc.).
+            </Typography>
+            {fields.length > 0 && (
+                <Table size="small" sx={{ mb: 2 }}>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>title</TableCell>
+                            <TableCell>Value</TableCell>
+                            <TableCell>Pro Platz</TableCell>
+                            <TableCell align="right" />
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {fields.map((f: any, i) => (
+                            <TableRow key={f._rhfKey} sx={{ bgcolor: ROW_BG, '&:hover': { bgcolor: ROW_BG_HOVER } }}>
+                                <TableCell>{f.title}</TableCell>
+                                <TableCell>€ {Number(f.value).toFixed(2)}</TableCell>
+                                <TableCell>{f.perPlace ? '✓' : '✕'}</TableCell>
+                                <TableCell align="right">
+                                    <IconButton size="small" onClick={() => openEdit(i)}><EditIcon fontSize="small" /></IconButton>
+                                    <IconButton size="small" onClick={() => remove(i)}><DeleteIcon fontSize="small" /></IconButton>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            )}
+
+            {!draft && (
+                <IconButton onClick={openAdd} title="Neue zusätzliche Option" sx={{ color: MATUKIO_BLUE }}>
+                    <AddCircleIcon fontSize="large" />
+                </IconButton>
+            )}
+
+            {draft && (
+                <Box sx={{ border: '1px solid #ddd', p: 2.5, maxWidth: 640 }}>
+                    <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                        <MuiTextField
+                            label="Title" fullWidth size="small"
+                            value={draft.values.title}
+                            onChange={e => setDraft({ ...draft, values: { ...draft.values, title: e.target.value } })}
+                        />
+                        <MuiTextField
+                            label="Value (€)" type="number" fullWidth size="small"
+                            value={draft.values.value}
+                            onChange={e => setDraft({ ...draft, values: { ...draft.values, value: Number(e.target.value) } })}
+                        />
+                    </Box>
+                    <FormControlLabel
+                        control={<Switch checked={!!draft.values.perPlace} onChange={e => setDraft({ ...draft, values: { ...draft.values, perPlace: e.target.checked } })} />}
+                        label="Pro gebuchtem Platz (statt einmal pro Buchung)"
+                    />
+                    <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
                         <Button variant="outlined" onClick={cancel}>Cancel</Button>
                         <Button variant="contained" onClick={apply} sx={{ bgcolor: MATUKIO_BLUE, '&:hover': { bgcolor: MATUKIO_BLUE } }}>Apply</Button>
                     </Box>

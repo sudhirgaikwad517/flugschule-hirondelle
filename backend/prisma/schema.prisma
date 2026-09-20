@@ -100,6 +100,30 @@ model Event {
   organizerId          String?
   locationId           String?
   eventTieredFees      Json?
+  // Old Matukio's "Additional Selectable Fee Options" (extra_fee_options) -
+  // genuine flat-price bolt-on add-ons (e.g. a hotel room) a customer can
+  // opt into on top of whichever ticket they picked. Distinct from
+  // `tickets` (the actual ticket types themselves) and from
+  // `eventTieredFees` (a checkout-time discount/surcharge on the base
+  // fee) - {title, value, perPlace}[].
+  extraFeeOptions      Json?
+  // Values entered for this event's category's CustomField definitions -
+  // {[customFieldId]: value}. The CustomField model only stores the field
+  // DEFINITION (title, type, which categories it applies to); this is
+  // where a specific event's actual answer lives.
+  customFieldValues    Json?
+  // Old site's separate "detail view" image (content.php:184), shown on
+  // the full event page - distinct from imageUrl (listing/overview
+  // cards). The equivalent "detail view" DESCRIPTION field already exists
+  // above as plain `description` (migrated from old's own `description`
+  // column, distinct from `shortDescription` which came from old's
+  // `shortdesc`) - it was just never exposed on the admin form until now,
+  // no new field needed for that half.
+  detailImageUrl       String?
+  // Old Matukio's hiron_matukio_recurring.hits page-view counter - real,
+  // actively-used data on the old site (not the near-never-used
+  // grade/rating column, which we deliberately did not migrate/rebuild).
+  views                Int           @default(0)
   seriesId             String?       // groups every date-occurrence generated together (single add or batch-recurring)
   cancelled            Boolean       @default(false) // distinct from `published` - a cancelled date stays visible but not bookable
   bookings             Booking[]
@@ -109,8 +133,23 @@ model Event {
   Organizer            Organizer?    @relation(fields: [organizerId], references: [id])
   tickets              EventTicket[]
   Voucher              Voucher[]
+  files                EventFile[]
 
   @@index([seriesId])
+}
+
+// Old Matukio's per-event file attachments (edit/files.php) - a title +
+// uploaded file + access level. Real historical usage on the old site was
+// minimal (a single PDF across its whole history), so this stays a plain
+// upload/list/delete list rather than a heavier ACL/download-tracking
+// system old's Joomla component also had.
+model EventFile {
+  id        String   @id @default(uuid())
+  eventId   String
+  title     String
+  url       String
+  createdAt DateTime @default(now())
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
 }
 
 model EventTicket {

@@ -664,8 +664,9 @@ async function createBookingAtomic(params: {
   voucherCode: string | undefined;
   userId: string | undefined;
   isRegisteredUser: boolean;
+  selectedExtraOptions: number[] | undefined;
 }) {
-  const { eventId, items, customerDetails, paymentMethod, remarks, voucherCode, userId, isRegisteredUser } = params;
+  const { eventId, items, customerDetails, paymentMethod, remarks, voucherCode, userId, isRegisteredUser, selectedExtraOptions } = params;
 
   const event = await prisma.event.findUnique({ where: { id: eventId } });
   if (!event) throw new BookingRequestError(404, 'Event not found');
@@ -694,8 +695,8 @@ async function createBookingAtomic(params: {
     }
   }
 
-  // Authoritative price calculation (tiered-fee + voucher discounts applied server-side)
-  const priceResult = await calculateBookingPrice(eventId, items, voucherCode, isRegisteredUser);
+  // Authoritative price calculation (tiered-fee + voucher discounts + selectable extras applied server-side)
+  const priceResult = await calculateBookingPrice(eventId, items, voucherCode, isRegisteredUser, selectedExtraOptions);
   if (voucherCode && !priceResult.appliedVoucherCode) {
     throw new BookingRequestError(400, 'Ungültiger Gutschein');
   }
@@ -793,7 +794,7 @@ router.post('/', async (req: any, res) => {
       }
     }
 
-    const { items, customerDetails, paymentMethod, remarks, eventId, voucherCode } = req.body;
+    const { items, customerDetails, paymentMethod, remarks, eventId, voucherCode, selectedExtraOptions } = req.body;
 
     const booking = await createBookingAtomic({
       eventId,
@@ -803,7 +804,8 @@ router.post('/', async (req: any, res) => {
       remarks,
       voucherCode,
       userId: req.user?.id,
-      isRegisteredUser: !!req.user
+      isRegisteredUser: !!req.user,
+      selectedExtraOptions
     });
 
     // Send confirmation email asynchronously
@@ -822,7 +824,7 @@ router.post('/', async (req: any, res) => {
 // Public booking route for guests
 router.post('/public', async (req, res) => {
   try {
-    const { items, eventId, customerDetails, paymentMethod, remarks, voucherCode } = req.body;
+    const { items, eventId, customerDetails, paymentMethod, remarks, voucherCode, selectedExtraOptions } = req.body;
 
     if (!eventId) {
       return res.status(400).json({ message: 'Event ID is required' });
@@ -836,7 +838,8 @@ router.post('/public', async (req, res) => {
       remarks,
       voucherCode,
       userId: undefined,
-      isRegisteredUser: false
+      isRegisteredUser: false,
+      selectedExtraOptions
     });
 
     // Send confirmation email asynchronously

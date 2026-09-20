@@ -24,7 +24,10 @@ import {
     useRefresh,
     useListContext,
     useUnselectAll,
-    BulkDeleteButton
+    useGetList,
+    BulkDeleteButton,
+    SaveButton,
+    Toolbar as RaToolbar
 } from 'react-admin';
 import { useState } from 'react';
 import { RichTextInput } from 'ra-input-rich-text';
@@ -37,7 +40,10 @@ import CloseIcon from '@mui/icons-material/Close';
 import { EventDatesManager } from './EventDatesManager';
 import { EventRowExpand } from './EventRowExpand';
 import { MCard, MTipsCard, MButtonGroupInput } from './matukioStyle';
-import { TieredFeesList, OptionalExtrasList } from './FeesLists';
+import { TieredFeesList, TicketsList, AdditionalOptionsList } from './FeesLists';
+import { EventFilesList } from './EventFilesList';
+import { EventCustomFieldsSection } from './EventCustomFieldsSection';
+import { ImageUploadInput } from './ImageUploadInput';
 
 const API = '/api';
 
@@ -195,6 +201,24 @@ const EventBulkActionButtons = () => {
     );
 };
 
+// Event.taxRate/currency store the actual value (e.g. "19", "EUR") rather
+// than a TaxRate/Currency row id, so a plain ReferenceInput (which always
+// matches by id) can't be used directly - these build the same "pick from
+// the manageable list" UX old Matukio has by fetching the published rows
+// and mapping them onto SelectInput choices keyed by the value that's
+// actually stored on the event.
+const TaxRateSelect = () => {
+    const { data } = useGetList('taxRates', { pagination: { page: 1, perPage: 100 }, filter: { published: true } });
+    const choices = (data || []).map((r: any) => ({ id: String(r.value), name: `${r.title} (${r.value}%)` }));
+    return <SelectInput source="taxRate" label="Steuersatz" choices={choices} fullWidth emptyText="Keiner" />;
+};
+
+const CurrencySelect = () => {
+    const { data } = useGetList('currencies', { pagination: { page: 1, perPage: 100 }, filter: { published: true } });
+    const choices = (data || []).map((r: any) => ({ id: r.paymentCode, name: `${r.description} (${r.symbol})` }));
+    return <SelectInput source="currency" label="Währung" choices={choices} defaultValue="EUR" fullWidth />;
+};
+
 const EventFilter = (props: any) => (
     <Filter {...props}>
         <TextInput label="Suche" source="q" alwaysOn />
@@ -304,9 +328,25 @@ const ContentsTabContent = () => (
                     </Grid>
                 </Grid>
             </MCard>
-            <MCard title="Beschreibungen & Bilder">
+            <MCard title="Beschreibungen & Bilder (Übersicht)">
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    Wird auf Listen/Übersichtskarten gezeigt (z.B. im Kalender, in der Veranstaltungsliste).
+                </Typography>
                 <RichTextInput source="shortDescription" label="Kurzbeschreibung" />
-                <TextInput source="imageUrl" label="Bild für die Übersicht (URL)" fullWidth sx={{ mt: 2 }} />
+                <ImageUploadInput source="imageUrl" label="Bild für die Übersicht" />
+            </MCard>
+            <MCard title="Beschreibung & Bild (Detailseite)">
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    Wird nur auf der vollständigen Detailseite der Veranstaltung gezeigt. Wenn leer, wird die Kurzbeschreibung oben verwendet.
+                </Typography>
+                <RichTextInput source="description" label="Ausführliche Beschreibung" />
+                <ImageUploadInput source="detailImageUrl" label="Bild für die Detailseite" />
+            </MCard>
+            <MCard title="Benutzerdefinierte Felder">
+                <EventCustomFieldsSection />
+            </MCard>
+            <MCard title="Dateien">
+                <EventFilesList />
             </MCard>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
@@ -466,21 +506,18 @@ const FeesTabContent = () => (
                 )}
             </FormDataConsumer>
 
-            <MCard title="Optional extras (optional add-ons)">
-                <OptionalExtrasList />
+            <MCard title="Ticket-Typen">
+                <TicketsList />
+            </MCard>
+
+            <MCard title="Zusätzliche buchbare Optionen">
+                <AdditionalOptionsList />
             </MCard>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
             <MCard title="Einstellungen der Gebühren">
-                <SelectInput source="taxRate" label="Steuersatz" choices={[
-                    { id: '19', name: '19%' },
-                    { id: '7', name: '7%' },
-                    { id: '0', name: '0%' }
-                ]} fullWidth />
-                <SelectInput source="currency" label="Währung" choices={[
-                    { id: 'EUR', name: 'EURO' },
-                    { id: 'USD', name: 'USD' }
-                ]} defaultValue="EUR" fullWidth />
+                <TaxRateSelect />
+                <CurrencySelect />
                 <BooleanInput source="paymentProcessing" label="Zahlungsverarbeitung" defaultValue={true} />
                 <BooleanInput source="tieredFees" label="Gestaffelte Gebühren" defaultValue={false} />
             </MCard>
@@ -528,10 +565,16 @@ const TermineTabContent = ({ isCreate }: { isCreate?: boolean }) => (
                 </Box>
                 <Grid container spacing={2} sx={{ mt: 1 }}>
                     <Grid size={{ xs: 6 }}>
-                        <TextInput source="eventNumber" label="Nummer" helperText="Veranstaltungs-Nummer (Optional)" fullWidth />
+                        <TextInput source="bookingNumber" label="Nummer" helperText="Veranstaltungs-Nummer, z.B. 5/26 (Optional)" fullWidth />
                     </Grid>
                     <Grid size={{ xs: 6 }}>
                         <TextInput source="titleOverride" label="Titel Überschreibung" helperText="Hier können Sie den Titel für diesen Termin überschreiben" fullWidth />
+                    </Grid>
+                    <Grid size={{ xs: 6 }}>
+                        <TextInput source="eventNumber" label="Interne Referenz-ID" helperText="Nur intern für die Serien-Zuordnung genutzt, nicht auf der Webseite sichtbar" fullWidth disabled />
+                    </Grid>
+                    <Grid size={{ xs: 6 }}>
+                        <NumberInput source="views" label="Seitenaufrufe" fullWidth disabled />
                     </Grid>
                 </Grid>
             </MCard>
@@ -558,6 +601,33 @@ const TermineTabContent = ({ isCreate }: { isCreate?: boolean }) => (
     </Grid>
 );
 
+// Old Matukio's toolbar (views/event/view.html.php) has a distinct "Save &
+// New" button that saves the current event and jumps straight into a
+// fresh, blank create form - useful for entering several events back to
+// back. react-admin's default Create toolbar only has one Save action
+// (redirects to the edit view of what was just created).
+const CreateToolbar = () => {
+    const notify = useNotify();
+    const redirect = useRedirect();
+    return (
+        <RaToolbar>
+            <SaveButton label="Speichern" />
+            <SaveButton
+                label="Speichern & Neu"
+                type="button"
+                variant="outlined"
+                mutationOptions={{
+                    onSuccess: () => {
+                        notify('Veranstaltung erstellt', { type: 'success' });
+                        redirect('create', 'events');
+                        window.location.reload();
+                    }
+                }}
+            />
+        </RaToolbar>
+    );
+};
+
 export const EventEdit = () => (
     <Edit title="Veranstaltung bearbeiten" actions={<EventEditActions />}>
         <TabbedForm>
@@ -573,7 +643,7 @@ export const EventEdit = () => (
 
 export const EventCreate = () => (
     <Create title="Veranstaltung erstellen">
-        <TabbedForm>
+        <TabbedForm toolbar={<CreateToolbar />}>
             <FormTab label="Inhalte"><ContentsTabContent /></FormTab>
             <FormTab label="Veranstaltungsort"><VenueTabContent /></FormTab>
             <FormTab label="Buchung"><BookingTabContent /></FormTab>

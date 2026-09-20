@@ -255,9 +255,9 @@ router.patch('/bulk-publish', authenticateJWT, authorizeAdmin, async (req, res) 
 router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
     const { tickets, id, categoryRef, createdAt, updatedAt, ...eventData } = req.body;
-    
-    const data = { 
-      ...eventData, 
+
+    const data = {
+      ...eventData,
       startDate: new Date(req.body.startDate),
       endDate: req.body.endDate ? new Date(req.body.endDate) : null,
       registrationDeadline: req.body.registrationDeadline ? new Date(req.body.registrationDeadline) : null,
@@ -268,22 +268,48 @@ router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
       feePerPerson: req.body.feePerPerson !== undefined ? parseFloat(req.body.feePerPerson) : null,
     };
 
-    // Update event and replace tickets (delete old, create new)
-    const event = await prisma.event.update({
-      where: { id: req.params.id as string },
-      data: {
-        ...data,
-        tickets: tickets ? {
-          deleteMany: {},
-          create: tickets.map((t: any) => ({
+    const eventId = req.params.id as string;
+
+    const event = await prisma.$transaction(async (tx) => {
+      // Reconcile tickets by id instead of delete-all-then-recreate: a
+      // blind deleteMany() 500s (FK violation) the instant any ticket has
+      // real BookingItem rows against it, which crashed every save for an
+      // event with bookings. Update existing rows in place (keeps ticketId
+      // stable for existing bookings), create new ones, and only delete
+      // removed rows that have zero bookings against them.
+      if (tickets) {
+        const existingTickets = await tx.eventTicket.findMany({ where: { eventId } });
+        const incomingIds = new Set(tickets.filter((t: any) => t.id).map((t: any) => t.id));
+
+        for (const t of tickets) {
+          const ticketData = {
             name: t.name,
             price: Number(t.price),
             description: t.description,
             capacity: Number(t.capacity) || 0
-          }))
-        } : undefined
-      },
-      include: { tickets: true }
+          };
+          if (t.id && existingTickets.some(e => e.id === t.id)) {
+            await tx.eventTicket.update({ where: { id: t.id }, data: ticketData });
+          } else {
+            await tx.eventTicket.create({ data: { ...ticketData, eventId } });
+          }
+        }
+
+        for (const removed of existingTickets.filter(e => !incomingIds.has(e.id))) {
+          const bookedCount = await tx.bookingItem.count({ where: { ticketId: removed.id } });
+          if (bookedCount === 0) {
+            await tx.eventTicket.delete({ where: { id: removed.id } });
+          }
+          // else: keep it - it still has real bookings against it, so it
+          // can't be safely removed even though the admin unselected it.
+        }
+      }
+
+      return tx.event.update({
+        where: { id: eventId },
+        data,
+        include: { tickets: true }
+      });
     });
     res.json(event);
   } catch (error) {
@@ -336,7 +362,13 @@ router.get('/series/:seriesId', authenticateJWT, authorizeAdmin, async (req, res
 
     res.json(events.map(e => ({
       ...e,
-      bookingsCount: e.bookings.filter(b => b.status !== 'CANCELLED').length,
+      // Same stale-status bug as events.routes.ts's bookedCount /
+      // bookings.routes.ts's waitlist check: this schema never uses
+      // 'CANCELLED', so filtering it out excluded nothing and counted every
+      // booking including 'COMPLETED' (which migrated from old Matukio's
+      // DELETED bookings - see the migration notes). Excluding COMPLETED
+      // gives a real "still-relevant bookings" count instead.
+      bookingsCount: e.bookings.filter(b => b.status !== 'COMPLETED').length,
       bookings: undefined
     })));
   } catch (error) {
@@ -405,7 +437,7 @@ router.post('/:id/add-date', authenticateJWT, authorizeAdmin, async (req, res) =
     if (!reference) return res.status(404).json({ message: 'Not found' });
     const referenceTickets = await prisma.eventTicket.findMany({ where: { eventId: reference.id } });
 
-    const { startDate, endDate, registrationDeadline, titleOverride, capacityOverride, locationOverride } = req.body;
+    const { startDate, endDate, registrationDeadline, titleOverride, capacityOverride, locationOverride, bookingNumber } = req.body;
     if (!startDate) return res.status(400).json({ message: 'startDate ist erforderlich' });
 
     const seriesId = reference.seriesId || crypto.randomUUID();
@@ -422,6 +454,10 @@ router.post('/:id/add-date', authenticateJWT, authorizeAdmin, async (req, res) =
 
     const {
       id, createdAt, updatedAt, alias: _oldAlias, startDate: _s, endDate: _e, registrationDeadline: _r,
+      // Old Matukio's "Nummer" (semnum) is a per-date identifier, not
+      // shared across occurrences - exclude it from the reference copy so
+      // a new date doesn't silently duplicate an existing one's Nummer.
+      bookingNumber: _b,
       ...shared
     } = reference as any;
 
@@ -432,6 +468,7 @@ router.post('/:id/add-date', authenticateJWT, authorizeAdmin, async (req, res) =
         title: titleOverride || reference.title,
         capacity: capacityOverride ? Number(capacityOverride) : reference.capacity,
         location: locationOverride || reference.location,
+        bookingNumber: bookingNumber || null,
         startDate: new Date(startDate),
         endDate: endDate ? new Date(endDate) : null,
         registrationDeadline: registrationDeadline ? new Date(registrationDeadline) : null,
@@ -457,7 +494,6 @@ router.post('/:id/add-recurring-dates', authenticateJWT, authorizeAdmin, async (
   try {
     const reference = await prisma.event.findUnique({ where: { id: req.params.id as string } });
     if (!reference) return res.status(404).json({ message: 'Not found' });
-    const referenceTickets = await prisma.eventTicket.findMany({ where: { eventId: reference.id } });
 
     const { recurrence, beginTime, endTime, bookingDeadlineTime } = req.body as {
       recurrence: RecurrenceSpec; beginTime: string; endTime: string; bookingDeadlineTime?: string;
@@ -468,6 +504,15 @@ router.post('/:id/add-recurring-dates', authenticateJWT, authorizeAdmin, async (
       return res.status(400).json({ message: 'Keine Termine mit diesen Angaben erzeugbar' });
     }
 
+    // Old Matukio's batch-generation step shows the resulting date list
+    // before actually committing anything - ?preview=true here just
+    // returns what WOULD be created, no DB writes at all.
+    if (req.query.preview === 'true') {
+      return res.json({ dates: dateStrings });
+    }
+
+    const referenceTickets = await prisma.eventTicket.findMany({ where: { eventId: reference.id } });
+
     const seriesId = reference.seriesId || crypto.randomUUID();
     if (!reference.seriesId) {
       await prisma.event.update({ where: { id: reference.id }, data: { seriesId } });
@@ -477,6 +522,9 @@ router.post('/:id/add-recurring-dates', authenticateJWT, authorizeAdmin, async (
 
     const {
       id, createdAt, updatedAt, alias: _oldAlias, startDate: _s, endDate: _e, registrationDeadline: _r,
+      // Batch-generated dates shouldn't all inherit the reference's own
+      // Nummer (bookingNumber) - each occurrence gets its own separately.
+      bookingNumber: _b,
       ...shared
     } = reference as any;
 
@@ -525,7 +573,7 @@ router.post('/:id/duplicate', authenticateJWT, authorizeAdmin, async (req, res) 
 
     const {
       id, createdAt, updatedAt, alias, startDate, endDate, registrationDeadline,
-      seriesId,
+      seriesId, bookingNumber,
       ...shared
     } = reference as any;
 
@@ -540,6 +588,7 @@ router.post('/:id/duplicate', authenticateJWT, authorizeAdmin, async (req, res) 
         endDate: reference.endDate,
         registrationDeadline: reference.registrationDeadline,
         seriesId: null,
+        bookingNumber: null,
         published: false,
         tickets: {
           create: referenceTickets.map(t => ({ name: t.name, price: t.price, description: t.description, capacity: t.capacity }))
@@ -603,6 +652,65 @@ router.get('/:id/ics', async (req, res) => {
     res.send(ics);
   } catch (error) {
     console.error('GET /:id/ics error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Old Matukio's hiron_matukio_recurring.hits counter - incremented once per
+// real public page view. A separate endpoint (rather than incrementing
+// inside GET /:id) so the admin edit form loading the same event data
+// doesn't inflate it - only the public EventDetailsView calls this.
+router.post('/:id/view', async (req, res) => {
+  try {
+    await prisma.event.update({
+      where: { id: req.params.id as string },
+      data: { views: { increment: 1 } }
+    });
+    res.status(204).end();
+  } catch {
+    // Non-critical - a missing/invalid id here should never break the
+    // visitor's page load.
+    res.status(204).end();
+  }
+});
+
+// Old Matukio's per-event file attachments (edit/files.php). Real
+// historical usage was minimal (a single PDF across the whole old site),
+// so this is a plain upload/list/delete list, not old's fuller per-file
+// ACL/download-count system.
+router.get('/:id/files', authenticateJWT, authorizeAdmin, async (req, res) => {
+  try {
+    const files = await prisma.eventFile.findMany({
+      where: { eventId: req.params.id as string },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(files);
+  } catch (error) {
+    console.error('GET /:id/files error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+router.post('/:id/files', authenticateJWT, authorizeAdmin, async (req, res) => {
+  try {
+    const { title, url } = req.body as { title: string; url: string };
+    if (!title || !url) return res.status(400).json({ message: 'title und url sind erforderlich' });
+    const file = await prisma.eventFile.create({
+      data: { eventId: req.params.id as string, title, url }
+    });
+    res.status(201).json(file);
+  } catch (error) {
+    console.error('POST /:id/files error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+router.delete('/files/:fileId', authenticateJWT, authorizeAdmin, async (req, res) => {
+  try {
+    await prisma.eventFile.delete({ where: { id: req.params.fileId as string } });
+    res.json({ id: req.params.fileId });
+  } catch (error) {
+    console.error('DELETE /files/:fileId error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

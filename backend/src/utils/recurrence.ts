@@ -9,6 +9,10 @@ export interface RecurrenceSpec {
   endMode: 'date' | 'count';
   endDate?: string;   // 'YYYY-MM-DD', required when endMode === 'date'
   count?: number;     // required when endMode === 'count'
+  // Old Matukio's "days between" spacing (e.g. every 2 weeks instead of
+  // every week) - the gap between occurrences, in `type` units. Defaults
+  // to 1 (no gap) when omitted, matching the previous hardcoded behavior.
+  interval?: number;
 }
 
 function addUnit(date: Date, amount: number, unit: RecurrenceSpec['type']): Date {
@@ -41,13 +45,14 @@ function diffInUnit(from: Date, to: Date, unit: RecurrenceSpec['type']): number 
 export function generateRecurringDates(spec: RecurrenceSpec): string[] {
   const dates: string[] = [];
   let cursor = new Date(`${spec.startDate}T00:00:00`);
+  const interval = spec.interval && spec.interval > 0 ? spec.interval : 1;
 
   let count = spec.count ?? 0;
   if (spec.endMode === 'date' && spec.endDate) {
     const end = new Date(`${spec.endDate}T00:00:00`);
     // +1: diffInUnit counts the number of unit-boundaries between start and
     // end, but we want the occurrence count *inclusive* of both endpoints.
-    count = Math.max(0, diffInUnit(cursor, end, spec.type) + 1);
+    count = Math.max(0, Math.floor(diffInUnit(cursor, end, spec.type) / interval) + 1);
   }
   if (!count || count <= 0) return [];
   if (count > 366) count = 366; // sanity cap
@@ -66,7 +71,7 @@ export function generateRecurringDates(spec: RecurrenceSpec): string[] {
         dates.push(formatYMD(setToWeekday(cursor, wd)));
       }
     }
-    cursor = addUnit(cursor, 1, spec.type);
+    cursor = addUnit(cursor, interval, spec.type);
   }
 
   return Array.from(new Set(dates)).sort();
