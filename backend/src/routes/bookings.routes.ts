@@ -522,6 +522,17 @@ router.get('/export/csv', authenticateJWT, authorizeAdmin, async (req, res) => {
       orderBy: { createdAt: 'desc' },
     });
 
+    // Old Matukio always exported one event's bookings at a time, named
+    // "{EventTitle}-{export date, Y-m-d}.csv" (components/com_matukio/
+    // views/print/tmpl/csv.php). Matched here when the request is scoped to
+    // a single event the same way; falls back to a generic name otherwise
+    // since this route can also export an unfiltered/multi-event list,
+    // which old's own export never supported.
+    const todayYmd = new Date().toISOString().slice(0, 10);
+    const exportFilename = req.query.eventId && bookings[0]?.event
+      ? `${bookings[0].event.title}-${todayYmd}.csv`
+      : `buchungen-${todayYmd}.csv`;
+
     const templatesConfig = await prisma.templatesConfig.findUnique({ where: { id: 'default' } });
     const csvTemplate = (templatesConfig?.csvXml as any)?.csvTemplate as string | undefined;
 
@@ -584,8 +595,12 @@ router.get('/export/csv', authenticateJWT, authorizeAdmin, async (req, res) => {
         .join('\r\n');
     }
 
+    // filename= alone can't carry non-ASCII (ö/ü/ß etc.) per the HTTP spec;
+    // filename*= (RFC 5987) is the correct UTF-8 form modern browsers use,
+    // with the plain filename= as an ASCII-safe fallback for older ones.
+    const asciiFilename = exportFilename.replace(/[^\x20-\x7E]/g, '_');
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', 'attachment; filename=buchungen.csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${asciiFilename}"; filename*=UTF-8''${encodeURIComponent(exportFilename)}`);
     // sep=; as the literal first line is an Excel-specific hint: without it,
     // double-clicking the file makes Excel split columns using the
     // Windows-regional "list separator" (comma on an English-locale

@@ -157,17 +157,47 @@ const BookingListActions = () => {
 
     const isTrashView = filterValues?.status === 'deleted';
 
-    const openExport = (path: string) => {
+    const buildExportQs = () => {
         const qs = new URLSearchParams();
         if (filterValues?.eventId) qs.set('eventId', filterValues.eventId);
         if (filterValues?.status) qs.set('status', filterValues.status);
         if (filterValues?.q) qs.set('q', filterValues.q);
         if (filterValues?.time) qs.set('time', filterValues.time);
-        fetch(`/api/bookings${path}?${qs.toString()}`, { headers: authHeaders() })
+        return qs;
+    };
+
+    // Print-list exports (participant/signature list) are meant to open in
+    // a new tab so the admin can use the browser's print dialog.
+    const openExport = (path: string) => {
+        fetch(`/api/bookings${path}?${buildExportQs().toString()}`, { headers: authHeaders() })
             .then(async (res) => {
                 const blob = await res.blob();
                 const url = URL.createObjectURL(blob);
                 window.open(url, '_blank');
+            });
+    };
+
+    // The CSV export needs an actual file download with a real name - a
+    // blob: URL carries no HTTP headers, so window.open() on one always
+    // shows/saves it under a random blob id instead of the filename the
+    // backend's Content-Disposition header specifies. An <a download> with
+    // that name read back out of the response header does it properly.
+    const downloadExport = (path: string) => {
+        fetch(`/api/bookings${path}?${buildExportQs().toString()}`, { headers: authHeaders() })
+            .then(async (res) => {
+                const disposition = res.headers.get('Content-Disposition') || '';
+                const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/);
+                const asciiMatch = disposition.match(/filename="([^"]+)"/);
+                const filename = utf8Match ? decodeURIComponent(utf8Match[1]) : (asciiMatch ? asciiMatch[1] : 'export.csv');
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(url);
             });
     };
 
@@ -209,7 +239,7 @@ const BookingListActions = () => {
                 <IconButton onClick={() => openExport('/export/signature-list')}><PrintIcon fontSize="small" /></IconButton>
             </Tooltip>
             <Tooltip title="Als CSV exportieren">
-                <IconButton onClick={() => openExport('/export/csv')}><DownloadIcon /></IconButton>
+                <IconButton onClick={() => downloadExport('/export/csv')}><DownloadIcon /></IconButton>
             </Tooltip>
 
             <ComposeDialog
