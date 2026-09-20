@@ -61,9 +61,13 @@ router.get('/dashboard', authenticateJWT, authorizeAdmin, async (req, res) => {
             select: { createdAt: true, totalPrice: true }
         });
 
+        // old: counts events by their actual start date ("events happening on
+        // day X"), not by when the DB row was created - using createdAt made
+        // this chart show zero for 95% of history, since migrated events all
+        // share one createdAt (the migration run itself).
         const events = await prisma.event.findMany({
-            where: { createdAt: { gte: rangeStart, lte: rangeEnd } },
-            select: { createdAt: true }
+            where: { startDate: { gte: rangeStart, lte: rangeEnd } },
+            select: { startDate: true }
         });
 
         // Initialize array for the selected range
@@ -96,7 +100,7 @@ router.get('/dashboard', authenticateJWT, authorizeAdmin, async (req, res) => {
         // Aggregate events
         let totalEvents = 0;
         events.forEach(e => {
-            const dateStr = e.createdAt.toISOString().split('T')[0];
+            const dateStr = e.startDate.toISOString().split('T')[0];
             if (historyMap.has(dateStr)) {
                 historyMap.get(dateStr).events += 1;
                 totalEvents += 1;

@@ -1,4 +1,5 @@
 import PDFDocument from 'pdfkit';
+import QRCode from 'qrcode';
 import { prisma } from '../utils/prisma';
 import fs from 'fs';
 import path from 'path';
@@ -45,13 +46,16 @@ export async function generateInvoicePDF(bookingId: string): Promise<Buffer> {
       doc.text(`${customer.salutation} ${customer.firstName || ''} ${customer.lastName || customer.fullName || ''}`);
       doc.text(customer.street || '');
       doc.text(`${customer.zip || ''} ${customer.city || ''}`);
+      if (customer.country) doc.text(customer.country);
     }
 
     doc.moveDown(2);
 
     doc.fontSize(12).text(`Rechnungsnummer: RE-${booking.id.split('-')[0].toUpperCase()}`, { align: 'right' });
+    doc.text(`Buchungsnummer: ${booking.id.replace(/-/g, '').slice(0, 10).toUpperCase()}`, { align: 'right' });
     doc.text(`Datum: ${new Date().toLocaleDateString('de-DE')}`, { align: 'right' });
-    
+    if (booking.paymentMethod) doc.text(`Zahlungsmethode: ${booking.paymentMethod}`, { align: 'right' });
+
     doc.moveDown(2);
 
     // Invoice Table Header
@@ -92,6 +96,24 @@ export async function generateInvoicePDF(bookingId: string): Promise<Buffer> {
       y += 20;
     }
 
+    // old's real invoice template shows a full net/tax/gross breakdown
+    // (MAT_BOOKING_PAYMENT_NETTO / _TAX / _BRUTTO) - Event.taxRate already
+    // existed in the schema but nothing fed it into invoice output before.
+    // totalPrice is treated as the gross amount, matching old's own
+    // payment_brutto (what this field was migrated from).
+    const taxRatePercent = parseFloat(booking.event.taxRate || '');
+    if (taxRatePercent > 0) {
+      const netAmount = booking.totalPrice / (1 + taxRatePercent / 100);
+      const taxAmount = booking.totalPrice - netAmount;
+      doc.font('Helvetica');
+      doc.text('Nettobetrag:', 350, y);
+      doc.text(`${netAmount.toFixed(2)} €`, 500, y);
+      y += 20;
+      doc.text(`zzgl. ${taxRatePercent}% MwSt.:`, 350, y);
+      doc.text(`${taxAmount.toFixed(2)} €`, 500, y);
+      y += 20;
+    }
+
     doc.font('Helvetica-Bold');
     doc.text('Gesamtbetrag:', 350, y);
     doc.text(`${booking.totalPrice.toFixed(2)} €`, 500, y);
@@ -108,6 +130,15 @@ export async function generateInvoicePDF(bookingId: string): Promise<Buffer> {
   });
 }
 
+// Matukio's real live ticket template (hiron_matukio_templates.tmpl_name=
+// 'ticket') includes MAT_BOOKING_NUMBER, MAT_BOOKING_PAYMENT_BRUTTO and a
+// MAT_BOOKING_CHECKIN_QRCODE token - a real, scannable check-in code, not
+// text. PDFKit can't embed an image via a text placeholder, so any literal
+// MAT_BOOKING_CHECKIN_QRCODE line in the admin's template text is dropped
+// (it would otherwise print as unresolved literal text) and a real QR
+// code encoding the booking id is always drawn in its own fixed spot -
+// this is genuinely scannable (any QR reader decodes the booking id),
+// unlike the previous static "Scan Me" box placeholder.
 export async function generateTicketPDF(bookingId: string): Promise<Buffer> {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
@@ -125,6 +156,11 @@ export async function generateTicketPDF(bookingId: string): Promise<Buffer> {
     if (loc) locationName = loc.title;
   }
 
+  const templatesConfig = await prisma.templatesConfig.findUnique({ where: { id: 'default' } });
+  const template = (templatesConfig?.tickets as any)?.ticketTemplate as string | undefined;
+  const qrDataUrl = await QRCode.toDataURL(booking.id, { margin: 1, width: 200 });
+  const qrBuffer = Buffer.from(qrDataUrl.split(',')[1], 'base64');
+
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50, layout: 'landscape', size: 'A5' });
     const buffers: Buffer[] = [];
@@ -135,34 +171,46 @@ export async function generateTicketPDF(bookingId: string): Promise<Buffer> {
     // Branding
     doc.rect(0, 0, doc.page.width, 40).fill('#ab8942');
     doc.fillColor('white').fontSize(16).text('Flugschule Hirondelle - Ticket', 20, 12);
-
     doc.fillColor('black');
     doc.moveDown(3);
 
-    // Event Info
-    doc.fontSize(18).font('Helvetica-Bold').text(booking.event.title);
-    doc.fontSize(12).font('Helvetica')
-       .text(`Datum: ${new Date(booking.event.startDate).toLocaleDateString('de-DE')}${booking.event.endDate ? ` - ${new Date(booking.event.endDate).toLocaleDateString('de-DE')}` : ''}`)
-       .text(`Ort: ${locationName}`);
-    
-    doc.moveDown();
+    if (template && template.trim()) {
+      const rendered = renderMatTokens(template, buildBookingPlaceholders(booking));
+      const lines = htmlTemplateToLines(rendered).filter(l => !l.includes('MAT_BOOKING_CHECKIN_QRCODE'));
+      doc.fontSize(12).font('Helvetica');
+      for (const line of lines) {
+        doc.text(line);
+      }
+    } else {
+      // Event Info
+      doc.fontSize(18).font('Helvetica-Bold').text(booking.event.title);
+      doc.fontSize(12).font('Helvetica')
+         .text(`Datum: ${new Date(booking.event.startDate).toLocaleDateString('de-DE')}${booking.event.endDate ? ` - ${new Date(booking.event.endDate).toLocaleDateString('de-DE')}` : ''}`)
+         .text(`Ort: ${locationName}`);
 
-    // Customer
-    const customer = booking.customerDetails as any;
-    if (customer) {
-      doc.text(`Teilnehmer: ${customer.salutation} ${customer.firstName || ''} ${customer.lastName || customer.fullName || ''}`);
+      doc.moveDown();
+
+      // Customer
+      const customer = booking.customerDetails as any;
+      if (customer) {
+        doc.text(`Teilnehmer: ${customer.salutation} ${customer.firstName || ''} ${customer.lastName || customer.fullName || ''}`);
+      }
+
+      doc.moveDown();
+
+      // Items
+      booking.items.forEach(item => {
+         doc.text(`- ${item.quantity}x ${item.ticket.name}`);
+      });
+
+      doc.moveDown();
+      doc.text(`Buchungsnummer: ${booking.id.replace(/-/g, '').slice(0, 10).toUpperCase()}`);
+      doc.text(`Gesamtpreis: ${booking.totalPrice.toFixed(2)} €`);
     }
 
-    doc.moveDown();
-    
-    // Items
-    booking.items.forEach(item => {
-       doc.text(`- ${item.quantity}x ${item.ticket.name}`);
-    });
-
-    // Barcode Placeholder
-    doc.rect(400, 100, 100, 100).stroke();
-    doc.fontSize(8).text('Scan Me', 430, 145);
+    // Real check-in QR code, always drawn regardless of template
+    doc.image(qrBuffer, doc.page.width - 150, 100, { width: 100, height: 100 });
+    doc.fontSize(7).text('Zum Check-in scannen', doc.page.width - 150, 202, { width: 100, align: 'center' });
 
     doc.end();
   });
