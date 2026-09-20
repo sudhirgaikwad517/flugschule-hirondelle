@@ -4,6 +4,7 @@ import { prisma } from '../utils/prisma';
 import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware';
 import { generateRecurringDates, RecurrenceSpec } from '../utils/recurrence';
 import { buildIcsCalendar } from '../utils/ics';
+import { sendNewEventNotificationEmail } from '../services/mailer.service';
 
 const router = Router();
 
@@ -211,7 +212,7 @@ router.post('/', authenticateJWT, authorizeAdmin, async (req, res) => {
       feePerPerson: req.body.feePerPerson ? parseFloat(req.body.feePerPerson) : null,
     };
     
-    const event = await prisma.event.create({ 
+    const event = await prisma.event.create({
       data: {
         ...data,
         tickets: tickets ? {
@@ -225,6 +226,12 @@ router.post('/', authenticateJWT, authorizeAdmin, async (req, res) => {
       },
       include: { tickets: true }
     });
+    // old: sendmail_newevent_group - notifies registered customers about a
+    // genuinely new event (not every recurring-date generated from an
+    // existing series, nor every later edit/republish of one). Real,
+    // active setting on the live site (=1), unlike the disabled
+    // cron_freeplaces_reminder.
+    if (event.published) sendNewEventNotificationEmail(event.id).catch(console.error);
     res.status(201).json(event);
   } catch (error) {
     console.error(error);

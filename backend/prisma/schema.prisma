@@ -661,6 +661,11 @@ model SettingsConfig {
   // old: rejection_subject - default subject line for the admin's
   // booking-rejection email compose dialog
   rejectionSubject           String   @default("Ihre Buchungsanfrage")
+  // old: sendmail_newevent_group - notify registered customers when a
+  // genuinely new event is created (real, active setting on the live
+  // site - unlike cron_freeplaces_reminder, which is off there and has no
+  // send-path implemented here either, for the same reason).
+  sendmailNewEventGroup      Boolean  @default(true)
   updatedAt                  DateTime @updatedAt
 }
 

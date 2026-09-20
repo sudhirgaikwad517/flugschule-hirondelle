@@ -6,7 +6,7 @@ import {
     useNotify,
     useRefresh
 } from 'react-admin';
-import { Typography, Card, CardContent, CircularProgress, Box, Paper, Tabs, Tab, Button, Divider } from '@mui/material';
+import { Typography, Card, CardContent, CircularProgress, Box, Paper, Tabs, Tab, Button, Divider, Alert } from '@mui/material';
 import { useState } from 'react';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -118,6 +118,26 @@ export const TemplatesBuilder = () => {
                                     <TextInput source="emails.adminCancellation.bodyHtml" label="HTML Text" multiline rows={8} fullWidth required />
                                     <TextInput source="emails.adminCancellation.bodyText" label="Nur-Text (Fallback)" multiline rows={4} fullWidth required />
                                 </Paper>
+
+                                <Paper variant="outlined" sx={{ p: 3, mb: 4, borderLeft: '4px solid #22c55e' }}>
+                                    <Typography variant="h6" sx={{ color: '#22c55e' }} gutterBottom>Neue Veranstaltung E-Mail</Typography>
+                                    <Divider sx={{ mb: 2 }} />
+                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                        Wird an alle registrierten Kunden gesendet, wenn eine neue Veranstaltung erstellt und veröffentlicht wird (steuerbar unter Einstellungen &gt; "Neue Veranstaltung an registrierte Kunden melden").
+                                    </Typography>
+                                    <TextInput source="emails.newEvent.subject" label="Betreff" fullWidth required />
+                                    <TextInput source="emails.newEvent.bodyHtml" label="HTML Text" multiline rows={6} fullWidth required />
+                                </Paper>
+
+                                <Paper variant="outlined" sx={{ p: 3, mb: 4, borderLeft: '4px solid #94a3b8' }}>
+                                    <Typography variant="h6" sx={{ color: '#64748b' }} gutterBottom>Erinnerung: Freie Plätze</Typography>
+                                    <Divider sx={{ mb: 2 }} />
+                                    <Alert severity="info" sx={{ mb: 2 }}>
+                                        Auf der alten Webseite war diese automatische Erinnerung deaktiviert (cron_freeplaces_reminder war ausgeschaltet). Der Text kann hier vorbereitet werden, wird aber aktuell noch nicht automatisch versendet.
+                                    </Alert>
+                                    <TextInput source="emails.freePlacesReminder.subject" label="Betreff" fullWidth />
+                                    <TextInput source="emails.freePlacesReminder.bodyHtml" label="HTML Text" multiline rows={6} fullWidth />
+                                </Paper>
                             </Box>
                             
                             <Box sx={{ flex: 1, minWidth: '300px' }}>
@@ -132,6 +152,7 @@ export const TemplatesBuilder = () => {
                                         <Box component="li" sx={{ mb: 1 }}><code>{'{EVENT_DETAILS}'}</code> - Datum, Ort und Basisdaten zum Event</Box>
                                         <Box component="li" sx={{ mb: 1 }}><code>{'{BOOKING_DETAILS}'}</code> - Gebuchte Tickets, Optionen, Preis etc.</Box>
                                         <Box component="li" sx={{ mb: 1 }}><code>{'{TOTAL_PRICE}'}</code> - Gesamtpreis</Box>
+                                        <Box component="li" sx={{ mb: 1 }}><code>{'{USER_NAME}'}</code> - Name des Kunden (nur "Neue Veranstaltung" / "Freie Plätze")</Box>
                                         <Box component="li"><code>{'{SIGNATURE}'}</code> - Signatur der Flugschule</Box>
                                     </Box>
                                 </Paper>

@@ -180,6 +180,74 @@ async function sendOwnerNotificationEmail(booking: any, ownerEmail: string) {
   console.log('Owner notification email sent to', ownerEmail);
 }
 
+// old: sendmail_newevent_group - notifies every registered customer when a
+// genuinely new event is created and published. Old's real trigger targets
+// a specific Joomla user GROUP (=1 on the live site); this app has no
+// group/ACL system to match that against (an earlier session finding - all
+// real events use a single uniform access level), so this instead notifies
+// every real CUSTOMER-role user, matching the spirit of "registered
+// members" the setting targets.
+export async function sendNewEventNotificationEmail(eventId: string) {
+  try {
+    const settings = await getSettingsConfig();
+    if (!settings.sendmailNewEventGroup) return;
+
+    const event = await prisma.event.findUnique({ where: { id: eventId } });
+    if (!event) return;
+
+    const config = await prisma.templatesConfig.findUnique({ where: { id: 'default' } });
+    let template = config?.emails ? (config.emails as any).newEvent : null;
+    if (!template) {
+      template = {
+        subject: 'Neue Veranstaltung: {EVENT_TITLE}',
+        bodyHtml: `
+          <h3>Hallo {USER_NAME},</h3>
+          <p>es gibt eine neue Veranstaltung:</p>
+          <br/>
+          {EVENT_DETAILS}
+          <br/>
+          <p>Mit freundlichen Grüßen,<br/>Ihr Team der Flugschule Hirondelle</p>
+        `
+      };
+    }
+
+    let locationName = event.location || 'Siehe Website';
+    if (!event.location && event.locationId) {
+      const loc = await prisma.location.findUnique({ where: { id: event.locationId } });
+      if (loc) locationName = loc.title;
+    }
+    const eventDetails = `
+      <strong>Veranstaltung:</strong> ${event.title}<br/>
+      <strong>Datum:</strong> ${new Date(event.startDate).toLocaleDateString('de-DE')}${event.endDate ? ` bis ${new Date(event.endDate).toLocaleDateString('de-DE')}` : ''}<br/>
+      <strong>Ort:</strong> ${locationName}
+    `;
+
+    const recipients = await prisma.user.findMany({
+      where: { role: 'CUSTOMER', email: { not: '' } },
+      select: { name: true, email: true },
+    });
+    if (recipients.length === 0) return;
+
+    const { transporter, config: mailConfig } = await getNewsletterTransporter();
+    const subject = template.subject.replace(/{EVENT_TITLE}/g, event.title);
+    for (const recipient of recipients) {
+      const bodyHtml = template.bodyHtml
+        .replace(/{USER_NAME}/g, recipient.name || 'Kunde')
+        .replace(/{EVENT_TITLE}/g, event.title)
+        .replace(/{EVENT_DETAILS}/g, eventDetails);
+      await transporter.sendMail({
+        from: mailConfig?.fromEmail ? `"${mailConfig.fromName || 'Flugschule Hirondelle'}" <${mailConfig.fromEmail}>` : '"Flugschule Hirondelle" <info@fs-hirondelle.de>',
+        to: recipient.email,
+        subject,
+        html: bodyHtml,
+      }).catch(console.error);
+    }
+    console.log(`New-event notification sent to ${recipients.length} customers for event ${event.title}`);
+  } catch (error) {
+    console.error('Error sending new-event notification email:', error);
+  }
+}
+
 // templateKey 'userCancellation' - the customer cancelled their own booking;
 // 'adminCancellation' - the school/admin cancelled the booking on their behalf.
 export async function sendCancellationEmail(bookingId: string, templateKey: 'userCancellation' | 'adminCancellation') {
@@ -191,6 +259,13 @@ export async function sendCancellationEmail(bookingId: string, templateKey: 'use
 
     if (!booking) {
       console.error('Booking not found for cancellation mailer');
+      return;
+    }
+
+    // old: notify_participants_cancel
+    const settings = await getSettingsConfig();
+    if (!settings.notifyParticipantsCancel) {
+      console.log('Cancellation email skipped: notifyParticipantsCancel is disabled in Settings.');
       return;
     }
 

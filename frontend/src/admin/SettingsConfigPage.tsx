@@ -121,6 +121,11 @@ export const SettingsConfigPage = () => {
                     />
                     <br />
                     <FormControlLabel
+                        control={<Switch checked={!!form.sendmailNewEventGroup} onChange={(e) => set('sendmailNewEventGroup')(e.target.checked)} />}
+                        label="Neue Veranstaltung an registrierte Kunden melden"
+                    />
+                    <br />
+                    <FormControlLabel
                         control={<Switch checked={!!form.sendmailInvoice} onChange={(e) => set('sendmailInvoice')(e.target.checked)} />}
                         label="Rechnung an die Buchungsbestätigung anhängen"
                     />
