@@ -14,11 +14,13 @@ import {
   useNotify,
   useInput,
   ArrayInput,
-  SimpleFormIterator
+  SimpleFormIterator,
+  FormDataConsumer
 } from 'react-admin';
 
 // List of predefined static pages that have media slots
 const PAGE_CHOICES = [
+  { id: 'home', name: 'Startseite' },
   { id: 'sicherheitstraining', name: 'Performance - Sicherheitstraining' },
   { id: 'rettungsgeraetetraining', name: 'Performance - Rettungsgerätetraining' },
   { id: 'refresher', name: 'Performance - Refresher' },
@@ -138,6 +140,16 @@ export const PageMediaEdit = () => {
         <div style={{ padding: '20px', background: '#fff3e0', borderRadius: '8px', width: '100%', marginBottom: '20px' }}>
           <h3 style={{ marginTop: 0 }}>Impressionen (Bildergalerie)</h3>
           <p style={{ fontSize: '13px', color: '#666', marginTop: 0 }}>Fügen Sie hier Bilder für die Galerie am Ende der Seite hinzu.</p>
+          <FormDataConsumer>
+            {({ formData }) =>
+              formData.slug === 'home' ? (
+                <p style={{ fontSize: '13px', color: '#a15c00', marginTop: 0 }}>
+                  Für die Startseite werden die ersten 3 Bilder in dieser Liste für die drei Highlight-Kacheln
+                  verwendet: Bild 1 = "Fliegen Lernen", Bild 2 = "Shop Geöffnet", Bild 3 = "On Tour...".
+                </p>
+              ) : null
+            }
+          </FormDataConsumer>
           <ArrayInput source="galleryImages" label="Bilder">
             <SimpleFormIterator>
               <ImageUploadInput source="" label="Bild" />
@@ -181,6 +193,16 @@ export const PageMediaCreate = () => (
         <div style={{ padding: '20px', background: '#fff3e0', borderRadius: '8px', width: '100%', marginBottom: '20px' }}>
           <h3 style={{ marginTop: 0 }}>Impressionen (Bildergalerie)</h3>
           <p style={{ fontSize: '13px', color: '#666', marginTop: 0 }}>Fügen Sie hier Bilder für die Galerie am Ende der Seite hinzu.</p>
+          <FormDataConsumer>
+            {({ formData }) =>
+              formData.slug === 'home' ? (
+                <p style={{ fontSize: '13px', color: '#a15c00', marginTop: 0 }}>
+                  Für die Startseite werden die ersten 3 Bilder in dieser Liste für die drei Highlight-Kacheln
+                  verwendet: Bild 1 = "Fliegen Lernen", Bild 2 = "Shop Geöffnet", Bild 3 = "On Tour...".
+                </p>
+              ) : null
+            }
+          </FormDataConsumer>
           <ArrayInput source="galleryImages" label="Bilder">
             <SimpleFormIterator>
               <ImageUploadInput source="" label="Bild" />

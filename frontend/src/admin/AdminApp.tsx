@@ -37,6 +37,14 @@ import { WebLinkCategoryList, WebLinkCategoryEdit, WebLinkCategoryCreate, WebLin
 import { AdBannerList, AdBannerEdit, AdBannerCreate } from './Banners';
 import { PageMediaList, PageMediaEdit, PageMediaCreate } from './PageMedia';
 import { GalleryList, GalleryEdit, GalleryCreate } from './Gallery'; // NEW - standalone Galerie feature, separate from PageMedia
+import { PagesManager } from './Pages'; // NEW - "Seiten" CMS: admin-created pages with their own URL, Unlayer-based editor
+import { HomeContentEditor } from './HomeContentEditor'; // NEW - editable data (text/images) for the hardcoded Home.tsx design
+import { AusbildungContentEditor } from './AusbildungContentEditor';
+import { PerformanceContentEditor } from './PerformanceContentEditor';
+import { ReisenContentEditor } from './ReisenContentEditor';
+import { ServiceContentEditor } from './ServiceContentEditor';
+import { InfosContentEditor } from './InfosContentEditor';
+import { Trash } from './Trash'; // NEW - WordPress-style Papierkorb for Pages.tsx deletes
 import { ServiceOrderList, ServiceOrderShow } from './ServiceOrders';
 import { TemplatesBuilder } from './TemplatesBuilder';
 import { CustomLayout } from './CustomLayout';
@@ -158,6 +166,34 @@ export const AdminApp = () => {
         <Resource name="bookingFormConfig" intent="registration" />
         <CustomRoutes>
             <Route path="/events-dashboard" element={<Authenticated><EventsDashboard /></Authenticated>} />
+            <Route path="/pages" element={<Authenticated><PagesManager /></Authenticated>} />
+            {/* :contentId? is only present when editing a fixed-page
+                duplicate (Pages.tsx > "Duplizieren") - see
+                FixedPageDuplicate model / fixedPageDuplicates.routes.ts. */}
+            <Route path="/home-content/:contentId?" element={<Authenticated><HomeContentEditor /></Authenticated>} />
+            <Route path="/ausbildung-content/:contentId?" element={<Authenticated><AusbildungContentEditor /></Authenticated>} />
+            <Route path="/performance-content/:contentId?" element={<Authenticated><PerformanceContentEditor /></Authenticated>} />
+            <Route path="/reisen-content/:contentId?" element={<Authenticated><ReisenContentEditor /></Authenticated>} />
+            <Route path="/service-content/:contentId?" element={<Authenticated><ServiceContentEditor /></Authenticated>} />
+            <Route path="/infos-content/:contentId?" element={<Authenticated><InfosContentEditor /></Authenticated>} />
+            <Route path="/trash" element={<Authenticated><Trash /></Authenticated>} />
+            {/* NEW - Galerie's own trash, separate from the Pages one above
+                (Trash's default `kinds` prop is page-only) - see Trash.tsx
+                and Gallery.tsx's "Papierkorb" button. */}
+            <Route
+              path="/gallery-trash"
+              element={
+                <Authenticated>
+                  <Trash
+                    kinds={['pagegallery']}
+                    title="Galerie-Papierkorb"
+                    description={'Gelöschte Galerien landen hier und können wiederhergestellt werden. "Endgültig löschen" entfernt den Eintrag dauerhaft.'}
+                    backTo="/admin/pagegallery"
+                    backLabel="Zurück zur Galerie"
+                  />
+                </Authenticated>
+              }
+            />
             <Route path="/booking-form-config" element={<Authenticated><BookingFormBuilder /></Authenticated>} />
             <Route path="/templates" element={<Authenticated><TemplatesBuilder /></Authenticated>} />
             <Route path="/import" element={<Authenticated><Import /></Authenticated>} />

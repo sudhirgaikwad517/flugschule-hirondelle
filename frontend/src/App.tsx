@@ -65,6 +65,7 @@ import { BookingCancel } from './pages/BookingCancel';
 import { Abmelden } from './pages/Abmelden';
 import { TrackingStoppen } from './pages/TrackingStoppen';
 import { Bestaetigen } from './pages/Bestaetigen';
+import { FixedPageRouter } from './pages/FixedPageRouter';
 
 function App() {
   return (
@@ -143,6 +144,15 @@ function App() {
           <Route path="newsletter/abmelden" element={<Abmelden />} />
           <Route path="newsletter/tracking-stoppen" element={<TrackingStoppen />} />
           <Route path="newsletter/bestaetigen" element={<Bestaetigen />} />
+          {/* Seiten CMS - admin-created pages, and true same-design
+              duplicates of the 6 fixed pages (Admin > Seiten >
+              "Duplizieren"). Must stay last: react-router ranks static path
+              segments above a same-depth dynamic one regardless of
+              declaration order, so this can't shadow any route above, but
+              keeping it last matches that intent for readability. See
+              FixedPageRouter.tsx, which checks fixed-page duplicates first
+              and falls back to DynamicPage (Seiten/Unlayer CMS). */}
+          <Route path=":slug" element={<FixedPageRouter />} />
           {/* Future Routes */}
         </Route>
       </Routes>

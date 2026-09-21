@@ -1,9 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   List,
   Datagrid,
   TextField,
-  TextInput,
   EditButton,
   Edit,
   Create,
@@ -12,16 +11,28 @@ import {
   useInput,
   useNotify,
   useRecordContext,
-  TopToolbar,
-  FilterButton,
+  useListContext,
+  useRefresh,
   ExportButton,
 } from 'react-admin';
-import { Link as RouterLink } from 'react-router-dom';
-import { Box, Typography, Button, IconButton, CircularProgress } from '@mui/material';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Typography,
+  Button,
+  IconButton,
+  CircularProgress,
+  TextField as MuiTextField,
+  InputAdornment,
+} from '@mui/material';
 import UploadIcon from '@mui/icons-material/Upload';
 import CloseIcon from '@mui/icons-material/Close';
 import ImageIcon from '@mui/icons-material/Image';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import RestoreFromTrashIcon from '@mui/icons-material/RestoreFromTrash';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import DeleteIcon from '@mui/icons-material/Delete';
+import SearchIcon from '@mui/icons-material/Search';
 
 // Standalone "Galerie" admin feature, separate from PageMedia.tsx on purpose
 // (per request: don't touch PageMedia's existing header/content image
@@ -259,31 +270,237 @@ const GalleryPreview = () => {
   );
 };
 
-// Live-filters the list as the admin types (react-admin refetches on each
-// keystroke after a short debounce) - same "q" search pattern already used
-// in Categories.tsx / categories.routes.ts. Matched server-side against the
-// `slug` column (e.g. typing "bassano" finds "bassano-tour").
-const galleryFilters = [
-  <TextInput source="q" label="Seite suchen" alwaysOn />,
-];
+// "Duplicate This"-style clone button, same UX as Pages.tsx's own
+// Duplizieren button: POSTs to /:id/duplicate (see pagegallery.routes.ts),
+// which copies the same image list under a new auto-generated slug, then
+// refreshes the list so the new row shows up immediately. The admin then
+// clicks "Bearbeiten" on the copy to assign it to whichever page should
+// start with this same set of images.
+const GalleryDuplicateButton = () => {
+  const record = useRecordContext();
+  const notify = useNotify();
+  const refresh = useRefresh();
+  const [busy, setBusy] = useState(false);
 
-// Custom toolbar with the "Erstellen" (Create) button removed on request -
-// existing galleries are still reachable/editable via "Bearbeiten" on each
-// row (rowClick="edit" below). To bring Create back, add <CreateButton />
-// here (see the same pattern in Categories.tsx's CategoryListActions).
-const GalleryListActions = () => (
-  <TopToolbar>
-    <FilterButton />
-    <ExportButton />
-  </TopToolbar>
-);
+  const handleDuplicate = async (event: React.MouseEvent) => {
+    // Without this, the click bubbles up to the Datagrid row's own
+    // rowClick="edit" handler and navigates to Edit instead of duplicating.
+    event.stopPropagation();
+    if (!record) return;
+    setBusy(true);
+    try {
+      const token = localStorage.getItem('auth');
+      const res = await fetch(`/api/pagegallery/${record.id}/duplicate`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        notify(data.error || 'Fehler beim Duplizieren', { type: 'error' });
+        return;
+      }
+      notify(`Duplikat erstellt: "${data.slug}" - auf "Bearbeiten" klicken um die Seite zuzuweisen`, { type: 'success' });
+      refresh();
+    } catch {
+      notify('Netzwerkfehler beim Duplizieren', { type: 'error' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <IconButton
+      size="small"
+      onClick={handleDuplicate}
+      disabled={busy}
+      title="Duplizieren (erstellt eine Kopie mit denselben Bildern)"
+    >
+      <ContentCopyIcon fontSize="small" />
+    </IconButton>
+  );
+};
+
+// Custom per-row delete - no confirmation dialog, no react-admin
+// undo-notification delay (both of react-admin's own <DeleteButton> modes
+// either force a dialog, or - in "undoable" mode - defer the real request
+// behind a background timer that was crashing this page). This calls
+// pagegallery.routes.ts's DELETE directly and moves straight to
+// Admin > Papierkorb, same one-click behavior as Duplizieren above.
+const GalleryDeleteButton = () => {
+  const record = useRecordContext();
+  const notify = useNotify();
+  const refresh = useRefresh();
+  const [busy, setBusy] = useState(false);
+
+  const handleDelete = async (event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (!record) return;
+    setBusy(true);
+    try {
+      const token = localStorage.getItem('auth');
+      const res = await fetch(`/api/pagegallery/${record.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        notify(data.error || 'Fehler beim Löschen', { type: 'error' });
+        return;
+      }
+      notify('In den Papierkorb verschoben', { type: 'success' });
+      refresh();
+    } catch {
+      notify('Netzwerkfehler beim Löschen', { type: 'error' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <IconButton size="small" onClick={handleDelete} disabled={busy} title="Löschen (verschiebt in den Papierkorb)">
+      <DeleteIcon fontSize="small" color="error" />
+    </IconButton>
+  );
+};
+
+// Same idea for the "X ausgewählt" bulk-select toolbar - deletes every
+// selected row with no confirmation, each one landing in Papierkorb.
+const GalleryBulkDeleteButton = () => {
+  const { selectedIds = [], onUnselectItems } = useListContext();
+  const notify = useNotify();
+  const refresh = useRefresh();
+  const [busy, setBusy] = useState(false);
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    setBusy(true);
+    try {
+      const token = localStorage.getItem('auth');
+      await Promise.all(
+        selectedIds.map((id) =>
+          fetch(`/api/pagegallery/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
+        )
+      );
+      notify(`${selectedIds.length} in den Papierkorb verschoben`, { type: 'success' });
+      onUnselectItems();
+      refresh();
+    } catch {
+      notify('Netzwerkfehler beim Löschen', { type: 'error' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Button
+      size="small"
+      color="error"
+      startIcon={busy ? <CircularProgress size={16} color="inherit" /> : <DeleteIcon />}
+      onClick={handleBulkDelete}
+      disabled={busy}
+    >
+      Löschen
+    </Button>
+  );
+};
+
+// Custom header - matches the layout already used by the "Seiten" admin
+// screen (Pages.tsx): a big title with the page's one action button
+// top-right, then a full-width search field below. Built by hand (instead
+// of react-admin's default filters/actions toolbar) so it can match that
+// layout exactly; still uses react-admin's own `setFilters`/ExportButton
+// under the hood, so search + export behave the same as any other list.
+const GalleryListHeader = () => {
+  const { filterValues, setFilters, displayedFilters } = useListContext();
+  const [search, setSearch] = useState(filterValues.q || '');
+  const navigate = useNavigate();
+
+  // Debounce so a request isn't fired on every single keystroke - same
+  // ~debounce feel as react-admin's own <TextInput alwaysOn> gave us before.
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setFilters({ ...filterValues, q: search || undefined }, displayedFilters);
+    }, 400);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+
+  return (
+    <Box sx={{ p: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {/* Fixed-destination back link (Admin Dashboard) - same pattern as
+              Trash.tsx's own back button, rather than relying only on the
+              generic browser-history "Zurück" icon in the app bar above. */}
+          <IconButton onClick={() => navigate('/admin')} title="Zurück zum Dashboard">
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography variant="h5">Galerie</Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          {/* Same "Papierkorb" button/icon/placement as Pages.tsx's header -
+              deleted galleries land in the same shared trash as pages. */}
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<RestoreFromTrashIcon />}
+            onClick={() => navigate('/admin/gallery-trash')}
+          >
+            Papierkorb
+          </Button>
+          <ExportButton />
+        </Box>
+      </Box>
+      <MuiTextField
+        placeholder="Seite suchen"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        size="small"
+        fullWidth
+        sx={{ mb: 2 }}
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" sx={{ color: '#999' }} />
+              </InputAdornment>
+            ),
+          },
+        }}
+      />
+      {/* React-admin's row-selection toolbar ("X ausgewählt ... LÖSCHEN") is
+          an absolutely-positioned overlay that floats theme.spacing(6)=48px
+          upward from right above the Datagrid, meant to land on the table's
+          own header row. With no gap here it instead overlapped this search
+          box - this spacer just reserves that space so it floats into empty
+          room instead. */}
+      <Box sx={{ height: 48 }} />
+    </Box>
+  );
+};
 
 export const GalleryList = () => (
-  <List filters={galleryFilters} actions={<GalleryListActions />}>
-    <Datagrid rowClick="edit">
+  <List actions={false}>
+    <GalleryListHeader />
+    <Datagrid
+      rowClick="edit"
+      // React-admin's own <DeleteButton>/<BulkDeleteButton> always show a
+      // confirmation dialog except in "undoable" mode, and "undoable" defers
+      // the real request behind a ~5s background timer that crashed this
+      // page with a DOM "removeChild" error. GalleryDeleteButton/
+      // GalleryBulkDeleteButton below are custom, simple, immediate deletes
+      // with no dialog - deleting here never destroys anything anyway, it
+      // just moves the row to Admin > Papierkorb (see below).
+      bulkActionButtons={<GalleryBulkDeleteButton />}
+    >
       <TextField source="slug" label="Seite" />
       <GalleryPreview label="Vorschau" />
       <EditButton />
+      <GalleryDuplicateButton label="Duplizieren" />
+      {/* Individual per-row delete - moves the row to Admin > Papierkorb
+          (trash) instead of deleting it outright - see
+          pagegallery.routes.ts's DELETE handler. */}
+      <GalleryDeleteButton label="Löschen" />
     </Datagrid>
   </List>
 );

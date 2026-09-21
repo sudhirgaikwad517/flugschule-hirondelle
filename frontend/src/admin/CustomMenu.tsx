@@ -32,6 +32,7 @@ import PermMediaIcon from '@mui/icons-material/PermMedia';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import PaymentIcon from '@mui/icons-material/Payment';
 import ExtensionIcon from '@mui/icons-material/Extension'; // NEW - "Komponenten" section icon
+import WebIcon from '@mui/icons-material/Web'; // NEW - "Seiten" link icon
 
 // A fully custom sidebar (plain MUI + react-router NavLink, no react-admin
 // <Menu>/<MenuItemLink>) - same approach already used successfully in the
@@ -50,7 +51,13 @@ interface Item {
     icon: ReactNode;
 }
 
+// "Seiten" is one flat link (like Benutzer) to the unified WordPress-Pages-
+// style list at /admin/pages (Pages.tsx) - every page (the 6 fixed ones
+// with their own data-only editors, e.g. HomeContentEditor.tsx, plus any
+// admin-created Unlayer pages) is listed there with Edit/Preview(/Delete)
+// actions, instead of being spread across individual sidebar sub-links.
 const TOP_ITEMS: Item[] = [
+    { label: 'Seiten', to: '/admin/pages', icon: <WebIcon fontSize="small" /> },
     { label: 'Benutzer', to: '/admin/users', icon: <PeopleIcon fontSize="small" /> },
 ];
 

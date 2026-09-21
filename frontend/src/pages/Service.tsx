@@ -1,34 +1,30 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 import { Banner } from '../components/common/Banner';
 import { Link } from 'react-router-dom';
 
-export const Service = () => {
-  const serviceItems = [
-    {
-      id: '2-jahres-check',
-      title: '2-JAHRES-CHECK',
-      description: 'Wartungsarbeiten und Reparaturen in unserer Service-Werkstätte',
-      image: '/images/service/check.jpg'
-    },
-    {
-      id: 'rettungspacken',
-      title: 'RETTUNGSGERÄTE-PACKSERVICE',
-      description: 'Rettung professionell gepackt! Wir packen sie, als wäre es unsere eigene.',
-      image: '/images/service/rettungspackservice.png'
-    },
-    {
-      id: 'trimmtuning',
-      title: 'TRIMMTUNING',
-      description: '„Trimmtuning“ – für bessere und sicherere Schirme! Mit professioneller Leinenvermessung und optimaler Einstellung der Leinenlängen mehr erreichen: Idealerweise kann so in der Luft mehr Leistung rausgeholt werden, ohne dass euer Schirm dadurch an Sicherheit verliert oder anspruchsvoller wird.',
-      image: '/images/service/trimmtuning.jpg'
-    },
-    {
-      id: 'reparatur',
-      title: 'REPARATUR-SERVICE',
-      description: 'Defekte an der Ausrüstung? Wir bieten euch einen Reparatur Service für eure Ausrüstung an.',
-      image: '/images/service/reparatur.jpg'
-    }
-  ];
+// Fallbacks match the page's current live copy exactly, so nothing changes
+// visually until an admin edits something in Admin > Seiten > Service (see
+// backend SitePageContent model / sitePageContent.routes.ts). Text, images,
+// and the "WEITERLESEN" links are all admin-editable; only the layout/CSS
+// and each item's `id` (used for the section anchor) stay fixed.
+const DEFAULT_ITEMS = [
+  { id: '2-jahres-check', title: '2-JAHRES-CHECK', description: 'Wartungsarbeiten und Reparaturen in unserer Service-Werkstätte', image: '/images/service/check.jpg', link: '/service/2-jahres-check' },
+  { id: 'rettungspacken', title: 'RETTUNGSGERÄTE-PACKSERVICE', description: 'Rettung professionell gepackt! Wir packen sie, als wäre es unsere eigene.', image: '/images/service/rettungspackservice.png', link: '/service/rettungspacken' },
+  { id: 'trimmtuning', title: 'TRIMMTUNING', description: '„Trimmtuning“ – für bessere und sicherere Schirme! Mit professioneller Leinenvermessung und optimaler Einstellung der Leinenlängen mehr erreichen: Idealerweise kann so in der Luft mehr Leistung rausgeholt werden, ohne dass euer Schirm dadurch an Sicherheit verliert oder anspruchsvoller wird.', image: '/images/service/trimmtuning.jpg', link: '/service/trimmtuning' },
+  { id: 'reparatur', title: 'REPARATUR-SERVICE', description: 'Defekte an der Ausrüstung? Wir bieten euch einen Reparatur Service für eure Ausrüstung an.', image: '/images/service/reparatur.jpg', link: '/service/reparatur' },
+];
+
+export const Service = ({ contentId }: { contentId?: string } = {}) => {
+  const [content, setContent] = useState({ items: DEFAULT_ITEMS });
+
+  useEffect(() => {
+    fetch(`/api/sitepagecontent/public/${contentId || 'service'}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data) setContent(data); })
+      .catch((err) => console.error('Error fetching Service content:', err));
+  }, [contentId]);
+
+  const serviceItems = content.items;
 
   return (
     <div className="w-full bg-white pb-20">
@@ -72,8 +68,8 @@ export const Service = () => {
                     <p className={`text-[15px] text-gray-500 font-light leading-relaxed mb-8 max-w-lg ${isEven ? '' : 'md:mr-0'}`}>
                       {item.description}
                     </p>
-                    <Link 
-                      to={`/service/${item.id}`} 
+                    <Link
+                      to={item.link}
                       className="inline-block px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm"
                     >
                       WEITERLESEN

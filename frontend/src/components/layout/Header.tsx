@@ -37,6 +37,18 @@ export const Header = () => {
     Pfalz: '/images/reisen/pfalz.jpg'
   };
 
+  // Admin-created pages (Admin > Seiten) - fetched once so any published,
+  // nav-visible page automatically appears in the "SEITEN" dropdown below
+  // with no code change. Empty list -> dropdown simply doesn't render.
+  const [dynamicPages, setDynamicPages] = useState<{ slug: string; title: string; navLabel?: string | null }[]>([]);
+
+  useEffect(() => {
+    fetch('/api/pages/public')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setDynamicPages(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
+
   const toggleMobileMenu = (menu: string) => {
     if (expandedMobileMenu === menu) setExpandedMobileMenu(null);
     else setExpandedMobileMenu(menu);
@@ -233,6 +245,26 @@ export const Header = () => {
                 </div>
               </div>
 
+              {/* Seiten Dropdown - admin-created pages (Admin > Seiten), only rendered when at least one exists */}
+              {dynamicPages.length > 0 && (
+                <div className="relative group h-[40px] flex items-center">
+                  <span className={getNavClass('__seiten__')}>
+                    SEITEN <ChevronDown className="w-3 h-3" />
+                  </span>
+                  <div className="absolute top-[40px] right-0 w-64 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl">
+                    <ul className="flex flex-col">
+                      {dynamicPages.map((page) => (
+                        <li key={page.slug}>
+                          <Link to={`/${page.slug}`} className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">
+                            {page.navLabel || page.title}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
               <Link to="/shop" className={getNavClass('/shop')}>
                 SHOP
               </Link>
@@ -411,6 +443,25 @@ export const Header = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Seiten - admin-created pages (Admin > Seiten), only rendered when at least one exists */}
+                {dynamicPages.length > 0 && (
+                  <div className="flex flex-col">
+                    <button onClick={() => toggleMobileMenu('seiten')} className="flex justify-between items-center w-full text-gray-800 text-[26px] font-luxury hover:text-hirondelle-blue transition-colors text-left py-1">
+                      Seiten
+                      <ChevronRight className={`w-4 h-4 text-gray-800 transition-transform ${expandedMobileMenu === 'seiten' ? 'rotate-90' : ''}`} />
+                    </button>
+                    <div className={`overflow-hidden transition-all duration-300 ${expandedMobileMenu === 'seiten' ? 'max-h-[600px] mt-2 mb-2 opacity-100' : 'max-h-0 opacity-0'}`}>
+                      <div className="flex flex-col space-y-4 pl-4 py-2">
+                        {dynamicPages.map((page) => (
+                          <Link key={page.slug} to={`/${page.slug}`} onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">
+                            {page.navLabel || page.title}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Direct Links */}
                 <Link to="/buchungskalender" onClick={() => setIsMobileMenuOpen(false)} className="block text-gray-800 text-[26px] font-luxury hover:text-hirondelle-blue transition-colors py-1">

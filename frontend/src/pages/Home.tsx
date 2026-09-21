@@ -1,9 +1,73 @@
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
+import { SafeHtml } from '../components/common/SafeHtml';
 import { useState, useEffect } from 'react';
 
-export const Home = () => {
+// Fallbacks match the page's current live copy exactly, so nothing changes
+// visually until an admin actually edits something in Admin > Startseite
+// (see backend HomeContent model / homecontent.routes.ts). Home.tsx's
+// JSX/Tailwind layout itself never changes here, only the words/photos/
+// links plugged into it.
+const DEFAULT_PROMO_CARDS = [
+  { title: 'Fliegen Lernen', boldLine: 'Der Anfang einer neuen Leidenschaft!', description: 'Reinschnuppern beim 1-Tageskurs oder Schnupperwochenende', image: '/images/startbuttons/startbutton_schnuppern.jpg', link: '/ausbildung/schnupperkurs' },
+  { title: 'Shop Geöffnet', boldLine: 'Mittwoch, 2.9.26 16-19 Uhr', description: 'Alex und Sarah sind für euch in Weinheim im Laden, bitte unbedingt voranmelden!', image: '/images/startbuttons/gutschein.jpg', link: '/infos' },
+  { title: 'On Tour...', boldLine: '23.1. - 6.2.2027 | Kolumbien', description: 'Fliegen über den grünen Landschaften des Valle del Cauca in den besten Fluggebieten von Cali Richtung Medellin...', image: '/images/bilder/2-tour-kolumbien/Kolumbien_3997_2.jpg', link: '/reisen/kolumbien-tour' },
+];
+const DEFAULT_TEAM_MEMBERS = [
+  { name: 'Alex', image: '/images/team/schlink.jpg' },
+  { name: 'Sarah', image: '/images/team/sarah.jpg' },
+  { name: 'Tobi', image: '/images/team/tobi.jpg' },
+  { name: 'Holger', image: '/images/team/holger.jpg' },
+  { name: 'Markus', image: '/images/team/markus.jpg' },
+];
+const DEFAULT_HOCH_HINAUS_HTML =
+  '<p>Willkommen bei der Flugschule Hirondelle, der Gleitschirmschule im Rhein-Main-Neckar Dreieck. Fliegen lernen mit dem <a href="/infos/team">Team Hirondelle</a> heißt: Persönliche und individuelle auf den Schüler zugeschnittene Ausbildung. Unser Team besteht aus sehr erfahrenen und ambitionierten Fluglehrern.</p>' +
+  '<p>Alles natürlich an genialen Schulungshängen im Raum Odenwald, Kraichtal, Nahetal und in der Pfalz.</p>';
+const DEFAULT_SECTION_TITLES = {
+  newsEyebrow: 'AKTUELLES',
+  newsTitle: 'NEWS',
+  hochHinausEyebrowPrefix: '...mit dem',
+  hochHinausEyebrowLinkText: 'Team Hirondelle',
+  hochHinausTitle: 'HOCH HINAUS',
+};
+
+interface HomeContentData {
+  promoCards: typeof DEFAULT_PROMO_CARDS;
+  teamMembers: typeof DEFAULT_TEAM_MEMBERS;
+  teamLink: string;
+  hochHinausHtml: string;
+  newsEyebrow: string;
+  newsTitle: string;
+  hochHinausEyebrowPrefix: string;
+  hochHinausEyebrowLinkText: string;
+  hochHinausTitle: string;
+}
+
+// contentId is set only when this component is rendered as a fixed-page
+// duplicate (see FixedPageRouter.tsx) - it points at the copied
+// SitePageContent row instead of the real HomeContent row, so the
+// duplicate can be edited independently while looking pixel-identical.
+export const Home = ({ contentId }: { contentId?: string } = {}) => {
   const [media, setMedia] = useState<any>(null);
+  const [homeContent, setHomeContent] = useState<HomeContentData | null>(null);
+
+  useEffect(() => {
+    const url = contentId ? `/api/sitepagecontent/public/${contentId}` : '/api/homecontent/public';
+    fetch(url)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setHomeContent(data))
+      .catch((err) => console.error('Error fetching home content:', err));
+  }, [contentId]);
+
+  const promoCards = homeContent?.promoCards?.length === 3 ? homeContent.promoCards : DEFAULT_PROMO_CARDS;
+  const teamMembers = homeContent?.teamMembers?.length === 5 ? homeContent.teamMembers : DEFAULT_TEAM_MEMBERS;
+  const hochHinausHtml = homeContent?.hochHinausHtml || DEFAULT_HOCH_HINAUS_HTML;
+  const newsEyebrow = homeContent?.newsEyebrow || DEFAULT_SECTION_TITLES.newsEyebrow;
+  const newsTitle = homeContent?.newsTitle || DEFAULT_SECTION_TITLES.newsTitle;
+  const hochHinausEyebrowPrefix = homeContent?.hochHinausEyebrowPrefix || DEFAULT_SECTION_TITLES.hochHinausEyebrowPrefix;
+  const hochHinausEyebrowLinkText = homeContent?.hochHinausEyebrowLinkText || DEFAULT_SECTION_TITLES.hochHinausEyebrowLinkText;
+  const hochHinausTitle = homeContent?.hochHinausTitle || DEFAULT_SECTION_TITLES.hochHinausTitle;
+  const teamLink = homeContent?.teamLink || '/infos/team';
   // Only ever promotes an admin-uploaded URL once the browser has actually
   // confirmed it loads - otherwise a stale/deleted upload would flash the
   // correct local fallback in, then silently swap to a broken image once
@@ -274,10 +338,10 @@ export const Home = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 
             {/* Box 1: Fliegen Lernen - old site's box links to /ausbildung/schnupperkurs */}
-            <Link to="/ausbildung/schnupperkurs" className="relative h-[400px] group overflow-hidden bg-white shadow-xl cursor-pointer block">
+            <Link to={promoCards[0].link || DEFAULT_PROMO_CARDS[0].link} className="relative h-[400px] group overflow-hidden bg-white shadow-xl cursor-pointer block">
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{ backgroundImage: `url("${getImage(7, '/images/startbuttons/startbutton_schnuppern.jpg')}")` }}
+                style={{ backgroundImage: `url("${getImage(7, promoCards[0].image || DEFAULT_PROMO_CARDS[0].image)}")` }}
               ></div>
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-dark/90 via-luxury-dark/40 to-black/20"></div>
               <div className="absolute inset-4 border border-white/20 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
@@ -286,22 +350,22 @@ export const Home = () => {
                 <div className="w-10 h-10 rounded-full border border-white flex items-center justify-center overflow-hidden bg-white">
                   <img src="/google.png" alt="Logo" className="w-full h-full object-contain" />
                 </div>
-                <h3 className="font-luxury text-white text-2xl uppercase tracking-widest">Fliegen Lernen</h3>
+                <h3 className="font-luxury text-white text-2xl uppercase tracking-widest">{promoCards[0].title}</h3>
               </div>
 
               <div className="absolute bottom-8 left-8 right-8 z-20">
-                <p className="text-white font-bold text-sm mb-2">Der Anfang einer neuen Leidenschaft!</p>
+                <p className="text-white font-bold text-sm mb-2">{promoCards[0].boldLine}</p>
                 <p className="text-white/80 text-sm font-light leading-relaxed">
-                  Reinschnuppern beim 1-Tageskurs oder Schnupperwochenende
+                  {promoCards[0].description}
                 </p>
               </div>
             </Link>
 
             {/* Box 2: Shop Geöffnet - old site's box links to /infos */}
-            <Link to="/infos" className="relative h-[400px] group overflow-hidden bg-white shadow-xl cursor-pointer block">
+            <Link to={promoCards[1].link || DEFAULT_PROMO_CARDS[1].link} className="relative h-[400px] group overflow-hidden bg-white shadow-xl cursor-pointer block">
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{ backgroundImage: `url("${getImage(8, '/images/startbuttons/gutschein.jpg')}")` }}
+                style={{ backgroundImage: `url("${getImage(8, promoCards[1].image || DEFAULT_PROMO_CARDS[1].image)}")` }}
               ></div>
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-dark/90 via-luxury-dark/40 to-black/20"></div>
               <div className="absolute inset-4 border border-white/20 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
@@ -310,13 +374,13 @@ export const Home = () => {
                 <div className="w-10 h-10 rounded-full border border-white flex items-center justify-center overflow-hidden bg-white">
                   <img src="/google.png" alt="Logo" className="w-full h-full object-contain" />
                 </div>
-                <h3 className="font-luxury text-white text-2xl uppercase tracking-widest">Shop Geöffnet</h3>
+                <h3 className="font-luxury text-white text-2xl uppercase tracking-widest">{promoCards[1].title}</h3>
               </div>
 
               <div className="absolute bottom-8 left-8 right-8 z-20">
-                <p className="text-white font-bold text-sm mb-2">Mittwoch, 2.9.26 16-19 Uhr</p>
+                <p className="text-white font-bold text-sm mb-2">{promoCards[1].boldLine}</p>
                 <p className="text-white/80 text-sm font-light leading-relaxed">
-                  Alex und Sarah sind für euch in Weinheim im Laden, bitte unbedingt voranmelden!
+                  {promoCards[1].description}
                 </p>
               </div>
             </Link>
@@ -324,10 +388,10 @@ export const Home = () => {
             {/* Box 3: On Tour - old site's box links to the old Kolumbien
                 event listing; our equivalent content lives at
                 /reisen/kolumbien-tour */}
-            <Link to="/reisen/kolumbien-tour" className="relative h-[400px] group overflow-hidden bg-white shadow-xl cursor-pointer block">
+            <Link to={promoCards[2].link || DEFAULT_PROMO_CARDS[2].link} className="relative h-[400px] group overflow-hidden bg-white shadow-xl cursor-pointer block">
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{ backgroundImage: `url("${getImage(9, '/images/bilder/2-tour-kolumbien/Kolumbien_3997_2.jpg')}")` }}
+                style={{ backgroundImage: `url("${getImage(9, promoCards[2].image || DEFAULT_PROMO_CARDS[2].image)}")` }}
               ></div>
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-dark/90 via-luxury-dark/40 to-black/20"></div>
               <div className="absolute inset-4 border border-white/20 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
@@ -336,13 +400,13 @@ export const Home = () => {
                 <div className="w-10 h-10 rounded-full border border-white flex items-center justify-center overflow-hidden bg-white">
                   <img src="/google.png" alt="Logo" className="w-full h-full object-contain" />
                 </div>
-                <h3 className="font-luxury text-white text-2xl uppercase tracking-widest">On Tour...</h3>
+                <h3 className="font-luxury text-white text-2xl uppercase tracking-widest">{promoCards[2].title}</h3>
               </div>
 
               <div className="absolute bottom-8 left-8 right-8 z-20">
-                <p className="text-white font-bold text-sm mb-2">23.1. - 6.2.2027 | Kolumbien</p>
+                <p className="text-white font-bold text-sm mb-2">{promoCards[2].boldLine}</p>
                 <p className="text-white/80 text-sm font-light leading-relaxed">
-                  Fliegen über den grünen Landschaften des Valle del Cauca in den besten Fluggebieten von Cali Richtung Medellin...
+                  {promoCards[2].description}
                 </p>
               </div>
             </Link>
@@ -359,9 +423,9 @@ export const Home = () => {
           <div className="w-full lg:w-5/12 flex flex-col">
             <div className="mb-10">
               <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-3">
-                AKTUELLES
+                {newsEyebrow}
               </p>
-              <h2 className="font-luxury text-4xl md:text-5xl text-luxury-dark">NEWS</h2>
+              <h2 className="font-luxury text-4xl md:text-5xl text-luxury-dark">{newsTitle}</h2>
             </div>
 
             <div className="w-full overflow-hidden h-[500px] flex items-start justify-start">
@@ -402,59 +466,41 @@ export const Home = () => {
           <div className="w-full lg:w-7/12 flex flex-col">
             <div className="mb-10">
               <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-3">
-                ...mit dem <Link to="/infos/team" className="hover:underline">Team Hirondelle</Link>
+                {hochHinausEyebrowPrefix} <Link to={teamLink} className="hover:underline">{hochHinausEyebrowLinkText}</Link>
               </p>
-              <h2 className="font-luxury text-4xl md:text-5xl text-luxury-dark">HOCH HINAUS</h2>
+              <h2 className="font-luxury text-4xl md:text-5xl text-luxury-dark">{hochHinausTitle}</h2>
             </div>
 
-            <div className="font-sans text-gray-500 font-light leading-relaxed text-sm md:text-base space-y-6 mb-16">
-              <p>
-                Willkommen bei der Flugschule Hirondelle, der Gleitschirmschule im Rhein-Main-Neckar Dreieck. Fliegen lernen mit dem <Link to="/infos/team" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-bold">Team Hirondelle</Link> heißt: Persönliche und individuelle auf den Schüler zugeschnittene Ausbildung. Unser Team besteht aus sehr erfahrenen und ambitionierten Fluglehrern.
-              </p>
-              <p>
-                Alles natürlich an genialen Schulungshängen im Raum Odenwald, Kraichtal, Nahetal und in der Pfalz.
-              </p>
-            </div>
+            <SafeHtml
+              html={hochHinausHtml}
+              className="font-sans text-gray-500 font-light leading-relaxed text-sm md:text-base space-y-6 mb-16 [&_a]:text-[#428bca] [&_a:hover]:text-[#2a6496] [&_a:hover]:underline [&_a]:font-bold"
+            />
 
             {/* Team Members - top row: Alex & Sarah, bottom row: the rest.
                 Wrapped in a Link to /infos/team (matching the old site and
                 the other Home boxes above that link out to their detail
                 pages) - each member already had cursor-pointer styling with
                 nowhere to go before this. */}
-            <Link to="/infos/team" className="flex flex-col gap-y-12">
+            <Link to={teamLink} className="flex flex-col gap-y-12">
               <div className="flex justify-center gap-x-10 sm:gap-x-16">
-                <div className="flex flex-col items-center group cursor-pointer">
-                  <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
-                    <img src="/images/team/schlink.jpg" className="w-full h-full rounded-full object-cover" alt="Alex" />
+                {teamMembers.slice(0, 2).map((member) => (
+                  <div key={member.name} className="flex flex-col items-center group cursor-pointer">
+                    <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
+                      <img src={member.image} className="w-full h-full rounded-full object-cover" alt={member.name} />
+                    </div>
+                    <span className="font-luxury text-lg text-luxury-dark tracking-wide">{member.name}</span>
                   </div>
-                  <span className="font-luxury text-lg text-luxury-dark tracking-wide">Alex</span>
-                </div>
-                <div className="flex flex-col items-center group cursor-pointer">
-                  <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
-                    <img src="/images/team/sarah.jpg" className="w-full h-full rounded-full object-cover" alt="Sarah" />
-                  </div>
-                  <span className="font-luxury text-lg text-luxury-dark tracking-wide">Sarah</span>
-                </div>
+                ))}
               </div>
               <div className="flex flex-wrap justify-center gap-x-6 sm:gap-x-10 gap-y-10">
-                <div className="flex flex-col items-center group cursor-pointer">
-                  <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
-                    <img src="/images/team/tobi.jpg" className="w-full h-full rounded-full object-cover" alt="Tobi" />
+                {teamMembers.slice(2).map((member) => (
+                  <div key={member.name} className="flex flex-col items-center group cursor-pointer">
+                    <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
+                      <img src={member.image} className="w-full h-full rounded-full object-cover" alt={member.name} />
+                    </div>
+                    <span className="font-luxury text-lg text-luxury-dark tracking-wide">{member.name}</span>
                   </div>
-                  <span className="font-luxury text-lg text-luxury-dark tracking-wide">Tobi</span>
-                </div>
-                <div className="flex flex-col items-center group cursor-pointer">
-                  <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
-                    <img src="/images/team/holger.jpg" className="w-full h-full rounded-full object-cover" alt="Holger" />
-                  </div>
-                  <span className="font-luxury text-lg text-luxury-dark tracking-wide">Holger</span>
-                </div>
-                <div className="flex flex-col items-center group cursor-pointer">
-                  <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
-                    <img src="/images/team/markus.jpg" className="w-full h-full rounded-full object-cover" alt="Markus" />
-                  </div>
-                  <span className="font-luxury text-lg text-luxury-dark tracking-wide">Markus</span>
-                </div>
+                ))}
               </div>
             </Link>
 
