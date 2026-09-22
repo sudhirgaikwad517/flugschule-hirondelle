@@ -234,6 +234,11 @@ model Newsletter {
   language     String   @default("German")
   trackStatus  Boolean  @default(true)
   confirmToken String?  @unique // used for double opt-in confirmation links
+  // Optional free-text feedback captured on the public unsubscribe page
+  // (Abmelden.tsx) - old AcyMailing tracked this in hiron_acym_history and
+  // real customers left genuine complaints/reasons there, which had no
+  // equivalent field to land in here at all.
+  unsubscribeReason String? @db.Text
 
   @@unique([email, listType])
 }

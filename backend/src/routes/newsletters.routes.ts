@@ -197,7 +197,8 @@ router.get('/email/:email/details', authenticateJWT, authorizeAdmin, async (req,
       subscriptions: subs.map(s => ({
         id: s.id,
         listType: s.listType,
-        subscribedAt: s.subscribedAt
+        subscribedAt: s.subscribedAt,
+        unsubscribeReason: s.unsubscribeReason
       })),
       allLists,
       history,
@@ -437,7 +438,7 @@ router.post('/public/subscribe', async (req, res) => {
 // arbitrary third-party addresses.
 router.post('/public/unsubscribe', async (req, res) => {
   try {
-    const { email, listType, token } = req.body;
+    const { email, listType, token, reason } = req.body;
     if (!email || typeof email !== 'string') {
       return res.status(400).json({ message: 'E-Mail ist erforderlich' });
     }
@@ -446,9 +447,14 @@ router.post('/public/unsubscribe', async (req, res) => {
       return res.status(403).json({ message: 'Ungültiger oder abgelaufener Abmeldelink' });
     }
 
+    // `reason` arrives in a second, optional call from Abmelden.tsx after the
+    // unsubscribe itself already succeeded (asking for a reason must never
+    // block or delay the actual unsubscribe) - only overwrite it when present
+    // so that follow-up call doesn't clobber isActive back to true.
+    const cleanReason = typeof reason === 'string' ? reason.trim().slice(0, 1000) : null;
     await prisma.newsletter.updateMany({
       where: listType ? { email: email.toLowerCase(), listType } : { email: email.toLowerCase() },
-      data: { isActive: false }
+      data: { isActive: false, ...(cleanReason ? { unsubscribeReason: cleanReason } : {}) }
     });
 
     res.json({ message: 'Erfolgreich abgemeldet' });
