@@ -518,6 +518,43 @@ model WebLinkCategory {
   links       WebLink[]
 }
 
+// NEW MODEL - admin-managed header navigation (Admin > Menü, right before
+// Galerie in the Komponenten group). Replaces the previously hardcoded
+// Ausbildung/Performance/Reisen/Service/Infos dropdowns and their direct
+// links in Header.tsx: each MenuItem is one top-level nav entry, rendered as
+// a hover dropdown when it has subItems or as a plain link otherwise. Shop,
+// the "Seiten" dropdown (admin-created pages, still auto-populated from
+// /api/pages/public) and the Konto/login menu stay hardcoded in Header.tsx
+// since they carry auth/e-commerce behavior beyond a label+link. See
+// backend/src/routes/menu.routes.ts and frontend/src/admin/MenuManager.tsx.
+// To revert: drop these two models, delete menu.routes.ts, remove its mount
+// in index.ts, and restore Header.tsx's hardcoded dropdown markup.
+model MenuItem {
+  id        String        @id @default(uuid())
+  label     String
+  url       String        @default("")
+  target    String        @default("_self") // "_self" | "_blank"
+  published Boolean       @default(true)
+  order     Int           @default(0)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  subItems  MenuSubItem[]
+}
+
+model MenuSubItem {
+  id         String   @id @default(uuid())
+  menuItemId String
+  label      String
+  url        String   @default("")
+  target     String   @default("_self")
+  imageUrl   String? // optional thumbnail - when ANY sibling sub-item under the same MenuItem has one, Header.tsx renders that whole dropdown as an image-tile grid (the old Reisen mega menu) instead of a plain text list
+  published  Boolean  @default(true)
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+}
+
 enum Role {
   ADMIN
   INSTRUCTOR
@@ -704,6 +741,28 @@ model FixedPageDuplicate {
   status    String   @default("published") // "published" | "draft" - a draft 404s publicly (see GET /public/:slug) but stays editable in admin
   showInNav Boolean  @default(false)
   navLabel  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Editable title/URL/publish-status for the 6 fixed pages THEMSELVES (not a
+// duplicate - see FixedPageDuplicate above). These pages have hardcoded
+// React routes (App.tsx: path="ausbildung" etc.) that the site's Header/
+// Footer nav link to directly, so `slug` here is only ever consulted for a
+// RENAME: if it differs from the kind's own hardcoded default, the old
+// hardcoded route redirects to it (see FixedPageGate.tsx) and the new slug
+// is picked up by the ":slug" catch-all (FixedPageRouter.tsx) - the old
+// route, and every Header/Footer link and sub-route under it, keeps working
+// without being touched. `slug` is null (and never editable) for "home",
+// since the homepage always stays at "/". `status: "draft"` hides the page
+// behind a "Diese Seite existiert nicht" message at both its old and new
+// URL without touching the route itself. See fixedPageSettings.routes.ts.
+model FixedPageSettings {
+  id        String   @id @default(uuid())
+  kind      String   @unique // home | ausbildung | performance | reisen | service | infos
+  slug      String?  @unique
+  title     String
+  status    String   @default("published") // "published" | "draft"
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

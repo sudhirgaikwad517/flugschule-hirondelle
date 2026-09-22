@@ -8,6 +8,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { type FixedDuplicateMeta, FixedDuplicateMetaFields } from './FixedDuplicateMetaFields';
+import { type PrimaryPageSettings, PrimaryPageSettingsFields } from './PrimaryPageSettingsFields';
 
 // Same "data only, layout stays" idea as HomeContentEditor.tsx, for the
 // /ausbildung page (Ausbildung.tsx): the intro text, the 6-row price table,
@@ -69,23 +70,26 @@ export const AusbildungContentEditor = () => {
   // /ausbildung row - see FixedPageRouter.tsx on the public side.
   const { contentId } = useParams<{ contentId?: string }>();
   const id = contentId || 'ausbildung';
-  const previewPath = `/${id}`;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [content, setContent] = useState<AusbildungData | null>(null);
   const [dupMeta, setDupMeta] = useState<FixedDuplicateMeta | null>(null);
+  const [primaryMeta, setPrimaryMeta] = useState<PrimaryPageSettings | null>(null);
   const [loadError, setLoadError] = useState(false);
+  const previewPath = `/${(!contentId && primaryMeta?.slug) || id}`;
 
   const load = () => {
     setLoadError(false);
     Promise.all([
       fetch(`/api/sitepagecontent/${id}`, { headers: authHeaders() }),
       contentId ? fetch(`/api/fixed-page-duplicates/${contentId}`, { headers: authHeaders() }) : Promise.resolve(null),
+      contentId ? Promise.resolve(null) : fetch('/api/fixed-page-settings/ausbildung', { headers: authHeaders() }),
     ])
-      .then(async ([contentRes, metaRes]) => {
+      .then(async ([contentRes, metaRes, primaryRes]) => {
         if (!contentRes.ok) throw new Error(`HTTP ${contentRes.status}`);
         setContent((await contentRes.json()).data);
         setDupMeta(metaRes && metaRes.ok ? await metaRes.json() : null);
+        setPrimaryMeta(primaryRes && primaryRes.ok ? await primaryRes.json() : null);
         setLoading(false);
       })
       .catch((err) => { console.error(err); notify('Fehler beim Laden', { type: 'error' }); setLoadError(true); setLoading(false); });
@@ -103,16 +107,27 @@ export const AusbildungContentEditor = () => {
     })
       .then(async (res) => { if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Speichern fehlgeschlagen'); })
       .then(async () => {
-        if (!dupMeta) return;
-        const res = await fetch(`/api/fixed-page-duplicates/${dupMeta.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify(dupMeta),
-        });
-        const updated = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(updated.error || 'Seiten-Einstellungen konnten nicht gespeichert werden');
-        if (updated.slug !== id) navigate(`/admin/ausbildung-content/${updated.slug}`, { replace: true });
-        else setDupMeta(updated);
+        if (dupMeta) {
+          const res = await fetch(`/api/fixed-page-duplicates/${dupMeta.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', ...authHeaders() },
+            body: JSON.stringify(dupMeta),
+          });
+          const updated = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(updated.error || 'Seiten-Einstellungen konnten nicht gespeichert werden');
+          if (updated.slug !== id) navigate(`/admin/ausbildung-content/${updated.slug}`, { replace: true });
+          else setDupMeta(updated);
+        }
+        if (primaryMeta) {
+          const res = await fetch('/api/fixed-page-settings/ausbildung', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', ...authHeaders() },
+            body: JSON.stringify(primaryMeta),
+          });
+          const updated = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(updated.error || 'Seiten-Einstellungen konnten nicht gespeichert werden');
+          setPrimaryMeta(updated);
+        }
       })
       .then(() => notify('Inhalte gespeichert', { type: 'success' }))
       .catch((err) => notify(err.message || 'Fehler beim Speichern', { type: 'error' }))
@@ -166,6 +181,7 @@ export const AusbildungContentEditor = () => {
       </Typography>
 
       {dupMeta && <FixedDuplicateMetaFields meta={dupMeta} onChange={setDupMeta} />}
+      {primaryMeta && <PrimaryPageSettingsFields settings={primaryMeta} onChange={setPrimaryMeta} />}
 
       <Card sx={{ mb: 3 }}>
         <CardContent>

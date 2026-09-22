@@ -123,6 +123,37 @@ router.post('/', authenticateJWT, authorizeAdmin, async (req, res) => {
   }
 });
 
+// Admin: duplicate an EXISTING duplicate (a "copy of a copy") - copies its
+// current content and kind under a new auto-incrementing slug, same as
+// duplicating one of the 6 originals above but sourced from this row's own
+// SitePageContent instead of the live original.
+router.post('/:id/duplicate', authenticateJWT, authorizeAdmin, async (req, res) => {
+  try {
+    const source = await findByIdOrSlug(req.params.id as string);
+    if (!source) return res.status(404).json({ error: 'Not found' });
+
+    const content = await prisma.sitePageContent.findUnique({ where: { id: source.slug } });
+    const data = content?.data ?? {};
+
+    const baseSlug = `${source.slug}-kopie`;
+    let slug = baseSlug;
+    let suffix = 2;
+    while (await slugTaken(slug)) {
+      slug = `${baseSlug}-${suffix}`;
+      suffix += 1;
+    }
+
+    await prisma.sitePageContent.create({ data: { id: slug, data } });
+    const dup = await prisma.fixedPageDuplicate.create({
+      data: { slug, kind: source.kind, title: `${source.title} (Kopie)`, showInNav: false },
+    });
+    res.status(201).json(dup);
+  } catch (error) {
+    console.error('Error duplicating fixed page duplicate:', error);
+    res.status(500).json({ error: 'Failed to duplicate page' });
+  }
+});
+
 // Admin: rename (title/slug/showInNav/navLabel) - the content itself is
 // edited the normal way, via /api/sitepagecontent/:slug (same editor
 // screens as the originals, just pointed at this slug instead).

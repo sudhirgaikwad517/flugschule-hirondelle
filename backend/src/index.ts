@@ -41,6 +41,8 @@ import homeContentRoutes from './routes/homecontent.routes'; // NEW - editable d
 import sitePageContentRoutes from './routes/sitePageContent.routes'; // NEW - same idea as homeContentRoutes, for Ausbildung/Performance/Reisen/Service/Infos
 import trashRoutes from './routes/trash.routes'; // NEW - WordPress-style Papierkorb (restore/permanently-delete) for pages.routes.ts, homecontent.routes.ts and sitePageContent.routes.ts deletes
 import fixedPageDuplicatesRoutes from './routes/fixedPageDuplicates.routes'; // NEW - true same-design duplicates of the 6 fixed pages (see FixedPageRouter.tsx on the frontend)
+import fixedPageSettingsRoutes from './routes/fixedPageSettings.routes'; // NEW - editable title/URL/publish-status for the 6 fixed pages themselves (see FixedPageGate.tsx on the frontend)
+import menuRoutes from './routes/menu.routes'; // NEW - admin-managed header navigation (Admin > Menü)
 import legalPagesRoutes from './routes/legalPages.routes';
 import serviceOrdersRoutes from './routes/serviceorders.routes';
 import trackRoutes from './routes/track.routes';
@@ -135,6 +137,8 @@ app.use('/api/homecontent', homeContentRoutes); // NEW - Home.tsx data
 app.use('/api/sitepagecontent', sitePageContentRoutes); // NEW - Ausbildung/Performance/Reisen/Service/Infos data
 app.use('/api/trash', trashRoutes); // NEW - Papierkorb (restore/permanently-delete)
 app.use('/api/fixed-page-duplicates', fixedPageDuplicatesRoutes); // NEW - true same-design duplicates
+app.use('/api/fixed-page-settings', fixedPageSettingsRoutes); // NEW - editable title/URL/publish-status for the 6 fixed pages themselves
+app.use('/api', menuRoutes); // NEW - admin-managed header navigation (/menu/public, /menuitems, /menusubitems)
 app.use('/api/legalPages', legalPagesRoutes);
 app.use('/api/serviceorders', serviceOrdersRoutes);
 app.use('/api/newsletterlists', newsletterListsRoutes);

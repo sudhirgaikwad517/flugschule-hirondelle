@@ -50,6 +50,20 @@ router.post('/:id/restore', authenticateJWT, authorizeAdmin, async (req, res) =>
       }
       await prisma.sitePageContent.upsert({ where: { id: data.slug }, update: { data: data.contentData }, create: { id: data.slug, data: data.contentData } });
       await prisma.fixedPageDuplicate.create({ data: { id: item.refId, slug: data.slug, kind: data.kind, title: data.title, showInNav: data.showInNav, navLabel: data.navLabel } });
+    } else if (item.kind === 'fixedpagesettings') {
+      if (data.slug) {
+        const existingSlug = await prisma.fixedPageSettings.findFirst({ where: { slug: data.slug, NOT: { kind: data.kind } } });
+        const slugTakenByPage = await prisma.page.findUnique({ where: { slug: data.slug } });
+        const slugTakenByDup = await prisma.fixedPageDuplicate.findUnique({ where: { slug: data.slug } });
+        if (existingSlug || slugTakenByPage || slugTakenByDup) {
+          return res.status(400).json({ error: `Die URL "${data.slug}" wird bereits verwendet. Bitte diese zuerst umbenennen.` });
+        }
+      }
+      await prisma.fixedPageSettings.upsert({
+        where: { kind: data.kind },
+        update: { slug: data.slug, title: data.title, status: data.status },
+        create: { id: item.refId, kind: data.kind, slug: data.slug, title: data.title, status: data.status },
+      });
     } else if (item.kind === 'pagegallery') {
       const existingSlug = await prisma.pageGallery.findUnique({ where: { slug: data.slug } });
       if (existingSlug) {

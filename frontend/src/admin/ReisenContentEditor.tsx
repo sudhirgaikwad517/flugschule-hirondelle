@@ -6,6 +6,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import UploadIcon from '@mui/icons-material/Upload';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { type FixedDuplicateMeta, FixedDuplicateMetaFields } from './FixedDuplicateMetaFields';
+import { type PrimaryPageSettings, PrimaryPageSettingsFields } from './PrimaryPageSettingsFields';
 
 // Same "data only, layout stays" idea as HomeContentEditor.tsx, for the
 // /reisen page (Reisen.tsx) and its 9 fixed tour sections.
@@ -57,23 +58,26 @@ export const ReisenContentEditor = () => {
   const navigate = useNavigate();
   const { contentId } = useParams<{ contentId?: string }>();
   const id = contentId || 'reisen';
-  const previewPath = `/${id}`;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [content, setContent] = useState<ReisenData | null>(null);
   const [dupMeta, setDupMeta] = useState<FixedDuplicateMeta | null>(null);
+  const [primaryMeta, setPrimaryMeta] = useState<PrimaryPageSettings | null>(null);
   const [loadError, setLoadError] = useState(false);
+  const previewPath = `/${(!contentId && primaryMeta?.slug) || id}`;
 
   const load = () => {
     setLoadError(false);
     Promise.all([
       fetch(`/api/sitepagecontent/${id}`, { headers: authHeaders() }),
       contentId ? fetch(`/api/fixed-page-duplicates/${contentId}`, { headers: authHeaders() }) : Promise.resolve(null),
+      contentId ? Promise.resolve(null) : fetch('/api/fixed-page-settings/reisen', { headers: authHeaders() }),
     ])
-      .then(async ([contentRes, metaRes]) => {
+      .then(async ([contentRes, metaRes, primaryRes]) => {
         if (!contentRes.ok) throw new Error(`HTTP ${contentRes.status}`);
         setContent((await contentRes.json()).data);
         setDupMeta(metaRes && metaRes.ok ? await metaRes.json() : null);
+        setPrimaryMeta(primaryRes && primaryRes.ok ? await primaryRes.json() : null);
         setLoading(false);
       })
       .catch((err) => { console.error(err); notify('Fehler beim Laden', { type: 'error' }); setLoadError(true); setLoading(false); });
@@ -91,16 +95,27 @@ export const ReisenContentEditor = () => {
     })
       .then(async (res) => { if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Speichern fehlgeschlagen'); })
       .then(async () => {
-        if (!dupMeta) return;
-        const res = await fetch(`/api/fixed-page-duplicates/${dupMeta.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify(dupMeta),
-        });
-        const updated = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(updated.error || 'Seiten-Einstellungen konnten nicht gespeichert werden');
-        if (updated.slug !== id) navigate(`/admin/reisen-content/${updated.slug}`, { replace: true });
-        else setDupMeta(updated);
+        if (dupMeta) {
+          const res = await fetch(`/api/fixed-page-duplicates/${dupMeta.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', ...authHeaders() },
+            body: JSON.stringify(dupMeta),
+          });
+          const updated = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(updated.error || 'Seiten-Einstellungen konnten nicht gespeichert werden');
+          if (updated.slug !== id) navigate(`/admin/reisen-content/${updated.slug}`, { replace: true });
+          else setDupMeta(updated);
+        }
+        if (primaryMeta) {
+          const res = await fetch('/api/fixed-page-settings/reisen', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', ...authHeaders() },
+            body: JSON.stringify(primaryMeta),
+          });
+          const updated = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(updated.error || 'Seiten-Einstellungen konnten nicht gespeichert werden');
+          setPrimaryMeta(updated);
+        }
       })
       .then(() => notify('Inhalte gespeichert', { type: 'success' }))
       .catch((err) => notify(err.message || 'Fehler beim Speichern', { type: 'error' }))
@@ -140,6 +155,7 @@ export const ReisenContentEditor = () => {
       </Typography>
 
       {dupMeta && <FixedDuplicateMetaFields meta={dupMeta} onChange={setDupMeta} />}
+      {primaryMeta && <PrimaryPageSettingsFields settings={primaryMeta} onChange={setPrimaryMeta} />}
 
       <Card sx={{ mb: 3 }}>
         <CardContent>

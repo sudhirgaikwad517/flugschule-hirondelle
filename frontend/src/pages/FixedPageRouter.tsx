@@ -17,29 +17,39 @@ const KIND_COMPONENTS: Record<string, ComponentType<{ contentId?: string }>> = {
   infos: Infos,
 };
 
-interface ResolvedDuplicate {
+interface Resolved {
   kind: string;
-  contentId: string;
-  title: string;
+  contentId?: string;
 }
 
-// Every catch-all ":slug" request goes through here first: if the slug is a
-// true same-design duplicate of one of the 6 fixed pages (Admin > Seiten >
-// "Duplizieren" on Startseite/Ausbildung/Performance/Reisen/Service/Infos -
-// see FixedPageDuplicate model / fixedPageDuplicates.routes.ts), render the
-// exact same hardcoded component the original page uses, pointed at the
-// copied content via contentId - this is what makes the duplicate's design
-// pixel-identical, since it's the same component. Otherwise fall back to
-// DynamicPage (the Seiten/Unlayer CMS flow), unchanged.
+// Every catch-all ":slug" request goes through here first, checking two
+// things a fixed page's slug can mean before falling back to DynamicPage
+// (the Seiten/Unlayer CMS flow):
+// 1. A true same-design duplicate (Admin > Seiten > "Duplizieren" on
+//    Startseite/Ausbildung/Performance/Reisen/Service/Infos - see
+//    FixedPageDuplicate model / fixedPageDuplicates.routes.ts) - renders the
+//    same component as the original, pointed at the copied content via
+//    contentId.
+// 2. A RENAMED original fixed page (Admin > Seiten > editing Ausbildung's
+//    own "Seiten-Einstellungen" - see FixedPageSettings model /
+//    fixedPageSettings.routes.ts / FixedPageGate.tsx, which redirects the
+//    old hardcoded route here) - renders the same component with no
+//    contentId, so it reads the page's own real content, not a copy.
 export const FixedPageRouter = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [resolved, setResolved] = useState<ResolvedDuplicate | null | undefined>(undefined);
+  const [resolved, setResolved] = useState<Resolved | null | undefined>(undefined);
 
   useEffect(() => {
     setResolved(undefined);
-    fetch(`/api/fixed-page-duplicates/public/${slug}`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setResolved(data))
+    Promise.all([
+      fetch(`/api/fixed-page-duplicates/public/${slug}`).then((res) => (res.ok ? res.json() : null)),
+      fetch(`/api/fixed-page-settings/public/by-slug/${slug}`).then((res) => (res.ok ? res.json() : null)),
+    ])
+      .then(([dup, primary]) => {
+        if (dup) setResolved({ kind: dup.kind, contentId: dup.contentId });
+        else if (primary) setResolved({ kind: primary.kind });
+        else setResolved(null);
+      })
       .catch(() => setResolved(null));
   }, [slug]);
 

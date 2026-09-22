@@ -480,7 +480,18 @@ const GalleryListHeader = () => {
 };
 
 export const GalleryList = () => (
-  <List actions={false}>
+  // Sorted by slug (not the default id/creation order) so a duplicate
+  // ("bassano-tour-kopie", and "bassano-tour-kopie-2" if duplicated again,
+  // even a copy-of-a-copy "...-kopie-kopie") lands alphabetically right
+  // next to its original ("bassano-tour") - no need to search for the copy
+  // after clicking Duplizieren. storeKey={false} is needed because
+  // react-admin otherwise remembers whatever sort was last used on this
+  // resource (from earlier browsing) and ignores this default.
+  // perPage is generous (well above the current/foreseeable row count) so
+  // every page's galleries fit on one page - sorting alone only guarantees
+  // adjacency in sort *order*; without this, a page name landing right at
+  // the page-10/11 boundary would still get visually split from its copy.
+  <List actions={false} sort={{ field: 'slug', order: 'ASC' }} storeKey={false} perPage={100}>
     <GalleryListHeader />
     <Datagrid
       rowClick="edit"

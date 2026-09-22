@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useNotify } from 'react-admin';
 import { type FixedDuplicateMeta, FixedDuplicateMetaFields } from './FixedDuplicateMetaFields';
+import { type PrimaryPageSettings, PrimaryPageSettingsFields } from './PrimaryPageSettingsFields';
 import {
   Box,
   Card,
@@ -129,6 +130,7 @@ export const HomeContentEditor = () => {
   const [saving, setSaving] = useState(false);
   const [content, setContent] = useState<HomeContentData>(DEFAULTS);
   const [dupMeta, setDupMeta] = useState<FixedDuplicateMeta | null>(null);
+  const [primaryMeta, setPrimaryMeta] = useState<PrimaryPageSettings | null>(null);
   const [loadError, setLoadError] = useState(false);
 
   const load = () => {
@@ -137,12 +139,14 @@ export const HomeContentEditor = () => {
     Promise.all([
       fetch(url, { headers: authHeaders() }),
       contentId ? fetch(`/api/fixed-page-duplicates/${contentId}`, { headers: authHeaders() }) : Promise.resolve(null),
+      contentId ? Promise.resolve(null) : fetch('/api/fixed-page-settings/home', { headers: authHeaders() }),
     ])
-      .then(async ([contentRes, metaRes]) => {
+      .then(async ([contentRes, metaRes, primaryRes]) => {
         if (!contentRes.ok) throw new Error(`HTTP ${contentRes.status}`);
         const data = await contentRes.json();
         setContent({ ...DEFAULTS, ...(contentId ? data.data : data) });
         setDupMeta(metaRes && metaRes.ok ? await metaRes.json() : null);
+        setPrimaryMeta(primaryRes && primaryRes.ok ? await primaryRes.json() : null);
         setLoading(false);
       })
       .catch((err) => {
@@ -168,16 +172,27 @@ export const HomeContentEditor = () => {
         return res.json();
       })
       .then(async () => {
-        if (!dupMeta) return;
-        const res = await fetch(`/api/fixed-page-duplicates/${dupMeta.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify(dupMeta),
-        });
-        const updated = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(updated.error || 'Seiten-Einstellungen konnten nicht gespeichert werden');
-        if (updated.slug !== contentId) navigate(`/admin/home-content/${updated.slug}`, { replace: true });
-        else setDupMeta(updated);
+        if (dupMeta) {
+          const res = await fetch(`/api/fixed-page-duplicates/${dupMeta.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', ...authHeaders() },
+            body: JSON.stringify(dupMeta),
+          });
+          const updated = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(updated.error || 'Seiten-Einstellungen konnten nicht gespeichert werden');
+          if (updated.slug !== contentId) navigate(`/admin/home-content/${updated.slug}`, { replace: true });
+          else setDupMeta(updated);
+        }
+        if (primaryMeta) {
+          const res = await fetch('/api/fixed-page-settings/home', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', ...authHeaders() },
+            body: JSON.stringify(primaryMeta),
+          });
+          const updated = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(updated.error || 'Seiten-Einstellungen konnten nicht gespeichert werden');
+          setPrimaryMeta(updated);
+        }
       })
       .then(() => notify('Startseiten-Inhalte gespeichert', { type: 'success' }))
       .catch((err) => notify(err.message || 'Fehler beim Speichern', { type: 'error' }))
@@ -227,6 +242,7 @@ export const HomeContentEditor = () => {
       </Box>
 
       {dupMeta && <FixedDuplicateMetaFields meta={dupMeta} onChange={setDupMeta} />}
+      {primaryMeta && <PrimaryPageSettingsFields settings={primaryMeta} onChange={setPrimaryMeta} />}
 
       <Card sx={{ mb: 3 }}>
         <CardContent>

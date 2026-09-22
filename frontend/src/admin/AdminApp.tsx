@@ -38,6 +38,7 @@ import { AdBannerList, AdBannerEdit, AdBannerCreate } from './Banners';
 import { PageMediaList, PageMediaEdit, PageMediaCreate } from './PageMedia';
 import { GalleryList, GalleryEdit, GalleryCreate } from './Gallery'; // NEW - standalone Galerie feature, separate from PageMedia
 import { PagesManager } from './Pages'; // NEW - "Seiten" CMS: admin-created pages with their own URL, Unlayer-based editor
+import { MenuManager } from './MenuManager'; // NEW - "Menü": header nav items and their sub-items
 import { HomeContentEditor } from './HomeContentEditor'; // NEW - editable data (text/images) for the hardcoded Home.tsx design
 import { AusbildungContentEditor } from './AusbildungContentEditor';
 import { PerformanceContentEditor } from './PerformanceContentEditor';
@@ -166,6 +167,7 @@ export const AdminApp = () => {
         <Resource name="bookingFormConfig" intent="registration" />
         <CustomRoutes>
             <Route path="/events-dashboard" element={<Authenticated><EventsDashboard /></Authenticated>} />
+            <Route path="/menu" element={<Authenticated><MenuManager /></Authenticated>} />
             <Route path="/pages" element={<Authenticated><PagesManager /></Authenticated>} />
             {/* :contentId? is only present when editing a fixed-page
                 duplicate (Pages.tsx > "Duplizieren") - see

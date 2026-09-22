@@ -30,6 +30,8 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import RestoreFromTrashIcon from '@mui/icons-material/RestoreFromTrash';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import SearchIcon from '@mui/icons-material/Search';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 // "Seiten" - the CMS feature that lets an admin create an entirely new page
 // from scratch (title, URL slug, description, header image, content) that
@@ -206,6 +208,15 @@ interface FixedDuplicateRow {
   navLabel?: string | null;
 }
 
+// Live settings for one of the 6 fixed pages themselves - see
+// FixedPageSettings model / fixedPageSettings.routes.ts.
+interface FixedPageSettingsRow {
+  kind: string;
+  slug: string | null;
+  title: string;
+  status: string;
+}
+
 export const PagesManager = () => {
   const notify = useNotify();
   const navigate = useNavigate();
@@ -213,8 +224,11 @@ export const PagesManager = () => {
 
   const [pages, setPages] = useState<PageRow[]>([]);
   const [fixedDuplicates, setFixedDuplicates] = useState<FixedDuplicateRow[]>([]);
+  const [fixedSettings, setFixedSettings] = useState<Record<string, FixedPageSettingsRow>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
   const [editing, setEditing] = useState<PageRow | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
 
@@ -245,8 +259,25 @@ export const PagesManager = () => {
       .catch(() => notify('Fehler beim Laden der Seiten-Duplikate', { type: 'error' }));
   };
 
+  // Live title/URL/status for the 6 fixed pages THEMSELVES (editable via
+  // "Seiten-Einstellungen" in their content editors - see
+  // FixedPageSettings model / fixedPageSettings.routes.ts), keyed by kind
+  // so each FIXED_PAGES row can show its current values instead of the
+  // hardcoded defaults once an admin has renamed/drafted one.
+  const fetchFixedSettings = () => {
+    fetch('/api/fixed-page-settings', { headers: authHeaders() })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        const byKind: Record<string, FixedPageSettingsRow> = {};
+        (Array.isArray(data) ? data : []).forEach((row: FixedPageSettingsRow) => { byKind[row.kind] = row; });
+        setFixedSettings(byKind);
+      })
+      .catch(() => notify('Fehler beim Laden der Seiten-Einstellungen', { type: 'error' }));
+  };
+
   useEffect(fetchPages, []);
   useEffect(fetchFixedDuplicates, []);
+  useEffect(fetchFixedSettings, []);
 
   const openCreate = () => {
     setEditing(null);
@@ -409,8 +440,22 @@ export const PagesManager = () => {
     }
   };
 
+  const handleDuplicateFixedDuplicate = async (dup: FixedDuplicateRow) => {
+    try {
+      const res = await fetch(`/api/fixed-page-duplicates/${dup.id}/duplicate`, { method: 'POST', headers: authHeaders() });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        notify(describeApiError(res, data, 'Fehler beim Duplizieren'), { type: 'error' });
+        return;
+      }
+      notify(`Duplikat erstellt: "${data.title}" - auf "Bearbeiten" klicken um sie umzubenennen`, { type: 'success' });
+      fetchFixedDuplicates();
+    } catch {
+      notify('Netzwerkfehler beim Duplizieren', { type: 'error' });
+    }
+  };
+
   const handleDeleteFixedDuplicate = async (dup: FixedDuplicateRow) => {
-    if (!window.confirm(`"${dup.title}" in den Papierkorb verschieben? Sie können sie dort wiederherstellen.`)) return;
     try {
       const res = await fetch(`/api/fixed-page-duplicates/${dup.id}`, { method: 'DELETE', headers: authHeaders() });
       const data = await res.json().catch(() => ({}));
@@ -426,7 +471,6 @@ export const PagesManager = () => {
   };
 
   const handleDelete = async (page: PageRow) => {
-    if (!window.confirm(`"${page.title}" in den Papierkorb verschieben? Sie können sie dort wiederherstellen.`)) return;
     try {
       const res = await fetch(`/api/pages/${page.id}`, { method: 'DELETE', headers: authHeaders() });
       const data = await res.json().catch(() => ({}));
@@ -442,15 +486,22 @@ export const PagesManager = () => {
   };
 
   const handleResetFixedPage = async (page: (typeof FIXED_PAGES)[number]) => {
-    if (!window.confirm(`"${page.title}" wirklich löschen? Die aktuellen Inhalte werden in den Papierkorb verschoben (dort wiederherstellbar) und die Seite zeigt bis dahin die Standardinhalte. Das Design bleibt erhalten.`)) return;
     try {
-      const res = await fetch(page.deletePath, { method: 'DELETE', headers: authHeaders() });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        notify(describeApiError(res, data, 'Fehler beim Löschen'), { type: 'error' });
+      const [contentRes, settingsRes] = await Promise.all([
+        fetch(page.deletePath, { method: 'DELETE', headers: authHeaders() }),
+        fetch(`/api/fixed-page-settings/${page.kind}`, { method: 'DELETE', headers: authHeaders() }),
+      ]);
+      const data = await contentRes.json().catch(() => ({}));
+      if (!contentRes.ok) {
+        notify(describeApiError(contentRes, data, 'Fehler beim Löschen'), { type: 'error' });
         return;
       }
-      notify(`"${page.title}" in den Papierkorb verschoben`, { type: 'success' });
+      if (!settingsRes.ok) {
+        notify('Inhalte zurückgesetzt, aber Titel/URL/Status konnten nicht zurückgesetzt werden', { type: 'warning' });
+      } else {
+        notify(`"${page.title}" in den Papierkorb verschoben`, { type: 'success' });
+      }
+      fetchFixedSettings();
     } catch {
       notify('Netzwerkfehler beim Löschen', { type: 'error' });
     }
@@ -527,9 +578,17 @@ export const PagesManager = () => {
     );
   }
 
-  const filteredFixedPages = FIXED_PAGES.filter((page) =>
-    textMatches(search, page.title, page.previewPath, ...(FIXED_PAGE_SEARCH_TERMS[page.kind] || []))
-  );
+  const filteredFixedPages = FIXED_PAGES.filter((page) => {
+    const live = fixedSettings[page.kind];
+    return textMatches(
+      search,
+      page.title,
+      page.previewPath,
+      live?.title,
+      live?.slug ? `/${live.slug}` : null,
+      ...(FIXED_PAGE_SEARCH_TERMS[page.kind] || [])
+    );
+  });
   const filteredFixedDuplicates = fixedDuplicates.filter((dup) =>
     textMatches(search, dup.title, `/${dup.slug}`, dup.navLabel, ...(FIXED_PAGE_SEARCH_TERMS[dup.kind] || []))
   );
@@ -540,6 +599,31 @@ export const PagesManager = () => {
     filteredFixedPages.length === 0 &&
     filteredFixedDuplicates.length === 0 &&
     filteredPages.length === 0;
+
+  // One combined, paginated list (fixed pages + their duplicates + custom
+  // Seiten pages) so a single "Zeilen pro Seite" control (matching
+  // Gallery.tsx's react-admin pagination) covers everything, instead of
+  // three separately-scrolling sections.
+  type DisplayRow =
+    | { key: string; rowKind: 'fixed'; page: (typeof FIXED_PAGES)[number] }
+    | { key: string; rowKind: 'duplicate'; dup: FixedDuplicateRow }
+    | { key: string; rowKind: 'custom'; page: PageRow };
+  const allRows: DisplayRow[] = [
+    ...filteredFixedPages.map((page): DisplayRow => ({ key: `fixed:${page.kind}`, rowKind: 'fixed', page })),
+    ...filteredFixedDuplicates.map((dup): DisplayRow => ({ key: `dup:${dup.id}`, rowKind: 'duplicate', dup })),
+    ...(loading ? [] : filteredPages.map((page): DisplayRow => ({ key: `custom:${page.id}`, rowKind: 'custom', page }))),
+  ];
+  const pageCount = Math.max(1, Math.ceil(allRows.length / perPage));
+  const clampedPage = Math.min(page, pageCount);
+  const startIdx = (clampedPage - 1) * perPage;
+  const pageRows = allRows.slice(startIdx, startIdx + perPage);
+  const rangeStart = allRows.length === 0 ? 0 : startIdx + 1;
+  const rangeEnd = Math.min(startIdx + perPage, allRows.length);
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setPage(1);
+  };
 
   return (
     <Box sx={{ p: 2 }}>
@@ -553,7 +637,7 @@ export const PagesManager = () => {
       <TextField
         placeholder="Suchen (Titel oder URL - auf Deutsch oder Englisch)"
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        onChange={(e) => handleSearchChange(e.target.value)}
         size="small"
         fullWidth
         sx={{ mb: 2 }}
@@ -582,72 +666,89 @@ export const PagesManager = () => {
             {noResults && (
               <TableRow><TableCell colSpan={5} align="center">Keine Seiten gefunden für "{search}".</TableCell></TableRow>
             )}
-            {filteredFixedPages.map((page) => (
-              <TableRow key={page.editPath} hover>
-                <TableCell>{page.title}</TableCell>
-                <TableCell>{page.previewPath}</TableCell>
-                <TableCell>—</TableCell>
-                <TableCell>—</TableCell>
-                <TableCell align="right">
-                  <IconButton
-                    size="small"
-                    component="a"
-                    href={page.previewPath}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Vorschau (öffnet die Seite in einem neuen Tab)"
-                  >
-                    <OpenInNewIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => navigate(page.editPath)} title="Bearbeiten">
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => handleDuplicateFixed(page)} title="Duplizieren (erstellt eine neue Seite mit exakt dem gleichen Design/Layout)">
-                    <ContentCopyIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => handleResetFixedPage(page)} title="Löschen (setzt die Seite auf die Standardinhalte zurück)">
-                    <DeleteIcon fontSize="small" color="error" />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-            {filteredFixedDuplicates.map((dup) => {
-              const original = FIXED_PAGES.find((p) => p.kind === dup.kind);
-              const editPath = original ? `${original.editPath}/${dup.slug}` : undefined;
-              return (
-                <TableRow key={dup.id} hover>
-                  <TableCell>{dup.title}</TableCell>
-                  <TableCell>{`/${dup.slug}`}</TableCell>
-                  <TableCell>Veröffentlicht</TableCell>
-                  <TableCell>{dup.showInNav ? 'Ja' : 'Nein'}</TableCell>
-                  <TableCell align="right">
-                    <IconButton
-                      size="small"
-                      component="a"
-                      href={`/${dup.slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title="Vorschau (öffnet die Seite in einem neuen Tab)"
-                    >
-                      <OpenInNewIcon fontSize="small" />
-                    </IconButton>
-                    {editPath && (
-                      <IconButton size="small" onClick={() => navigate(editPath)} title="Bearbeiten">
+            {loading && pageRows.length === 0 && (
+              <TableRow><TableCell colSpan={5} align="center">Lädt...</TableCell></TableRow>
+            )}
+            {pageRows.map((row) => {
+              if (row.rowKind === 'fixed') {
+                const { page } = row;
+                const live = fixedSettings[page.kind];
+                const title = live?.title || page.title;
+                const previewPath = live?.slug ? `/${live.slug}` : page.previewPath;
+                return (
+                  <TableRow key={row.key} hover onClick={() => navigate(page.editPath)} sx={{ cursor: 'pointer' }}>
+                    <TableCell>{title}</TableCell>
+                    <TableCell>{previewPath}</TableCell>
+                    <TableCell>{live?.status === 'draft' ? 'Entwurf' : 'Veröffentlicht'}</TableCell>
+                    <TableCell>—</TableCell>
+                    <TableCell align="right" onClick={(e) => e.stopPropagation()}>
+                      <IconButton
+                        size="small"
+                        component="a"
+                        href={previewPath}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Vorschau (öffnet die Seite in einem neuen Tab)"
+                      >
+                        <OpenInNewIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton size="small" onClick={() => navigate(page.editPath)} title="Bearbeiten">
                         <EditIcon fontSize="small" />
                       </IconButton>
-                    )}
-                    <IconButton size="small" onClick={() => handleDeleteFixedDuplicate(dup)} title="Löschen">
-                      <DeleteIcon fontSize="small" color="error" />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-            {loading ? (
-              <TableRow><TableCell colSpan={5} align="center">Lädt...</TableCell></TableRow>
-            ) : (
-              filteredPages.map((page) => (
-                <TableRow key={page.id} hover>
+                      <IconButton size="small" onClick={() => handleDuplicateFixed(page)} title="Duplizieren (erstellt eine neue Seite mit exakt dem gleichen Design/Layout)">
+                        <ContentCopyIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton size="small" onClick={() => handleResetFixedPage(page)} title="Löschen (setzt Inhalte, Titel, URL und Status auf die Standardwerte zurück)">
+                        <DeleteIcon fontSize="small" color="error" />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              }
+              if (row.rowKind === 'duplicate') {
+                const { dup } = row;
+                const original = FIXED_PAGES.find((p) => p.kind === dup.kind);
+                const editPath = original ? `${original.editPath}/${dup.slug}` : undefined;
+                return (
+                  <TableRow
+                    key={row.key}
+                    hover
+                    onClick={() => editPath && navigate(editPath)}
+                    sx={{ cursor: editPath ? 'pointer' : 'default' }}
+                  >
+                    <TableCell>{dup.title}</TableCell>
+                    <TableCell>{`/${dup.slug}`}</TableCell>
+                    <TableCell>Veröffentlicht</TableCell>
+                    <TableCell>{dup.showInNav ? 'Ja' : 'Nein'}</TableCell>
+                    <TableCell align="right" onClick={(e) => e.stopPropagation()}>
+                      <IconButton
+                        size="small"
+                        component="a"
+                        href={`/${dup.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Vorschau (öffnet die Seite in einem neuen Tab)"
+                      >
+                        <OpenInNewIcon fontSize="small" />
+                      </IconButton>
+                      {editPath && (
+                        <IconButton size="small" onClick={() => navigate(editPath)} title="Bearbeiten">
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      )}
+                      <IconButton size="small" onClick={() => handleDuplicateFixedDuplicate(dup)} title="Duplizieren (erstellt eine weitere Kopie mit gleichem Design/Inhalt)">
+                        <ContentCopyIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton size="small" onClick={() => handleDeleteFixedDuplicate(dup)} title="Löschen">
+                        <DeleteIcon fontSize="small" color="error" />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              }
+              const { page } = row;
+              return (
+                <TableRow key={row.key} hover onClick={() => openEdit(page)} sx={{ cursor: 'pointer' }}>
                   <TableCell>
                     {page.title}
                     {page.slug === 'home' && (
@@ -659,7 +760,7 @@ export const PagesManager = () => {
                   <TableCell>{page.slug === 'home' ? '/' : `/${page.slug}`}</TableCell>
                   <TableCell>{page.status === 'published' ? 'Veröffentlicht' : 'Entwurf'}</TableCell>
                   <TableCell>{page.showInNav ? 'Ja' : 'Nein'}</TableCell>
-                  <TableCell align="right">
+                  <TableCell align="right" onClick={(e) => e.stopPropagation()}>
                     <IconButton
                       size="small"
                       component="a"
@@ -681,10 +782,59 @@ export const PagesManager = () => {
                     </IconButton>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
+              );
+            })}
           </TableBody>
         </Table>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap', gap: 2, px: 2, py: 1, borderTop: '1px solid #e2e8f0' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="body2" sx={{ color: '#666' }}>Zeilen pro Seite:</Typography>
+            <TextField
+              select
+              value={perPage}
+              onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); }}
+              size="small"
+              variant="standard"
+              sx={{ width: 56 }}
+            >
+              <MenuItem value={10}>10</MenuItem>
+              <MenuItem value={25}>25</MenuItem>
+              <MenuItem value={50}>50</MenuItem>
+            </TextField>
+          </Box>
+          <Typography variant="body2" sx={{ color: '#666' }}>
+            {rangeStart}-{rangeEnd} von {allRows.length}
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <IconButton size="small" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={clampedPage <= 1}>
+              <ChevronLeftIcon fontSize="small" />
+            </IconButton>
+            {Array.from({ length: pageCount }, (_, i) => i + 1).map((n) => (
+              <Box
+                key={n}
+                onClick={() => setPage(n)}
+                sx={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem',
+                  bgcolor: n === clampedPage ? '#e2e8f0' : 'transparent',
+                  fontWeight: n === clampedPage ? 700 : 400,
+                  '&:hover': { bgcolor: '#f1f5f9' },
+                }}
+              >
+                {n}
+              </Box>
+            ))}
+            <IconButton size="small" onClick={() => setPage((p) => Math.min(pageCount, p + 1))} disabled={clampedPage >= pageCount}>
+              <ChevronRightIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        </Box>
       </Paper>
     </Box>
   );
