@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../utils/prisma';
 import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware';
 import { RESERVED_SLUGS } from '../data/reservedSlugs';
+import { syncMenuPublishedForUrl } from '../utils/menuSync';
 
 // Editable title/URL/publish-status for the 6 fixed pages THEMSELVES - see
 // the FixedPageSettings model comment in schema.prisma for the full
@@ -129,6 +130,8 @@ router.put('/:kind', authenticateJWT, authorizeAdmin, async (req, res) => {
       where: { kind },
       data: { title, status, slug },
     });
+    const url = kind === 'home' ? '/' : `/${updated.slug}`;
+    await syncMenuPublishedForUrl(url, status !== 'draft');
     res.json(updated);
   } catch (error) {
     console.error('Error updating fixed page settings:', error);

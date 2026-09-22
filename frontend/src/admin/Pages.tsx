@@ -658,16 +658,15 @@ export const PagesManager = () => {
               <TableCell>Titel</TableCell>
               <TableCell>URL</TableCell>
               <TableCell>Status</TableCell>
-              <TableCell>Im Menü</TableCell>
               <TableCell align="right">Aktionen</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {noResults && (
-              <TableRow><TableCell colSpan={5} align="center">Keine Seiten gefunden für "{search}".</TableCell></TableRow>
+              <TableRow><TableCell colSpan={4} align="center">Keine Seiten gefunden für "{search}".</TableCell></TableRow>
             )}
             {loading && pageRows.length === 0 && (
-              <TableRow><TableCell colSpan={5} align="center">Lädt...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={4} align="center">Lädt...</TableCell></TableRow>
             )}
             {pageRows.map((row) => {
               if (row.rowKind === 'fixed') {
@@ -680,7 +679,6 @@ export const PagesManager = () => {
                     <TableCell>{title}</TableCell>
                     <TableCell>{previewPath}</TableCell>
                     <TableCell>{live?.status === 'draft' ? 'Entwurf' : 'Veröffentlicht'}</TableCell>
-                    <TableCell>—</TableCell>
                     <TableCell align="right" onClick={(e) => e.stopPropagation()}>
                       <IconButton
                         size="small"
@@ -719,7 +717,6 @@ export const PagesManager = () => {
                     <TableCell>{dup.title}</TableCell>
                     <TableCell>{`/${dup.slug}`}</TableCell>
                     <TableCell>Veröffentlicht</TableCell>
-                    <TableCell>{dup.showInNav ? 'Ja' : 'Nein'}</TableCell>
                     <TableCell align="right" onClick={(e) => e.stopPropagation()}>
                       <IconButton
                         size="small"
@@ -759,7 +756,6 @@ export const PagesManager = () => {
                   </TableCell>
                   <TableCell>{page.slug === 'home' ? '/' : `/${page.slug}`}</TableCell>
                   <TableCell>{page.status === 'published' ? 'Veröffentlicht' : 'Entwurf'}</TableCell>
-                  <TableCell>{page.showInNav ? 'Ja' : 'Nein'}</TableCell>
                   <TableCell align="right" onClick={(e) => e.stopPropagation()}>
                     <IconButton
                       size="small"

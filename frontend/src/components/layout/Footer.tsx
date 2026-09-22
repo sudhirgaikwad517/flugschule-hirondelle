@@ -65,29 +65,19 @@ export const Footer = () => {
     }
   };
 
-  // Order matches the live site's own footer sitemap menu exactly
-  // (verified against its actual markup, which regroups these same 15
-  // items into different column counts at different widths but always in
-  // this same underlying sequence): Home, Reisen, Kalender, Ausbildung,
-  // Shop, Checks, Wetter, Medien, Gelände, Team, Tandem, FAQ, Kontakt,
-  // Impressum, Datenschutzerklärung.
-  const NAV_LINKS = [
-    { to: '/', label: 'Home' },
-    { to: '/reisen', label: 'Reisen' },
-    { to: '/buchungskalender', label: 'Kalender' },
-    { to: '/ausbildung', label: 'Ausbildung' },
-    { to: '/shop', label: 'Shop' },
-    { to: '/service#2-jahres-check', label: 'Checks' },
-    { to: '/infos/wetter', label: 'Wetter' },
-    { to: '/infos/medien', label: 'Medien' },
-    { to: '/infos/gelaende', label: 'Gelände' },
-    { to: '/infos/team', label: 'Team' },
-    { to: '/ausbildung#tandem', label: 'Tandem' },
-    { to: '/faq', label: 'FAQ' },
-    { to: '/infos#kontakt', label: 'Kontakt' },
-    { to: '/impressum', label: 'Impressum' },
-    { to: '/datenschutz', label: 'Datenschutzerklärung' },
-  ];
+  // Admin-managed (Admin > Menü > Footer tab) - was a hardcoded NAV_LINKS
+  // array here (Home, Reisen, Kalender, Ausbildung, Shop, Checks, Wetter,
+  // Medien, Gelände, Team, Tandem, FAQ, Kontakt, Impressum,
+  // Datenschutzerklärung), now fetched from the same MenuItem model as the
+  // header nav (see menu.routes.ts, MenuItem.location === 'footer').
+  const [footerLinks, setFooterLinks] = useState<{ id: string; label: string; url: string; target: string }[]>([]);
+
+  useEffect(() => {
+    fetch('/api/footerlinks/public')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setFooterLinks(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
 
   return (
     <footer
@@ -182,11 +172,14 @@ export const Footer = () => {
                 Ausbildung/Shop/Checks, and so on - not a left-to-right,
                 row-by-row fill, which regroups the same 15 links wrong. */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 md:grid-rows-3 md:grid-flow-col gap-x-6 gap-y-3 text-sm font-semibold mb-8">
-              {NAV_LINKS.map((link) => (
-                <Link key={link.to} to={link.to} className="underline hover:text-luxury-gold transition-colors whitespace-nowrap">
-                  {link.label}
-                </Link>
-              ))}
+              {footerLinks.map((link) => {
+                const linkProps = link.target === '_blank' ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+                return (
+                  <Link key={link.id} to={link.url} className="underline hover:text-luxury-gold transition-colors whitespace-nowrap" {...linkProps}>
+                    {link.label}
+                  </Link>
+                );
+              })}
             </div>
 
             <div className="flex items-center gap-4">

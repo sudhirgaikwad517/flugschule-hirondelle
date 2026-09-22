@@ -4,6 +4,7 @@ import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware'
 import { RESERVED_SLUGS } from '../data/reservedSlugs';
 import { DEFAULTS as HOME_DEFAULTS } from './homecontent.routes';
 import { DEFAULTS as SITE_PAGE_DEFAULTS } from './sitePageContent.routes';
+import { syncMenuPublishedForUrl } from '../utils/menuSync';
 
 // A TRUE same-design duplicate of one of the 6 fixed pages (see the
 // FixedPageDuplicate model comment in schema.prisma): unlike Pages.tsx's
@@ -184,6 +185,7 @@ router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
         navLabel: req.body.navLabel ?? existing.navLabel,
       },
     });
+    await syncMenuPublishedForUrl(`/${updated.slug}`, updated.status !== 'draft');
     res.json(updated);
   } catch (error) {
     console.error('Error updating fixed page duplicate:', error);

@@ -8,7 +8,7 @@ const router = Router();
 router.get('/menu/public', async (req, res) => {
   try {
     const items = await prisma.menuItem.findMany({
-      where: { published: true },
+      where: { published: true, location: 'header' },
       include: {
         subItems: {
           where: { published: true },
@@ -23,10 +23,29 @@ router.get('/menu/public', async (req, res) => {
   }
 });
 
-// Admin routes for MenuItems (top-level nav entries)
-router.get('/menuitems', authenticateJWT, authorizeAdmin, async (req, res) => {
+// GET published footer links, flat (Public) - consumed by Footer.tsx. Footer
+// items never have subItems (the footer is a flat link list), so this stays
+// a plain array instead of the nested shape /menu/public returns.
+router.get('/footerlinks/public', async (req, res) => {
   try {
     const items = await prisma.menuItem.findMany({
+      where: { published: true, location: 'footer' },
+      orderBy: { order: 'asc' },
+    });
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Admin routes for MenuItems (top-level entries, header or footer). Both
+// MenuManager.tsx tabs (Header/Footer) hit these same endpoints, filtered by
+// ?location=header|footer (defaults to "header").
+router.get('/menuitems', authenticateJWT, authorizeAdmin, async (req, res) => {
+  try {
+    const location = req.query.location === 'footer' ? 'footer' : 'header';
+    const items = await prisma.menuItem.findMany({
+      where: { location },
       include: { subItems: { orderBy: { order: 'asc' } } },
       orderBy: { order: 'asc' },
     });
@@ -39,9 +58,10 @@ router.get('/menuitems', authenticateJWT, authorizeAdmin, async (req, res) => {
 router.post('/menuitems', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
     const { label, url, target, published } = req.body;
-    const count = await prisma.menuItem.count();
+    const location = req.body.location === 'footer' ? 'footer' : 'header';
+    const count = await prisma.menuItem.count({ where: { location } });
     const item = await prisma.menuItem.create({
-      data: { label, url, target, published, order: count },
+      data: { label, url, target, published, location, order: count },
     });
     res.status(201).json(item);
   } catch (error) {

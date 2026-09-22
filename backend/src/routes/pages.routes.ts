@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../utils/prisma';
 import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware';
 import { RESERVED_SLUGS } from '../data/reservedSlugs';
+import { syncMenuPublishedForUrl } from '../utils/menuSync';
 
 // NEW FILE - the "Seiten" CMS feature: lets an admin create an entirely new
 // page (title, slug, description, header image, content) that goes live at
@@ -124,6 +125,7 @@ router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
       where: { id: req.params.id as string },
       data: { slug, title, metaDescription, headerImageUrl, status, showInNav, navLabel, body, design },
     });
+    await syncMenuPublishedForUrl(`/${page.slug}`, page.status !== 'draft');
     res.json(page);
   } catch (error: any) {
     if (error?.code === 'P2002') {

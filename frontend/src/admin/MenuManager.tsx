@@ -3,17 +3,21 @@ import { useNotify } from 'react-admin';
 import {
   Box,
   Button,
+  Checkbox,
   CircularProgress,
   Collapse,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   FormControlLabel,
   IconButton,
   MenuItem as SelectMenuItem,
   Paper,
   Switch,
+  Tab,
+  Tabs,
   TextField,
   Typography,
 } from '@mui/material';
@@ -25,14 +29,22 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import UploadIcon from '@mui/icons-material/Upload';
 import CloseIcon from '@mui/icons-material/Close';
+import DescriptionIcon from '@mui/icons-material/Description';
+import LinkIcon from '@mui/icons-material/Link';
 
 // "Menü" - admin management for the header's top-level navigation items and
-// their sub-items (Ausbildung > Schnupperkurs, etc.), backed by the
-// MenuItem/MenuSubItem models and menu.routes.ts. Replaces what used to be
-// hardcoded directly in Header.tsx. Drag-and-drop reordering mirrors
-// Gallery.tsx's GalleryImagesInput (plain HTML5 drag events, no library).
-// Registered as a CustomRoute at /admin/menu in AdminApp.tsx, right before
-// Galerie in CustomMenu.tsx's Komponenten group.
+// their sub-items (Ausbildung > Schnupperkurs, etc.) AND the footer's flat
+// link list, both backed by the same MenuItem/MenuSubItem models
+// (menu.routes.ts), distinguished by MenuItem.location ("header" | "footer").
+// Replaces what used to be hardcoded directly in Header.tsx/Footer.tsx.
+// Drag-and-drop reordering mirrors Gallery.tsx's GalleryImagesInput (plain
+// HTML5 drag events, no library). Registered as a CustomRoute at /admin/menu
+// in AdminApp.tsx, right before Galerie in CustomMenu.tsx's Komponenten
+// group.
+//
+// Footer items never have sub-items (the footer is a flat link list, not a
+// dropdown nav), so the "Header"/"Footer" tab below hides all sub-item UI
+// while on the Footer tab.
 //
 // Shop, the "Seiten" dropdown (auto-populated from admin-created pages) and
 // the Konto/login menu are NOT managed here - they stay hardcoded in
@@ -72,8 +84,28 @@ const describeApiError = (res: Response, fallback: string): string => {
 const emptyItemForm = { label: '', url: '', target: '_self', published: true };
 const emptySubItemForm = { label: '', url: '', target: '_self', imageUrl: '', published: true };
 
+// The 6 hand-built pages (same set as Pages.tsx's FIXED_PAGES), offered in
+// the left "Seiten" picker alongside admin-created Seiten pages, so an admin
+// can add an existing page to the menu by ticking a checkbox instead of
+// retyping its URL - the same "pick from Pages" flow WordPress's own
+// Appearance > Menus screen uses. Only the `kind`/default label/default slug
+// are fixed here - the actual title and URL an admin sees (and may have
+// renamed via "Seiten-Einstellungen", e.g. Ausbildung -> "Training" at
+// /education) are live-fetched from /api/fixed-page-settings below, exactly
+// like Pages.tsx's own fixedSettings lookup - hardcoding them here would
+// silently drift out of sync with a renamed fixed page.
+const FIXED_PAGE_DEFAULTS: { kind: string; label: string; defaultSlug: string | null }[] = [
+  { kind: 'home', label: 'Startseite', defaultSlug: null },
+  { kind: 'ausbildung', label: 'Ausbildung', defaultSlug: 'ausbildung' },
+  { kind: 'performance', label: 'Performance', defaultSlug: 'performance' },
+  { kind: 'reisen', label: 'Reisen', defaultSlug: 'reisen' },
+  { kind: 'service', label: 'Service', defaultSlug: 'service' },
+  { kind: 'infos', label: 'Infos / Kontakt', defaultSlug: 'infos' },
+];
+
 export const MenuManager = () => {
   const notify = useNotify();
+  const [location, setLocation] = useState<'header' | 'footer'>('header');
   const [items, setItems] = useState<ItemRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -94,16 +126,142 @@ export const MenuManager = () => {
   const [dragItemIndex, setDragItemIndex] = useState<number | null>(null);
   const [dragSubItem, setDragSubItem] = useState<{ parentId: string; index: number } | null>(null);
 
+  // --- "Menüpunkt hinzufügen" picker (left panel) ---
+  const [fixedPageSettings, setFixedPageSettings] = useState<Record<string, { slug: string | null; title: string }>>({});
+  const [customPages, setCustomPages] = useState<{ key: string; label: string; url: string }[]>([]);
+  const [duplicatePages, setDuplicatePages] = useState<{ key: string; label: string; url: string }[]>([]);
+  const [selectedPageKeys, setSelectedPageKeys] = useState<Set<string>>(new Set());
+  const [customLinkLabel, setCustomLinkLabel] = useState('');
+  const [customLinkUrl, setCustomLinkUrl] = useState('');
+  const [addingSelected, setAddingSelected] = useState(false);
+  const [addingCustomLink, setAddingCustomLink] = useState(false);
+
+  // Live title/URL for the 6 fixed pages, keyed by kind - same source
+  // Pages.tsx itself reads (fetchFixedSettings), so a renamed fixed page
+  // (e.g. Ausbildung -> "Training" at /education via "Seiten-Einstellungen")
+  // shows up here with its actual current title/URL instead of the default.
+  useEffect(() => {
+    fetch('/api/fixed-page-settings', { headers: authHeaders() })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: { kind: string; slug: string | null; title: string }[]) => {
+        const byKind: Record<string, { slug: string | null; title: string }> = {};
+        (Array.isArray(data) ? data : []).forEach((row) => { byKind[row.kind] = row; });
+        setFixedPageSettings(byKind);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Same admin endpoint Admin > Seiten (Pages.tsx) itself lists from, so
+  // every custom-created page shown there - published or draft, nav-visible
+  // or not - appears in this picker too, not just the subset /pages/public
+  // exposes for the live site's own "Seiten" dropdown. "home" is excluded
+  // since it's covered by the Startseite fixed-page entry above.
+  useEffect(() => {
+    fetch('/api/pages?_start=0&_end=200', { headers: authHeaders() })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: { slug: string; title: string; navLabel?: string | null }[]) => {
+        setCustomPages(
+          (Array.isArray(data) ? data : [])
+            .filter((p) => p.slug !== 'home')
+            .map((p) => ({ key: `page:${p.slug}`, label: p.navLabel || p.title, url: `/${p.slug}` }))
+        );
+      })
+      .catch(() => {});
+  }, []);
+
+  // A "Duplizieren" copy of one of the 6 fixed pages (Pages.tsx > Seiten,
+  // rendered by FixedPageRouter.tsx at its own slug) is stored as a
+  // FixedPageDuplicate, NOT a Page row - Admin > Seiten lists both in one
+  // table, so this picker needs both too, or a duplicated page (like
+  // "testtttt") would silently be missing from it.
+  useEffect(() => {
+    fetch('/api/fixed-page-duplicates', { headers: authHeaders() })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: { slug: string; title: string; navLabel?: string | null }[]) => {
+        setDuplicatePages(
+          (Array.isArray(data) ? data : []).map((d) => ({ key: `dup:${d.slug}`, label: d.navLabel || d.title, url: `/${d.slug}` }))
+        );
+      })
+      .catch(() => {});
+  }, []);
+
+  const fixedPages = FIXED_PAGE_DEFAULTS.map((d) => {
+    const live = fixedPageSettings[d.kind];
+    const label = live?.title || d.label;
+    const url = d.kind === 'home' ? '/' : `/${live?.slug || d.defaultSlug}`;
+    return { key: `fixed:${d.kind}`, label, url };
+  });
+
+  useEffect(() => {
+    setSelectedPageKeys(new Set());
+  }, [location]);
+
+  const pageOptions = [...fixedPages, ...customPages, ...duplicatePages];
+
+  const togglePageSelected = (key: string) => {
+    setSelectedPageKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  // Shared by both "add selected pages" and "add custom link": always
+  // creates a new top-level MenuItem. Nesting an entry under another item as
+  // a sub-item is still done from the Menüstruktur panel on the right (the
+  // per-item "Untermenüpunkt hinzufügen" button), not from this picker.
+  const addEntriesToMenu = async (entries: { label: string; url: string }[]) => {
+    if (entries.length === 0) return;
+    try {
+      for (const entry of entries) {
+        await fetch('/api/menuitems', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ label: entry.label, url: entry.url, target: '_self', published: true, location }),
+        });
+      }
+      notify(entries.length === 1 ? 'Zum Menü hinzugefügt' : `${entries.length} Einträge zum Menü hinzugefügt`, { type: 'success' });
+      fetchItems();
+    } catch {
+      notify('Fehler beim Hinzufügen', { type: 'error' });
+    }
+  };
+
+  const addSelectedPages = async () => {
+    const entries = pageOptions.filter((p) => selectedPageKeys.has(p.key)).map((p) => ({ label: p.label, url: p.url }));
+    if (entries.length === 0) {
+      notify('Bitte mindestens eine Seite auswählen.', { type: 'warning' });
+      return;
+    }
+    setAddingSelected(true);
+    await addEntriesToMenu(entries);
+    setSelectedPageKeys(new Set());
+    setAddingSelected(false);
+  };
+
+  const addCustomLink = async () => {
+    if (!customLinkLabel.trim() || !customLinkUrl.trim()) {
+      notify('Bitte Link-Text und URL eingeben.', { type: 'warning' });
+      return;
+    }
+    setAddingCustomLink(true);
+    await addEntriesToMenu([{ label: customLinkLabel.trim(), url: customLinkUrl.trim() }]);
+    setCustomLinkLabel('');
+    setCustomLinkUrl('');
+    setAddingCustomLink(false);
+  };
+
   const fetchItems = () => {
     setLoading(true);
-    fetch('/api/menuitems', { headers: authHeaders() })
+    fetch(`/api/menuitems?location=${location}`, { headers: authHeaders() })
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => setItems(Array.isArray(data) ? data : []))
       .catch(() => notify('Fehler beim Laden des Menüs', { type: 'error' }))
       .finally(() => setLoading(false));
   };
 
-  useEffect(fetchItems, []);
+  useEffect(fetchItems, [location]);
 
   const toggleExpanded = (id: string) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
@@ -130,7 +288,7 @@ export const MenuManager = () => {
     try {
       const url = editingItem ? `/api/menuitems/${editingItem.id}` : '/api/menuitems';
       const method = editingItem ? 'PUT' : 'POST';
-      const body = editingItem ? { ...itemForm, order: editingItem.order } : itemForm;
+      const body = editingItem ? { ...itemForm, order: editingItem.order } : { ...itemForm, location };
       const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
       if (!res.ok) throw new Error(describeApiError(res, 'Fehler beim Speichern'));
       notify(editingItem ? 'Menüpunkt gespeichert' : 'Menüpunkt erstellt', { type: 'success' });
@@ -144,7 +302,10 @@ export const MenuManager = () => {
   };
 
   const deleteItem = async (item: ItemRow) => {
-    if (!window.confirm(`"${item.label}" und alle seine Untermenüpunkte wirklich löschen?`)) return;
+    const confirmMsg = location === 'header'
+      ? `"${item.label}" und alle seine Untermenüpunkte wirklich löschen?`
+      : `"${item.label}" wirklich aus dem Footer löschen?`;
+    if (!window.confirm(confirmMsg)) return;
     try {
       const res = await fetch(`/api/menuitems/${item.id}`, { method: 'DELETE', headers: authHeaders() });
       if (!res.ok) throw new Error(describeApiError(res, 'Fehler beim Löschen'));
@@ -303,25 +464,97 @@ export const MenuManager = () => {
 
   return (
     <Box sx={{ p: 2 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-        <Box>
-          <Typography variant="h5">Menü</Typography>
-          <Typography variant="body2" sx={{ color: '#666' }}>
-            Verwaltet die Hauptnavigation der Webseite (Header) und ihre Untermenüpunkte.
-          </Typography>
-        </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreateItem}>Neuer Menüpunkt</Button>
+      <Box sx={{ mb: 1 }}>
+        <Typography variant="h5">Menü</Typography>
+        <Typography variant="body2" sx={{ color: '#666' }}>
+          {location === 'header'
+            ? 'Verwaltet die Hauptnavigation der Webseite (Header) und ihre Untermenüpunkte.'
+            : 'Verwaltet die Link-Liste im Footer der Webseite.'}
+        </Typography>
       </Box>
 
-      {loading && items.length === 0 && (
-        <Typography sx={{ mt: 3, color: '#999' }}>Lädt...</Typography>
-      )}
+      <Tabs value={location} onChange={(_, v) => { setLocation(v); setExpanded({}); }} sx={{ mb: 2, borderBottom: '1px solid #e0e0e0' }}>
+        <Tab label="Header" value="header" />
+        <Tab label="Footer" value="footer" />
+      </Tabs>
 
-      {!loading && items.length === 0 && (
-        <Paper variant="outlined" sx={{ p: 4, textAlign: 'center', color: '#999', mt: 2 }}>
-          Noch keine Menüpunkte vorhanden.
+      <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', flexDirection: { xs: 'column', md: 'row' } }}>
+
+        {/* Left panel - "Menüpunkt hinzufügen", mirrors WordPress's Appearance > Menus
+            "Add menu items" panel: pick existing pages or type a custom link, then
+            choose whether it becomes a new top-level entry or a sub-item of an
+            existing one (header only - the footer is always a flat list). */}
+        <Paper variant="outlined" sx={{ width: { xs: '100%', md: 320 }, flexShrink: 0, p: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5 }}>Menüpunkt hinzufügen</Typography>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            <DescriptionIcon fontSize="small" sx={{ color: '#666' }} />
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>Seiten</Typography>
+          </Box>
+          <Box sx={{ maxHeight: 220, overflowY: 'auto', border: '1px solid #eee', borderRadius: '6px', mb: 1.5 }}>
+            {pageOptions.length === 0 && (
+              <Typography variant="body2" sx={{ color: '#999', p: 1.5 }}>Keine Seiten gefunden.</Typography>
+            )}
+            {pageOptions.map((p) => (
+              <Box key={p.key} sx={{ display: 'flex', alignItems: 'center', px: 0.5 }}>
+                <Checkbox size="small" checked={selectedPageKeys.has(p.key)} onChange={() => togglePageSelected(p.key)} />
+                <Typography variant="body2" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.label}</Typography>
+              </Box>
+            ))}
+          </Box>
+
+          <Button
+            fullWidth variant="outlined" size="small"
+            onClick={addSelectedPages}
+            disabled={addingSelected || selectedPageKeys.size === 0}
+          >
+            {addingSelected ? 'Wird hinzugefügt...' : 'Zum Menü hinzufügen'}
+          </Button>
+
+          <Divider sx={{ my: 2 }} />
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            <LinkIcon fontSize="small" sx={{ color: '#666' }} />
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>Eigener Link</Typography>
+          </Box>
+          <TextField
+            fullWidth size="small" label="URL" placeholder="https://... oder /pfad"
+            value={customLinkUrl} onChange={(e) => setCustomLinkUrl(e.target.value)}
+            sx={{ mb: 1 }}
+          />
+          <TextField
+            fullWidth size="small" label="Link-Text"
+            value={customLinkLabel} onChange={(e) => setCustomLinkLabel(e.target.value)}
+            sx={{ mb: 1.5 }}
+          />
+          <Button
+            fullWidth variant="outlined" size="small"
+            onClick={addCustomLink}
+            disabled={addingCustomLink || !customLinkLabel.trim() || !customLinkUrl.trim()}
+          >
+            {addingCustomLink ? 'Wird hinzugefügt...' : 'Zum Menü hinzufügen'}
+          </Button>
         </Paper>
-      )}
+
+        {/* Right panel - "Menüstruktur": the current ordered/nested tree, drag to
+            reorder within a level, expand a header item to manage its sub-items. */}
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Menüstruktur</Typography>
+            <Button size="small" startIcon={<AddIcon />} onClick={openCreateItem}>
+              {location === 'header' ? 'Manueller Eintrag' : 'Manueller Footer-Link'}
+            </Button>
+          </Box>
+
+          {loading && items.length === 0 && (
+            <Typography sx={{ mt: 3, color: '#999' }}>Lädt...</Typography>
+          )}
+
+          {!loading && items.length === 0 && (
+            <Paper variant="outlined" sx={{ p: 4, textAlign: 'center', color: '#999', mt: 2 }}>
+              {location === 'header' ? 'Noch keine Menüpunkte vorhanden.' : 'Noch keine Footer-Links vorhanden.'}
+            </Paper>
+          )}
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 2 }}>
         {items.map((item, index) => (
@@ -341,14 +574,16 @@ export const MenuManager = () => {
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1.5 }}>
               <DragIndicatorIcon sx={{ color: '#aaa', cursor: 'grab' }} fontSize="small" />
-              <IconButton size="small" onClick={() => toggleExpanded(item.id)}>
-                {expanded[item.id] ? <ExpandMoreIcon fontSize="small" /> : <ChevronRightIcon fontSize="small" />}
-              </IconButton>
+              {location === 'header' && (
+                <IconButton size="small" onClick={() => toggleExpanded(item.id)}>
+                  {expanded[item.id] ? <ExpandMoreIcon fontSize="small" /> : <ChevronRightIcon fontSize="small" />}
+                </IconButton>
+              )}
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{item.label}</Typography>
                 <Typography variant="body2" sx={{ color: '#666' }}>
                   {item.url || '—'}
-                  {item.subItems.length > 0 && ` · ${item.subItems.length} Untermenüpunkt${item.subItems.length === 1 ? '' : 'e'}`}
+                  {location === 'header' && item.subItems.length > 0 && ` · ${item.subItems.length} Untermenüpunkt${item.subItems.length === 1 ? '' : 'e'}`}
                 </Typography>
               </Box>
               <FormControlLabel
@@ -360,7 +595,13 @@ export const MenuManager = () => {
               <IconButton size="small" onClick={() => deleteItem(item)} title="Löschen"><DeleteIcon fontSize="small" color="error" /></IconButton>
             </Box>
 
-            <Collapse in={!!expanded[item.id]} timeout="auto" unmountOnExit>
+            {/* Always mounted (never conditionally removed from the tree) so
+                switching the Header/Footer tab can't yank this out mid-
+                animation while `in` is still true - that abrupt unmount is
+                what crashes Collapse/react-transition-group with a
+                "removeChild" DOM error. `in` itself already stays false for
+                footer items since the expand chevron above is header-only. */}
+            <Collapse in={location === 'header' && !!expanded[item.id]} timeout="auto" unmountOnExit>
               <Box sx={{ pl: 6, pr: 2, pb: 2 }}>
                 {item.subItems.length === 0 && (
                   <Typography variant="body2" sx={{ color: '#999', mb: 1 }}>Keine Untermenüpunkte.</Typography>
@@ -406,10 +647,16 @@ export const MenuManager = () => {
           </Paper>
         ))}
       </Box>
+        </Box>
+      </Box>
 
       {/* Top-level item dialog */}
       <Dialog open={itemDialogOpen} onClose={() => setItemDialogOpen(false)} fullWidth maxWidth="sm">
-        <DialogTitle>{editingItem ? 'Menüpunkt bearbeiten' : 'Neuer Menüpunkt'}</DialogTitle>
+        <DialogTitle>
+          {location === 'header'
+            ? (editingItem ? 'Menüpunkt bearbeiten' : 'Neuer Menüpunkt')
+            : (editingItem ? 'Footer-Link bearbeiten' : 'Neuer Footer-Link')}
+        </DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
           <TextField
             label="Titel" fullWidth autoFocus
