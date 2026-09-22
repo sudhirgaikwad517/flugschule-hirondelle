@@ -181,6 +181,14 @@ model Booking {
   certificated    Boolean       @default(false)
   checkedIn       Boolean       @default(false)
   adminComment    String?       @db.Text // internal admin-only note, distinct from customer-facing `remarks`
+  // Set the first (and only) time reminders.job.ts's daily cron actually
+  // sends each email for this booking - the cron re-queries "events in
+  // exactly 3 days" / "events that ended yesterday" fresh every run with no
+  // memory of what it already sent, so without these guards a duplicate
+  // cron execution (e.g. a stray zombie process from a dev-server restart
+  // that never fully died) resends the same email every time it fires.
+  reminderSentAt       DateTime?
+  ratingRequestSentAt  DateTime?
   event           Event         @relation(fields: [eventId], references: [id])
   user            User?         @relation(fields: [userId], references: [id])
   items           BookingItem[]

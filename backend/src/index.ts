@@ -163,14 +163,22 @@ if (process.env.NODE_ENV === 'production') {
 import { startCronJobs } from './jobs/reminders.job';
 import { startNewsletterCron } from './jobs/newsletter.job';
 
-// Start cron jobs
-startCronJobs();
-startNewsletterCron();
-
-// Start server
+// Start server - cron jobs are only registered once this process has
+// actually won the port (see the listen callback below). Starting them
+// unconditionally here used to mean that a process which lost the port
+// (e.g. a `tsx watch` restart whose predecessor didn't fully exit, common
+// on Windows) still ran its own copy of the daily reminder/rating-request
+// cron forever, invisibly, alongside the real server - the process never
+// serves HTTP but keeps sending duplicate emails at 8am every day.
 const httpServer = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  startCronJobs();
+  startNewsletterCron();
 });
 httpServer.on('error', (err) => {
   console.error('LISTEN ERROR:', err);
+  // A process that failed to bind the port must not linger - it has
+  // nothing left to do, and staying alive is exactly how the zombie-cron
+  // duplicate-email bug happened.
+  process.exit(1);
 });

@@ -36,7 +36,11 @@ export const startCronJobs = () => {
 
       const upcomingEvents = await prisma.event.findMany({
         where: { startDate: { gte: targetDate, lt: nextDay } },
-        include: { bookings: { where: { status: 'CONFIRMED' }, include: { user: true } } }
+        // reminderSentAt: null - this query re-runs fresh every day with no
+        // other memory of what it already sent, so without this filter any
+        // duplicate cron execution (e.g. a stray zombie process) resends
+        // the same reminder to every booking, every time it fires.
+        include: { bookings: { where: { status: 'CONFIRMED', reminderSentAt: null }, include: { user: true } } }
       });
 
       console.log(`Found ${upcomingEvents.length} events starting in 3 days.`);
@@ -67,8 +71,13 @@ export const startCronJobs = () => {
                 <p>Ihr Team der Flugschule Hirondelle</p>
               `
             });
+            await prisma.booking.update({ where: { id: booking.id }, data: { reminderSentAt: new Date() } });
             if (isTestMode) console.log(`Reminder sent to ${booking.id} (test mode, no real SMTP configured yet):`, info.messageId);
           } catch (err) {
+            // Deliberately NOT marking reminderSentAt here - a failed send
+            // (e.g. a transient SMTP error) should still be eligible to be
+            // picked up and retried by this same day's cron run, not
+            // silently given up on forever.
             console.error(`Failed to send 3-day reminder for booking ${booking.id}:`, err);
           }
         }
@@ -91,7 +100,9 @@ export const startCronJobs = () => {
         // Only actually-confirmed/attended bookings - `not: CANCELLED` also
         // matched PENDING (never paid) and WAITLIST (never admitted),
         // sending "thanks for attending" emails to people who didn't.
-        include: { bookings: { where: { status: { in: ['CONFIRMED', 'COMPLETED'] } }, include: { user: true } } }
+        // ratingRequestSentAt: null - same duplicate-prevention reasoning
+        // as the 3-day reminder query above.
+        include: { bookings: { where: { status: { in: ['CONFIRMED', 'COMPLETED'] }, ratingRequestSentAt: null }, include: { user: true } } }
       });
 
       console.log(`Found ${endedEvents.length} events that ended yesterday - sending rating requests.`);
@@ -117,6 +128,7 @@ export const startCronJobs = () => {
                 <p>Ihr Team der Flugschule Hirondelle</p>
               `
             });
+            await prisma.booking.update({ where: { id: booking.id }, data: { ratingRequestSentAt: new Date() } });
             if (isTestMode) console.log(`Rating request sent for booking ${booking.id} (test mode, no real SMTP configured yet):`, info.messageId);
           } catch (err) {
             console.error(`Failed to send rating request for booking ${booking.id}:`, err);
