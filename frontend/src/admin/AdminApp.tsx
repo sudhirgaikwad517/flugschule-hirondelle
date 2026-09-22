@@ -50,6 +50,7 @@ import { ServiceOrderList, ServiceOrderShow } from './ServiceOrders';
 import { TemplatesBuilder } from './TemplatesBuilder';
 import { CustomLayout } from './CustomLayout';
 import { EventsDashboard } from './EventsDashboard';
+import { EventStatistics } from './EventStatistics';
 import { Import } from './Import';
 import { EcwidConfigPage } from './EcwidConfigPage';
 import { CookieConsentConfigPage } from './CookieConsentConfigPage';
@@ -168,6 +169,7 @@ export const AdminApp = () => {
         <Resource name="bookingFormConfig" intent="registration" />
         <CustomRoutes>
             <Route path="/events-dashboard" element={<Authenticated><EventsDashboard /></Authenticated>} />
+            <Route path="/event-statistics" element={<Authenticated><EventStatistics /></Authenticated>} />
             <Route path="/menu" element={<Authenticated><MenuManager /></Authenticated>} />
             <Route path="/pages" element={<Authenticated><PagesManager /></Authenticated>} />
             {/* :contentId? is only present when editing a fixed-page

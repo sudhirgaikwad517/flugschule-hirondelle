@@ -5,6 +5,7 @@ import { Box, Collapse, Typography } from '@mui/material';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import EventIcon from '@mui/icons-material/Event';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import BarChartIcon from '@mui/icons-material/BarChart';
 import PeopleIcon from '@mui/icons-material/People';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -59,6 +60,7 @@ const TOP_ITEMS: Item[] = [
 
 const EVENT_ITEMS: Item[] = [
     { label: 'Dashboard', to: '/admin/events-dashboard', icon: <DashboardIcon fontSize="small" /> },
+    { label: 'Statistiken', to: '/admin/event-statistics', icon: <BarChartIcon fontSize="small" /> },
     { label: 'Buchungs-Formular', to: '/admin/booking-form-config', icon: <ListAltIcon fontSize="small" /> },
     { label: 'Vorlagen', to: '/admin/templates', icon: <DescriptionIcon fontSize="small" /> },
     { label: 'Import', to: '/admin/import', icon: <UploadFileIcon fontSize="small" /> },

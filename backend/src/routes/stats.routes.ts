@@ -143,6 +143,73 @@ router.get('/dashboard', authenticateJWT, authorizeAdmin, async (req, res) => {
     }
 });
 
+function emptyMonthBucket(month: number) {
+    return { month, courses: 0, hits: 0, bookings: 0, certificated: 0, maxpupil: 0 };
+}
+
+// Matches old Matukio's administrator "Statistik" report (per-year/month
+// event count, views, booked seats, certified seats, total capacity) -
+// old's own template then derives utilization%/per-event ratios from these
+// same raw numbers, so this endpoint returns only the raw aggregates and
+// leaves that derivation to the frontend, same division of work as old.
+router.get('/event-statistics', authenticateJWT, authorizeAdmin, async (req, res) => {
+    try {
+        const events = await prisma.event.findMany({
+            select: {
+                startDate: true,
+                capacity: true,
+                views: true,
+                bookings: {
+                    where: { status: 'CONFIRMED' },
+                    select: { certificated: true, items: { select: { quantity: true } } }
+                }
+            }
+        });
+
+        const commonPeriod = Array.from({ length: 12 }, (_, i) => emptyMonthBucket(i + 1));
+        const yearBuckets = new Map<number, ReturnType<typeof emptyMonthBucket>[]>();
+
+        for (const event of events) {
+            const year = event.startDate.getFullYear();
+            const month = event.startDate.getMonth(); // 0-based index into the 12-slot arrays
+            if (!yearBuckets.has(year)) {
+                yearBuckets.set(year, Array.from({ length: 12 }, (_, i) => emptyMonthBucket(i + 1)));
+            }
+            const seatsBooked = event.bookings.reduce((sum, b) => sum + b.items.reduce((s, it) => s + it.quantity, 0), 0);
+            const seatsCertificated = event.bookings
+                .filter(b => b.certificated)
+                .reduce((sum, b) => sum + b.items.reduce((s, it) => s + it.quantity, 0), 0);
+
+            for (const bucket of [commonPeriod[month], yearBuckets.get(year)![month]]) {
+                bucket.courses += 1;
+                bucket.hits += event.views;
+                bucket.bookings += seatsBooked;
+                bucket.certificated += seatsCertificated;
+                bucket.maxpupil += event.capacity;
+            }
+        }
+
+        const years = Array.from(yearBuckets.entries())
+            .sort(([a], [b]) => b - a) // most recent year first
+            .map(([year, months]) => ({
+                year,
+                months,
+                total: months.reduce((t, m) => ({
+                    courses: t.courses + m.courses,
+                    hits: t.hits + m.hits,
+                    bookings: t.bookings + m.bookings,
+                    certificated: t.certificated + m.certificated,
+                    maxpupil: t.maxpupil + m.maxpupil,
+                }), { courses: 0, hits: 0, bookings: 0, certificated: 0, maxpupil: 0 })
+            }));
+
+        res.json({ commonPeriod, years });
+    } catch (error) {
+        console.error('Event statistics error:', error);
+        res.status(500).json({ error: 'Failed to fetch event statistics' });
+    }
+});
+
 router.get('/acymailing', authenticateJWT, authorizeAdmin, async (req, res) => {
     try {
         const thirtyDaysAgo = new Date();
