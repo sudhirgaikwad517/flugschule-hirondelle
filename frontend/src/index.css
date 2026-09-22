@@ -419,3 +419,38 @@ h1, h2, h3, h4, h5, h6, .nav-item {
   to { width: 100%; }
 }
 .RaBulkActionsToolbar-collapsed { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }
+
+/* Admin-authored Seiten (Unlayer CMS, see Pages.tsx/DynamicPage.tsx) content
+   should look like it belongs on this site by default, without the admin
+   needing to style every block by hand - matches the "luxury" font/color
+   scheme used everywhere else (Home.tsx, Ausbildung.tsx, etc.), applied to
+   the raw tags Unlayer actually produces (h1-h3, p, a, img). This can only
+   ever be a starting point: full parity with a hand-built section like
+   Service.tsx's cards (absolute badges, hover-zoom images, its own
+   WEITERLESEN button) isn't achievable from a generic drag-and-drop editor
+   with no knowledge of this site's component markup - but the fonts,
+   colors and spacing now match instead of looking like a foreign block. */
+.dynamic-page-content h1,
+.dynamic-page-content h2,
+.dynamic-page-content h3 {
+  font-family: var(--font-luxury);
+  color: var(--color-luxury-dark);
+  letter-spacing: 0.02em;
+}
+.dynamic-page-content p {
+  font-family: var(--font-luxurysans);
+  color: #6b7280;
+  line-height: 1.7;
+}
+.dynamic-page-content a {
+  color: #428bca;
+  text-decoration: none;
+}
+.dynamic-page-content a:hover {
+  color: #2a6496;
+  text-decoration: underline;
+}
+.dynamic-page-content img {
+  border-radius: 2px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}

@@ -33,6 +33,8 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import PaymentIcon from '@mui/icons-material/Payment';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ExtensionIcon from '@mui/icons-material/Extension'; // NEW - "Komponenten" section icon
+import WebIcon from '@mui/icons-material/Web'; // NEW - "Seiten" link icon
+import MenuIcon from '@mui/icons-material/Menu'; // NEW - "Menü" link icon
 
 // A fully custom sidebar (plain MUI + react-router NavLink, no react-admin
 // <Menu>/<MenuItemLink>) - same approach already used successfully in the
@@ -90,12 +92,16 @@ const BOTTOM_ITEMS: Item[] = [
     { label: 'Cookie-Hinweis', to: '/admin/cookie-consent', icon: <CookieIcon fontSize="small" /> },
 ];
 
-// NEW - a Joomla-"Components"-style group for site-wide content tools that
-// aren't tied to Flugschule Events. Currently just Galerie; more of this
-// kind of feature can be added here later without inventing another
-// top-level sidebar section each time.
+// A Joomla-"Components"-style group for site-wide content tools that aren't
+// tied to Flugschule Events. "Menü" (Admin > Menü, MenuManager.tsx) manages
+// the header's top-level nav items and their sub-items, right before
+// Galerie. "Seiten" (the unified WordPress-Pages-style list at /admin/pages,
+// Pages.tsx - every page, including the 6 fixed ones with their own
+// data-only editors and any admin-created Unlayer pages) lives here too.
 const COMPONENT_ITEMS: Item[] = [
+    { label: 'Menü', to: '/admin/menu', icon: <MenuIcon fontSize="small" /> },
     { label: 'Galerie', to: '/admin/pagegallery', icon: <ViewCarouselIcon fontSize="small" /> },
+    { label: 'Seiten', to: '/admin/pages', icon: <WebIcon fontSize="small" /> },
 ];
 
 // Inline `style` for color (not just `sx`) so nothing in the app's global

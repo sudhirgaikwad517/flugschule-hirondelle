@@ -566,6 +566,43 @@ model WebLinkCategory {
   links       WebLink[]
 }
 
+// NEW MODEL - admin-managed header navigation (Admin > Menü, right before
+// Galerie in the Komponenten group). Replaces the previously hardcoded
+// Ausbildung/Performance/Reisen/Service/Infos dropdowns and their direct
+// links in Header.tsx: each MenuItem is one top-level nav entry, rendered as
+// a hover dropdown when it has subItems or as a plain link otherwise. Shop,
+// the "Seiten" dropdown (admin-created pages, still auto-populated from
+// /api/pages/public) and the Konto/login menu stay hardcoded in Header.tsx
+// since they carry auth/e-commerce behavior beyond a label+link. See
+// backend/src/routes/menu.routes.ts and frontend/src/admin/MenuManager.tsx.
+// To revert: drop these two models, delete menu.routes.ts, remove its mount
+// in index.ts, and restore Header.tsx's hardcoded dropdown markup.
+model MenuItem {
+  id        String        @id @default(uuid())
+  label     String
+  url       String        @default("")
+  target    String        @default("_self") // "_self" | "_blank"
+  published Boolean       @default(true)
+  order     Int           @default(0)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  subItems  MenuSubItem[]
+}
+
+model MenuSubItem {
+  id         String   @id @default(uuid())
+  menuItemId String
+  label      String
+  url        String   @default("")
+  target     String   @default("_self")
+  imageUrl   String? // optional thumbnail - when ANY sibling sub-item under the same MenuItem has one, Header.tsx renders that whole dropdown as an image-tile grid (the old Reisen mega menu) instead of a plain text list
+  published  Boolean  @default(true)
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+}
+
 enum Role {
   ADMIN
   INSTRUCTOR
@@ -605,6 +642,32 @@ model PageGallery {
   images    String?  @db.Text // JSON string array of image URLs
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// NEW MODEL - lets an admin create an entirely new page from scratch (title,
+// slug, description, header image, content) that becomes live at its own
+// top-level URL with no code change, unlike PageGallery/PageMedia above
+// which only make EXISTING hardcoded pages editable, edited via the Unlayer
+// drag-and-drop editor (Admin > Seiten). This is the single flow for ALL
+// dynamic page content, including the home page itself (slug "home",
+// rendered at "/" - see App.tsx). See backend/src/routes/pages.routes.ts,
+// frontend/src/admin/Pages.tsx and frontend/src/pages/DynamicPage.tsx. To
+// revert: drop this model, delete pages.routes.ts, remove its mount in
+// index.ts, and remove the trailing ":slug" route (and the index route) in
+// frontend/src/App.tsx plus the "Seiten" nav/admin entries.
+model Page {
+  id              String   @id @default(uuid())
+  slug            String   @unique
+  title           String
+  metaDescription String?
+  headerImageUrl  String?
+  body            String?  @db.LongText // rendered HTML (Unlayer's exportHtml output body) - what the public page actually renders
+  design          String?  @db.LongText // Unlayer's own JSON design state, reloaded into the editor for further edits - same body/design pairing as NewsletterTemplate
+  status          String   @default("published") // "published" | "draft"
+  showInNav       Boolean  @default(true)
+  navLabel        String? // falls back to title if empty
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 // Admin-editable static legal text pages (Matukio's agb_text/revoke_text
@@ -689,6 +752,104 @@ model CookieConsentConfig {
   settingsButtonText  String   @default("Cookie-Einstellungen")
   settingsUrl         String?
   updatedAt           DateTime @updatedAt
+}
+
+// Same idea as HomeContent below, generalized to the other main-nav
+// landing pages (Ausbildung, Performance, Reisen, Service, Infos) that
+// already have a hand-built React/Tailwind layout: only the TEXT/IMAGES are
+// admin-editable, never the layout. One shared table instead of 5 near-
+// identical ones - `id` is the page's own slug ('ausbildung', 'performance',
+// 'reisen', 'service', 'infos') and `data` holds that page's own JSON shape,
+// which only sitePageContent.routes.ts's per-page defaults and each page's
+// own admin editor (e.g. AusbildungContentEditor.tsx) need to agree on.
+model SitePageContent {
+  id        String   @id
+  data      Json
+  updatedAt DateTime @updatedAt
+}
+
+// Makes the DATA on the (hardcoded, Tailwind-styled) home page editable -
+// promo card text, the "Hoch Hinaus" copy, team member names/photos -
+// without touching the page's actual layout/design. Deliberately not part
+// of the Seiten/Unlayer CMS (Page model / pages.routes.ts): that system is
+// for admin-authored pages that don't have a pre-built React layout, and
+// letting an admin rebuild the home page's design there proved to be the
+// wrong tool for a page whose look must never change - see Home.tsx, which
+// reads this via GET /api/homecontent/public and falls back to its own
+// hardcoded copy if this row doesn't exist yet.
+model HomeContent {
+  id                        String   @id @default("default")
+  promoCards                Json // [{ title, boldLine, description, image, link }] - fixed length 3
+  teamMembers               Json // [{ name, image }] - fixed length 5 (Alex, Sarah, Tobi, Holger, Markus)
+  teamLink                  String   @default("/infos/team") // where all 5 team photos link to
+  hochHinausHtml            String   @db.LongText // rich text, keeps the "Team Hirondelle" link
+  newsEyebrow               String   @default("AKTUELLES")
+  newsTitle                 String   @default("NEWS")
+  hochHinausEyebrowPrefix   String   @default("...mit dem")
+  hochHinausEyebrowLinkText String   @default("Team Hirondelle")
+  hochHinausTitle           String   @default("HOCH HINAUS")
+  updatedAt                 DateTime @updatedAt
+}
+
+// WordPress-style Trash: a "Löschen" click on any page (a custom Page/
+// Unlayer row, or a "reset" of one of the 6 fixed pages' HomeContent/
+// SitePageContent row) snapshots the deleted row here instead of actually
+// destroying it, so it can be restored. `kind` says which table it came
+// from ('page' | 'homecontent' | 'sitepagecontent'), `refId` is that row's
+// original id, and `data` is everything needed to recreate it - see
+// trash.routes.ts for the restore logic, and pages.routes.ts /
+// homecontent.routes.ts / sitePageContent.routes.ts for what snapshots in
+// on delete. Never queried by the public site - admin (Papierkorb) only.
+model ContentTrash {
+  id        String   @id @default(uuid())
+  kind      String
+  refId     String
+  title     String
+  data      Json
+  deletedAt DateTime @default(now())
+}
+
+// A TRUE same-design duplicate of one of the 6 fixed pages (Startseite/
+// Ausbildung/Performance/Reisen/Service/Infos) at a new URL: `kind` says
+// which hardcoded React component to render (Ausbildung.tsx etc. - see
+// FixedPageRouter.tsx), and `slug` is a normal SitePageContent row (id =
+// this row's own `slug`) holding a COPY of that component's data. Because
+// it's rendered by the exact same component as the original, the design is
+// pixel-identical - unlike a duplicate into the Seiten/Unlayer CMS (Page
+// model), which can only ever approximate the layout with generic blocks.
+// See fixedPageDuplicates.routes.ts.
+model FixedPageDuplicate {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  kind      String
+  title     String
+  status    String   @default("published") // "published" | "draft" - a draft 404s publicly (see GET /public/:slug) but stays editable in admin
+  showInNav Boolean  @default(false)
+  navLabel  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Editable title/URL/publish-status for the 6 fixed pages THEMSELVES (not a
+// duplicate - see FixedPageDuplicate above). These pages have hardcoded
+// React routes (App.tsx: path="ausbildung" etc.) that the site's Header/
+// Footer nav link to directly, so `slug` here is only ever consulted for a
+// RENAME: if it differs from the kind's own hardcoded default, the old
+// hardcoded route redirects to it (see FixedPageGate.tsx) and the new slug
+// is picked up by the ":slug" catch-all (FixedPageRouter.tsx) - the old
+// route, and every Header/Footer link and sub-route under it, keeps working
+// without being touched. `slug` is null (and never editable) for "home",
+// since the homepage always stays at "/". `status: "draft"` hides the page
+// behind a "Diese Seite existiert nicht" message at both its old and new
+// URL without touching the route itself. See fixedPageSettings.routes.ts.
+model FixedPageSettings {
+  id        String   @id @default(uuid())
+  kind      String   @unique // home | ausbildung | performance | reisen | service | infos
+  slug      String?  @unique
+  title     String
+  status    String   @default("published") // "published" | "draft"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ServiceOrder {

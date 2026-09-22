@@ -1,11 +1,57 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Bird, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Banner } from '../components/common/Banner';
 import { useLightbox } from '../components/common/Lightbox';
+import { SafeHtml } from '../components/common/SafeHtml';
 
-export const Ausbildung = () => {
+// Fallbacks match the page's current live copy exactly, so nothing changes
+// visually until an admin edits something in Admin > Seiten > Ausbildung
+// (see backend SitePageContent model / sitePageContent.routes.ts). Text,
+// images, and the "WEITERLESEN" links are all admin-editable; only the
+// layout/CSS stays fixed. The price table's rows are the one repeater field
+// here (admin can add/remove rows) - colors cycle through this list by
+// position so any number of rows still matches the page's existing design,
+// and the bottom border always lands on whichever row is actually last.
+const PRICE_ROW_COLORS = ['#80c533', '#34963b', '#fff600', '#ffd700', '#e58e26', '#c4c5ca'];
+
+const DEFAULT_CONTENT = {
+  heroQuote: 'Die Flugschule Hirondelle bietet euch eine qualifizierte, sichere und vielseitige Ausbildung.',
+  introQuote: 'Wir begleiten euch von den ersten Hüpfern bis zu euren ersten Strecken- und Thermikflügen hier im Odenwald, in der Pfalz, im Kraichtal, im Nahetal und überall sonst auf der Welt.',
+  introHtml: 'Im Nachfolgenden sind die Ausbildungswege in der Flugschule Hirondelle vom <a href="/ausbildung/schnupperkurs">Schnupper-/Einsteigerkurs</a> über den <a href="/ausbildung/l-schein">L-Schein</a> und die <a href="/ausbildung/a-schein">Höhenflugschulung (A-Schein)</a> bis zum <a href="/ausbildung/b-schein">unbeschränkten Luftfahrerschein (B-Schein)</a> aufgelistet, hier gelangt ihr zur <a href="/ausbildung/ausbildungskonzept">Gesamtübersicht</a>.',
+  priceRows: [
+    { name: 'Schnupper-/Einsteigerkurs', duration: '1 – 2 Tage', content: 'Ausrüstung kennen lernen, die ersten Flüge', price: 'ab 149,- €' },
+    { name: 'L-Schein', duration: '3 – 4 Tage', content: '15 Flüge am Grundkurs-Übungshang', price: '620,- €' },
+    { name: 'Windenschein', duration: '3 Tage', content: '20 Flüge an der Winde', price: '450,- €' },
+    { name: 'A-Schein', duration: 'mind. 1 Woche', content: '40 Höhenflüge', price: 'ab 990,- €' },
+    { name: 'B-Schein', duration: 'mind. 1 Woche', content: '20 Höhenflüge', price: 'ab 990,- €' },
+    { name: 'Tandemschein', duration: 'mind. 1 Woche', content: '40 Höhenflüge mit einem Passagier', price: 'ab 790,- €' },
+  ],
+  graphicImage: '/images/inhalte/ausbildungswege.png',
+  graphicCaption: 'hm = ca. Höhenmeter-Differenz zwischen Start- und Landeplatz',
+  graphicButtonLink: '',
+  categories: [
+    { heading: 'Schnupper-/Einsteigerkurs', subheading: 'Der Anfang einer neuen Leidenschaft....', description: "Am Schnuppertag / Einsteigerkurs lernst du die Grundzüge des Gleitschirmfliegens kennen. Anfängliche Aufzieh- und Laufübungen bereiten dich auf deine ersten Flüge vor: Kappe auslegen, Leinen sortieren, Eintrittsöffnungen kontrollieren, damit der Gleitschirm anschließend richtig über euch steigt. Gurtzeug anlegen, Startcheck und los geht's zum ersten Versuch.", image: '/images/ausbildung-1.jpg', link: '/ausbildung/schnupperkurs' },
+    { heading: 'L-Schein', subheading: 'Du legst den Grundstein...', description: 'Aufbauend auf den Schnupperkurs werden im Grundkurs die fehlenden Flüge zur Erlangung des L-Scheins absolviert. Ziel des Kurses ist es, mindestens 15 Flüge am Hang oder an der Winde zu absolvieren, bei denen die Höhendifferenz schon bis zu 200 Meter betragen kann. Kurvenflug und Schirmkontrolle sind einige der Lerninhalte, die in diesem Kurs auf dem Lehrplan stehen.', image: '/images/ausbildung-2.jpg', link: '/ausbildung/l-schein' },
+    { heading: 'A-Schein', subheading: 'Was dich erwartet beim Höhenflugkurs...', description: 'Aufbauend auf dem Grundkurs, werden beim Höhenflugkurs die ersten 15 Flüge für den beschränkten Luftfahrerschein (A-Schein) durchgeführt. Das Ziel des Höhenflugkurses ist der Höhenflugausweis.', image: '/images/ausbildung-3.jpg', link: '/ausbildung/a-schein' },
+    { heading: 'B-Schein', subheading: 'Auf Strecke mit dem unbeschränkten Luftfahrerschein...', description: 'Das Gleitpotential des Gleitschirms ausreizen, die Thermik ausfliegen und dann auf Strecke gehen. Von Aufwind zu Aufwind gleiten und die Landschaft aus der Vogelperspektive genießen, das ist der Traum vieler Flieger.', image: '/images/ausbildung-4.jpg', link: '/ausbildung/b-schein' },
+    { heading: 'Windenschein', subheading: 'Windenschlepp mit dem Gleitschirm...', description: 'Das Schleppen an der Winde ist eine ideale Möglichkeit, auch im Flachland mit dem Gleitschirm in die Luft zu kommen. Der Windenschein ist die ideale Ergänzung zum A-Scheinkurs da ihr hier schnell einen Großteil der nötigen Flüge für die A-Scheinprüfung sammeln könnt.', image: '/images/ausbildung-5.jpg', link: '/ausbildung/windenschein' },
+    { heading: 'Tandemschein', subheading: 'Zusammen mit Freunden zum Fliegen gehen.', description: 'Zum Fliegen gehen und die Leidenschaft mit Freunden teilen? Mit dem Tandemschein kein Problem! Die Freiheit und die Eindrücke in der Luft mit jemanden teilen zu können ist ein fantastisches Erlebnis sowohl für den Piloten auch für den Passagier. Einfach ein Traum.', image: '/images/ausbildung-6.jpg', link: '/ausbildung/tandemschein' },
+  ],
+};
+
+export const Ausbildung = ({ contentId }: { contentId?: string } = {}) => {
   const { open } = useLightbox();
+  const [content, setContent] = useState(DEFAULT_CONTENT);
+
+  useEffect(() => {
+    fetch(`/api/sitepagecontent/public/${contentId || 'ausbildung'}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data) setContent(data); })
+      .catch((err) => console.error('Error fetching Ausbildung content:', err));
+  }, [contentId]);
+
+  const [c0, c1, c2, c3, c4, c5] = content.categories;
   return (
     <div className="w-full bg-white">
       <Banner />
@@ -17,16 +63,12 @@ export const Ausbildung = () => {
           
           {/* Intro text */}
           <p className="text-xl md:text-2xl text-luxury-heading italic font-luxury mb-8 max-w-3xl mx-auto leading-relaxed">
-            "Die Flugschule Hirondelle bietet euch eine qualifizierte, sichere und vielseitige Ausbildung."
+            "{content.heroQuote}"
           </p>
-          
+
           <div className="max-w-4xl mx-auto text-gray-500 space-y-6 text-sm md:text-base font-light leading-relaxed text-justify">
-            <p>
-              Wir begleiten euch von den ersten Hüpfern bis zu euren ersten Strecken- und Thermikflügen hier im Odenwald, in der Pfalz, im Kraichtal, im Nahetal und überall sonst auf der Welt.
-            </p>
-            <p>
-              Im Nachfolgenden sind die Ausbildungswege in der Flugschule Hirondelle vom <Link to="/ausbildung/schnupperkurs" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-bold">Schnupper-/Einsteigerkurs</Link> über den <Link to="/ausbildung/l-schein" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-bold">L-Schein</Link> und die <Link to="/ausbildung/a-schein" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-bold">Höhenflugschulung (A-Schein)</Link> bis zum <Link to="/ausbildung/b-schein" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-bold">unbeschränkten Luftfahrerschein (B-Schein)</Link> aufgelistet, hier gelangt ihr zur <Link to="/ausbildung/ausbildungskonzept" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-bold">Gesamtübersicht</Link>.
-            </p>
+            <p>{content.introQuote}</p>
+            <SafeHtml html={content.introHtml} className="[&_a]:text-[#428bca] [&_a:hover]:text-[#2a6496] [&_a:hover]:underline [&_a]:font-bold" />
           </div>
         </div>
 
@@ -44,36 +86,20 @@ export const Ausbildung = () => {
                 </tr>
               </thead>
               <tbody className="text-[11px] sm:text-sm">
-                <tr className="bg-[#80c533] text-black">
-                  <td className="py-2 px-1 sm:px-2 font-bold break-words pr-2">Schnupper-/Einsteigerkurs <br className="sm:hidden" /><span className="font-normal text-[10px] sm:text-sm">(1 – 2 Tage)</span></td>
-                  <td className="py-2 px-1 sm:px-2 pr-2">Ausrüstung kennen lernen, die ersten Flüge</td>
-                  <td className="py-2 px-1 sm:px-2 text-right font-semibold">ab 149,- €</td>
-                </tr>
-                <tr className="bg-[#34963b] text-black">
-                  <td className="py-2 px-1 sm:px-2 font-bold break-words pr-2">L-Schein <br className="sm:hidden" /><span className="font-normal text-[10px] sm:text-sm">(3 – 4 Tage)</span></td>
-                  <td className="py-2 px-1 sm:px-2 pr-2">15 Flüge am Grundkurs-Übungshang</td>
-                  <td className="py-2 px-1 sm:px-2 text-right font-semibold">620,- €</td>
-                </tr>
-                <tr className="bg-[#fff600] text-black">
-                  <td className="py-2 px-1 sm:px-2 font-bold break-words pr-2">Windenschein <br className="sm:hidden" /><span className="font-normal text-[10px] sm:text-sm">(3 Tage)</span></td>
-                  <td className="py-2 px-1 sm:px-2 pr-2">20 Flüge an der Winde</td>
-                  <td className="py-2 px-1 sm:px-2 text-right font-semibold">450,- €</td>
-                </tr>
-                <tr className="bg-[#ffd700] text-black">
-                  <td className="py-2 px-1 sm:px-2 font-bold break-words pr-2">A-Schein <br className="sm:hidden" /><span className="font-normal text-[10px] sm:text-sm">(mind. 1 Woche)</span></td>
-                  <td className="py-2 px-1 sm:px-2 pr-2">40 Höhenflüge</td>
-                  <td className="py-2 px-1 sm:px-2 text-right font-semibold">ab 990,- €</td>
-                </tr>
-                <tr className="bg-[#e58e26] text-black">
-                  <td className="py-2 px-1 sm:px-2 font-bold break-words pr-2">B-Schein <br className="sm:hidden" /><span className="font-normal text-[10px] sm:text-sm">(mind. 1 Woche)</span></td>
-                  <td className="py-2 px-1 sm:px-2 pr-2">20 Höhenflüge</td>
-                  <td className="py-2 px-1 sm:px-2 text-right font-semibold">ab 990,- €</td>
-                </tr>
-                <tr className="bg-[#c4c5ca] text-black border-b border-gray-300">
-                  <td className="py-2 px-1 sm:px-2 font-bold break-words pr-2">Tandemschein <br className="sm:hidden" /><span className="font-normal text-[10px] sm:text-sm">(mind. 1 Woche)</span></td>
-                  <td className="py-2 px-1 sm:px-2 pr-2">40 Höhenflüge mit einem Passagier</td>
-                  <td className="py-2 px-1 sm:px-2 text-right font-semibold">ab 790,- €</td>
-                </tr>
+                {content.priceRows.map((row, i) => {
+                  const isLast = i === content.priceRows.length - 1;
+                  return (
+                    <tr
+                      key={i}
+                      style={{ backgroundColor: PRICE_ROW_COLORS[i % PRICE_ROW_COLORS.length] }}
+                      className={`text-black ${isLast ? 'border-b border-gray-300' : ''}`}
+                    >
+                      <td className="py-2 px-1 sm:px-2 font-bold break-words pr-2">{row.name} <br className="sm:hidden" /><span className="font-normal text-[10px] sm:text-sm">({row.duration})</span></td>
+                      <td className="py-2 px-1 sm:px-2 pr-2">{row.content}</td>
+                      <td className="py-2 px-1 sm:px-2 text-right font-semibold">{row.price}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
             <p className="text-xs text-gray-500 mt-2">*exkl. Zusatzkosten vor Ort (z. B. Geländegebühren, Auffahrtskosten etc.)</p>
@@ -85,10 +111,10 @@ export const Ausbildung = () => {
           <div className="w-full lg:w-2/5 flex flex-col justify-end">
             <div
               className="relative group/zoom cursor-zoom-in mb-2"
-              onClick={() => open('/images/inhalte/ausbildungswege.png', 'Ausbildungswege Grafik')}
+              onClick={() => open(content.graphicImage, 'Ausbildungswege Grafik')}
             >
               <img
-                src="/images/inhalte/ausbildungswege.png"
+                src={content.graphicImage}
                 alt="Ausbildungswege Grafik"
                 className="w-full object-contain"
               />
@@ -97,12 +123,18 @@ export const Ausbildung = () => {
               </div>
             </div>
             <p className="text-[13px] text-gray-600 text-center mb-6">
-              hm = ca. Höhenmeter-Differenz zwischen Start- und Landeplatz
+              {content.graphicCaption}
             </p>
             <div className="flex justify-start">
-              <button className="px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm">
-                WEITERLESEN
-              </button>
+              {content.graphicButtonLink ? (
+                <Link to={content.graphicButtonLink} className="px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm">
+                  WEITERLESEN
+                </Link>
+              ) : (
+                <button className="px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm">
+                  WEITERLESEN
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -113,20 +145,20 @@ export const Ausbildung = () => {
           {/* Schnupperkurs (Image Right) */}
           <div id="schnupper" className="flex flex-col md:flex-row gap-12 items-center scroll-mt-[100px]">
             <div className="w-full md:w-1/2 flex flex-col items-start">
-              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">Schnupper-/Einsteigerkurs</h2>
+              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">{c0.heading}</h2>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
-              <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">Der Anfang einer neuen Leidenschaft....</h3>
+              <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">{c0.subheading}</h3>
               <p className="text-gray-500 mb-8 leading-relaxed font-light text-justify">
-                Am Schnuppertag / Einsteigerkurs lernst du die Grundzüge des Gleitschirmfliegens kennen. Anfängliche Aufzieh- und Laufübungen bereiten dich auf deine ersten Flüge vor: Kappe auslegen, Leinen sortieren, Eintrittsöffnungen kontrollieren, damit der Gleitschirm anschließend richtig über euch steigt. Gurtzeug anlegen, Startcheck und los geht's zum ersten Versuch.
+                {c0.description}
               </p>
-              <Link to="/ausbildung/schnupperkurs" className="inline-block px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm">
+              <Link to={c0.link} className="inline-block px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm">
                 WEITERLESEN
               </Link>
             </div>
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="/images/ausbildung-1.jpg" alt="Schnupperkurs" onClick={() => open('/images/ausbildung-1.jpg', 'Schnupperkurs')} className="w-full h-[400px] object-cover cursor-zoom-in transition-transform duration-1000 group-hover:scale-105" />
+                <img src={c0.image} alt="Schnupperkurs" onClick={() => open(c0.image, 'Schnupperkurs')} className="w-full h-[400px] object-cover cursor-zoom-in transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -134,20 +166,20 @@ export const Ausbildung = () => {
           {/* L-Schein (Image Left) */}
           <div id="l-schein" className="flex flex-col md:flex-row-reverse gap-12 items-center scroll-mt-[100px]">
             <div className="w-full md:w-1/2 flex flex-col items-start">
-              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">L-Schein</h2>
+              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">{c1.heading}</h2>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
-              <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">Du legst den Grundstein...</h3>
+              <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">{c1.subheading}</h3>
               <p className="text-gray-500 mb-8 leading-relaxed font-light text-justify">
-                Aufbauend auf den Schnupperkurs werden im Grundkurs die fehlenden Flüge zur Erlangung des L-Scheins absolviert. Ziel des Kurses ist es, mindestens 15 Flüge am Hang oder an der Winde zu absolvieren, bei denen die Höhendifferenz schon bis zu 200 Meter betragen kann. Kurvenflug und Schirmkontrolle sind einige der Lerninhalte, die in diesem Kurs auf dem Lehrplan stehen.
+                {c1.description}
               </p>
-              <Link to="/ausbildung/l-schein" className="inline-block px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm">
+              <Link to={c1.link} className="inline-block px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm">
                 WEITERLESEN
               </Link>
             </div>
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="/images/ausbildung-2.jpg" alt="L-Schein" onClick={() => open('/images/ausbildung-2.jpg', 'L-Schein')} className="w-full h-[400px] object-cover cursor-zoom-in transition-transform duration-1000 group-hover:scale-105" />
+                <img src={c1.image} alt="L-Schein" onClick={() => open(c1.image, 'L-Schein')} className="w-full h-[400px] object-cover cursor-zoom-in transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -155,20 +187,20 @@ export const Ausbildung = () => {
           {/* A-Schein (Image Right) */}
           <div id="a-schein" className="flex flex-col md:flex-row gap-12 items-center scroll-mt-[100px]">
             <div className="w-full md:w-1/2 flex flex-col items-start">
-              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">A-Schein</h2>
+              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">{c2.heading}</h2>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
-              <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">Was dich erwartet beim Höhenflugkurs...</h3>
+              <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">{c2.subheading}</h3>
               <p className="text-gray-500 mb-8 leading-relaxed font-light text-justify">
-                Aufbauend auf dem Grundkurs, werden beim Höhenflugkurs die ersten 15 Flüge für den beschränkten Luftfahrerschein (A-Schein) durchgeführt. Das Ziel des Höhenflugkurses ist der Höhenflugausweis.
+                {c2.description}
               </p>
-              <Link to="/ausbildung/a-schein" className="inline-block px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm">
+              <Link to={c2.link} className="inline-block px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm">
                 WEITERLESEN
               </Link>
             </div>
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="/images/ausbildung-3.jpg" alt="A-Schein" onClick={() => open('/images/ausbildung-3.jpg', 'A-Schein')} className="w-full h-[400px] object-cover cursor-zoom-in transition-transform duration-1000 group-hover:scale-105" />
+                <img src={c2.image} alt="A-Schein" onClick={() => open(c2.image, 'A-Schein')} className="w-full h-[400px] object-cover cursor-zoom-in transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -176,20 +208,20 @@ export const Ausbildung = () => {
           {/* B-Schein (Image Left) */}
           <div id="b-schein" className="flex flex-col md:flex-row-reverse gap-12 items-center scroll-mt-[100px]">
             <div className="w-full md:w-1/2 flex flex-col items-start">
-              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">B-Schein</h2>
+              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">{c3.heading}</h2>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
-              <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">Auf Strecke mit dem unbeschränkten Luftfahrerschein...</h3>
+              <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">{c3.subheading}</h3>
               <p className="text-gray-500 mb-8 leading-relaxed font-light text-justify">
-                Das Gleitpotential des Gleitschirms ausreizen, die Thermik ausfliegen und dann auf Strecke gehen. Von Aufwind zu Aufwind gleiten und die Landschaft aus der Vogelperspektive genießen, das ist der Traum vieler Flieger.
+                {c3.description}
               </p>
-              <Link to="/ausbildung/b-schein" className="inline-block px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm">
+              <Link to={c3.link} className="inline-block px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm">
                 WEITERLESEN
               </Link>
             </div>
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="/images/ausbildung-4.jpg" alt="B-Schein" onClick={() => open('/images/ausbildung-4.jpg', 'B-Schein')} className="w-full h-[400px] object-cover cursor-zoom-in transition-transform duration-1000 group-hover:scale-105" />
+                <img src={c3.image} alt="B-Schein" onClick={() => open(c3.image, 'B-Schein')} className="w-full h-[400px] object-cover cursor-zoom-in transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -197,20 +229,20 @@ export const Ausbildung = () => {
           {/* Windenschein (Image Right) */}
           <div id="winde" className="flex flex-col md:flex-row gap-12 items-center scroll-mt-[100px]">
             <div className="w-full md:w-1/2 flex flex-col items-start">
-              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">Windenschein</h2>
+              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">{c4.heading}</h2>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
-              <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">Windenschlepp mit dem Gleitschirm...</h3>
+              <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">{c4.subheading}</h3>
               <p className="text-gray-500 mb-8 leading-relaxed font-light text-justify">
-                Das Schleppen an der Winde ist eine ideale Möglichkeit, auch im Flachland mit dem Gleitschirm in die Luft zu kommen. Der Windenschein ist die ideale Ergänzung zum A-Scheinkurs da ihr hier schnell einen Großteil der nötigen Flüge für die A-Scheinprüfung sammeln könnt.
+                {c4.description}
               </p>
-              <Link to="/ausbildung/windenschein" className="inline-block px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm">
+              <Link to={c4.link} className="inline-block px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm">
                 WEITERLESEN
               </Link>
             </div>
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="/images/ausbildung-5.jpg" alt="Windenschein" onClick={() => open('/images/ausbildung-5.jpg', 'Windenschein')} className="w-full h-[400px] object-cover cursor-zoom-in transition-transform duration-1000 group-hover:scale-105" />
+                <img src={c4.image} alt="Windenschein" onClick={() => open(c4.image, 'Windenschein')} className="w-full h-[400px] object-cover cursor-zoom-in transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>
@@ -218,20 +250,20 @@ export const Ausbildung = () => {
           {/* Tandemschein (Image Left) */}
           <div id="tandem" className="flex flex-col md:flex-row-reverse gap-12 items-center scroll-mt-[100px]">
             <div className="w-full md:w-1/2 flex flex-col items-start">
-              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">Tandemschein</h2>
+              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">{c5.heading}</h2>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
-              <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">Zusammen mit Freunden zum Fliegen gehen.</h3>
+              <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">{c5.subheading}</h3>
               <p className="text-gray-500 mb-8 leading-relaxed font-light text-justify">
-                Zum Fliegen gehen und die Leidenschaft mit Freunden teilen? Mit dem Tandemschein kein Problem! Die Freiheit und die Eindrücke in der Luft mit jemanden teilen zu können ist ein fantastisches Erlebnis sowohl für den Piloten auch für den Passagier. Einfach ein Traum.
+                {c5.description}
               </p>
-              <Link to="/ausbildung/tandemschein" className="inline-block px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm">
+              <Link to={c5.link} className="inline-block px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm">
                 WEITERLESEN
               </Link>
             </div>
             <div className="w-full md:w-1/2">
               <div className="relative group overflow-hidden rounded-sm shadow-xl">
                 <div className="absolute inset-4 border border-white/40 pointer-events-none z-10 transition-colors group-hover:border-luxury-gold/50"></div>
-                <img src="/images/ausbildung-6.jpg" alt="Tandemschein" onClick={() => open('/images/ausbildung-6.jpg', 'Tandemschein')} className="w-full h-[400px] object-cover cursor-zoom-in transition-transform duration-1000 group-hover:scale-105" />
+                <img src={c5.image} alt="Tandemschein" onClick={() => open(c5.image, 'Tandemschein')} className="w-full h-[400px] object-cover cursor-zoom-in transition-transform duration-1000 group-hover:scale-105" />
               </div>
             </div>
           </div>

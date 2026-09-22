@@ -65,6 +65,8 @@ import { BookingCancel } from './pages/BookingCancel';
 import { Abmelden } from './pages/Abmelden';
 import { TrackingStoppen } from './pages/TrackingStoppen';
 import { Bestaetigen } from './pages/Bestaetigen';
+import { FixedPageRouter } from './pages/FixedPageRouter';
+import { FixedPageGate } from './pages/FixedPageGate';
 
 function App() {
   return (
@@ -72,7 +74,7 @@ function App() {
       <Routes>
         <Route path="/admin/*" element={<AdminApp />} />
         <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
+          <Route index element={<FixedPageGate kind="home" defaultSlug={null}><Home /></FixedPageGate>} />
           <Route path="news" element={<News />} />
           <Route path="news/:slug" element={<NewsDetail />} />
           <Route path="downloads" element={<Downloads />} />
@@ -83,7 +85,7 @@ function App() {
               <Events />
             </ErrorBoundary>
           } />
-          <Route path="ausbildung" element={<Ausbildung />} />
+          <Route path="ausbildung" element={<FixedPageGate kind="ausbildung" defaultSlug="ausbildung"><Ausbildung /></FixedPageGate>} />
           <Route path="ausbildung/schnupperkurs" element={<Schnupperkurs />} />
           <Route path="ausbildung/l-schein" element={<LSchein />} />
           <Route path="ausbildung/a-schein" element={<ASchein />} />
@@ -91,12 +93,12 @@ function App() {
           <Route path="ausbildung/windenschein" element={<Windenschein />} />
           <Route path="ausbildung/tandemschein" element={<Tandemschein />} />
           <Route path="ausbildung/ausbildungskonzept" element={<Ausbildungskonzept />} />
-          <Route path="performance" element={<Performance />} />
+          <Route path="performance" element={<FixedPageGate kind="performance" defaultSlug="performance"><Performance /></FixedPageGate>} />
           <Route path="performance/sicherheitstraining" element={<Sicherheitstraining />} />
           <Route path="performance/rettungsgeraetetraining" element={<Rettungsgeraetetraining />} />
           <Route path="performance/refresher" element={<Refresher />} />
           <Route path="performance/groundhandling" element={<Groundhandling />} />
-          <Route path="reisen" element={<Reisen />} />
+          <Route path="reisen" element={<FixedPageGate kind="reisen" defaultSlug="reisen"><Reisen /></FixedPageGate>} />
           <Route path="reisen/brasilien-tour" element={<BrasilienTour />} />
           <Route path="reisen/kolumbien-tour" element={<KolumbienTour />} />
           <Route path="reisen/suedafrika-tour" element={<SuedafrikaTour />} />
@@ -110,13 +112,13 @@ function App() {
           <Route path="buchungskalender" element={<Buchungskalender />} />
           <Route path="buchungskalender/:eventId" element={<Buchungskalender />} />
           <Route path="tandem" element={<Tandem />} />
-          <Route path="service" element={<Service />} />
+          <Route path="service" element={<FixedPageGate kind="service" defaultSlug="service"><Service /></FixedPageGate>} />
           <Route path="service/2-jahres-check" element={<ZweiJahresCheck />} />
           <Route path="service/rettungspacken" element={<Rettungspacken />} />
           <Route path="service/trimmtuning" element={<Trimmtuning />} />
           <Route path="service/reparatur" element={<ReparaturService />} />
           <Route path="service/service-auftrag" element={<ServiceAuftrag />} />
-          <Route path="infos" element={<Infos />} />
+          <Route path="infos" element={<FixedPageGate kind="infos" defaultSlug="infos"><Infos /></FixedPageGate>} />
           <Route path="infos/team" element={<Team />} />
           <Route path="infos/gelaende" element={<Gelaende />} />
           <Route path="infos/gelaende/:slug" element={<GelaendeDetail />} />
@@ -143,6 +145,15 @@ function App() {
           <Route path="newsletter/abmelden" element={<Abmelden />} />
           <Route path="newsletter/tracking-stoppen" element={<TrackingStoppen />} />
           <Route path="newsletter/bestaetigen" element={<Bestaetigen />} />
+          {/* Seiten CMS - admin-created pages, and true same-design
+              duplicates of the 6 fixed pages (Admin > Seiten >
+              "Duplizieren"). Must stay last: react-router ranks static path
+              segments above a same-depth dynamic one regardless of
+              declaration order, so this can't shadow any route above, but
+              keeping it last matches that intent for readability. See
+              FixedPageRouter.tsx, which checks fixed-page duplicates first
+              and falls back to DynamicPage (Seiten/Unlayer CMS). */}
+          <Route path=":slug" element={<FixedPageRouter />} />
           {/* Future Routes */}
         </Route>
       </Routes>

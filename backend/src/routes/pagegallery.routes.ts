@@ -15,6 +15,15 @@ router.use((req, res, next) => {
   next();
 });
 
+// Same slug-normalizing helper as pages.routes.ts, kept as its own copy
+// here so this file has no dependency on that one.
+const normalizeSlug = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
 // Helper to parse the stored `images` JSON string into an array
 const parseImages = (gallery: any) => {
   if (gallery && gallery.images) {
@@ -90,6 +99,35 @@ router.get('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
   }
 });
 
+// Admin: duplicate - WordPress-"Duplicate This"-style clone: copies the
+// same image list to a new row under an auto-generated unique slug
+// ("<source>-kopie", "-2", "-3", ... if taken - same pattern as
+// pages.routes.ts's POST /:id/duplicate). The admin then edits the new
+// row's "Seite auswählen" to point it at whichever page should get this
+// same starting set of images, instead of re-uploading everything.
+router.post('/:id/duplicate', authenticateJWT, authorizeAdmin, async (req, res) => {
+  try {
+    const source = await prisma.pageGallery.findUnique({ where: { id: req.params.id as string } });
+    if (!source) return res.status(404).json({ error: 'Page Gallery not found' });
+
+    const baseSlug = normalizeSlug(`${source.slug}-kopie`);
+    let slug = baseSlug;
+    let suffix = 2;
+    while (await prisma.pageGallery.findUnique({ where: { slug } })) {
+      slug = `${baseSlug}-${suffix}`;
+      suffix += 1;
+    }
+
+    const copy = await prisma.pageGallery.create({
+      data: { slug, images: source.images },
+    });
+    res.status(201).json(parseImages(copy));
+  } catch (error) {
+    console.error('Error duplicating Page Gallery:', error);
+    res.status(500).json({ error: 'Failed to duplicate Page Gallery' });
+  }
+});
+
 // Admin: Create PageGallery
 router.post('/', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
@@ -125,12 +163,18 @@ router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
 });
 
 // Admin: Delete PageGallery
+// Admin: delete - WordPress-style trash, not a hard delete: snapshot the
+// row into ContentTrash first so it can be restored from Admin > Papierkorb
+// (see trash.routes.ts's 'pagegallery' case), then remove it here so its
+// slug frees up. Same pattern as pages.routes.ts's delete handler.
 router.delete('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    await prisma.pageGallery.delete({
-      where: { id: (req.params.id as string) }
-    });
-    res.json({ message: 'Page Gallery deleted successfully' });
+    const gallery = await prisma.pageGallery.findUnique({ where: { id: req.params.id as string } });
+    if (!gallery) return res.status(404).json({ error: 'Page Gallery not found' });
+    const { id, createdAt, updatedAt, ...data } = gallery;
+    await prisma.contentTrash.create({ data: { kind: 'pagegallery', refId: gallery.id, title: gallery.slug, data } });
+    await prisma.pageGallery.delete({ where: { id: req.params.id as string } });
+    res.json({ message: 'Page Gallery moved to trash' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete Page Gallery' });
   }

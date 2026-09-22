@@ -1,5 +1,5 @@
 import { AppBar, TitlePortal } from 'react-admin';
-import { Box, Typography, IconButton } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
 
@@ -24,9 +24,15 @@ export const CustomAppBar = (props: any) => {
                 '& .RaAppBar-toolbar': { minHeight: 64, height: 64, flexWrap: 'nowrap', overflow: 'hidden' },
             }}
         >
-            <IconButton onClick={() => navigate(-1)} sx={{ mr: 1, ml: -1 }} color="inherit" title="Zurück">
-                <ArrowBackIcon />
-            </IconButton>
+            <Button
+                onClick={() => navigate(-1)}
+                startIcon={<ArrowBackIcon />}
+                color="inherit"
+                title="Zurück"
+                sx={{ mr: 1, ml: -1, textTransform: 'none', minWidth: 0, whiteSpace: 'nowrap', flexShrink: 0 }}
+            >
+                Zurück
+            </Button>
             <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
                 <TitlePortal />
             </Box>

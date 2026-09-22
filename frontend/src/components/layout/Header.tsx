@@ -2,6 +2,94 @@ import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Menu, X, ChevronDown, ChevronRight } from 'lucide-react';
 
+// Shape returned by GET /api/menu/public (MenuItem + published MenuSubItem[]).
+interface MenuSubNavItem {
+  id: string;
+  label: string;
+  url: string;
+  target: string;
+  imageUrl?: string | null;
+}
+interface MenuNavItem extends MenuSubNavItem {
+  subItems: MenuSubNavItem[];
+}
+
+// One admin-managed top-level nav entry: a hover dropdown when it has
+// sub-items, otherwise a plain link - replaces what used to be individually
+// hardcoded Ausbildung/Performance/Reisen/Service/Infos blocks below. When
+// EVERY sub-item has an imageUrl set (Admin > Menü), it renders as a
+// full-width image-tile mega menu instead of a plain text list - this is
+// what keeps the old hardcoded Reisen tour-thumbnail menu working, now
+// admin-editable rather than a one-off special case in this file. A plain
+// dropdown is centered under the item (not left/right-pinned like the old
+// per-item markup) so it never depends on where admin-managed items land.
+const NavDropdown = ({ item, getNavClass }: { item: MenuNavItem; getNavClass: (path: string) => string }) => {
+  const linkProps = item.target === '_blank' ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+  if (item.subItems.length === 0) {
+    return (
+      <Link to={item.url} className={getNavClass(item.url)} {...linkProps}>
+        {item.label.toUpperCase()}
+      </Link>
+    );
+  }
+
+  const isImageMenu = item.subItems.length > 0 && item.subItems.every((sub) => !!sub.imageUrl);
+
+  if (isImageMenu) {
+    return (
+      <div className="group h-[40px] flex items-center">
+        <Link to={item.url} className={getNavClass(item.url)} {...linkProps}>
+          {item.label.toUpperCase()} <ChevronDown className="w-3 h-3" />
+        </Link>
+        <div className="absolute top-[40px] left-0 w-full bg-luxury-gold border-t border-black/10 hidden group-hover:block transition-all shadow-2xl z-50">
+          <div className="container mx-auto max-w-[1600px] px-8 py-8">
+            <div className="flex gap-3">
+              {item.subItems.map((sub) => {
+                const subLinkProps = sub.target === '_blank' ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+                return (
+                  <Link
+                    to={sub.url}
+                    key={sub.id}
+                    className="block flex-1 min-w-0 text-center group/tour cursor-pointer"
+                    {...subLinkProps}
+                  >
+                    <div className="w-full h-[100px] overflow-hidden mb-2">
+                      <img src={sub.imageUrl!} alt={sub.label} className="w-full h-full object-cover transition-transform duration-700 group-hover/tour:scale-110" />
+                    </div>
+                    <h5 className="font-luxury text-black text-sm truncate">{sub.label}</h5>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative group h-[40px] flex items-center">
+      <Link to={item.url} className={getNavClass(item.url)} {...linkProps}>
+        {item.label.toUpperCase()} <ChevronDown className="w-3 h-3" />
+      </Link>
+      <div className="absolute top-[40px] left-1/2 -translate-x-1/2 w-64 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl">
+        <ul className="flex flex-col">
+          {item.subItems.map((sub) => {
+            const subLinkProps = sub.target === '_blank' ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+            return (
+              <li key={sub.id}>
+                <Link to={sub.url} className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10" {...subLinkProps}>
+                  {sub.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </div>
+  );
+};
+
 export const Header = () => {
   const location = useLocation();
   const pathname = location.pathname;
@@ -23,19 +111,33 @@ export const Header = () => {
   const [expandedMobileMenu, setExpandedMobileMenu] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const reisenTours = ['Brasilien', 'Kolumbien', 'Südafrika', 'Bassano', 'Griechenland', 'Slowenien', 'Bergamo', 'Savoye', 'Vogesen', 'Pfalz'];
-  const reisenImages: Record<string, string> = {
-    Brasilien: '/images/reisen/brasilien.jpg',
-    Kolumbien: '/images/reisen/kolumbien.jpg',
-    Südafrika: '/images/reisen/suedafrika.jpg',
-    Bassano: '/images/reisen/bassano.jpg',
-    Griechenland: '/images/reisen/griechenland.jpg',
-    Slowenien: '/images/reisen/slowenien.jpg',
-    Bergamo: '/images/reisen/bergamo.jpg',
-    Savoye: '/images/reisen/savoye.jpg',
-    Vogesen: '/images/reisen/vogesen.jpg',
-    Pfalz: '/images/reisen/pfalz.jpg'
-  };
+
+  // Admin-created pages (Admin > Seiten) - fetched once so any published,
+  // nav-visible page automatically appears in the "SEITEN" dropdown below
+  // with no code change. Empty list -> dropdown simply doesn't render.
+  const [dynamicPages, setDynamicPages] = useState<{ slug: string; title: string; navLabel?: string | null }[]>([]);
+
+  useEffect(() => {
+    fetch('/api/pages/public')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setDynamicPages(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
+
+  // Admin-managed header nav (Admin > Menü) - the Ausbildung/Performance/
+  // Reisen/Buchungskalender/Tandem/Service/Infos entries below all come
+  // from here now, each with its own optional sub-items rendered as a
+  // hover dropdown. Shop, "Seiten" above and the Konto/login menu stay
+  // hardcoded since they carry behavior beyond a plain label+link. See
+  // MenuItem/MenuSubItem in schema.prisma and menu.routes.ts.
+  const [menuItems, setMenuItems] = useState<MenuNavItem[]>([]);
+
+  useEffect(() => {
+    fetch('/api/menu/public')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setMenuItems(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
 
   const toggleMobileMenu = (menu: string) => {
     if (expandedMobileMenu === menu) setExpandedMobileMenu(null);
@@ -122,116 +224,36 @@ export const Header = () => {
                 </span>
               </Link>
 
-              {/* Ausbildung Dropdown - plain single-column list like Infos,
-                  not a full-width mega menu with promo images (those two
-                  images didn't belong to any real submenu page). Item
-                  order matches the live site's actual Ausbildung submenu
-                  exactly (verified against its own flat menu markup):
-                  Schnupperkurs, L-Schein, A-Schein, B-Schein, Winde,
-                  Tandem, Ausbildungskonzept. */}
-              <div className="relative group h-[40px] flex items-center">
-                <Link to="/ausbildung" className={getNavClass('/ausbildung')}>
-                  AUSBILDUNG <ChevronDown className="w-3 h-3" />
-                </Link>
-                <div className="absolute top-[40px] left-0 w-64 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl">
-                  <ul className="flex flex-col">
-                    <li><Link to="/ausbildung/schnupperkurs" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Schnupper-/Einsteigerkurs</Link></li>
-                    <li><Link to="/ausbildung/l-schein" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">L-Schein (Grundkurs)</Link></li>
-                    <li><Link to="/ausbildung/a-schein" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">A-Schein</Link></li>
-                    <li><Link to="/ausbildung/b-schein" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">B-Schein</Link></li>
-                    <li><Link to="/ausbildung/windenschein" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Winde</Link></li>
-                    <li><Link to="/ausbildung/tandemschein" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Tandem</Link></li>
-                    <li><Link to="/ausbildung/ausbildungskonzept" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Ausbildungskonzept</Link></li>
-                  </ul>
-                </div>
-              </div>
+              {/* Admin-managed nav (Admin > Menü) - Ausbildung, Performance,
+                  Reisen, Buchungskalender, Tandem, Service, Infos and any
+                  future items/order come from here now (see NavDropdown
+                  above). The Reisen entry used to be a full-width mega menu
+                  with tour thumbnails; that's a per-item design the generic
+                  admin-managed dropdown doesn't reproduce, so it now renders
+                  as a plain dropdown list like the others. */}
+              {menuItems.map((item) => (
+                <NavDropdown key={item.id} item={item} getNavClass={getNavClass} />
+              ))}
 
-              {/* Performance Dropdown */}
-              <div className="relative group h-[40px] flex items-center">
-                <Link to="/performance" className={getNavClass('/performance')}>
-                  PERFORMANCE <ChevronDown className="w-3 h-3" />
-                </Link>
-                <div className="absolute top-[40px] right-0 w-56 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl">
-                  <ul className="flex flex-col">
-                    <li><Link to="/performance/sicherheitstraining" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Sicherheit</Link></li>
-                    <li><Link to="/performance/rettungsgeraetetraining" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Rettungsgeräte</Link></li>
-                    <li><Link to="/performance/refresher" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Refresher</Link></li>
-                    <li><Link to="/performance/groundhandling" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Groundhandling</Link></li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* Mega Menu: Reisen */}
-              <div className="group h-[40px] flex items-center">
-                <Link to="/reisen" className={getNavClass('/reisen')}>
-                  REISEN <ChevronDown className="w-3 h-3" />
-                </Link>
-
-                {/* All 10 tours in one static row - no slider/arrows, just
-                    smaller thumbnails so every item fits on screen at once. */}
-                <div className="absolute top-[40px] left-0 w-full bg-luxury-gold border-t border-black/10 hidden group-hover:block transition-all shadow-2xl z-50">
-                  <div className="container mx-auto max-w-[1600px] px-8 py-8">
-                    <div className="flex gap-3">
-                      {reisenTours.map((tour) => (
-                        <Link
-                          to={tour === 'Brasilien' ? '/reisen/brasilien-tour' : tour === 'Kolumbien' ? '/reisen/kolumbien-tour' : tour === 'Südafrika' ? '/reisen/suedafrika-tour' : tour === 'Bassano' ? '/reisen/bassano-tour' : tour === 'Griechenland' ? '/reisen/griechenland-tour' : tour === 'Slowenien' ? '/reisen/slowenien-tour' : tour === 'Bergamo' ? '/reisen/bergamo-tour' : tour === 'Savoye' ? '/reisen/savoye-tour' : tour === 'Vogesen' ? '/reisen/vogesen-tour' : tour === 'Pfalz' ? '/reisen/pfalz-tour' : `/reisen#${tour.toLowerCase()}`}
-                          key={tour}
-                          className="block flex-1 min-w-0 text-center group/tour cursor-pointer"
-                        >
-                          <div className="w-full h-[100px] overflow-hidden mb-2">
-                            <img src={reisenImages[tour]} alt={tour} className="w-full h-full object-cover transition-transform duration-700 group-hover/tour:scale-110" />
-                          </div>
-                          <h5 className="font-luxury text-black text-sm truncate">{tour}</h5>
-                        </Link>
+              {/* Seiten Dropdown - admin-created pages (Admin > Seiten), only rendered when at least one exists */}
+              {dynamicPages.length > 0 && (
+                <div className="relative group h-[40px] flex items-center">
+                  <span className={getNavClass('__seiten__')}>
+                    SEITEN <ChevronDown className="w-3 h-3" />
+                  </span>
+                  <div className="absolute top-[40px] right-0 w-64 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl">
+                    <ul className="flex flex-col">
+                      {dynamicPages.map((page) => (
+                        <li key={page.slug}>
+                          <Link to={`/${page.slug}`} className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">
+                            {page.navLabel || page.title}
+                          </Link>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   </div>
                 </div>
-              </div>
-
-              <Link to="/buchungskalender" className={getNavClass('/buchungskalender')}>
-                BUCHUNGSKALENDER
-              </Link>
-
-              <Link to="/tandem" className={getNavClass('/tandem')}>
-                TANDEM
-              </Link>
-
-              {/* Service Dropdown */}
-              <div className="relative group h-[40px] flex items-center">
-                <Link to="/service" className={getNavClass('/service')}>
-                  SERVICE <ChevronDown className="w-3 h-3" />
-                </Link>
-                <div className="absolute top-[40px] right-0 w-64 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl">
-                  <ul className="flex flex-col">
-                    <li><Link to="/service/2-jahres-check" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Checks</Link></li>
-                    <li><Link to="/service/rettungspacken" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Rettungspacken</Link></li>
-                    <li><Link to="/service/trimmtuning" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Trimmen</Link></li>
-                    <li><Link to="/service/reparatur" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Reparaturen</Link></li>
-                    <li><Link to="/service/service-auftrag" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Service-Auftrag</Link></li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* Infos Dropdown */}
-              <div className="relative group h-[40px] flex items-center">
-                <Link to="/infos" className={getNavClass('/infos')}>
-                  INFOS <ChevronDown className="w-3 h-3" />
-                </Link>
-                <div className="absolute top-[40px] left-0 w-64 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl">
-                  <ul className="flex flex-col">
-                    <li><Link to="/infos#kontakt" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Kontakt & Anfahrt</Link></li>
-                    <li><Link to="/infos/team" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Team</Link></li>
-                    <li><Link to="/infos/gelaende" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Gelände</Link></li>
-                    <li><Link to="/infos/wetter" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Wetter</Link></li>
-                    <li><Link to="/infos/medien" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Medien</Link></li>
-                    <li><Link to="/downloads" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Downloads</Link></li>
-                    <li><Link to="/infos/gruppenevents" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Gruppenevents</Link></li>
-                    <li><Link to="/infos/gutscheine" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Gutscheine</Link></li>
-                    <li><Link to="/infos/versicherungen" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Versicherungen</Link></li>
-                  </ul>
-                </div>
-              </div>
+              )}
 
               <Link to="/shop" className={getNavClass('/shop')}>
                 SHOP
@@ -297,128 +319,68 @@ export const Header = () => {
                   Home
                 </Link>
 
-                {/* Ausbildung */}
-                <div className="flex flex-col">
-                  <div className="flex justify-between items-center w-full text-gray-800 text-[26px] font-luxury">
-                    <Link to="/ausbildung" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-hirondelle-blue transition-colors py-1 flex-1">
-                      Ausbildung
-                    </Link>
-                    <button onClick={() => toggleMobileMenu('ausbildung')} aria-label="Ausbildung Untermenü umschalten" className="p-2 -mr-2">
-                      <ChevronRight className={`w-4 h-4 text-gray-800 transition-transform ${expandedMobileMenu === 'ausbildung' ? 'rotate-90' : ''}`} />
-                    </button>
-                  </div>
-                  <div className={`overflow-hidden transition-all duration-300 ${expandedMobileMenu === 'ausbildung' ? 'max-h-[800px] mt-2 mb-2 opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <div className="flex flex-col space-y-4 pl-4 py-2">
-                      <Link to="/ausbildung/schnupperkurs" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Schnupper-/Einsteigerkurs</Link>
-                      <Link to="/ausbildung/l-schein" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">L-Schein (Grundkurs)</Link>
-                      <Link to="/ausbildung/a-schein" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">A-Schein</Link>
-                      <Link to="/ausbildung/b-schein" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">B-Schein</Link>
-                      <Link to="/ausbildung/windenschein" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Winde</Link>
-                      <Link to="/ausbildung/tandemschein" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Tandem</Link>
-                      <Link to="/ausbildung/ausbildungskonzept" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Ausbildungskonzept</Link>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Performance */}
-                <div className="flex flex-col">
-                  <div className="flex justify-between items-center w-full text-gray-800 text-[26px] font-luxury">
-                    <Link to="/performance" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-hirondelle-blue transition-colors py-1 flex-1">
-                      Performance
-                    </Link>
-                    <button onClick={() => toggleMobileMenu('performance')} aria-label="Performance Untermenü umschalten" className="p-2 -mr-2">
-                      <ChevronRight className={`w-4 h-4 text-gray-800 transition-transform ${expandedMobileMenu === 'performance' ? 'rotate-90' : ''}`} />
-                    </button>
-                  </div>
-                  <div className={`overflow-hidden transition-all duration-300 ${expandedMobileMenu === 'performance' ? 'max-h-[400px] mt-2 mb-2 opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <div className="flex flex-col space-y-4 pl-4 py-2">
-                      <Link to="/performance/sicherheitstraining" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Sicherheit</Link>
-                      <Link to="/performance/rettungsgeraetetraining" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Rettungsgeräte</Link>
-                      <Link to="/performance/refresher" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Refresher</Link>
-                      <Link to="/performance/groundhandling" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Groundhandling</Link>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Reisen */}
-                <div className="flex flex-col">
-                  <div className="flex justify-between items-center w-full text-gray-800 text-[26px] font-luxury">
-                    <Link to="/reisen" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-hirondelle-blue transition-colors py-1 flex-1">
-                      Reisen
-                    </Link>
-                    <button onClick={() => toggleMobileMenu('reisen')} aria-label="Reisen Untermenü umschalten" className="p-2 -mr-2">
-                      <ChevronRight className={`w-4 h-4 text-gray-800 transition-transform ${expandedMobileMenu === 'reisen' ? 'rotate-90' : ''}`} />
-                    </button>
-                  </div>
-                  <div className={`overflow-hidden transition-all duration-300 ${expandedMobileMenu === 'reisen' ? 'max-h-[800px] mt-2 mb-2 opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <div className="flex flex-col space-y-4 pl-4 py-2">
-                      {reisenTours.map(tour => (
-                        <Link 
-                          key={tour} 
-                          to={tour === 'Brasilien' ? '/reisen/brasilien-tour' : tour === 'Kolumbien' ? '/reisen/kolumbien-tour' : tour === 'Südafrika' ? '/reisen/suedafrika-tour' : tour === 'Bassano' ? '/reisen/bassano-tour' : tour === 'Griechenland' ? '/reisen/griechenland-tour' : tour === 'Slowenien' ? '/reisen/slowenien-tour' : tour === 'Bergamo' ? '/reisen/bergamo-tour' : tour === 'Savoye' ? '/reisen/savoye-tour' : tour === 'Vogesen' ? '/reisen/vogesen-tour' : tour === 'Pfalz' ? '/reisen/pfalz-tour' : `/reisen#${tour.toLowerCase()}`} 
-                          onClick={() => setIsMobileMenuOpen(false)} 
-                          className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue"
-                        >
-                          {tour}
+                {/* Admin-managed nav (Admin > Menü) - same items/order as the
+                    desktop NavDropdown loop above, rendered here as
+                    accordions keyed by item.id instead of a hardcoded name
+                    (see toggleMobileMenu). */}
+                {menuItems.map((item) => {
+                  const itemLinkProps = item.target === '_blank' ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+                  if (item.subItems.length === 0) {
+                    return (
+                      <Link key={item.id} to={item.url} onClick={() => setIsMobileMenuOpen(false)} className="block text-gray-800 text-[26px] font-luxury hover:text-hirondelle-blue transition-colors py-1" {...itemLinkProps}>
+                        {item.label}
+                      </Link>
+                    );
+                  }
+                  return (
+                    <div key={item.id} className="flex flex-col">
+                      <div className="flex justify-between items-center w-full text-gray-800 text-[26px] font-luxury">
+                        <Link to={item.url} onClick={() => setIsMobileMenuOpen(false)} className="hover:text-hirondelle-blue transition-colors py-1 flex-1" {...itemLinkProps}>
+                          {item.label}
                         </Link>
-                      ))}
+                        <button onClick={() => toggleMobileMenu(item.id)} aria-label={`${item.label} Untermenü umschalten`} className="p-2 -mr-2">
+                          <ChevronRight className={`w-4 h-4 text-gray-800 transition-transform ${expandedMobileMenu === item.id ? 'rotate-90' : ''}`} />
+                        </button>
+                      </div>
+                      <div className={`overflow-hidden transition-all duration-300 ${expandedMobileMenu === item.id ? 'max-h-[800px] mt-2 mb-2 opacity-100' : 'max-h-0 opacity-0'}`}>
+                        <div className="flex flex-col space-y-4 pl-4 py-2">
+                          {item.subItems.map((sub) => {
+                            const subLinkProps = sub.target === '_blank' ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+                            return (
+                              <Link key={sub.id} to={sub.url} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 text-gray-600 text-[15px] font-light hover:text-hirondelle-blue" {...subLinkProps}>
+                                {sub.imageUrl && (
+                                  <img src={sub.imageUrl} alt="" className="w-10 h-10 object-cover rounded shrink-0" />
+                                )}
+                                {sub.label}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  );
+                })}
 
-                {/* Service */}
-                <div className="flex flex-col">
-                  <div className="flex justify-between items-center w-full text-gray-800 text-[26px] font-luxury">
-                    <Link to="/service" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-hirondelle-blue transition-colors py-1 flex-1">
-                      Service
-                    </Link>
-                    <button onClick={() => toggleMobileMenu('service')} aria-label="Service Untermenü umschalten" className="p-2 -mr-2">
-                      <ChevronRight className={`w-4 h-4 text-gray-800 transition-transform ${expandedMobileMenu === 'service' ? 'rotate-90' : ''}`} />
+                {/* Seiten - admin-created pages (Admin > Seiten), only rendered when at least one exists */}
+                {dynamicPages.length > 0 && (
+                  <div className="flex flex-col">
+                    <button onClick={() => toggleMobileMenu('seiten')} className="flex justify-between items-center w-full text-gray-800 text-[26px] font-luxury hover:text-hirondelle-blue transition-colors text-left py-1">
+                      Seiten
+                      <ChevronRight className={`w-4 h-4 text-gray-800 transition-transform ${expandedMobileMenu === 'seiten' ? 'rotate-90' : ''}`} />
                     </button>
-                  </div>
-                  <div className={`overflow-hidden transition-all duration-300 ${expandedMobileMenu === 'service' ? 'max-h-[400px] mt-2 mb-2 opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <div className="flex flex-col space-y-4 pl-4 py-2">
-                      <Link to="/service/2-jahres-check" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Checks</Link>
-                      <Link to="/service/rettungspacken" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Rettungspacken</Link>
-                      <Link to="/service/trimmtuning" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Trimmen</Link>
-                      <Link to="/service/reparatur" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Reparaturen</Link>
-                      <Link to="/service/service-auftrag" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Service-Auftrag</Link>
+                    <div className={`overflow-hidden transition-all duration-300 ${expandedMobileMenu === 'seiten' ? 'max-h-[600px] mt-2 mb-2 opacity-100' : 'max-h-0 opacity-0'}`}>
+                      <div className="flex flex-col space-y-4 pl-4 py-2">
+                        {dynamicPages.map((page) => (
+                          <Link key={page.slug} to={`/${page.slug}`} onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">
+                            {page.navLabel || page.title}
+                          </Link>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Infos */}
-                <div className="flex flex-col">
-                  <div className="flex justify-between items-center w-full text-gray-800 text-[26px] font-luxury">
-                    <Link to="/infos" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-hirondelle-blue transition-colors py-1 flex-1">
-                      Infos
-                    </Link>
-                    <button onClick={() => toggleMobileMenu('infos')} aria-label="Infos Untermenü umschalten" className="p-2 -mr-2">
-                      <ChevronRight className={`w-4 h-4 text-gray-800 transition-transform ${expandedMobileMenu === 'infos' ? 'rotate-90' : ''}`} />
-                    </button>
-                  </div>
-                  <div className={`overflow-hidden transition-all duration-300 ${expandedMobileMenu === 'infos' ? 'max-h-[600px] mt-2 mb-2 opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <div className="flex flex-col space-y-4 pl-4 py-2">
-                      <Link to="/infos#kontakt" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Kontakt & Anfahrt</Link>
-                      <Link to="/infos/team" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Team</Link>
-                      <Link to="/infos/gelaende" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Gelände</Link>
-                      <Link to="/infos/wetter" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Wetter</Link>
-                      <Link to="/infos/medien" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Medien</Link>
-                      <Link to="/downloads" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Downloads</Link>
-                      <Link to="/infos/gruppenevents" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Gruppenevents</Link>
-                      <Link to="/infos/gutscheine" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Gutscheine</Link>
-                      <Link to="/infos/versicherungen" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 text-[15px] font-light hover:text-hirondelle-blue">Versicherungen</Link>
-                    </div>
-                  </div>
-                </div>
+                )}
 
                 {/* Direct Links */}
-                <Link to="/buchungskalender" onClick={() => setIsMobileMenuOpen(false)} className="block text-gray-800 text-[26px] font-luxury hover:text-hirondelle-blue transition-colors py-1">
-                  Buchungskalender
-                </Link>
-                <Link to="/tandem" onClick={() => setIsMobileMenuOpen(false)} className="block text-gray-800 text-[26px] font-luxury hover:text-hirondelle-blue transition-colors py-1">
-                  Tandem
-                </Link>
                 <Link to="/shop" onClick={() => setIsMobileMenuOpen(false)} className="block text-gray-800 text-[26px] font-luxury hover:text-hirondelle-blue transition-colors py-1">
                   Shop
                 </Link>
