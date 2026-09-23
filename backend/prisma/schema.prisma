@@ -721,9 +721,10 @@ model SettingsConfig {
   id                         String   @id @default("default")
   // old: sendmail_teilnehmer - the customer's own booking-confirmation email
   sendmailTeilnehmer         Boolean  @default(true)
-  // old: notify_participants_publish / notify_participants_cancel
+  // old: notify_participants_publish / notify_participants_cancel / notify_participants_delete
   notifyParticipantsPublish  Boolean  @default(true)
   notifyParticipantsCancel   Boolean  @default(true)
+  notifyParticipantsDelete   Boolean  @default(true)
   // old: sendmail_owner - a copy of every new booking to the school itself
   sendmailOwner              Boolean  @default(false)
   ownerNotificationEmail     String?

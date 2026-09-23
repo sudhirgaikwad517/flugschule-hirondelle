@@ -250,7 +250,16 @@ export async function sendNewEventNotificationEmail(eventId: string) {
 
 // templateKey 'userCancellation' - the customer cancelled their own booking;
 // 'adminCancellation' - the school/admin cancelled the booking on their behalf.
-export async function sendCancellationEmail(bookingId: string, templateKey: 'userCancellation' | 'adminCancellation') {
+export async function sendCancellationEmail(
+  bookingId: string,
+  templateKey: 'userCancellation' | 'adminCancellation',
+  // Event-level delete (events.routes.ts) gates on old's separate
+  // notify_participants_delete flag instead - it checks that flag itself
+  // before calling this, so it passes true here to skip this function's
+  // own notify_participants_cancel gate (which would otherwise silently
+  // suppress delete notifications whenever the CANCEL flag happens to be off).
+  skipCancelConfigCheck = false
+) {
   try {
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
@@ -264,7 +273,7 @@ export async function sendCancellationEmail(bookingId: string, templateKey: 'use
 
     // old: notify_participants_cancel
     const settings = await getSettingsConfig();
-    if (!settings.notifyParticipantsCancel) {
+    if (!skipCancelConfigCheck && !settings.notifyParticipantsCancel) {
       console.log('Cancellation email skipped: notifyParticipantsCancel is disabled in Settings.');
       return;
     }

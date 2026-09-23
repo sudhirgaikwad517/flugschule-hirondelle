@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../utils/prisma';
 import { authenticateJWT, authorizeAdmin, AuthRequest } from '../middlewares/auth.middleware';
 import { sendBookingConfirmationEmail, sendCancellationEmail } from '../services/mailer.service';
+import { getSettingsConfig } from './settingsConfig.routes';
 import { calculateBookingPrice } from '../utils/bookingPrice';
 import { JWT_SECRET } from '../utils/config';
 import jwt from 'jsonwebtoken';
@@ -999,10 +1000,29 @@ router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
 // Customer self-service: cancel their own booking
 router.post('/:id/cancel', authenticateJWT, async (req: any, res) => {
   try {
-    const booking = await prisma.booking.findUnique({ where: { id: req.params.id as string } });
+    const booking = await prisma.booking.findUnique({ where: { id: req.params.id as string }, include: { event: true } });
     if (!booking) return res.status(404).json({ message: 'Not found' });
     if (booking.userId !== req.user.id) return res.status(403).json({ message: 'Nicht erlaubt' });
     if (booking.status === 'CANCELLED') return res.status(400).json({ message: 'Diese Buchung ist bereits storniert' });
+    if (!['PENDING', 'CONFIRMED', 'WAITLIST'].includes(booking.status)) {
+      return res.status(400).json({ message: 'Diese Buchung kann nicht mehr storniert werden' });
+    }
+
+    // old: booking_stornotage (default 28, real live value) - self-service
+    // cancellation only within this many days of the event's end (old
+    // literally aliases this to $event->end, see submit.php), and only for
+    // still-unpaid bookings; -1 disables self-cancellation entirely. This
+    // matched the button's own visibility condition on old's real booking
+    // page, not something this app enforced before.
+    if (booking.paid) {
+      return res.status(400).json({ message: 'Bereits bezahlte Buchungen können nicht selbst storniert werden - bitte kontaktieren Sie uns direkt.' });
+    }
+    const settings = await getSettingsConfig();
+    const deadline = booking.event.endDate || booking.event.startDate;
+    const daysRemaining = (deadline.getTime() - Date.now()) / 86400000;
+    if (settings.bookingStornotage === -1 || daysRemaining < settings.bookingStornotage) {
+      return res.status(400).json({ message: `Diese Buchung kann nicht mehr selbst storniert werden (nur bis ${settings.bookingStornotage} Tage vor der Veranstaltung möglich) - bitte kontaktieren Sie uns direkt.` });
+    }
 
     const updated = await prisma.booking.update({
       where: { id: req.params.id as string },

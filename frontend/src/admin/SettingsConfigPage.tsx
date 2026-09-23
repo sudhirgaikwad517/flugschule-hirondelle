@@ -121,6 +121,11 @@ export const SettingsConfigPage = () => {
                     />
                     <br />
                     <FormControlLabel
+                        control={<Switch checked={!!form.notifyParticipantsDelete} onChange={(e) => set('notifyParticipantsDelete')(e.target.checked)} />}
+                        label="Teilnehmer benachrichtigen, wenn eine Veranstaltung gelöscht wird"
+                    />
+                    <br />
+                    <FormControlLabel
                         control={<Switch checked={!!form.sendmailNewEventGroup} onChange={(e) => set('sendmailNewEventGroup')(e.target.checked)} />}
                         label="Neue Veranstaltung an registrierte Kunden melden"
                     />

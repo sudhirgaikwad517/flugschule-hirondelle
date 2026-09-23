@@ -4,7 +4,8 @@ import { prisma } from '../utils/prisma';
 import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware';
 import { generateRecurringDates, RecurrenceSpec } from '../utils/recurrence';
 import { buildIcsCalendar } from '../utils/ics';
-import { sendNewEventNotificationEmail } from '../services/mailer.service';
+import { sendNewEventNotificationEmail, sendCancellationEmail } from '../services/mailer.service';
+import { getSettingsConfig } from './settingsConfig.routes';
 
 const router = Router();
 
@@ -327,9 +328,38 @@ router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
 
 router.delete('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
+    // Booking.eventId is a RESTRICT foreign key (unlike old's DB, which had
+    // no such constraint and let a delete silently orphan real booking
+    // rows) - deleting an event that still has any booking always fails
+    // here. That's the actually-safer design (real booking history is
+    // never silently orphaned), but it also means the notification email
+    // MUST fire only after a successful delete, never before it - sending
+    // "your booking is cancelled" and then having the delete itself fail
+    // would be a false notification about something that never happened.
+    const affectedBookings = await prisma.booking.findMany({
+      where: { eventId: req.params.id as string, status: { in: ['PENDING', 'CONFIRMED', 'WAITLIST'] } },
+      select: { id: true }
+    });
+
     await prisma.event.delete({ where: { id: req.params.id as string } });
+
+    // old: notify_participants_delete (real, active on the live site) -
+    // reachable in practice only when the event had no blocking bookings
+    // (see above), but kept faithful to old's real config flag for the
+    // rare edge case (e.g. only CANCELLED-status bookings remained, which
+    // don't block the FK).
+    const settings = await getSettingsConfig();
+    if (settings.notifyParticipantsDelete) {
+      for (const b of affectedBookings) {
+        sendCancellationEmail(b.id, 'adminCancellation', true).catch(console.error);
+      }
+    }
+
     res.json({ id: req.params.id });
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.code === 'P2003') {
+      return res.status(400).json({ message: 'Diese Veranstaltung hat noch Buchungen und kann nicht gelöscht werden - bitte stattdessen stornieren oder unveröffentlichen.' });
+    }
     res.status(500).json({ message: 'Internal server error' });
   }
 });
@@ -617,10 +647,27 @@ router.patch('/:id/toggle-cancel', authenticateJWT, authorizeAdmin, async (req, 
     const event = await prisma.event.findUnique({ where: { id: req.params.id as string } });
     if (!event) return res.status(404).json({ message: 'Not found' });
 
+    const willBeCancelled = !event.cancelled;
     const updated = await prisma.event.update({
       where: { id: req.params.id as string },
-      data: { cancelled: !event.cancelled }
+      data: { cancelled: willBeCancelled }
     });
+
+    // Only notify when actually CANCELLING (not when un-cancelling back to
+    // published) - this is the real, reachable equivalent of old's
+    // notify_participants_delete/cancel flow for an event with existing
+    // customers, since deleting one outright is blocked while it has any
+    // booking (see DELETE /:id above).
+    if (willBeCancelled) {
+      const affectedBookings = await prisma.booking.findMany({
+        where: { eventId: req.params.id as string, status: { in: ['PENDING', 'CONFIRMED', 'WAITLIST'] } },
+        select: { id: true }
+      });
+      for (const b of affectedBookings) {
+        sendCancellationEmail(b.id, 'adminCancellation').catch(console.error);
+      }
+    }
+
     res.json(updated);
   } catch (error) {
     res.status(500).json({ message: 'Internal server error' });

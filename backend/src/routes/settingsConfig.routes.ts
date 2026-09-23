@@ -25,7 +25,7 @@ router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
 router.put('/', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
     const {
-      sendmailTeilnehmer, notifyParticipantsPublish, notifyParticipantsCancel,
+      sendmailTeilnehmer, notifyParticipantsPublish, notifyParticipantsCancel, notifyParticipantsDelete,
       sendmailOwner, ownerNotificationEmail, sendmailInvoice, sendmailTicket,
       sendmailCertificate, bookingStornotage, rejectionSubject, sendmailNewEventGroup,
     } = req.body;
@@ -34,6 +34,7 @@ router.put('/', authenticateJWT, authorizeAdmin, async (req, res) => {
     if (sendmailTeilnehmer !== undefined) data.sendmailTeilnehmer = !!sendmailTeilnehmer;
     if (notifyParticipantsPublish !== undefined) data.notifyParticipantsPublish = !!notifyParticipantsPublish;
     if (notifyParticipantsCancel !== undefined) data.notifyParticipantsCancel = !!notifyParticipantsCancel;
+    if (notifyParticipantsDelete !== undefined) data.notifyParticipantsDelete = !!notifyParticipantsDelete;
     if (sendmailOwner !== undefined) data.sendmailOwner = !!sendmailOwner;
     if (ownerNotificationEmail !== undefined) data.ownerNotificationEmail = ownerNotificationEmail || null;
     if (sendmailInvoice !== undefined) data.sendmailInvoice = !!sendmailInvoice;
