@@ -560,6 +560,21 @@ model MenuSubItem {
   menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
 }
 
+// The currently PUBLISHED menu tree for one location ("header" | "footer"),
+// one row each. GET /menu/public and GET /footerlinks/public serve THIS,
+// not the live MenuItem/MenuSubItem tables directly - every edit in
+// MenuManager.tsx (drag reorder, nest, toggle, add/remove...) still saves
+// straight to MenuItem/MenuSubItem immediately (so nothing is lost if the
+// admin navigates away mid-edit), but the public site only picks up those
+// changes once the admin clicks "Speichern" there, which snapshots the
+// current MenuItem/MenuSubItem tree into this row. See menu.routes.ts.
+model MenuSnapshot {
+  id        String   @id @default(uuid())
+  location  String   @unique // "header" | "footer"
+  data      String   @db.LongText // JSON: nested items+subItems tree, same shape GET /menuitems returns
+  updatedAt DateTime @updatedAt
+}
+
 enum Role {
   ADMIN
   INSTRUCTOR

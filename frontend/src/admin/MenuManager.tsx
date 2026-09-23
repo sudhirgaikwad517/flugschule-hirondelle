@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, type DragEvent } from 'react';
 import { useNotify } from 'react-admin';
 import {
   Box,
@@ -25,6 +25,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import UploadIcon from '@mui/icons-material/Upload';
@@ -84,24 +85,19 @@ const describeApiError = (res: Response, fallback: string): string => {
 const emptyItemForm = { label: '', url: '', target: '_self', published: true };
 const emptySubItemForm = { label: '', url: '', target: '_self', imageUrl: '', published: true };
 
-// The 6 hand-built pages (same set as Pages.tsx's FIXED_PAGES), offered in
-// the left "Seiten" picker alongside admin-created Seiten pages, so an admin
-// can add an existing page to the menu by ticking a checkbox instead of
-// retyping its URL - the same "pick from Pages" flow WordPress's own
-// Appearance > Menus screen uses. Only the `kind`/default label/default slug
-// are fixed here - the actual title and URL an admin sees (and may have
-// renamed via "Seiten-Einstellungen", e.g. Ausbildung -> "Training" at
-// /education) are live-fetched from /api/fixed-page-settings below, exactly
-// like Pages.tsx's own fixedSettings lookup - hardcoding them here would
-// silently drift out of sync with a renamed fixed page.
-const FIXED_PAGE_DEFAULTS: { kind: string; label: string; defaultSlug: string | null }[] = [
-  { kind: 'home', label: 'Startseite', defaultSlug: null },
-  { kind: 'ausbildung', label: 'Ausbildung', defaultSlug: 'ausbildung' },
-  { kind: 'performance', label: 'Performance', defaultSlug: 'performance' },
-  { kind: 'reisen', label: 'Reisen', defaultSlug: 'reisen' },
-  { kind: 'service', label: 'Service', defaultSlug: 'service' },
-  { kind: 'infos', label: 'Infos / Kontakt', defaultSlug: 'infos' },
-];
+// The hand-built "fixed" pages (same set as Pages.tsx's own list), offered
+// in the left "Seiten" picker alongside admin-created Seiten pages, so an
+// admin can add an existing page to the menu by ticking a checkbox instead
+// of retyping its URL - the same "pick from Pages" flow WordPress's own
+// Appearance > Menus screen uses. This list is fetched from GET
+// /api/fixed-page-duplicates/kinds (the same registry Pages.tsx reads) -
+// NOT hardcoded here - so a new fixed page (e.g. a future /infos/* sub-page)
+// shows up in this picker automatically the moment it's added to that
+// registry, with nothing in this file to update. Only kinds with
+// `hasSettings: true` get their title/URL live-overridden from
+// /api/fixed-page-settings below (a rename, e.g. Ausbildung -> "Training"
+// at /education) - the rest always use their fixed `defaultUrl`.
+interface FixedPageKindInfo { kind: string; label: string; defaultUrl: string; hasSettings: boolean }
 
 export const MenuManager = () => {
   const notify = useNotify();
@@ -123,10 +119,20 @@ export const MenuManager = () => {
   const [uploadingSubItemImage, setUploadingSubItemImage] = useState(false);
   const subItemFileInputRef = useRef<HTMLInputElement>(null);
 
+  const [dirty, setDirty] = useState(false);
+  const [publishedAt, setPublishedAt] = useState<string | null>(null);
+  const [publishing, setPublishing] = useState(false);
+
   const [dragItemIndex, setDragItemIndex] = useState<number | null>(null);
   const [dragSubItem, setDragSubItem] = useState<{ parentId: string; index: number } | null>(null);
+  // Feedback for what dropping onto a top-level item's row will do: reorder
+  // before/after it, or ("into") nest the dragged item/sub-item as one of
+  // its own Untermenüpunkte. Computed live from the pointer's vertical
+  // position within the row during dragover.
+  const [overTarget, setOverTarget] = useState<{ index: number; mode: 'before' | 'after' | 'into' } | null>(null);
 
   // --- "Menüpunkt hinzufügen" picker (left panel) ---
+  const [fixedPageKinds, setFixedPageKinds] = useState<FixedPageKindInfo[]>([]);
   const [fixedPageSettings, setFixedPageSettings] = useState<Record<string, { slug: string | null; title: string }>>({});
   const [customPages, setCustomPages] = useState<{ key: string; label: string; url: string }[]>([]);
   const [duplicatePages, setDuplicatePages] = useState<{ key: string; label: string; url: string }[]>([]);
@@ -136,10 +142,21 @@ export const MenuManager = () => {
   const [addingSelected, setAddingSelected] = useState(false);
   const [addingCustomLink, setAddingCustomLink] = useState(false);
 
-  // Live title/URL for the 6 fixed pages, keyed by kind - same source
-  // Pages.tsx itself reads (fetchFixedSettings), so a renamed fixed page
-  // (e.g. Ausbildung -> "Training" at /education via "Seiten-Einstellungen")
-  // shows up here with its actual current title/URL instead of the default.
+  // The full fixed-page registry (see fixedPageDuplicates.routes.ts's
+  // GET /kinds) - every kind listed there appears in the picker below, so a
+  // newly-added fixed page needs no change in this file.
+  useEffect(() => {
+    fetch('/api/fixed-page-duplicates/kinds', { headers: authHeaders() })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: FixedPageKindInfo[]) => setFixedPageKinds(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
+
+  // Live title/URL for kinds with `hasSettings: true`, keyed by kind - same
+  // source Pages.tsx itself reads (fetchFixedSettings), so a renamed fixed
+  // page (e.g. Ausbildung -> "Training" at /education via "Seiten-
+  // Einstellungen") shows up here with its actual current title/URL instead
+  // of the default.
   useEffect(() => {
     fetch('/api/fixed-page-settings', { headers: authHeaders() })
       .then((res) => (res.ok ? res.json() : []))
@@ -185,10 +202,10 @@ export const MenuManager = () => {
       .catch(() => {});
   }, []);
 
-  const fixedPages = FIXED_PAGE_DEFAULTS.map((d) => {
-    const live = fixedPageSettings[d.kind];
+  const fixedPages = fixedPageKinds.map((d) => {
+    const live = d.hasSettings ? fixedPageSettings[d.kind] : undefined;
     const label = live?.title || d.label;
-    const url = d.kind === 'home' ? '/' : `/${live?.slug || d.defaultSlug}`;
+    const url = d.kind === 'home' ? '/' : live?.slug ? `/${live.slug}` : d.defaultUrl;
     return { key: `fixed:${d.kind}`, label, url };
   });
 
@@ -259,9 +276,44 @@ export const MenuManager = () => {
       .then((data) => setItems(Array.isArray(data) ? data : []))
       .catch(() => notify('Fehler beim Laden des Menüs', { type: 'error' }))
       .finally(() => setLoading(false));
+    fetchPublishStatus();
   };
 
   useEffect(fetchItems, [location]);
+
+  // --- Publish (the live MenuItem/MenuSubItem tree above is what admin
+  // edits always save to immediately - the PUBLIC site instead reads the
+  // separate, explicitly-published MenuSnapshot, so none of those edits
+  // reach the front-end until "Speichern" here. See menu.routes.ts. ---
+
+  const fetchPublishStatus = () => {
+    fetch(`/api/menu/publish-status?location=${location}`, { headers: authHeaders() })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data) return;
+        setDirty(!!data.dirty);
+        setPublishedAt(data.publishedAt);
+      })
+      .catch(() => {});
+  };
+
+  const publishMenu = async () => {
+    setPublishing(true);
+    try {
+      const res = await fetch('/api/menu/publish', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ location }),
+      });
+      if (!res.ok) throw new Error(describeApiError(res, 'Fehler beim Veröffentlichen'));
+      notify(location === 'header' ? 'Hauptmenü veröffentlicht' : 'Footer-Links veröffentlicht', { type: 'success' });
+      fetchPublishStatus();
+    } catch (e: any) {
+      notify(e.message || 'Fehler beim Veröffentlichen', { type: 'error' });
+    } finally {
+      setPublishing(false);
+    }
+  };
 
   const toggleExpanded = (id: string) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
@@ -324,6 +376,7 @@ export const MenuManager = () => {
         headers: authHeaders(),
         body: JSON.stringify({ label: item.label, url: item.url, target: item.target, published: !item.published, order: item.order }),
       });
+      fetchPublishStatus();
     } catch {
       notify('Fehler beim Aktualisieren', { type: 'error' });
       fetchItems();
@@ -342,10 +395,87 @@ export const MenuManager = () => {
         headers: authHeaders(),
         body: JSON.stringify(next.map((i, idx) => ({ id: i.id, order: idx }))),
       });
+      fetchPublishStatus();
     } catch {
       notify('Fehler beim Sortieren', { type: 'error' });
       fetchItems();
     }
+  };
+
+  // Drag a top-level item onto another top-level item's row (the middle
+  // band, see computeDropMode below) to make it a sub-item of that item
+  // instead of reordering it. Rejected server-side (with a clear message)
+  // if the dragged item has its own sub-items already, since this menu is
+  // only 2 levels deep.
+  const nestItemUnder = async (source: ItemRow, target: ItemRow) => {
+    try {
+      const res = await fetch(`/api/menuitems/${source.id}/nest`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ targetId: target.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || describeApiError(res, 'Fehler beim Verschachteln'));
+      notify(`"${source.label}" ist jetzt ein Untermenüpunkt von "${target.label}"`, { type: 'success' });
+      setExpanded((prev) => ({ ...prev, [target.id]: true }));
+      fetchItems();
+    } catch (e: any) {
+      notify(e.message || 'Fehler beim Verschachteln', { type: 'error' });
+    }
+  };
+
+  // Drag a sub-item onto a DIFFERENT top-level item's row to move it into
+  // that item's sub-items instead of its current parent's.
+  const reparentSubItem = async (source: { parentId: string; index: number }, target: ItemRow) => {
+    const parent = items.find((i) => i.id === source.parentId);
+    const sub = parent?.subItems[source.index];
+    if (!sub) return;
+    try {
+      const res = await fetch(`/api/menusubitems/${sub.id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          label: sub.label, url: sub.url, target: sub.target, imageUrl: sub.imageUrl || '',
+          published: sub.published, order: target.subItems.length, menuItemId: target.id,
+        }),
+      });
+      if (!res.ok) throw new Error(describeApiError(res, 'Fehler beim Verschieben'));
+      notify(`"${sub.label}" wurde zu "${target.label}" verschoben`, { type: 'success' });
+      setExpanded((prev) => ({ ...prev, [target.id]: true }));
+      fetchItems();
+    } catch (e: any) {
+      notify(e.message || 'Fehler beim Verschieben', { type: 'error' });
+    }
+  };
+
+  // The reverse of nestItemUnder: pulls a sub-item back out to become its
+  // own top-level item. Triggered from a button on the sub-item row rather
+  // than a drag gesture (there's no obvious empty drop zone to drag it
+  // onto), but shares the same backend "un-nest" idea.
+  const promoteSubItem = async (sub: SubItemRow) => {
+    try {
+      const res = await fetch(`/api/menusubitems/${sub.id}/promote`, { method: 'POST', headers: authHeaders() });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || describeApiError(res, 'Fehler beim Verschieben'));
+      notify(`"${sub.label}" ist jetzt ein eigener Menüpunkt`, { type: 'success' });
+      fetchItems();
+    } catch (e: any) {
+      notify(e.message || 'Fehler beim Verschieben', { type: 'error' });
+    }
+  };
+
+  // Where within a top-level row the pointer is decides what dropping there
+  // does: top/bottom edge = reorder before/after, middle band = nest into
+  // it. A sub-item being dragged always means "nest here" (there's no
+  // "reorder top-level items around a sub-item" concept), and the footer
+  // tab never nests (footer is a flat list), so both skip the band split.
+  const computeDropMode = (e: DragEvent<HTMLElement>): 'before' | 'after' | 'into' => {
+    if (dragSubItem || location === 'footer') return dragSubItem ? 'into' : 'before';
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = (e.clientY - rect.top) / rect.height;
+    if (ratio < 0.25) return 'before';
+    if (ratio > 0.75) return 'after';
+    return 'into';
   };
 
   // --- Sub-items ---
@@ -437,6 +567,7 @@ export const MenuManager = () => {
         headers: authHeaders(),
         body: JSON.stringify({ label: sub.label, url: sub.url, target: sub.target, published: !sub.published, order: sub.order }),
       });
+      fetchPublishStatus();
     } catch {
       notify('Fehler beim Aktualisieren', { type: 'error' });
       fetchItems();
@@ -456,6 +587,7 @@ export const MenuManager = () => {
         headers: authHeaders(),
         body: JSON.stringify(nextSubs.map((s, idx) => ({ id: s.id, order: idx }))),
       });
+      fetchPublishStatus();
     } catch {
       notify('Fehler beim Sortieren', { type: 'error' });
       fetchItems();
@@ -477,6 +609,36 @@ export const MenuManager = () => {
         <Tab label="Header" value="header" />
         <Tab label="Footer" value="footer" />
       </Tabs>
+
+      {/* Every edit below (drag, toggle, add/edit/delete, nest/promote)
+          saves immediately - but only to the working menu, not the live
+          site. The live header/footer only picks up those changes once
+          "Speichern" here publishes them (see loadPublicTree in
+          menu.routes.ts), so an admin can freely rearrange things without
+          it going live mid-edit. */}
+      <Paper
+        variant="outlined"
+        sx={{
+          display: 'flex', alignItems: 'center', gap: 1.5, p: 1.5, mb: 2,
+          bgcolor: dirty ? '#fff8e1' : '#f6f8f6',
+          borderColor: dirty ? '#f0c14b' : undefined,
+        }}
+      >
+        <Typography variant="body2" sx={{ flex: 1, color: dirty ? '#8a6d1f' : '#557a5e' }}>
+          {dirty
+            ? (location === 'header' ? 'Das Hauptmenü hat ungespeicherte Änderungen - auf der Webseite ist noch der zuletzt veröffentlichte Stand zu sehen.' : 'Der Footer hat ungespeicherte Änderungen - auf der Webseite ist noch der zuletzt veröffentlichte Stand zu sehen.')
+            : (publishedAt ? `Veröffentlicht - zuletzt am ${new Date(publishedAt).toLocaleString('de-DE')}.` : 'Noch nichts veröffentlicht.')}
+        </Typography>
+        <Button
+          variant="contained"
+          color={dirty ? 'warning' : 'success'}
+          size="small"
+          onClick={publishMenu}
+          disabled={publishing || !dirty}
+        >
+          {publishing ? 'Wird veröffentlicht...' : (location === 'header' ? 'Menü veröffentlichen' : 'Footer veröffentlichen')}
+        </Button>
+      </Paper>
 
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', flexDirection: { xs: 'column', md: 'row' } }}>
 
@@ -545,6 +707,11 @@ export const MenuManager = () => {
               {location === 'header' ? 'Manueller Eintrag' : 'Manueller Footer-Link'}
             </Button>
           </Box>
+          {location === 'header' && !loading && items.length > 0 && (
+            <Typography variant="body2" sx={{ color: '#999', mb: 1 }}>
+              Tipp: einen Menüpunkt auf die Mitte eines anderen ziehen, um ihn zu dessen Untermenüpunkt zu machen - auf den oberen/unteren Rand ziehen, um nur die Reihenfolge zu ändern.
+            </Typography>
+          )}
 
           {loading && items.length === 0 && (
             <Typography sx={{ mt: 3, color: '#999' }}>Lädt...</Typography>
@@ -563,14 +730,36 @@ export const MenuManager = () => {
             variant="outlined"
             draggable
             onDragStart={() => setDragItemIndex(index)}
-            onDragOver={(e) => e.preventDefault()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              if (dragItemIndex === index) return;
+              setOverTarget({ index, mode: computeDropMode(e) });
+            }}
             onDrop={(e) => {
               e.preventDefault();
-              if (dragItemIndex !== null) moveItem(dragItemIndex, index);
+              const mode = computeDropMode(e);
+              if (dragSubItem) {
+                if (dragSubItem.parentId !== item.id) reparentSubItem(dragSubItem, item);
+              } else if (dragItemIndex !== null && dragItemIndex !== index) {
+                if (mode === 'into') nestItemUnder(items[dragItemIndex], item);
+                else moveItem(dragItemIndex, index);
+              }
               setDragItemIndex(null);
+              setDragSubItem(null);
+              setOverTarget(null);
             }}
-            onDragEnd={() => setDragItemIndex(null)}
-            sx={{ opacity: dragItemIndex === index ? 0.4 : 1 }}
+            onDragEnd={() => { setDragItemIndex(null); setDragSubItem(null); setOverTarget(null); }}
+            sx={{
+              opacity: dragItemIndex === index ? 0.4 : 1,
+              transition: 'box-shadow 0.1s, background-color 0.1s',
+              ...(overTarget?.index === index && overTarget.mode === 'into'
+                ? { boxShadow: (t) => `inset 0 0 0 2px ${t.palette.primary.main}`, bgcolor: 'action.hover' }
+                : overTarget?.index === index && overTarget.mode === 'before'
+                ? { boxShadow: (t) => `inset 0 2px 0 0 ${t.palette.primary.main}` }
+                : overTarget?.index === index && overTarget.mode === 'after'
+                ? { boxShadow: (t) => `inset 0 -2px 0 0 ${t.palette.primary.main}` }
+                : {}),
+            }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1.5 }}>
               <DragIndicatorIcon sx={{ color: '#aaa', cursor: 'grab' }} fontSize="small" />
@@ -611,14 +800,15 @@ export const MenuManager = () => {
                     <Box
                       key={sub.id}
                       draggable
-                      onDragStart={() => setDragSubItem({ parentId: item.id, index: subIndex })}
-                      onDragOver={(e) => e.preventDefault()}
+                      onDragStart={(e) => { e.stopPropagation(); setDragSubItem({ parentId: item.id, index: subIndex }); }}
+                      onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
                       onDrop={(e) => {
                         e.preventDefault();
+                        e.stopPropagation();
                         if (dragSubItem && dragSubItem.parentId === item.id) moveSubItem(item.id, dragSubItem.index, subIndex);
                         setDragSubItem(null);
                       }}
-                      onDragEnd={() => setDragSubItem(null)}
+                      onDragEnd={(e) => { e.stopPropagation(); setDragSubItem(null); }}
                       sx={{
                         display: 'flex', alignItems: 'center', gap: 1, p: 1,
                         border: '1px solid #eee', borderRadius: '6px',
@@ -634,6 +824,7 @@ export const MenuManager = () => {
                         <Typography variant="caption" sx={{ color: '#888' }}>{sub.url || '—'}</Typography>
                       </Box>
                       <Switch size="small" checked={sub.published} onChange={() => togglePublishedSubItem(sub)} />
+                      <IconButton size="small" onClick={() => promoteSubItem(sub)} title="Zu eigenem Menüpunkt machen"><ArrowUpwardIcon fontSize="small" /></IconButton>
                       <IconButton size="small" onClick={() => openEditSubItem(item.id, sub)} title="Bearbeiten"><EditIcon fontSize="small" /></IconButton>
                       <IconButton size="small" onClick={() => deleteSubItem(sub)} title="Löschen"><DeleteIcon fontSize="small" color="error" /></IconButton>
                     </Box>

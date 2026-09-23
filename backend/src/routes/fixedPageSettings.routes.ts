@@ -4,14 +4,52 @@ import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware'
 import { RESERVED_SLUGS } from '../data/reservedSlugs';
 import { syncMenuPublishedForUrl } from '../utils/menuSync';
 
-// Editable title/URL/publish-status for the 6 fixed pages THEMSELVES - see
+// Editable title/URL/publish-status for the 13 fixed pages THEMSELVES - see
 // the FixedPageSettings model comment in schema.prisma for the full
 // rationale (redirect-based rename, home's slug never editable, drafts
 // gated at both the old and new URL via FixedPageGate.tsx).
 
 const router = Router();
 
-const FIXED_KINDS = ['home', 'ausbildung', 'performance', 'reisen', 'service', 'infos'] as const;
+const FIXED_KINDS = [
+  'home',
+  'ausbildung',
+  'performance',
+  'reisen',
+  'service',
+  'infos',
+  'team',
+  'gelaende',
+  'wetter',
+  'medien',
+  'gruppenevents',
+  'gutscheine',
+  'versicherungen',
+  'schnupperkurs',
+  'l-schein',
+  'a-schein',
+  'b-schein',
+  'windenschein',
+  'tandemschein',
+  'ausbildungskonzept',
+  'sicherheitstraining',
+  'rettungsgeraetetraining',
+  'groundhandling',
+  'brasilien-tour',
+  'kolumbien-tour',
+  'suedafrika-tour',
+  'bassano-tour',
+  'griechenland-tour',
+  'slowenien-tour',
+  'bergamo-tour',
+  'savoye-tour',
+  'vogesen-tour',
+  'pfalz-tour',
+  '2-jahres-check',
+  'rettungspacken',
+  'trimmtuning',
+  'reparatur',
+] as const;
 type FixedKind = (typeof FIXED_KINDS)[number];
 
 const KIND_LABELS: Record<FixedKind, string> = {
@@ -21,12 +59,46 @@ const KIND_LABELS: Record<FixedKind, string> = {
   reisen: 'Reisen',
   service: 'Service',
   infos: 'Infos / Kontakt',
+  team: 'Team',
+  gelaende: 'Fluggelände',
+  wetter: 'Wetter',
+  medien: 'Medien',
+  gruppenevents: 'Gruppenevents',
+  gutscheine: 'Gutscheine',
+  versicherungen: 'Versicherungen',
+  schnupperkurs: 'Schnupperkurs',
+  'l-schein': 'L-Schein',
+  'a-schein': 'A-Schein',
+  'b-schein': 'B-Schein',
+  windenschein: 'Windenschein',
+  tandemschein: 'Tandemschein',
+  ausbildungskonzept: 'Ausbildungskonzept',
+  sicherheitstraining: 'Sicherheitstraining',
+  rettungsgeraetetraining: 'Rettungsgerätetraining',
+  groundhandling: 'Groundhandling',
+  'brasilien-tour': 'Brasilien-Tour',
+  'kolumbien-tour': 'Kolumbien-Tour',
+  'suedafrika-tour': 'Südafrika-Tour',
+  'bassano-tour': 'Bassano-Tour',
+  'griechenland-tour': 'Griechenland-Tour',
+  'slowenien-tour': 'Slowenien-Tour',
+  'bergamo-tour': 'Bergamo-Tour',
+  'savoye-tour': 'Savoyer Alpentour',
+  'vogesen-tour': 'Vogesen-Tour',
+  'pfalz-tour': 'Pfalz-Tour',
+  '2-jahres-check': '2-Jahres-Check',
+  rettungspacken: 'Rettungsgeräte-Packservice',
+  trimmtuning: 'Trimmtuning',
+  reparatur: 'Reparatur-Service',
 };
 
 // The hardcoded React route each kind's page lives at today (App.tsx) -
 // also each row's default `slug` value, and the one slug value that's
 // always allowed even though it's in RESERVED_SLUGS (renaming back to your
-// own default is a no-op, not a collision with another page).
+// own default is a no-op, not a collision with another page). The 7
+// /infos/* sub-pages live nested under /infos/<kind> but, like every other
+// fixed page, redirect to a top-level /<slug> once renamed (see
+// FixedPageGate.tsx) - same mechanism a "Seiten > Duplizieren" copy uses.
 const DEFAULT_SLUGS: Record<FixedKind, string | null> = {
   home: null,
   ausbildung: 'ausbildung',
@@ -34,6 +106,37 @@ const DEFAULT_SLUGS: Record<FixedKind, string | null> = {
   reisen: 'reisen',
   service: 'service',
   infos: 'infos',
+  team: 'team',
+  gelaende: 'gelaende',
+  wetter: 'wetter',
+  medien: 'medien',
+  gruppenevents: 'gruppenevents',
+  gutscheine: 'gutscheine',
+  versicherungen: 'versicherungen',
+  schnupperkurs: 'schnupperkurs',
+  'l-schein': 'l-schein',
+  'a-schein': 'a-schein',
+  'b-schein': 'b-schein',
+  windenschein: 'windenschein',
+  tandemschein: 'tandemschein',
+  ausbildungskonzept: 'ausbildungskonzept',
+  sicherheitstraining: 'sicherheitstraining',
+  rettungsgeraetetraining: 'rettungsgeraetetraining',
+  groundhandling: 'groundhandling',
+  'brasilien-tour': 'brasilien-tour',
+  'kolumbien-tour': 'kolumbien-tour',
+  'suedafrika-tour': 'suedafrika-tour',
+  'bassano-tour': 'bassano-tour',
+  'griechenland-tour': 'griechenland-tour',
+  'slowenien-tour': 'slowenien-tour',
+  'bergamo-tour': 'bergamo-tour',
+  'savoye-tour': 'savoye-tour',
+  'vogesen-tour': 'vogesen-tour',
+  'pfalz-tour': 'pfalz-tour',
+  '2-jahres-check': '2-jahres-check',
+  rettungspacken: 'rettungspacken',
+  trimmtuning: 'trimmtuning',
+  reparatur: 'reparatur',
 };
 
 const normalizeSlug = (value: string) =>
@@ -87,7 +190,7 @@ router.get('/public/by-slug/:slug', async (req, res) => {
   }
 });
 
-// Admin: list all 6 (auto-creating any missing rows with defaults)
+// Admin: list all (auto-creating any missing rows with defaults)
 router.get('/', authenticateJWT, authorizeAdmin, async (_req, res) => {
   try {
     const rows = await Promise.all(FIXED_KINDS.map((kind) => getOrCreate(kind)));

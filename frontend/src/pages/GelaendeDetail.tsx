@@ -1,15 +1,27 @@
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
 import { SafeHtml } from '../components/common/SafeHtml';
-import { getGelaendeArticleBySlug } from '../data/gelaendeArticles';
+import { GELAENDE_ARTICLES, getGelaendeArticleBySlug, type GelaendeArticle } from '../data/gelaendeArticles';
 
-// Content HTML comes verbatim from the old site's article (see
-// data/gelaendeArticles.ts) - only the page shell (title, back link,
-// typography) is ours. The className below only styles generic tags
-// (p/strong/a/img/iframe/ul) so the original content stays untouched.
+// Content comes from the `gelaende` kind's `articles` array (Admin > Seiten
+// > Fluggelände - see GelaendeContentEditor.tsx), falling back to the
+// original hardcoded transcription in data/gelaendeArticles.ts if the fetch
+// fails or a row doesn't exist yet. Only the page shell (title, back link,
+// typography) is ours - the className below only styles generic tags
+// (p/strong/a/img/iframe/ul) so the article content stays untouched.
 export const GelaendeDetail = () => {
   const { slug } = useParams<{ slug: string }>();
-  const article = slug ? getGelaendeArticleBySlug(slug) : undefined;
+  const [articles, setArticles] = useState<GelaendeArticle[]>(GELAENDE_ARTICLES);
+
+  useEffect(() => {
+    fetch('/api/sitepagecontent/public/gelaende')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data?.articles?.length) setArticles(data.articles); })
+      .catch((err) => console.error('Error fetching Gelände content:', err));
+  }, []);
+
+  const article = slug ? (articles.find((a) => a.slug === slug) ?? getGelaendeArticleBySlug(slug)) : undefined;
 
   return (
     <div className="w-full bg-white font-luxurysans pb-20">
@@ -32,7 +44,7 @@ export const GelaendeDetail = () => {
                 <h1 className="font-luxury text-3xl md:text-4xl lg:text-5xl text-luxury-dark uppercase mb-6 tracking-wide">
                   {article.title}
                 </h1>
-                <div className="w-24 h-px bg-luxury-gold"></div>
+                <div className="w-24 h-px bg-luxury-gold mx-auto"></div>
               </div>
 
               <SafeHtml

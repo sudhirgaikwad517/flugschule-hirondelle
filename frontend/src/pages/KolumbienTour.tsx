@@ -1,6 +1,7 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
-import { Check, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { EventComments } from '../components/common/EventComments';
 import { useLightbox } from '../components/common/Lightbox';
 import { GutscheinBox } from '../components/common/GutscheinBox';
@@ -25,11 +26,128 @@ const FALLBACK_GALLERY = [
   'Kolumbien_9346.jpg', 'Kolumbien_9353.jpg', 'Kolumbien_9382.jpg', 'Kolumbien_9FD1.jpg',
 ].map((f) => `/images/tour-kolumbien/${f}`);
 
-export const KolumbienTour = () => {
+interface Station { icon: string; heading: string; text: string }
+interface Badge { label: string; color: string }
+
+interface KolumbienTourData {
+  eyebrow: string;
+  title: string;
+  heroImage: string;
+  heroAlt: string;
+  block1Heading: string;
+  block1Paragraph1: string;
+  block1Paragraph2: string;
+  block2Heading: string;
+  block2Intro: string;
+  block2Paragraph: string;
+  block2Stations: Station[];
+  block3Heading: string;
+  block3Paragraph1: string;
+  block3Paragraph2: string;
+  block4Heading: string;
+  block4Paragraph1: string;
+  block4Paragraph2: string;
+  leistungenHeading: string;
+  leistungen: string[];
+  badges: Badge[];
+  bookingButtonText: string;
+  bookingButtonLink: string;
+  priceLabel: string;
+  price: string;
+  priceNote: string;
+  scheduleButtonText: string;
+  scheduleButtonLink: string;
+  gutscheinHeading: string;
+  gutscheinDescription: string;
+}
+
+const DEFAULT_CONTENT: KolumbienTourData = {
+  eyebrow: 'REISEN',
+  title: 'Kolumbien-Tour',
+  heroImage: '/images/reisen/kolumbien.jpg',
+  heroAlt: 'Kolumbien-Tour',
+  block1Heading: 'Thermik- und Streckenfliegen in Kolumbien',
+  block1Paragraph1: 'Wir fliegen über den grünen Landschaften des Valle del Cauca. Dabei genießen wir die großartige Gastfreundschaft der Kolumbianer und befliegen über mehrere Stationen die besten Fluggebiete von Cali Richtung Medellin. Die sanfte Thermik und das breite Tal mit zahllosen Landemöglichkeiten laden zu gemeinsamen Thermik- und Streckenflügen ein.',
+  block1Paragraph2: "Wir befliegen zuerst die Fluggebiete von Piedechinche, die in unmittelbarer Nähe zu Cali liegen. Weiter geht's Richtung Norden mit 3 weiteren Stops und diversen Fluggebieten im Valle de Cauca bis Medellin, wo wir unsere Tour beenden.",
+  block2Heading: 'Fluggebiete',
+  block2Intro: 'Valle del Cauca',
+  block2Paragraph: 'Mit den bekannten Fluggebieten Roldanillo, dem Austragungsort des PWC 2011 und Super Finals 2013, Ansermanuevo, La Pintada und Piedechinche. Roldanillo liegt 1000 m über dem Meeresspiegel. Das Klima ist tropisch warm, die westliche Kette der Anden sperrt die Zufuhr von kühler und feuchter Luft vom Pazifischen Ozean. Die Durchschnittstemperatur liegt zw. 26° - 28° C . Die trockenen Jahreszeiten sind Dezember bis März und Juli bis August, der Rest ist Regenzeit. Die Stationen im Einzelnen:',
+  block2Stations: [
+    {
+      icon: '📍',
+      heading: 'Piedechinche – Der Auftakt in den Anden',
+      text: 'Unsere Reise beginnt südlich von Cali im grünen Herz des Valle del Cauca. In Piedechinche, nahe Palmira, liegt unsere erste Unterkunft – umgeben von Zuckerrohrfeldern und ersten genialen Fluggebieten. Hier sammeln wir die ersten Thermikstunden bei stabilen Bedingungen mit spektakulärem Blick auf das Tal.',
+    },
+    {
+      icon: '🗺️',
+      heading: 'La Unión – Vielfalt in der Luft & am Boden',
+      text: 'Weiter geht\'s nach La Unión, bekannt für seine exzellenten Flugspots: Ansermanuevo, Roldanillo und Apía. Die Region ist das Zentrum des kolumbianischen Gleitschirmfliegens und hat schon internationale Wettbewerbe beherbergt. Neben dem Fliegen erwarten uns Kolumbiens typischer Kaffee, kleine Dörfer mit kolonialem Flair und beeindruckende Berglandschaften.',
+    },
+    {
+      icon: '🏕️',
+      heading: 'Jericó – Hoch über dem Tal',
+      text: 'Ein echter Geheimtipp ist unser nächster Stopp: Jericó, ein charmantes Bergstädtchen mit Top-Flugbedingungen. Die Szenerie rund um die schroffen Hänge und grünen Hochplateaus bietet beste Voraussetzungen für Thermik, Soaring – und atemberaubende Aussicht.',
+    },
+    {
+      icon: '🌇',
+      heading: 'Finale in Medellín – Kultur, Kaffee & Cityvibes',
+      text: 'Zum Abschluss der Reise lassen wir es uns in Medellín, der „Stadt des ewigen Frühlings", gutgehen. Neben einem möglichen Flugspot am Stadtrand steht hier auch Sightseeing auf dem Programm: lebendige Märkte, Street Art in Comuna 13, Seilbahnfahrten über die Stadtviertel und kolumbianische Küche vom Feinsten.',
+    },
+  ],
+  block3Heading: 'Für wen ist die Reise gedacht?',
+  block3Paragraph1: 'Die Reise ist sowohl für engagierte Hobbypiloten wie auch für den versierten Flieger geeignet. Für alle, die fliegerisch dazulernen und für diejenigen, die ihre ersten kleinen Streckenflüge machen möchten – aber auch Streckencracks kommen voll auf ihre Kosten!',
+  block3Paragraph2: 'Mindestvoraussetzung ist der A-Schein.',
+  block4Heading: 'Anreise, Unterkunft und Verpflegung',
+  block4Paragraph1: 'Die Anreise / Hin- und Rückflug erfolgt nach Cali bzw. Medellin. Zwecks gemeinsamer Anreise in der gleichen Maschine geben wir euch gerne die Flugnummer.',
+  block4Paragraph2: 'Während unseres Aufenthalts sind wir in landestypischen Gästehäusern oder Hotels in der Nähe der Startplätze untergebracht. Nach dem Fliegen lassen wir den Tag in geselliger Runde bei gemeinsamem Abendessen ausklingen und lassen uns von der kolumbianischen Küche verwöhnen.',
+  leistungenHeading: 'Unsere Leistungen',
+  leistungen: [
+    'professionelle Betreuung durch unsere Fluglehrer plus mitfliegendem Guide aus Kolumbien',
+    'Gelände- und spezielle Theorieeinweisung fürs Soaring, Thermikfliegen, Streckenfliegen',
+    'Flugwetterbriefing',
+    'Funkbetreuung',
+    'Flug-/Videoanalyse',
+    'alle Transfers während der Reisedauer sowie Auffahrten zu Startplätzen',
+    'Rückholen nach den Streckenflügen :-)!',
+    'Übernachtungen in Gästehäusern, im Doppel-/Dreibettzimmer inkl. Frühstück',
+    'Organisation eines Alternativprogramms bei schlechtem Wetter',
+    'exkl. Hin- und Rückflug nach Kolumbien',
+    'exkl. Sim-Karte für Kolumbien, Datenpakete müssen separat gekauft werden',
+    'exkl. Geländegebühren vor Ort',
+    'exkl. Eintrittspreise für das Alternativprogramm',
+    'exkl. Auslandskrankenversicherung inkl. Rücktransport (Bitte unbedingt abschließen - gibt es für kleines Geld beim ADAC)',
+  ],
+  badges: [
+    { label: 'Streckenflugtraining', color: '#E58E26' },
+    { label: 'Thermik- und Flugtechniktraining', color: '#34963B' },
+    { label: 'Soaringtraining', color: '#80C533' },
+    { label: 'Groundhandlingtraining', color: '#3274B7' },
+  ],
+  bookingButtonText: 'Reise buchen',
+  bookingButtonLink: '/events?category=Reisen',
+  priceLabel: 'Tourpreis',
+  price: '2.690,- €',
+  priceNote: 'Voraussetzung: mindestens A-Schein / Sopi',
+  scheduleButtonText: 'Termin: siehe Kalender',
+  scheduleButtonLink: '/events?search=Kolumbien',
+  gutscheinHeading: 'Tour Verschenken',
+  gutscheinDescription: 'Die Tour ist auch als Geschenk-Gutschein möglich',
+};
+
+export const KolumbienTour = ({ contentId }: { contentId?: string } = {}) => {
   const { openGallery } = useLightbox();
   // Admin-managed gallery (falls back to FALLBACK_GALLERY above) - see
   // frontend/src/hooks/usePageGallery.ts
   const galleryImages = usePageGallery('kolumbien-tour', FALLBACK_GALLERY);
+  const [content, setContent] = useState<KolumbienTourData>(DEFAULT_CONTENT);
+
+  useEffect(() => {
+    fetch(`/api/sitepagecontent/public/${contentId || 'kolumbien-tour'}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data) setContent(data); })
+      .catch((err) => console.error('Error fetching Kolumbien-Tour content:', err));
+  }, [contentId]);
+
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -42,10 +160,10 @@ export const KolumbienTour = () => {
           {/* Page Title (full width, above the two-column grid) */}
           <div className="mb-12">
             <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-3">
-              REISEN
+              {content.eyebrow}
             </p>
             <h1 className="font-luxury text-4xl md:text-5xl text-luxury-dark uppercase">
-              Kolumbien-Tour
+              {content.title}
             </h1>
           </div>
 
@@ -56,78 +174,62 @@ export const KolumbienTour = () => {
 
             {/* Main Image */}
             <div className="w-full h-[400px] relative overflow-hidden rounded-sm shadow-sm">
-              <img 
-                src="/images/reisen/kolumbien.jpg"
-                alt="Kolumbien-Tour"
+              <img
+                src={content.heroImage}
+                alt={content.heroAlt}
                 className="w-full h-full object-cover transition-transform duration-1000 hover:scale-105"
               />
             </div>
 
             {/* Content Blocks */}
             <div className="space-y-10 text-gray-600 font-light leading-relaxed text-justify">
-              
+
               <div>
-                <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Thermik- und Streckenfliegen in Kolumbien</h3>
+                <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">{content.block1Heading}</h3>
                 <p className="mb-4">
-                  Wir fliegen über den grünen Landschaften des Valle del Cauca. Dabei genießen wir die großartige Gastfreundschaft der Kolumbianer und befliegen über mehrere Stationen die besten Fluggebiete von Cali Richtung Medellin. Die sanfte Thermik und das breite Tal mit zahllosen Landemöglichkeiten laden zu gemeinsamen Thermik- und Streckenflügen ein.
+                  {content.block1Paragraph1}
                 </p>
                 <p>
-                  Wir befliegen zuerst die Fluggebiete von Piedechinche, die in unmittelbarer Nähe zu Cali liegen. Weiter geht's Richtung Norden mit 3 weiteren Stops und diversen Fluggebieten im Valle de Cauca bis Medellin, wo wir unsere Tour beenden.
+                  {content.block1Paragraph2}
                 </p>
               </div>
 
               <div>
-                <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Fluggebiete</h3>
-                <p className="mb-4 font-semibold uppercase text-sm tracking-widest text-[#53a8c7]">Valle del Cauca</p>
+                <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">{content.block2Heading}</h3>
+                <p className="mb-4 font-semibold uppercase text-sm tracking-widest text-[#53a8c7]">{content.block2Intro}</p>
                 <p className="mb-6">
-                  Mit den bekannten Fluggebieten Roldanillo, dem Austragungsort des PWC 2011 und Super Finals 2013, Ansermanuevo, La Pintada und Piedechinche. Roldanillo liegt 1000 m über dem Meeresspiegel. Das Klima ist tropisch warm, die westliche Kette der Anden sperrt die Zufuhr von kühler und feuchter Luft vom Pazifischen Ozean. Die Durchschnittstemperatur liegt zw. 26° - 28° C . Die trockenen Jahreszeiten sind Dezember bis März und Juli bis August, der Rest ist Regenzeit. Die Stationen im Einzelnen:
+                  {content.block2Paragraph}
                 </p>
-                
+
                 <div className="space-y-6">
-                  <div>
-                    <h4 className="text-luxury-dark font-medium mb-2 flex items-center gap-2">
-                      <span className="text-xl">📍</span> Piedechinche – Der Auftakt in den Anden
-                    </h4>
-                    <p>Unsere Reise beginnt südlich von Cali im grünen Herz des Valle del Cauca. In Piedechinche, nahe Palmira, liegt unsere erste Unterkunft – umgeben von Zuckerrohrfeldern und ersten genialen Fluggebieten. Hier sammeln wir die ersten Thermikstunden bei stabilen Bedingungen mit spektakulärem Blick auf das Tal.</p>
-                  </div>
-                  <div>
-                    <h4 className="text-luxury-dark font-medium mb-2 flex items-center gap-2">
-                      <span className="text-xl">🗺️</span> La Unión – Vielfalt in der Luft & am Boden
-                    </h4>
-                    <p>Weiter geht's nach La Unión, bekannt für seine exzellenten Flugspots: Ansermanuevo, Roldanillo und Apía. Die Region ist das Zentrum des kolumbianischen Gleitschirmfliegens und hat schon internationale Wettbewerbe beherbergt. Neben dem Fliegen erwarten uns Kolumbiens typischer Kaffee, kleine Dörfer mit kolonialem Flair und beeindruckende Berglandschaften.</p>
-                  </div>
-                  <div>
-                    <h4 className="text-luxury-dark font-medium mb-2 flex items-center gap-2">
-                      <span className="text-xl">🏕️</span> Jericó – Hoch über dem Tal
-                    </h4>
-                    <p>Ein echter Geheimtipp ist unser nächster Stopp: Jericó, ein charmantes Bergstädtchen mit Top-Flugbedingungen. Die Szenerie rund um die schroffen Hänge und grünen Hochplateaus bietet beste Voraussetzungen für Thermik, Soaring – und atemberaubende Aussicht.</p>
-                  </div>
-                  <div>
-                    <h4 className="text-luxury-dark font-medium mb-2 flex items-center gap-2">
-                      <span className="text-xl">🌇</span> Finale in Medellín – Kultur, Kaffee & Cityvibes
-                    </h4>
-                    <p>Zum Abschluss der Reise lassen wir es uns in Medellín, der „Stadt des ewigen Frühlings“, gutgehen. Neben einem möglichen Flugspot am Stadtrand steht hier auch Sightseeing auf dem Programm: lebendige Märkte, Street Art in Comuna 13, Seilbahnfahrten über die Stadtviertel und kolumbianische Küche vom Feinsten.</p>
-                  </div>
+                  {content.block2Stations.map((station, idx) => (
+                    <div key={idx}>
+                      <h4 className="text-luxury-dark font-medium mb-2 flex items-center gap-2">
+                        <span className="text-xl">{station.icon}</span> {station.heading}
+                      </h4>
+                      <p>{station.text}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
 
               <div>
-                <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Für wen ist die Reise gedacht?</h3>
+                <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">{content.block3Heading}</h3>
                 <p className="mb-4">
-                  Die Reise ist sowohl für engagierte Hobbypiloten wie auch für den versierten Flieger geeignet. Für alle, die fliegerisch dazulernen und für diejenigen, die ihre ersten kleinen Streckenflüge machen möchten – aber auch Streckencracks kommen voll auf ihre Kosten!
+                  {content.block3Paragraph1}
                 </p>
                 <p>
-                  Mindestvoraussetzung ist der A-Schein.
+                  {content.block3Paragraph2}
                 </p>
               </div>
 
               <div>
-                <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Anreise, Unterkunft und Verpflegung</h3>
+                <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">{content.block4Heading}</h3>
                 <p className="mb-4">
-                  Die Anreise / Hin- und Rückflug erfolgt nach Cali bzw. Medellin. Zwecks gemeinsamer Anreise in der gleichen Maschine geben wir euch gerne die Flugnummer.
+                  {content.block4Paragraph1}
                 </p>
                 <p>
-                  Während unseres Aufenthalts sind wir in landestypischen Gästehäusern oder Hotels in der Nähe der Startplätze untergebracht. Nach dem Fliegen lassen wir den Tag in geselliger Runde bei gemeinsamem Abendessen ausklingen und lassen uns von der kolumbianischen Küche verwöhnen.
+                  {content.block4Paragraph2}
                 </p>
               </div>
 
@@ -135,24 +237,9 @@ export const KolumbienTour = () => {
 
             {/* Leistungen inside Left Column (matches original design) */}
             <div className="mt-12 pt-12 border-t border-gray-100">
-              <h3 className="font-luxury text-3xl text-luxury-dark mb-8 uppercase tracking-wider border-b border-gray-200 pb-4 text-[#53a8c7]">Unsere Leistungen</h3>
+              <h3 className="font-luxury text-3xl text-luxury-dark mb-8 uppercase tracking-wider border-b border-gray-200 pb-4 text-[#53a8c7]">{content.leistungenHeading}</h3>
               <ul className="space-y-4">
-                {[
-                  'professionelle Betreuung durch unsere Fluglehrer plus mitfliegendem Guide aus Kolumbien',
-                  'Gelände- und spezielle Theorieeinweisung fürs Soaring, Thermikfliegen, Streckenfliegen',
-                  'Flugwetterbriefing',
-                  'Funkbetreuung',
-                  'Flug-/Videoanalyse',
-                  'alle Transfers während der Reisedauer sowie Auffahrten zu Startplätzen',
-                  'Rückholen nach den Streckenflügen :-)!',
-                  'Übernachtungen in Gästehäusern, im Doppel-/Dreibettzimmer inkl. Frühstück',
-                  'Organisation eines Alternativprogramms bei schlechtem Wetter',
-                  'exkl. Hin- und Rückflug nach Kolumbien',
-                  'exkl. Sim-Karte für Kolumbien, Datenpakete müssen separat gekauft werden',
-                  'exkl. Geländegebühren vor Ort',
-                  'exkl. Eintrittspreise für das Alternativprogramm',
-                  'exkl. Auslandskrankenversicherung inkl. Rücktransport (Bitte unbedingt abschließen - gibt es für kleines Geld beim ADAC)'
-                ].map((item, idx) => (
+                {content.leistungen.map((item, idx) => (
                   <li key={idx} className="flex gap-4 items-start text-gray-600 font-light text-sm">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#53a8c7] mt-2 shrink-0"></span>
                     <span className="leading-relaxed">{item}</span>
@@ -168,46 +255,45 @@ export const KolumbienTour = () => {
 
             {/* Badges */}
             <div className="flex flex-col gap-1 w-full font-semibold text-white text-center text-sm">
-              <div className="bg-[#E58E26] py-2">Streckenflugtraining</div>
-              <div className="bg-[#34963B] py-2">Thermik- und Flugtechniktraining</div>
-              <div className="bg-[#80C533] py-2">Soaringtraining</div>
-              <div className="bg-[#3274B7] py-2">Groundhandlingtraining</div>
+              {content.badges.map((badge, idx) => (
+                <div key={idx} style={{ backgroundColor: badge.color }} className="py-2">{badge.label}</div>
+              ))}
             </div>
-            
+
             {/* Booking Card */}
             <div className="bg-[#FAF9F7] p-8 border border-gray-100 shadow-sm relative overflow-hidden group">
               <div className="absolute top-0 left-0 w-full h-1 bg-[#53a8c7] transform origin-left transition-transform duration-500 scale-x-0 group-hover:scale-x-100"></div>
-              
-              <Link 
-                to="/events?category=Reisen"
+
+              <Link
+                to={content.bookingButtonLink}
                 className="block w-full bg-[#53a8c7] hover:bg-[#4396b5] text-white text-center py-3 rounded-full text-lg font-semibold transition-colors mb-8 shadow-md flex items-center justify-center gap-2"
               >
-                Reise buchen
+                {content.bookingButtonText}
               </Link>
 
               <div className="space-y-6 mb-8 text-sm">
                 <div>
                   <div className="flex justify-between items-start gap-4">
-                    <p className="text-luxury-dark font-medium">Tourpreis</p>
+                    <p className="text-luxury-dark font-medium">{content.priceLabel}</p>
                     <div className="text-right">
-                      <p className="font-medium text-luxury-dark whitespace-nowrap text-lg">2.690,- €</p>
+                      <p className="font-medium text-luxury-dark whitespace-nowrap text-lg">{content.price}</p>
                     </div>
                   </div>
                 </div>
 
                 <div className="pt-4 border-t border-gray-200">
-                  <p className="text-gray-600 font-light">Voraussetzung: mindestens A-Schein / Sopi</p>
+                  <p className="text-gray-600 font-light">{content.priceNote}</p>
                 </div>
               </div>
 
-              <Link to="/events?search=Kolumbien" className="block w-full bg-[#4a5f68] hover:bg-[#3d4f57] text-white text-center py-3 font-semibold shadow-md transition-colors">
-                Termin: siehe Kalender
+              <Link to={content.scheduleButtonLink} className="block w-full bg-[#4a5f68] hover:bg-[#3d4f57] text-white text-center py-3 font-semibold shadow-md transition-colors">
+                {content.scheduleButtonText}
               </Link>
             </div>
 
             <GutscheinBox
-              heading="Tour Verschenken"
-              description="Die Tour ist auch als Geschenk-Gutschein möglich"
+              heading={content.gutscheinHeading}
+              description={content.gutscheinDescription}
               headingClassName="text-[#53a8c7]"
             />
 

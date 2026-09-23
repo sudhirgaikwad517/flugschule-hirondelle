@@ -4,11 +4,13 @@ import { useNotify } from 'react-admin';
 import { Box, Card, CardContent, Typography, TextField, Button, Grid, Alert, CircularProgress, IconButton } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import UploadIcon from '@mui/icons-material/Upload';
+import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { type FixedDuplicateMeta, FixedDuplicateMetaFields } from './FixedDuplicateMetaFields';
 import { type PrimaryPageSettings, PrimaryPageSettingsFields } from './PrimaryPageSettingsFields';
+import { RichTextField } from './RichTextField';
 
 // Same "data only, layout stays" idea as HomeContentEditor.tsx, for the
 // /ausbildung page (Ausbildung.tsx): the intro text, the 6-row price table,
@@ -53,7 +55,19 @@ const ImageSlot = ({ url, onUploaded, label }: { url: string; onUploaded: (url: 
   };
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-      {url && <Box component="img" src={url} alt="" sx={{ width: 72, height: 54, objectFit: 'cover', borderRadius: 1 }} />}
+      {url && (
+        <Box sx={{ position: 'relative', width: 72, height: 54 }}>
+          <Box component="img" src={url} alt="" sx={{ width: 72, height: 54, objectFit: 'cover', borderRadius: 1 }} />
+          <IconButton
+            size="small"
+            onClick={() => onUploaded('')}
+            title="Bild entfernen"
+            sx={{ position: 'absolute', top: -8, right: -8, width: 20, height: 20, bgcolor: 'white', boxShadow: 1, '&:hover': { bgcolor: '#fee2e2' } }}
+          >
+            <CloseIcon sx={{ fontSize: 14 }} />
+          </IconButton>
+        </Box>
+      )}
       <Button component="label" size="small" variant="outlined" startIcon={uploading ? <CircularProgress size={16} /> : <UploadIcon />} disabled={uploading}>
         {label}
         <input type="file" accept="image/*" hidden onChange={handleUpload} />
@@ -188,7 +202,7 @@ export const AusbildungContentEditor = () => {
           <Typography variant="h6" sx={{ mb: 2 }}>Einleitung</Typography>
           <TextField label="Großes Zitat (oben)" fullWidth multiline minRows={2} value={content.heroQuote} onChange={(e) => setContent({ ...content, heroQuote: e.target.value })} sx={{ mb: 2 }} />
           <TextField label="Absatz 1" fullWidth multiline minRows={2} value={content.introQuote} onChange={(e) => setContent({ ...content, introQuote: e.target.value })} sx={{ mb: 2 }} />
-          <TextField label="Absatz 2 (HTML erlaubt)" fullWidth multiline minRows={3} value={content.introHtml} onChange={(e) => setContent({ ...content, introHtml: e.target.value })} />
+          <RichTextField label="Absatz 2" value={content.introHtml} onChange={(html) => setContent({ ...content, introHtml: html })} />
         </CardContent>
       </Card>
 

@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
+import { SafeHtml } from '../components/common/SafeHtml';
 import { Check, Search } from 'lucide-react';
 import { useLightbox } from '../components/common/Lightbox';
 import { GutscheinBox } from '../components/common/GutscheinBox';
@@ -18,11 +20,93 @@ const FALLBACK_GALLERY = [
   'itemimg-schnuppern',
 ].map((f) => `/images/schnupperkurs/${f}.jpg`);
 
-export const Schnupperkurs = () => {
+interface PriceRow { label: string; price: string }
+interface SchnupperkursData {
+  eyebrow: string;
+  title: string;
+  heroImage: string;
+  heroImageAlt: string;
+  block1Heading: string;
+  block1Text: string;
+  block2Heading: string;
+  block2Text: string;
+  block3Heading: string;
+  block3Html: string;
+  block4Heading: string;
+  block4Html: string;
+  bookingButtonText: string;
+  bookingButtonLink: string;
+  priceHeading: string;
+  priceRows: PriceRow[];
+  scheduleButtonText: string;
+  scheduleButtonLink: string;
+  gutscheinHeading: string;
+  gutscheinDescription: string;
+  leistungenHeading: string;
+  leistungen: string[];
+  checklisteHeading: string;
+  checkliste: string[];
+}
+
+// Fallbacks match the page's current live copy exactly, so nothing changes
+// visually until an admin edits something in Admin > Seiten > Schnupperkurs
+// (see backend SitePageContent model / sitePageContent.routes.ts).
+const DEFAULT_CONTENT: SchnupperkursData = {
+  eyebrow: 'AUSBILDUNG',
+  title: 'Schnupper- / Einsteigerkurs',
+  heroImage: '/images/schnupperkurs/hero.jpg',
+  heroImageAlt: 'Schnupperkurs',
+  block1Heading: 'Der Anfang einer neuen Leidenschaft...',
+  block1Text: "Am Schnuppertag / Einsteigerkurs lernst du die Grundzüge des Gleitschirmfliegens kennen. Anfängliche Aufzieh- und Laufübungen bereiten dich auf deine ersten Flüge vor: Kappe auslegen, Leinen sortieren, Eintrittsöffnungen kontrollieren, damit der Gleitschirm anschließend richtig über euch steigt. Gurtzeug anlegen, Startcheck und los geht's zum ersten Versuch. Wenn alles klappt und der Wind passt, spürt ihr den Auftrieb, der euch immer leichter werden lässt.",
+  block2Heading: 'Ab in die Luft...',
+  block2Text: 'Die Grundlagen für die ersten kleinen Flüge sind geschafft. Der Wind passt, die Startvorbereitungen sind ausgeführt und der Fluglehrer gibt dir Kommandos über Funk. Der Schirm steigt über dich, und du beschleunigst. Schritt für Schritt wirst du schneller und schließlich hebst du ab. Ein Moment des Gleitens, der Boden kommt wieder näher, Landung. Dein erster Flug ist geschafft – was für ein Gefühl! Step by Step erklimmen wir den Übungshang und arbeiten uns immer weiter hinauf in die Luft! Ziel für den Schnupperkurs sind Flüge mit 40 bis 60 Metern Höhendifferenz. Zwischendurch erfahrt ihr Wissenswertes über Gerätekunde und Flugpraxis.',
+  block3Heading: 'Organisatorisches...',
+  block3Html: 'Ort und Uhrzeit des Schnupperkurses erfahrt ihr am Vortag bis ca. 15 Uhr per Newsletter. Der eintägige Schnuppertag findet regulär samstags statt, je nach Wetter kann der Termin allerdings auch auf den Sonntag verschoben werden. Je nach Windrichtung schulen wir an einem unserer Übungshänge im Odenwald, Kraichtal, Nahetal und der Pfalz. Die Wegbeschreibungen zu den jeweiligen <a href="/infos/gelaende" class="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Fluggeländen findet ihr hier</a>. Eine aktuelle und sichere Leihausrüstung sind im Preis inbegriffen. Wenn aufgrund der Wetterlage der Kurs ausfällt oder nicht vollständig absolviert werden kann, ist es möglich, diesen zu einem späteren Termin kostenlos nachzuholen, tragt euch dazu bitte an einem neuen Termin über unseren Buchungskalender ein.',
+  block4Heading: 'Wie geht es weiter...',
+  block4Html: "Weiter geht's mit dem <a href=\"/ausbildung/l-schein\" class=\"text-[#428bca] hover:text-[#2a6496] hover:underline font-medium\">Grundkurs</a>! Die absolvierten Tage im Schnupperkurs sowie der anteilige Kurspreis werden euch hierfür angerechnet und abgezogen (gültig innerhalb der gleichen Saison!).",
+  bookingButtonText: 'Kurs buchen',
+  bookingButtonLink: '/events?category=Schnupperkurs',
+  priceHeading: 'Kurspreis',
+  priceRows: [
+    { label: 'Schnuppertag 1-tägig Samstag,\nwetterbedingt kann auf Sonntag verschoben werden', price: '149,- €' },
+    { label: 'Einsteigerkurs 2-tägig Samstag & Sonntag', price: '250,- €' },
+  ],
+  scheduleButtonText: 'Termine > Siehe Liste',
+  scheduleButtonLink: '/events?category=Schnupperkurs',
+  gutscheinHeading: 'Schnupperkurs Verschenken',
+  gutscheinDescription: 'Der Schnupperkurs ist auch als Geschenk-Gutschein möglich',
+  leistungenHeading: 'Unsere Leistungen',
+  leistungen: [
+    'Theorie- und Praxisausbildung durch zertifizierte Fluglehrer',
+    'Neue und sichere Leihausrüstung',
+    'Funkausrüstung und -betreuung',
+    'Haftpflichtversicherung',
+  ],
+  checklisteHeading: 'Deine Checkliste',
+  checkliste: [
+    'Lust aufs Fliegen',
+    'Mindestalter: 14 Jahre (mit Einverständniserklärung der Erziehungsberechtigten!)',
+    'Überknöchelhohe Schuhe, wir empfehlen spezielle Flugschuhe oder zumindest Wanderschuhe',
+    'Outdoor-Bekleidung, je nach Wetter Wechselkleidung',
+    'Ausreichend Getränke und Verpflegung (Fliegen macht hungrig!)',
+    'Sonnencreme',
+  ],
+};
+
+export const Schnupperkurs = ({ contentId }: { contentId?: string } = {}) => {
   const { openGallery } = useLightbox();
+  const [content, setContent] = useState<SchnupperkursData>(DEFAULT_CONTENT);
   // Admin-managed gallery (falls back to FALLBACK_GALLERY above) - see
   // frontend/src/hooks/usePageGallery.ts
   const galleryImages = usePageGallery('schnupperkurs', FALLBACK_GALLERY);
+
+  useEffect(() => {
+    fetch(`/api/sitepagecontent/public/${contentId || 'schnupperkurs'}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data) setContent(data); })
+      .catch((err) => console.error('Error fetching Schnupperkurs content:', err));
+  }, [contentId]);
+
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -35,10 +119,10 @@ export const Schnupperkurs = () => {
           {/* Page Title (full width, above the two-column grid) */}
           <div className="mb-12">
             <p className="text-luxury-heading uppercase tracking-[0.2em] text-xs font-semibold mb-3">
-              AUSBILDUNG
+              {content.eyebrow}
             </p>
             <h1 className="font-luxury text-4xl md:text-5xl text-luxury-dark uppercase">
-              Schnupper- / Einsteigerkurs
+              {content.title}
             </h1>
           </div>
 
@@ -49,9 +133,9 @@ export const Schnupperkurs = () => {
 
             {/* Featured Image */}
             <div className="w-full h-[400px] overflow-hidden rounded-sm shadow-sm group">
-              <img 
-                src="/images/schnupperkurs/hero.jpg"
-                alt="Schnupperkurs"
+              <img
+                src={content.heroImage}
+                alt={content.heroImageAlt}
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
               />
             </div>
@@ -59,31 +143,23 @@ export const Schnupperkurs = () => {
             {/* Content Blocks */}
             <div className="space-y-10 text-gray-600 font-light leading-relaxed text-justify">
               <div>
-                <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Der Anfang einer neuen Leidenschaft...</h3>
-                <p>
-                  Am Schnuppertag / Einsteigerkurs lernst du die Grundzüge des Gleitschirmfliegens kennen. Anfängliche Aufzieh- und Laufübungen bereiten dich auf deine ersten Flüge vor: Kappe auslegen, Leinen sortieren, Eintrittsöffnungen kontrollieren, damit der Gleitschirm anschließend richtig über euch steigt. Gurtzeug anlegen, Startcheck und los geht's zum ersten Versuch. Wenn alles klappt und der Wind passt, spürt ihr den Auftrieb, der euch immer leichter werden lässt.
-                </p>
+                <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">{content.block1Heading}</h3>
+                <p>{content.block1Text}</p>
               </div>
 
               <div>
-                <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Ab in die Luft...</h3>
-                <p>
-                  Die Grundlagen für die ersten kleinen Flüge sind geschafft. Der Wind passt, die Startvorbereitungen sind ausgeführt und der Fluglehrer gibt dir Kommandos über Funk. Der Schirm steigt über dich, und du beschleunigst. Schritt für Schritt wirst du schneller und schließlich hebst du ab. Ein Moment des Gleitens, der Boden kommt wieder näher, Landung. Dein erster Flug ist geschafft – was für ein Gefühl! Step by Step erklimmen wir den Übungshang und arbeiten uns immer weiter hinauf in die Luft! Ziel für den Schnupperkurs sind Flüge mit 40 bis 60 Metern Höhendifferenz. Zwischendurch erfahrt ihr Wissenswertes über Gerätekunde und Flugpraxis.
-                </p>
+                <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">{content.block2Heading}</h3>
+                <p>{content.block2Text}</p>
               </div>
 
               <div>
-                <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Organisatorisches...</h3>
-                <p>
-                  Ort und Uhrzeit des Schnupperkurses erfahrt ihr am Vortag bis ca. 15 Uhr per Newsletter. Der eintägige Schnuppertag findet regulär samstags statt, je nach Wetter kann der Termin allerdings auch auf den Sonntag verschoben werden. Je nach Windrichtung schulen wir an einem unserer Übungshänge im Odenwald, Kraichtal, Nahetal und der Pfalz. Die Wegbeschreibungen zu den jeweiligen <Link to="/infos/gelaende" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Fluggeländen findet ihr hier</Link>. Eine aktuelle und sichere Leihausrüstung sind im Preis inbegriffen. Wenn aufgrund der Wetterlage der Kurs ausfällt oder nicht vollständig absolviert werden kann, ist es möglich, diesen zu einem späteren Termin kostenlos nachzuholen, tragt euch dazu bitte an einem neuen Termin über unseren Buchungskalender ein.
-                </p>
+                <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">{content.block3Heading}</h3>
+                <SafeHtml html={content.block3Html} className="[&_p]:m-0" />
               </div>
 
               <div>
-                <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">Wie geht es weiter...</h3>
-                <p>
-                  Weiter geht's mit dem <Link to="/ausbildung/l-schein" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Grundkurs</Link>! Die absolvierten Tage im Schnupperkurs sowie der anteilige Kurspreis werden euch hierfür angerechnet und abgezogen (gültig innerhalb der gleichen Saison!).
-                </p>
+                <h3 className="font-luxury text-2xl text-luxury-dark mb-4 italic">{content.block4Heading}</h3>
+                <SafeHtml html={content.block4Html} className="[&_p]:m-0" />
               </div>
             </div>
 
@@ -91,52 +167,49 @@ export const Schnupperkurs = () => {
 
           {/* Right Column (Sidebar) */}
           <div className="lg:col-span-5 space-y-12">
-            
+
             {/* Booking Card */}
             <div className="bg-[#FAF9F7] p-8 border border-gray-100 shadow-sm relative overflow-hidden group">
               {/* Subtle decorative accent */}
               <div className="absolute top-0 left-0 w-full h-1 bg-luxury-gold transform origin-left transition-transform duration-500 scale-x-0 group-hover:scale-x-100"></div>
-              
-              <Link 
-                to="/events?category=Schnupperkurs"
+
+              <Link
+                to={content.bookingButtonLink}
                 className="block w-full bg-[#53a8c7] hover:bg-[#4396b5] text-white text-center py-3 rounded-full text-lg font-semibold transition-colors mb-8 shadow-md"
               >
-                Kurs buchen
+                {content.bookingButtonText}
               </Link>
 
               <div className="space-y-6 mb-8">
-                <div className="border-b border-gray-200 pb-4">
-                  <p className="text-luxury-gold text-xs uppercase tracking-widest font-semibold mb-2">Kurspreis</p>
-                  <div className="flex justify-between items-start gap-4">
-                    <p className="text-gray-600 font-light text-sm leading-relaxed">
-                      Schnuppertag 1-tägig Samstag,<br/>
-                      wetterbedingt kann auf Sonntag verschoben werden
-                    </p>
-                    <p className="font-medium text-luxury-dark whitespace-nowrap">149,- €</p>
+                {content.priceRows.map((row, i) => (
+                  <div key={i} className="border-b border-gray-200 pb-4">
+                    {i === 0 && <p className="text-luxury-gold text-xs uppercase tracking-widest font-semibold mb-2">{content.priceHeading}</p>}
+                    <div className="flex justify-between items-start gap-4">
+                      <p className="text-gray-600 font-light text-sm leading-relaxed">
+                        {row.label.split('\n').map((line, li) => (
+                          <span key={li}>
+                            {li > 0 && <br />}
+                            {line}
+                          </span>
+                        ))}
+                      </p>
+                      <p className="font-medium text-luxury-dark whitespace-nowrap">{row.price}</p>
+                    </div>
                   </div>
-                </div>
-
-                <div className="border-b border-gray-200 pb-4">
-                  <div className="flex justify-between items-start gap-4">
-                    <p className="text-gray-600 font-light text-sm leading-relaxed">
-                      Einsteigerkurs 2-tägig Samstag & Sonntag
-                    </p>
-                    <p className="font-medium text-luxury-dark whitespace-nowrap">250,- €</p>
-                  </div>
-                </div>
+                ))}
               </div>
 
-              <Link 
-                to="/events?category=Schnupperkurs" 
+              <Link
+                to={content.scheduleButtonLink}
                 className="w-full block bg-[#526a75] hover:bg-luxury-gold text-white text-center py-4 text-sm font-semibold uppercase tracking-widest transition-colors"
               >
-                Termine &gt; Siehe Liste
+                {content.scheduleButtonText}
               </Link>
             </div>
 
             <GutscheinBox
-              heading="Schnupperkurs Verschenken"
-              description="Der Schnupperkurs ist auch als Geschenk-Gutschein möglich"
+              heading={content.gutscheinHeading}
+              description={content.gutscheinDescription}
             />
 
             {/* Impressions Gallery */}
@@ -177,14 +250,9 @@ export const Schnupperkurs = () => {
           <hr className="border-gray-100 mb-10" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24">
             <div>
-              <h2 className="font-luxury text-3xl text-luxury-dark mb-8 uppercase">Unsere Leistungen</h2>
+              <h2 className="font-luxury text-3xl text-luxury-dark mb-8 uppercase">{content.leistungenHeading}</h2>
               <ul className="space-y-4">
-                {[
-                  'Theorie- und Praxisausbildung durch zertifizierte Fluglehrer',
-                  'Neue und sichere Leihausrüstung',
-                  'Funkausrüstung und -betreuung',
-                  'Haftpflichtversicherung'
-                ].map((item, idx) => (
+                {content.leistungen.map((item, idx) => (
                   <li key={idx} className="flex gap-3 text-gray-600 font-light">
                     <Check className="w-5 h-5 text-luxury-gold shrink-0 mt-0.5" />
                     <span>{item}</span>
@@ -194,16 +262,9 @@ export const Schnupperkurs = () => {
             </div>
 
             <div>
-              <h2 className="font-luxury text-3xl text-luxury-dark mb-8 uppercase">Deine Checkliste</h2>
+              <h2 className="font-luxury text-3xl text-luxury-dark mb-8 uppercase">{content.checklisteHeading}</h2>
               <ul className="space-y-4">
-                {[
-                  'Lust aufs Fliegen',
-                  'Mindestalter: 14 Jahre (mit Einverständniserklärung der Erziehungsberechtigten!)',
-                  'Überknöchelhohe Schuhe, wir empfehlen spezielle Flugschuhe oder zumindest Wanderschuhe',
-                  'Outdoor-Bekleidung, je nach Wetter Wechselkleidung',
-                  'Ausreichend Getränke und Verpflegung (Fliegen macht hungrig!)',
-                  'Sonnencreme'
-                ].map((item, idx) => (
+                {content.checkliste.map((item, idx) => (
                   <li key={idx} className="flex gap-3 text-gray-600 font-light">
                     <Check className="w-5 h-5 text-luxury-gold shrink-0 mt-0.5" />
                     <span>{item}</span>

@@ -1,12 +1,15 @@
-import { Box, FormControlLabel, MenuItem, Switch, TextField } from '@mui/material';
+import { Box, MenuItem, TextField } from '@mui/material';
 
-// Editing a fixed-page duplicate's own title/URL/publish-status/nav
-// settings (see FixedPageDuplicate model / fixedPageDuplicates.routes.ts)
-// happens right inside the content editor that already opens for it
+// Editing a fixed-page duplicate's own title/URL/publish-status (see
+// FixedPageDuplicate model / fixedPageDuplicates.routes.ts) happens right
+// inside the content editor that already opens for it
 // (AusbildungContentEditor.tsx etc.), rather than as a separate screen -
 // this is the shared field group + slug normalization used there. Styled
 // as the same single-row toolbar as the custom Seiten editor's own header
 // (Pages.tsx), so both "page settings" bars look and behave identically.
+// No "Im Menü"/nav-label fields here - adding a duplicate to the site menu
+// is handled entirely by the dedicated Menü screen (MenuManager.tsx), so
+// this stays a single, obvious place to do that instead of two.
 
 export interface FixedDuplicateMeta {
   id: string;
@@ -58,19 +61,5 @@ export const FixedDuplicateMetaFields = ({
       <MenuItem value="published">Veröffentlicht</MenuItem>
       <MenuItem value="draft">Entwurf</MenuItem>
     </TextField>
-    <FormControlLabel
-      control={<Switch checked={meta.showInNav} onChange={(e) => onChange({ ...meta, showInNav: e.target.checked })} />}
-      label="Im Menü"
-      sx={{ flexShrink: 0, mt: 0.5 }}
-    />
-    <TextField
-      label="Menü-Beschriftung"
-      value={meta.navLabel || ''}
-      onChange={(e) => onChange({ ...meta, navLabel: e.target.value })}
-      helperText="Leer = Titel"
-      size="small"
-      fullWidth={false}
-      sx={{ width: 160 }}
-    />
   </Box>
 );

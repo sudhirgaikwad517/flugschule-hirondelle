@@ -45,6 +45,37 @@ import { PerformanceContentEditor } from './PerformanceContentEditor';
 import { ReisenContentEditor } from './ReisenContentEditor';
 import { ServiceContentEditor } from './ServiceContentEditor';
 import { InfosContentEditor } from './InfosContentEditor';
+import { TeamContentEditor } from './TeamContentEditor'; // NEW - /infos/team
+import { GelaendeContentEditor } from './GelaendeContentEditor'; // NEW - /infos/gelaende + its 10 detail pages
+import { WetterContentEditor } from './WetterContentEditor'; // NEW - /infos/wetter
+import { MedienContentEditor } from './MedienContentEditor'; // NEW - /infos/medien
+import { GruppeneventsContentEditor } from './GruppeneventsContentEditor'; // NEW - /infos/gruppenevents
+import { GutscheineContentEditor } from './GutscheineContentEditor'; // NEW - /infos/gutscheine
+import { VersicherungenContentEditor } from './VersicherungenContentEditor'; // NEW - /infos/versicherungen
+import { SchnupperkursContentEditor } from './SchnupperkursContentEditor'; // NEW - /ausbildung/schnupperkurs
+import { LScheinContentEditor } from './LScheinContentEditor'; // NEW - /ausbildung/l-schein
+import { AScheinContentEditor } from './AScheinContentEditor'; // NEW - /ausbildung/a-schein
+import { BScheinContentEditor } from './BScheinContentEditor'; // NEW - /ausbildung/b-schein
+import { WindenscheinContentEditor } from './WindenscheinContentEditor'; // NEW - /ausbildung/windenschein
+import { TandemscheinContentEditor } from './TandemscheinContentEditor'; // NEW - /ausbildung/tandemschein
+import { AusbildungskonzeptContentEditor } from './AusbildungskonzeptContentEditor'; // NEW - /ausbildung/ausbildungskonzept
+import { SicherheitstrainingContentEditor } from './SicherheitstrainingContentEditor'; // NEW - /performance/sicherheitstraining
+import { RettungsgeraetetrainingContentEditor } from './RettungsgeraetetrainingContentEditor'; // NEW - /performance/rettungsgeraetetraining
+import { GroundhandlingContentEditor } from './GroundhandlingContentEditor'; // NEW - /performance/groundhandling
+import { BrasilienTourContentEditor } from './BrasilienTourContentEditor'; // NEW - /reisen/brasilien-tour
+import { KolumbienTourContentEditor } from './KolumbienTourContentEditor'; // NEW - /reisen/kolumbien-tour
+import { SuedafrikaTourContentEditor } from './SuedafrikaTourContentEditor'; // NEW - /reisen/suedafrika-tour
+import { BassanoTourContentEditor } from './BassanoTourContentEditor'; // NEW - /reisen/bassano-tour
+import { GriechenlandTourContentEditor } from './GriechenlandTourContentEditor'; // NEW - /reisen/griechenland-tour
+import { SlowenienTourContentEditor } from './SlowenienTourContentEditor'; // NEW - /reisen/slowenien-tour
+import { BergamoTourContentEditor } from './BergamoTourContentEditor'; // NEW - /reisen/bergamo-tour
+import { SavoyeTourContentEditor } from './SavoyeTourContentEditor'; // NEW - /reisen/savoye-tour
+import { VogesenTourContentEditor } from './VogesenTourContentEditor'; // NEW - /reisen/vogesen-tour
+import { PfalzTourContentEditor } from './PfalzTourContentEditor'; // NEW - /reisen/pfalz-tour
+import { ZweiJahresCheckContentEditor } from './ZweiJahresCheckContentEditor'; // NEW - /service/2-jahres-check
+import { RettungspackenContentEditor } from './RettungspackenContentEditor'; // NEW - /service/rettungspacken
+import { TrimmtuningContentEditor } from './TrimmtuningContentEditor'; // NEW - /service/trimmtuning
+import { ReparaturServiceContentEditor } from './ReparaturServiceContentEditor'; // NEW - /service/reparatur
 import { Trash } from './Trash'; // NEW - WordPress-style Papierkorb for Pages.tsx deletes
 import { ServiceOrderList, ServiceOrderShow } from './ServiceOrders';
 import { TemplatesBuilder } from './TemplatesBuilder';
@@ -178,6 +209,37 @@ export const AdminApp = () => {
             <Route path="/reisen-content/:contentId?" element={<Authenticated><ReisenContentEditor /></Authenticated>} />
             <Route path="/service-content/:contentId?" element={<Authenticated><ServiceContentEditor /></Authenticated>} />
             <Route path="/infos-content/:contentId?" element={<Authenticated><InfosContentEditor /></Authenticated>} />
+            <Route path="/team-content/:contentId?" element={<Authenticated><TeamContentEditor /></Authenticated>} />
+            <Route path="/gelaende-content/:contentId?" element={<Authenticated><GelaendeContentEditor /></Authenticated>} />
+            <Route path="/wetter-content/:contentId?" element={<Authenticated><WetterContentEditor /></Authenticated>} />
+            <Route path="/medien-content/:contentId?" element={<Authenticated><MedienContentEditor /></Authenticated>} />
+            <Route path="/gruppenevents-content/:contentId?" element={<Authenticated><GruppeneventsContentEditor /></Authenticated>} />
+            <Route path="/gutscheine-content/:contentId?" element={<Authenticated><GutscheineContentEditor /></Authenticated>} />
+            <Route path="/versicherungen-content/:contentId?" element={<Authenticated><VersicherungenContentEditor /></Authenticated>} />
+            <Route path="/schnupperkurs-content/:contentId?" element={<Authenticated><SchnupperkursContentEditor /></Authenticated>} />
+            <Route path="/l-schein-content/:contentId?" element={<Authenticated><LScheinContentEditor /></Authenticated>} />
+            <Route path="/a-schein-content/:contentId?" element={<Authenticated><AScheinContentEditor /></Authenticated>} />
+            <Route path="/b-schein-content/:contentId?" element={<Authenticated><BScheinContentEditor /></Authenticated>} />
+            <Route path="/windenschein-content/:contentId?" element={<Authenticated><WindenscheinContentEditor /></Authenticated>} />
+            <Route path="/tandemschein-content/:contentId?" element={<Authenticated><TandemscheinContentEditor /></Authenticated>} />
+            <Route path="/ausbildungskonzept-content/:contentId?" element={<Authenticated><AusbildungskonzeptContentEditor /></Authenticated>} />
+            <Route path="/sicherheitstraining-content/:contentId?" element={<Authenticated><SicherheitstrainingContentEditor /></Authenticated>} />
+            <Route path="/rettungsgeraetetraining-content/:contentId?" element={<Authenticated><RettungsgeraetetrainingContentEditor /></Authenticated>} />
+            <Route path="/groundhandling-content/:contentId?" element={<Authenticated><GroundhandlingContentEditor /></Authenticated>} />
+            <Route path="/brasilien-tour-content/:contentId?" element={<Authenticated><BrasilienTourContentEditor /></Authenticated>} />
+            <Route path="/kolumbien-tour-content/:contentId?" element={<Authenticated><KolumbienTourContentEditor /></Authenticated>} />
+            <Route path="/suedafrika-tour-content/:contentId?" element={<Authenticated><SuedafrikaTourContentEditor /></Authenticated>} />
+            <Route path="/bassano-tour-content/:contentId?" element={<Authenticated><BassanoTourContentEditor /></Authenticated>} />
+            <Route path="/griechenland-tour-content/:contentId?" element={<Authenticated><GriechenlandTourContentEditor /></Authenticated>} />
+            <Route path="/slowenien-tour-content/:contentId?" element={<Authenticated><SlowenienTourContentEditor /></Authenticated>} />
+            <Route path="/bergamo-tour-content/:contentId?" element={<Authenticated><BergamoTourContentEditor /></Authenticated>} />
+            <Route path="/savoye-tour-content/:contentId?" element={<Authenticated><SavoyeTourContentEditor /></Authenticated>} />
+            <Route path="/vogesen-tour-content/:contentId?" element={<Authenticated><VogesenTourContentEditor /></Authenticated>} />
+            <Route path="/pfalz-tour-content/:contentId?" element={<Authenticated><PfalzTourContentEditor /></Authenticated>} />
+            <Route path="/2-jahres-check-content/:contentId?" element={<Authenticated><ZweiJahresCheckContentEditor /></Authenticated>} />
+            <Route path="/rettungspacken-content/:contentId?" element={<Authenticated><RettungspackenContentEditor /></Authenticated>} />
+            <Route path="/trimmtuning-content/:contentId?" element={<Authenticated><TrimmtuningContentEditor /></Authenticated>} />
+            <Route path="/reparatur-content/:contentId?" element={<Authenticated><ReparaturServiceContentEditor /></Authenticated>} />
             <Route path="/trash" element={<Authenticated><Trash /></Authenticated>} />
             {/* NEW - Galerie's own trash, separate from the Pages one above
                 (Trash's default `kinds` prop is page-only) - see Trash.tsx

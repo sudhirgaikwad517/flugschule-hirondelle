@@ -1,10 +1,64 @@
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
 import { Banner } from '../components/common/Banner';
 import { useLightbox } from '../components/common/Lightbox';
+import { SafeHtml } from '../components/common/SafeHtml';
 
-export const Ausbildungskonzept = () => {
+interface TableRow {
+  name: string;
+  duration: string;
+  content: string;
+  goal: string;
+  bgColor: string;
+}
+
+interface AusbildungskonzeptData {
+  heading: string;
+  subheading: string;
+  paragraph1: string;
+  paragraph2: string;
+  bulletPoints: string[];
+  pathsHtml: string;
+  graphicImage: string;
+  graphicCaption: string;
+  tableRows: TableRow[];
+}
+
+const DEFAULT_CONTENT: AusbildungskonzeptData = {
+  heading: 'Ausbildungskonzept',
+  subheading: 'Ausbildung mit der Flugschule Hirondelle',
+  paragraph1: 'Die Flugschule Hirondelle bietet euch eine qualifizierte, sichere und vielseitige Ausbildung. Wir begleiten euch von den ersten Hüpfern bis zu euren ersten Strecken- und Thermikflügen hier im Odenwald, in der Pfalz, im Kraichtal, im Nahetal und überall sonst auf der Welt.',
+  paragraph2: 'Fliegen lernen mit dem Team Hirondelle heißt persönliche und individuelle auf den Schüler zugeschnittene Ausbildung! Das zeichnet uns aus:',
+  bulletPoints: [
+    'Unser Team besteht aus sehr erfahrenen und ambitionierten Fluglehrern',
+    'Bei uns steht der Spaß und die Sicherheit am Fliegen im Vordergrund',
+    'Geniale Schulungshänge im Raum Odenwald, Kraichtal, Nahetal und in der Pfalz (5 eigene auf die Flugschule zugelassene Schulungshänge)',
+    'Schulung bei jeder Windrichtung möglich',
+  ],
+  pathsHtml: 'Im Nachfolgenden sind die Ausbildungswege in der Flugschule Hirondelle vom <a href="/ausbildung/schnupperkurs" class="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Schnupperkurs</a> über die <a href="/ausbildung/a-schein" class="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Höhenflugschulung</a> bis zum <a href="/ausbildung/b-schein" class="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">unbeschränkten Luftfahrerschein</a> aufgelistet.',
+  graphicImage: '/images/inhalte/ausbildungswege.png',
+  graphicCaption: 'hm = ca. Höhenmeter-Differenz zwischen Start- und Landeplatz',
+  tableRows: [
+    { name: 'Schnupper-/Einsteigerkurs', duration: '1 – 2 Tage', content: 'Ausrüstung kennen lernen, theoretische Grundlagen, die ersten kleinen Flüge', goal: 'spielerisches Kennenlernen des Sports, selbständiges Groundhandling', bgColor: '#80c533' },
+    { name: 'L-Schein', duration: '3 – 4 Tage\nGrundkurs', content: 'Inhalte Schnupperkurs, Grundlagen in Flugtechnik, 15 Flüge für den L-Schein, Lerninhalte Grundkurs', goal: 'L-Schein, selbständiges Groundhandling, eigenständiges Fliegen in den eingewiesenen Geländen', bgColor: '#34963b' },
+    { name: 'Windenschein', duration: '3 – 4 Tage', content: '20 Flüge an der Winde, Lerninhalte Windenschlepp, Flugschulinterne Theorie- und Praxisprüfung für den Windenschlepp', goal: 'Windenschleppberechtigung, selbständiges Fliegen an der Winde', bgColor: '#fff600' },
+    { name: 'A-Schein', duration: 'Höhenflugschulung', content: '40 Höhenflüge (20 davon können an der Winde absolviert werden) sowie 18.000 Höhenmeter, Lerninhalte A-Schein, Theorie-/Praxisprüfung zum beschränkten Luftfahrerschein vor einem Prüfer des DHV', goal: 'beschränkter Luftfahrerschein (A-Schein), selbständiges Fliegen in fast allen Geländen weltweit, innerhalb des Gleitwinkelbereiches vom Startplatz', bgColor: '#ffd700' },
+    { name: 'B-Schein', duration: 'Integriert in eine Flugreise oder Fortbildung', content: '20 Höhenflüge, Lerninhalte für den unbeschränkten Luftfahrerschein Theorieprüfung zum unbeschränkten Luftfahrerschein vor einem Prüfer des DHV', goal: 'Unbeschränkter Luftfahrerschein (B-Schein), selbständiges Fliegen in allen Fluggeländen Europas, Streckenflugberechtigung', bgColor: '#e58e26' },
+    { name: 'Tandemschein', duration: '', content: '40 Höhenflüge mit einem Passagier, Lerninhalte Passagierflug, Theorie-/Praxisprüfung zur Passagierflugberechtigung vor einem Prüfer des DHV', goal: 'Passagierflugberechtigung, selbständiges Passagierfliegen', bgColor: '#c4c5ca' },
+  ],
+};
+
+export const Ausbildungskonzept = ({ contentId }: { contentId?: string } = {}) => {
   const { open } = useLightbox();
+  const [content, setContent] = useState<AusbildungskonzeptData>(DEFAULT_CONTENT);
+
+  useEffect(() => {
+    fetch(`/api/sitepagecontent/public/${contentId || 'ausbildungskonzept'}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data) setContent(data); })
+      .catch((err) => console.error('Error fetching Ausbildungskonzept content:', err));
+  }, [contentId]);
+
   return (
     <div className="w-full bg-white font-luxurysans">
       {/* Banner Component */}
@@ -13,55 +67,52 @@ export const Ausbildungskonzept = () => {
       {/* Main Content Section */}
       <section className="py-16 md:py-24 px-4">
         <div className="max-w-[1200px] mx-auto">
-          
+
           <div className="mb-12">
             <h1 className="font-luxury text-4xl md:text-5xl text-[#53a8c7] uppercase tracking-wider mb-2">
-              Ausbildungskonzept
+              {content.heading}
             </h1>
             <div className="w-full h-px bg-[#53a8c7]/30"></div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            
+
             {/* Left Column (Content) */}
             <div className="lg:col-span-5 space-y-8">
               <h3 className="font-luxury text-2xl text-luxury-dark italic">
-                Ausbildung mit der Flugschule Hirondelle
+                {content.subheading}
               </h3>
-              
+
               <div className="space-y-6 text-gray-600 font-light leading-relaxed text-justify">
                 <p>
-                  Die Flugschule Hirondelle bietet euch eine qualifizierte, sichere und vielseitige Ausbildung. Wir begleiten euch von den ersten Hüpfern bis zu euren ersten Strecken- und Thermikflügen hier im Odenwald, in der Pfalz, im Kraichtal, im Nahetal und überall sonst auf der Welt.
+                  {content.paragraph1}
                 </p>
                 <p>
-                  Fliegen lernen mit dem Team Hirondelle heißt persönliche und individuelle auf den Schüler zugeschnittene Ausbildung! Das zeichnet uns aus:
+                  {content.paragraph2}
                 </p>
-                
+
                 <ul className="list-disc pl-5 space-y-2 text-[15px]">
-                  <li>Unser Team besteht aus sehr erfahrenen und ambitionierten Fluglehrern</li>
-                  <li>Bei uns steht der Spaß und die Sicherheit am Fliegen im Vordergrund</li>
-                  <li>Geniale Schulungshänge im Raum Odenwald, Kraichtal, Nahetal und in der Pfalz (5 eigene auf die Flugschule zugelassene Schulungshänge)</li>
-                  <li>Schulung bei jeder Windrichtung möglich</li>
+                  {content.bulletPoints.map((point, idx) => (
+                    <li key={idx}>{point}</li>
+                  ))}
                 </ul>
 
-                <p>
-                  Im Nachfolgenden sind die Ausbildungswege in der Flugschule Hirondelle vom <Link to="/ausbildung/schnupperkurs" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Schnupperkurs</Link> über die <Link to="/ausbildung/a-schein" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Höhenflugschulung</Link> bis zum <Link to="/ausbildung/b-schein" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">unbeschränkten Luftfahrerschein</Link> aufgelistet.
-                </p>
+                <SafeHtml html={content.pathsHtml} />
               </div>
             </div>
 
             {/* Right Column (Graphic and Table) */}
             <div className="lg:col-span-7 flex flex-col items-end">
-              
+
               {/* Graphic - old site's mediabox plugin puts a magnifier badge in
                   the bottom-right corner of every zoomable content image. */}
               <div className="w-full max-w-2xl mb-2">
                 <div
                   className="relative group/zoom cursor-zoom-in"
-                  onClick={() => open('/images/inhalte/ausbildungswege.png', 'Ausbildungswege Grafik')}
+                  onClick={() => open(content.graphicImage, 'Ausbildungswege Grafik')}
                 >
                   <img
-                    src="/images/inhalte/ausbildungswege.png"
+                    src={content.graphicImage}
                     alt="Ausbildungswege Grafik"
                     className="w-full object-contain"
                   />
@@ -70,7 +121,7 @@ export const Ausbildungskonzept = () => {
                   </div>
                 </div>
                 <p className="text-center text-gray-500 text-sm mt-1">
-                  hm = ca. Höhenmeter-Differenz zwischen Start- und Landeplatz
+                  {content.graphicCaption}
                 </p>
               </div>
 
@@ -85,91 +136,26 @@ export const Ausbildungskonzept = () => {
                     </tr>
                   </thead>
                   <tbody className="text-sm">
-                    
-                    {/* Schnupperkurs */}
-                    <tr className="bg-[#80c533] text-black border-b border-white/20">
-                      <td className="py-4 px-4 align-top">
-                        <div className="font-bold">Schnupper-/Einsteigerkurs</div>
-                        <div>1 – 2 Tage</div>
-                      </td>
-                      <td className="py-4 px-4 align-top">
-                        Ausrüstung kennen lernen, theoretische Grundlagen, die ersten kleinen Flüge
-                      </td>
-                      <td className="py-4 px-4 align-top">
-                        spielerisches Kennenlernen des Sports, selbständiges Groundhandling
-                      </td>
-                    </tr>
-
-                    {/* L-Schein */}
-                    <tr className="bg-[#34963b] text-black border-b border-white/20">
-                      <td className="py-4 px-4 align-top">
-                        <div className="font-bold">L-Schein</div>
-                        <div>3 – 4 Tage</div>
-                        <div>Grundkurs</div>
-                      </td>
-                      <td className="py-4 px-4 align-top">
-                        Inhalte Schnupperkurs, Grundlagen in Flugtechnik, 15 Flüge für den L-Schein, Lerninhalte Grundkurs
-                      </td>
-                      <td className="py-4 px-4 align-top">
-                        L-Schein, selbständiges Groundhandling, eigenständiges Fliegen in den eingewiesenen Geländen
-                      </td>
-                    </tr>
-
-                    {/* Winde */}
-                    <tr className="bg-[#fff600] text-black border-b border-white/20">
-                      <td className="py-4 px-4 align-top">
-                        <div className="font-bold">Windenschein</div>
-                        <div>3 – 4 Tage</div>
-                      </td>
-                      <td className="py-4 px-4 align-top">
-                        20 Flüge an der Winde, Lerninhalte Windenschlepp, Flugschulinterne Theorie- und Praxisprüfung für den Windenschlepp
-                      </td>
-                      <td className="py-4 px-4 align-top">
-                        Windenschleppberechtigung, selbständiges Fliegen an der Winde
-                      </td>
-                    </tr>
-
-                    {/* A-Schein */}
-                    <tr className="bg-[#ffd700] text-black border-b border-white/20">
-                      <td className="py-4 px-4 align-top">
-                        <div className="font-bold">A-Schein</div>
-                        <div>Höhenflugschulung</div>
-                      </td>
-                      <td className="py-4 px-4 align-top">
-                        40 Höhenflüge (20 davon können an der Winde absolviert werden) sowie 18.000 Höhenmeter, Lerninhalte A-Schein, Theorie-/Praxisprüfung zum beschränkten Luftfahrerschein vor einem Prüfer des DHV
-                      </td>
-                      <td className="py-4 px-4 align-top">
-                        beschränkter Luftfahrerschein (A-Schein), selbständiges Fliegen in fast allen Geländen weltweit, innerhalb des Gleitwinkelbereiches vom Startplatz
-                      </td>
-                    </tr>
-
-                    {/* B-Schein */}
-                    <tr className="bg-[#e58e26] text-black border-b border-white/20">
-                      <td className="py-4 px-4 align-top">
-                        <div className="font-bold">B-Schein</div>
-                        <div>Integriert in eine Flugreise oder Fortbildung</div>
-                      </td>
-                      <td className="py-4 px-4 align-top">
-                        20 Höhenflüge, Lerninhalte für den unbeschränkten Luftfahrerschein Theorieprüfung zum unbeschränkten Luftfahrerschein vor einem Prüfer des DHV
-                      </td>
-                      <td className="py-4 px-4 align-top">
-                        Unbeschränkter Luftfahrerschein (B-Schein), selbständiges Fliegen in allen Fluggeländen Europas, Streckenflugberechtigung
-                      </td>
-                    </tr>
-
-                    {/* Tandem */}
-                    <tr className="bg-[#c4c5ca] text-black">
-                      <td className="py-4 px-4 align-top">
-                        <div className="font-bold mt-4">Tandemschein</div>
-                      </td>
-                      <td className="py-4 px-4 align-top">
-                        40 Höhenflüge mit einem Passagier, Lerninhalte Passagierflug, Theorie-/Praxisprüfung zur Passagierflugberechtigung vor einem Prüfer des DHV
-                      </td>
-                      <td className="py-4 px-4 align-top">
-                        Passagierflugberechtigung, selbständiges Passagierfliegen
-                      </td>
-                    </tr>
-
+                    {content.tableRows.map((row, idx) => (
+                      <tr
+                        key={idx}
+                        className={`text-black ${idx < content.tableRows.length - 1 ? 'border-b border-white/20' : ''}`}
+                        style={{ backgroundColor: row.bgColor }}
+                      >
+                        <td className="py-4 px-4 align-top">
+                          {row.name && <div className="font-bold">{row.name}</div>}
+                          {row.duration && row.duration.split('\n').map((line, lineIdx) => (
+                            <div key={lineIdx}>{line}</div>
+                          ))}
+                        </td>
+                        <td className="py-4 px-4 align-top">
+                          {row.content}
+                        </td>
+                        <td className="py-4 px-4 align-top">
+                          {row.goal}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
