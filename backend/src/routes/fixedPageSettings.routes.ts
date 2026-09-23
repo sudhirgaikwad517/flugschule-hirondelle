@@ -49,6 +49,16 @@ const FIXED_KINDS = [
   'rettungspacken',
   'trimmtuning',
   'reparatur',
+  'billings',
+  'erlau',
+  'gadern',
+  'lindenfels',
+  'nonrod-nordost',
+  'nonrod',
+  'stauf',
+  'winterkasten',
+  'bad-kreuznach',
+  'herrenteich',
 ] as const;
 type FixedKind = (typeof FIXED_KINDS)[number];
 
@@ -90,6 +100,16 @@ const KIND_LABELS: Record<FixedKind, string> = {
   rettungspacken: 'Rettungsgeräte-Packservice',
   trimmtuning: 'Trimmtuning',
   reparatur: 'Reparatur-Service',
+  billings: 'Billings',
+  erlau: 'Erlau',
+  gadern: 'Gadern',
+  lindenfels: 'Lindenfels',
+  'nonrod-nordost': 'Nonrod Nordost',
+  nonrod: 'Nonroder Höhe',
+  stauf: 'Stauf',
+  winterkasten: 'Winterkasten',
+  'bad-kreuznach': 'Bad Kreuznach',
+  herrenteich: 'Herrenteich',
 };
 
 // The hardcoded React route each kind's page lives at today (App.tsx) -
@@ -137,6 +157,16 @@ const DEFAULT_SLUGS: Record<FixedKind, string | null> = {
   rettungspacken: 'rettungspacken',
   trimmtuning: 'trimmtuning',
   reparatur: 'reparatur',
+  billings: 'billings',
+  erlau: 'erlau',
+  gadern: 'gadern',
+  lindenfels: 'lindenfels',
+  'nonrod-nordost': 'nonrod-nordost',
+  nonrod: 'nonrod',
+  stauf: 'stauf',
+  winterkasten: 'winterkasten',
+  'bad-kreuznach': 'bad-kreuznach',
+  herrenteich: 'herrenteich',
 };
 
 const normalizeSlug = (value: string) =>

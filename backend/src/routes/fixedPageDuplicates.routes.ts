@@ -31,6 +31,9 @@ const FIXED_KINDS = [
   'slowenien-tour', 'bergamo-tour', 'savoye-tour', 'vogesen-tour', 'pfalz-tour',
   // /service/* sub-pages - same duplicate mechanism.
   '2-jahres-check', 'rettungspacken', 'trimmtuning', 'reparatur',
+  // /infos/gelaende/* detail sub-pages - same duplicate mechanism.
+  'billings', 'erlau', 'gadern', 'lindenfels', 'nonrod-nordost', 'nonrod',
+  'stauf', 'winterkasten', 'bad-kreuznach', 'herrenteich',
 ] as const;
 type FixedKind = (typeof FIXED_KINDS)[number];
 
@@ -72,6 +75,16 @@ const KIND_LABELS: Record<FixedKind, string> = {
   rettungspacken: 'Rettungsgeräte-Packservice',
   trimmtuning: 'Trimmtuning',
   reparatur: 'Reparatur-Service',
+  billings: 'Billings',
+  erlau: 'Erlau',
+  gadern: 'Gadern',
+  lindenfels: 'Lindenfels',
+  'nonrod-nordost': 'Nonrod Nordost',
+  nonrod: 'Nonroder Höhe',
+  stauf: 'Stauf',
+  winterkasten: 'Winterkasten',
+  'bad-kreuznach': 'Bad Kreuznach',
+  herrenteich: 'Herrenteich',
 };
 
 // Each kind's default (un-renamed) URL, and whether it also has its own
@@ -122,6 +135,16 @@ const FIXED_PAGE_URLS: Record<FixedKind, string> = {
   rettungspacken: '/service/rettungspacken',
   trimmtuning: '/service/trimmtuning',
   reparatur: '/service/reparatur',
+  billings: '/infos/gelaende/billings',
+  erlau: '/infos/gelaende/erlau',
+  gadern: '/infos/gelaende/gadern',
+  lindenfels: '/infos/gelaende/lindenfels',
+  'nonrod-nordost': '/infos/gelaende/nonrod-nordost',
+  nonrod: '/infos/gelaende/nonrod',
+  stauf: '/infos/gelaende/stauf',
+  winterkasten: '/infos/gelaende/winterkasten',
+  'bad-kreuznach': '/infos/gelaende/bad-kreuznach',
+  herrenteich: '/infos/gelaende/herrenteich',
 };
 const KINDS_WITH_SETTINGS = new Set<FixedKind>([
   'home',
@@ -161,6 +184,16 @@ const KINDS_WITH_SETTINGS = new Set<FixedKind>([
   'rettungspacken',
   'trimmtuning',
   'reparatur',
+  'billings',
+  'erlau',
+  'gadern',
+  'lindenfels',
+  'nonrod-nordost',
+  'nonrod',
+  'stauf',
+  'winterkasten',
+  'bad-kreuznach',
+  'herrenteich',
 ]);
 
 const normalizeSlug = (value: string) =>

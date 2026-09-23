@@ -6,20 +6,16 @@ import {
   Box,
   Button,
   CircularProgress,
-  FormControlLabel,
   IconButton,
   InputAdornment,
   MenuItem,
   Paper,
-  Switch,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableRow,
   TextField,
-  ToggleButton,
-  ToggleButtonGroup,
   Typography,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
@@ -211,6 +207,16 @@ const FIXED_PAGES = [
   { title: 'Rettungsgeräte-Packservice', editPath: '/admin/rettungspacken-content', previewPath: '/service/rettungspacken', deletePath: '/api/sitepagecontent/rettungspacken', kind: 'rettungspacken', hasSettings: true },
   { title: 'Trimmtuning', editPath: '/admin/trimmtuning-content', previewPath: '/service/trimmtuning', deletePath: '/api/sitepagecontent/trimmtuning', kind: 'trimmtuning', hasSettings: true },
   { title: 'Reparatur-Service', editPath: '/admin/reparatur-content', previewPath: '/service/reparatur', deletePath: '/api/sitepagecontent/reparatur', kind: 'reparatur', hasSettings: true },
+  { title: 'Billings', editPath: '/admin/billings-content', previewPath: '/infos/gelaende/billings', deletePath: '/api/sitepagecontent/billings', kind: 'billings', hasSettings: true },
+  { title: 'Erlau', editPath: '/admin/erlau-content', previewPath: '/infos/gelaende/erlau', deletePath: '/api/sitepagecontent/erlau', kind: 'erlau', hasSettings: true },
+  { title: 'Gadern', editPath: '/admin/gadern-content', previewPath: '/infos/gelaende/gadern', deletePath: '/api/sitepagecontent/gadern', kind: 'gadern', hasSettings: true },
+  { title: 'Lindenfels', editPath: '/admin/lindenfels-content', previewPath: '/infos/gelaende/lindenfels', deletePath: '/api/sitepagecontent/lindenfels', kind: 'lindenfels', hasSettings: true },
+  { title: 'Nonrod Nordost', editPath: '/admin/nonrod-nordost-content', previewPath: '/infos/gelaende/nonrod-nordost', deletePath: '/api/sitepagecontent/nonrod-nordost', kind: 'nonrod-nordost', hasSettings: true },
+  { title: 'Nonroder Höhe', editPath: '/admin/nonrod-content', previewPath: '/infos/gelaende/nonrod', deletePath: '/api/sitepagecontent/nonrod', kind: 'nonrod', hasSettings: true },
+  { title: 'Stauf', editPath: '/admin/stauf-content', previewPath: '/infos/gelaende/stauf', deletePath: '/api/sitepagecontent/stauf', kind: 'stauf', hasSettings: true },
+  { title: 'Winterkasten', editPath: '/admin/winterkasten-content', previewPath: '/infos/gelaende/winterkasten', deletePath: '/api/sitepagecontent/winterkasten', kind: 'winterkasten', hasSettings: true },
+  { title: 'Bad Kreuznach', editPath: '/admin/bad-kreuznach-content', previewPath: '/infos/gelaende/bad-kreuznach', deletePath: '/api/sitepagecontent/bad-kreuznach', kind: 'bad-kreuznach', hasSettings: true },
+  { title: 'Herrenteich', editPath: '/admin/herrenteich-content', previewPath: '/infos/gelaende/herrenteich', deletePath: '/api/sitepagecontent/herrenteich', kind: 'herrenteich', hasSettings: true },
 ];
 
 // The fixed pages' titles are fixed German text, so a plain substring
@@ -256,6 +262,16 @@ const FIXED_PAGE_SEARCH_TERMS: Record<string, string[]> = {
   rettungspacken: ['rettungspacken', 'rettungsgeräte', 'rettungsgeraete', 'packservice', 'reserve packing'],
   trimmtuning: ['trimmtuning', 'trim tuning', 'trimmung'],
   reparatur: ['reparatur', 'repair'],
+  billings: ['billings', 'fluggelände billings'],
+  erlau: ['erlau', 'fluggelände erlau'],
+  gadern: ['gadern', 'fluggelände gadern'],
+  lindenfels: ['lindenfels', 'fluggelände lindenfels'],
+  'nonrod-nordost': ['nonrod nordost', 'nonrod-nordost'],
+  nonrod: ['nonrod', 'nonroder höhe', 'nonroder hoehe'],
+  stauf: ['stauf', 'fluggelände stauf'],
+  winterkasten: ['winterkasten', 'fluggelände winterkasten'],
+  'bad-kreuznach': ['bad kreuznach', 'bad-kreuznach', 'mergesfeld'],
+  herrenteich: ['herrenteich', 'fluggelände herrenteich'],
 };
 
 const textMatches = (query: string, ...values: Array<string | null | undefined>) => {
@@ -629,32 +645,10 @@ export const PagesManager = () => {
             fullWidth={false}
             sx={{ width: 180 }}
           />
-          <TextField
-            label="Kurzbeschreibung"
-            value={metaDescription}
-            onChange={(e) => setMetaDescription(e.target.value)}
-            size="small"
-            fullWidth={false}
-            sx={{ width: 200 }}
-          />
           <TextField select label="Status" value={status} onChange={(e) => setStatus(e.target.value)} size="small" fullWidth={false} sx={{ width: 140 }}>
             <MenuItem value="published">Veröffentlicht</MenuItem>
             <MenuItem value="draft">Entwurf</MenuItem>
           </TextField>
-          <FormControlLabel
-            control={<Switch checked={showInNav} onChange={(e) => setShowInNav(e.target.checked)} />}
-            label="Im Menü"
-            sx={{ flexShrink: 0 }}
-          />
-          <TextField
-            label="Menü-Beschriftung"
-            value={navLabel}
-            onChange={(e) => setNavLabel(e.target.value)}
-            size="small"
-            fullWidth={false}
-            sx={{ width: 160 }}
-            helperText="Leer = Titel"
-          />
           <Button
             component="label"
             size="small"
@@ -708,16 +702,28 @@ export const PagesManager = () => {
   // One combined, paginated list (fixed pages incl. /infos/* sub-pages +
   // their duplicates + custom Seiten pages) so a single "Zeilen pro Seite"
   // control (matching Gallery.tsx's react-admin pagination) covers
-  // everything, instead of separately-scrolling sections.
+  // everything, instead of separately-scrolling sections - sorted A-Z by
+  // title (German collation) so it reads as one alphabetical list rather
+  // than fixed/duplicate/custom pages each clustered in their own order.
   type DisplayRow =
     | { key: string; rowKind: 'fixed'; page: (typeof FIXED_PAGES)[number] }
     | { key: string; rowKind: 'duplicate'; dup: FixedDuplicateRow }
     | { key: string; rowKind: 'custom'; page: PageRow };
+  // Title shown in the "Titel" column - same fallback logic each row type
+  // already uses when rendering, pulled out here too so the flat "Alle
+  // Seiten" view can be sorted A-Z across fixed pages, duplicates and
+  // custom Seiten pages together, not just within each group.
+  const rowTitle = (row: DisplayRow): string => {
+    if (row.rowKind === 'fixed') return fixedSettings[row.page.kind]?.title || row.page.title;
+    if (row.rowKind === 'duplicate') return row.dup.title;
+    return row.page.title;
+  };
+
   const allRows: DisplayRow[] = [
     ...filteredFixedPages.map((page): DisplayRow => ({ key: `fixed:${page.kind}`, rowKind: 'fixed', page })),
     ...filteredFixedDuplicates.map((dup): DisplayRow => ({ key: `dup:${dup.id}`, rowKind: 'duplicate', dup })),
     ...(loading ? [] : filteredPages.map((page): DisplayRow => ({ key: `custom:${page.id}`, rowKind: 'custom', page }))),
-  ];
+  ].sort((a, b) => rowTitle(a).localeCompare(rowTitle(b), 'de', { sensitivity: 'base' }));
   const pageCount = Math.max(1, Math.ceil(allRows.length / perPage));
   const clampedPage = Math.min(page, pageCount);
   const startIdx = (clampedPage - 1) * perPage;
@@ -942,15 +948,6 @@ export const PagesManager = () => {
             },
           }}
         />
-        <ToggleButtonGroup
-          value={viewMode}
-          exclusive
-          size="small"
-          onChange={(_, v) => v && setViewMode(v)}
-        >
-          <ToggleButton value="flat">Alle Seiten</ToggleButton>
-          <ToggleButton value="menu">Nach Menü</ToggleButton>
-        </ToggleButtonGroup>
       </Box>
       <Paper variant="outlined">
         <Table>

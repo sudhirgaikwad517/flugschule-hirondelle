@@ -454,3 +454,38 @@ h1, h2, h3, h4, h5, h6, .nav-item {
   border-radius: 2px;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
 }
+
+/* Gelände detail articles (/infos/gelaende/:slug) carry verbatim raw HTML
+   transcribed from the old Joomla site, which used Bootstrap 2's
+   `.col-md-N` grid classes to sit the Google Maps embed BESIDE the article
+   text instead of below it. GelaendeDetail.tsx/GelaendeArticlePage.tsx
+   already force every `.col-md-*` to `display:block` (so nested pairs -
+   e.g. the "Eckdaten" box next to the parking-QR box inside the main
+   content column - stay simple stacked blocks, unchanged), but that alone
+   collapsed the OUTER content/map pair to full-width stacked too. This
+   only touches DIRECT children of `.gelaende-article-body` (the map/
+   content pair itself, and the occasional bare heading/spacer div some
+   articles have at that same level) - anything nested deeper (inside the
+   content column) is untouched and keeps stacking exactly as before.
+   Matches Bootstrap's own col-md-* behavior: stacked below 768px, side by
+   side with the map filling the blank space to the right above it. */
+.gelaende-article-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 2rem;
+}
+.gelaende-article-body > * {
+  flex: 1 1 100%;
+}
+@media (min-width: 768px) {
+  .gelaende-article-body > .col-md-5 {
+    flex: 1 1 calc(41.6667% - 1rem);
+  }
+  .gelaende-article-body > .col-md-6 {
+    flex: 1 1 calc(50% - 1rem);
+  }
+  .gelaende-article-body > .col-md-7 {
+    flex: 1 1 calc(58.3333% - 1rem);
+  }
+}

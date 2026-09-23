@@ -37,6 +37,16 @@ import { ZweiJahresCheck } from './ZweiJahresCheck';
 import { Rettungspacken } from './Rettungspacken';
 import { Trimmtuning } from './Trimmtuning';
 import { ReparaturService } from './ReparaturService';
+import { Billings } from './Billings';
+import { Erlau } from './Erlau';
+import { Gadern } from './Gadern';
+import { LindenfelsGelaende } from './Lindenfels';
+import { NonrodNordost } from './NonrodNordost';
+import { Nonrod } from './Nonrod';
+import { Stauf } from './Stauf';
+import { Winterkasten } from './Winterkasten';
+import { BadKreuznach } from './BadKreuznach';
+import { Herrenteich } from './Herrenteich';
 import { DynamicPage } from './DynamicPage';
 
 const KIND_COMPONENTS: Record<string, ComponentType<{ contentId?: string }>> = {
@@ -77,6 +87,16 @@ const KIND_COMPONENTS: Record<string, ComponentType<{ contentId?: string }>> = {
   rettungspacken: Rettungspacken,
   trimmtuning: Trimmtuning,
   reparatur: ReparaturService,
+  billings: Billings,
+  erlau: Erlau,
+  gadern: Gadern,
+  lindenfels: LindenfelsGelaende,
+  'nonrod-nordost': NonrodNordost,
+  nonrod: Nonrod,
+  stauf: Stauf,
+  winterkasten: Winterkasten,
+  'bad-kreuznach': BadKreuznach,
+  herrenteich: Herrenteich,
 };
 
 interface Resolved {

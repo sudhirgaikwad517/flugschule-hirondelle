@@ -46,6 +46,16 @@ import { ServiceAuftrag } from './pages/ServiceAuftrag';
 import { Team } from './pages/Team';
 import { Gelaende } from './pages/Gelaende';
 import { GelaendeDetail } from './pages/GelaendeDetail';
+import { Billings } from './pages/Billings';
+import { Erlau } from './pages/Erlau';
+import { Gadern } from './pages/Gadern';
+import { LindenfelsGelaende } from './pages/Lindenfels';
+import { NonrodNordost } from './pages/NonrodNordost';
+import { Nonrod } from './pages/Nonrod';
+import { Stauf } from './pages/Stauf';
+import { Winterkasten } from './pages/Winterkasten';
+import { BadKreuznach } from './pages/BadKreuznach';
+import { Herrenteich } from './pages/Herrenteich';
 import { Wetter } from './pages/Wetter';
 import { Medien } from './pages/Medien';
 import { Gruppenevents } from './pages/Gruppenevents';
@@ -121,6 +131,16 @@ function App() {
           <Route path="infos" element={<FixedPageGate kind="infos" defaultSlug="infos"><Infos /></FixedPageGate>} />
           <Route path="infos/team" element={<FixedPageGate kind="team" defaultSlug="team"><Team /></FixedPageGate>} />
           <Route path="infos/gelaende" element={<FixedPageGate kind="gelaende" defaultSlug="gelaende"><Gelaende /></FixedPageGate>} />
+          <Route path="infos/gelaende/billings" element={<FixedPageGate kind="billings" defaultSlug="billings"><Billings /></FixedPageGate>} />
+          <Route path="infos/gelaende/erlau" element={<FixedPageGate kind="erlau" defaultSlug="erlau"><Erlau /></FixedPageGate>} />
+          <Route path="infos/gelaende/gadern" element={<FixedPageGate kind="gadern" defaultSlug="gadern"><Gadern /></FixedPageGate>} />
+          <Route path="infos/gelaende/lindenfels" element={<FixedPageGate kind="lindenfels" defaultSlug="lindenfels"><LindenfelsGelaende /></FixedPageGate>} />
+          <Route path="infos/gelaende/nonrod-nordost" element={<FixedPageGate kind="nonrod-nordost" defaultSlug="nonrod-nordost"><NonrodNordost /></FixedPageGate>} />
+          <Route path="infos/gelaende/nonrod" element={<FixedPageGate kind="nonrod" defaultSlug="nonrod"><Nonrod /></FixedPageGate>} />
+          <Route path="infos/gelaende/stauf" element={<FixedPageGate kind="stauf" defaultSlug="stauf"><Stauf /></FixedPageGate>} />
+          <Route path="infos/gelaende/winterkasten" element={<FixedPageGate kind="winterkasten" defaultSlug="winterkasten"><Winterkasten /></FixedPageGate>} />
+          <Route path="infos/gelaende/bad-kreuznach" element={<FixedPageGate kind="bad-kreuznach" defaultSlug="bad-kreuznach"><BadKreuznach /></FixedPageGate>} />
+          <Route path="infos/gelaende/herrenteich" element={<FixedPageGate kind="herrenteich" defaultSlug="herrenteich"><Herrenteich /></FixedPageGate>} />
           <Route path="infos/gelaende/:slug" element={<GelaendeDetail />} />
           <Route path="infos/wetter" element={<FixedPageGate kind="wetter" defaultSlug="wetter"><Wetter /></FixedPageGate>} />
           <Route path="infos/medien" element={<FixedPageGate kind="medien" defaultSlug="medien"><Medien /></FixedPageGate>} />

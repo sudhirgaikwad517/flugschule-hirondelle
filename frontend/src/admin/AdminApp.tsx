@@ -76,6 +76,16 @@ import { ZweiJahresCheckContentEditor } from './ZweiJahresCheckContentEditor'; /
 import { RettungspackenContentEditor } from './RettungspackenContentEditor'; // NEW - /service/rettungspacken
 import { TrimmtuningContentEditor } from './TrimmtuningContentEditor'; // NEW - /service/trimmtuning
 import { ReparaturServiceContentEditor } from './ReparaturServiceContentEditor'; // NEW - /service/reparatur
+import { BillingsContentEditor } from './BillingsContentEditor'; // NEW - /infos/gelaende/billings
+import { ErlauContentEditor } from './ErlauContentEditor'; // NEW - /infos/gelaende/erlau
+import { GadernContentEditor } from './GadernContentEditor'; // NEW - /infos/gelaende/gadern
+import { LindenfelsGelaendeContentEditor } from './LindenfelsContentEditor'; // NEW - /infos/gelaende/lindenfels
+import { NonrodNordostContentEditor } from './NonrodNordostContentEditor'; // NEW - /infos/gelaende/nonrod-nordost
+import { NonrodContentEditor } from './NonrodContentEditor'; // NEW - /infos/gelaende/nonrod
+import { StaufContentEditor } from './StaufContentEditor'; // NEW - /infos/gelaende/stauf
+import { WinterkastenContentEditor } from './WinterkastenContentEditor'; // NEW - /infos/gelaende/winterkasten
+import { BadKreuznachContentEditor } from './BadKreuznachContentEditor'; // NEW - /infos/gelaende/bad-kreuznach
+import { HerrenteichContentEditor } from './HerrenteichContentEditor'; // NEW - /infos/gelaende/herrenteich
 import { Trash } from './Trash'; // NEW - WordPress-style Papierkorb for Pages.tsx deletes
 import { ServiceOrderList, ServiceOrderShow } from './ServiceOrders';
 import { TemplatesBuilder } from './TemplatesBuilder';
@@ -240,6 +250,16 @@ export const AdminApp = () => {
             <Route path="/rettungspacken-content/:contentId?" element={<Authenticated><RettungspackenContentEditor /></Authenticated>} />
             <Route path="/trimmtuning-content/:contentId?" element={<Authenticated><TrimmtuningContentEditor /></Authenticated>} />
             <Route path="/reparatur-content/:contentId?" element={<Authenticated><ReparaturServiceContentEditor /></Authenticated>} />
+            <Route path="/billings-content/:contentId?" element={<Authenticated><BillingsContentEditor /></Authenticated>} />
+            <Route path="/erlau-content/:contentId?" element={<Authenticated><ErlauContentEditor /></Authenticated>} />
+            <Route path="/gadern-content/:contentId?" element={<Authenticated><GadernContentEditor /></Authenticated>} />
+            <Route path="/lindenfels-content/:contentId?" element={<Authenticated><LindenfelsGelaendeContentEditor /></Authenticated>} />
+            <Route path="/nonrod-nordost-content/:contentId?" element={<Authenticated><NonrodNordostContentEditor /></Authenticated>} />
+            <Route path="/nonrod-content/:contentId?" element={<Authenticated><NonrodContentEditor /></Authenticated>} />
+            <Route path="/stauf-content/:contentId?" element={<Authenticated><StaufContentEditor /></Authenticated>} />
+            <Route path="/winterkasten-content/:contentId?" element={<Authenticated><WinterkastenContentEditor /></Authenticated>} />
+            <Route path="/bad-kreuznach-content/:contentId?" element={<Authenticated><BadKreuznachContentEditor /></Authenticated>} />
+            <Route path="/herrenteich-content/:contentId?" element={<Authenticated><HerrenteichContentEditor /></Authenticated>} />
             <Route path="/trash" element={<Authenticated><Trash /></Authenticated>} />
             {/* NEW - Galerie's own trash, separate from the Pages one above
                 (Trash's default `kinds` prop is page-only) - see Trash.tsx
