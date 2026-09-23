@@ -44,13 +44,13 @@ export const TieredFeesList = () => {
                 <Table size="small" sx={{ mb: 2 }}>
                     <TableHead>
                         <TableRow>
-                            <TableCell>title</TableCell>
-                            <TableCell>Value</TableCell>
-                            <TableCell>Bookable for</TableCell>
-                            <TableCell>In percent</TableCell>
-                            <TableCell>Discount</TableCell>
-                            <TableCell>Valid from</TableCell>
-                            <TableCell>Valid until</TableCell>
+                            <TableCell>Titel</TableCell>
+                            <TableCell>Wert</TableCell>
+                            <TableCell>Buchbar für</TableCell>
+                            <TableCell>In Prozent</TableCell>
+                            <TableCell>Rabatt</TableCell>
+                            <TableCell>Gültig ab</TableCell>
+                            <TableCell>Gültig bis</TableCell>
                             <TableCell align="right" />
                         </TableRow>
                     </TableHead>
@@ -59,7 +59,7 @@ export const TieredFeesList = () => {
                             <TableRow key={f._rhfKey} sx={{ bgcolor: ROW_BG, '&:hover': { bgcolor: ROW_BG_HOVER } }}>
                                 <TableCell>{f.title}</TableCell>
                                 <TableCell>{f.value}</TableCell>
-                                <TableCell>{f.bookableFor === 'registered' ? 'Registriert' : 'Public'}</TableCell>
+                                <TableCell>{f.bookableFor === 'registered' ? 'Registriert' : 'Öffentlich'}</TableCell>
                                 <TableCell>{f.isPercentage ? '✓' : '✕'}</TableCell>
                                 <TableCell>{f.isDiscount ? '✓' : '✕'}</TableCell>
                                 <TableCell>{f.validFrom ? new Date(f.validFrom).toLocaleDateString('de-DE') : '-'}</TableCell>
@@ -84,33 +84,33 @@ export const TieredFeesList = () => {
                 <Box sx={{ border: '1px solid #ddd', p: 2.5, maxWidth: 640 }}>
                     <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
                         <MuiTextField
-                            label="Title of the fee" fullWidth size="small"
+                            label="Titel der Gebühr" fullWidth size="small"
                             value={draft.values.title}
                             onChange={e => setDraft({ ...draft, values: { ...draft.values, title: e.target.value } })}
                         />
                         <MuiTextField
-                            select label="Bookable for" fullWidth size="small"
+                            select label="Buchbar für" fullWidth size="small"
                             value={draft.values.bookableFor || 'public'}
                             onChange={e => setDraft({ ...draft, values: { ...draft.values, bookableFor: e.target.value } })}
                         >
-                            <MenuItem value="public">Public</MenuItem>
+                            <MenuItem value="public">Öffentlich</MenuItem>
                             <MenuItem value="registered">Registriert</MenuItem>
                         </MuiTextField>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
                         <MuiTextField
-                            label="Value" type="number" fullWidth size="small"
+                            label="Wert" type="number" fullWidth size="small"
                             value={draft.values.value}
                             onChange={e => setDraft({ ...draft, values: { ...draft.values, value: Number(e.target.value) } })}
                         />
                         <MuiTextField
-                            label="Valid from" type="datetime-local" fullWidth size="small"
+                            label="Gültig ab" type="datetime-local" fullWidth size="small"
                             slotProps={{ inputLabel: { shrink: true } }}
                             value={draft.values.validFrom ? draft.values.validFrom.slice(0, 16) : ''}
                             onChange={e => setDraft({ ...draft, values: { ...draft.values, validFrom: e.target.value } })}
                         />
                         <MuiTextField
-                            label="Valid until" type="datetime-local" fullWidth size="small"
+                            label="Gültig bis" type="datetime-local" fullWidth size="small"
                             slotProps={{ inputLabel: { shrink: true } }}
                             value={draft.values.validUntil ? draft.values.validUntil.slice(0, 16) : ''}
                             onChange={e => setDraft({ ...draft, values: { ...draft.values, validUntil: e.target.value } })}
@@ -119,16 +119,16 @@ export const TieredFeesList = () => {
                     <Box sx={{ display: 'flex', gap: 3, mb: 2 }}>
                         <FormControlLabel
                             control={<Switch checked={!!draft.values.isPercentage} onChange={e => setDraft({ ...draft, values: { ...draft.values, isPercentage: e.target.checked } })} />}
-                            label="Percentage value"
+                            label="Prozentwert"
                         />
                         <FormControlLabel
                             control={<Switch checked={!!draft.values.isDiscount} onChange={e => setDraft({ ...draft, values: { ...draft.values, isDiscount: e.target.checked } })} />}
-                            label="Discount"
+                            label="Rabatt"
                         />
                     </Box>
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button variant="outlined" onClick={cancel}>Cancel</Button>
-                        <Button variant="contained" onClick={apply} sx={{ bgcolor: MATUKIO_BLUE, '&:hover': { bgcolor: MATUKIO_BLUE } }}>Apply</Button>
+                        <Button variant="outlined" onClick={cancel}>Abbrechen</Button>
+                        <Button variant="contained" onClick={apply} sx={{ bgcolor: MATUKIO_BLUE, '&:hover': { bgcolor: MATUKIO_BLUE } }}>Übernehmen</Button>
                     </Box>
                 </Box>
             )}
@@ -175,8 +175,8 @@ export const TicketsList = () => {
                 <Table size="small" sx={{ mb: 2 }}>
                     <TableHead>
                         <TableRow>
-                            <TableCell>title</TableCell>
-                            <TableCell>Value</TableCell>
+                            <TableCell>Titel</TableCell>
+                            <TableCell>Wert</TableCell>
                             <TableCell>Kapazität</TableCell>
                             <TableCell align="right" />
                         </TableRow>
@@ -207,12 +207,12 @@ export const TicketsList = () => {
                 <Box sx={{ border: '1px solid #ddd', p: 2.5, maxWidth: 640 }}>
                     <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
                         <MuiTextField
-                            label="Title" fullWidth size="small"
+                            label="Titel" fullWidth size="small"
                             value={draft.values.name}
                             onChange={e => setDraft({ ...draft, values: { ...draft.values, name: e.target.value } })}
                         />
                         <MuiTextField
-                            label="Value (€)" type="number" fullWidth size="small"
+                            label="Wert (€)" type="number" fullWidth size="small"
                             value={draft.values.price}
                             onChange={e => setDraft({ ...draft, values: { ...draft.values, price: Number(e.target.value) } })}
                         />
@@ -228,8 +228,8 @@ export const TicketsList = () => {
                         onChange={e => setDraft({ ...draft, values: { ...draft.values, description: e.target.value } })}
                     />
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button variant="outlined" onClick={cancel}>Cancel</Button>
-                        <Button variant="contained" onClick={apply} sx={{ bgcolor: MATUKIO_BLUE, '&:hover': { bgcolor: MATUKIO_BLUE } }}>Apply</Button>
+                        <Button variant="outlined" onClick={cancel}>Abbrechen</Button>
+                        <Button variant="contained" onClick={apply} sx={{ bgcolor: MATUKIO_BLUE, '&:hover': { bgcolor: MATUKIO_BLUE } }}>Übernehmen</Button>
                     </Box>
                 </Box>
             )}
@@ -264,14 +264,14 @@ export const AdditionalOptionsList = () => {
     return (
         <Box>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                Additional services can be offered with the bookable options (e.g. hotel rooms, etc.).
+                Zusätzliche Leistungen, die zu den buchbaren Optionen angeboten werden können (z. B. Hotelzimmer usw.).
             </Typography>
             {fields.length > 0 && (
                 <Table size="small" sx={{ mb: 2 }}>
                     <TableHead>
                         <TableRow>
-                            <TableCell>title</TableCell>
-                            <TableCell>Value</TableCell>
+                            <TableCell>Titel</TableCell>
+                            <TableCell>Wert</TableCell>
                             <TableCell>Pro Platz</TableCell>
                             <TableCell align="right" />
                         </TableRow>
@@ -302,12 +302,12 @@ export const AdditionalOptionsList = () => {
                 <Box sx={{ border: '1px solid #ddd', p: 2.5, maxWidth: 640 }}>
                     <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
                         <MuiTextField
-                            label="Title" fullWidth size="small"
+                            label="Titel" fullWidth size="small"
                             value={draft.values.title}
                             onChange={e => setDraft({ ...draft, values: { ...draft.values, title: e.target.value } })}
                         />
                         <MuiTextField
-                            label="Value (€)" type="number" fullWidth size="small"
+                            label="Wert (€)" type="number" fullWidth size="small"
                             value={draft.values.value}
                             onChange={e => setDraft({ ...draft, values: { ...draft.values, value: Number(e.target.value) } })}
                         />
@@ -317,8 +317,8 @@ export const AdditionalOptionsList = () => {
                         label="Pro gebuchtem Platz (statt einmal pro Buchung)"
                     />
                     <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-                        <Button variant="outlined" onClick={cancel}>Cancel</Button>
-                        <Button variant="contained" onClick={apply} sx={{ bgcolor: MATUKIO_BLUE, '&:hover': { bgcolor: MATUKIO_BLUE } }}>Apply</Button>
+                        <Button variant="outlined" onClick={cancel}>Abbrechen</Button>
+                        <Button variant="contained" onClick={apply} sx={{ bgcolor: MATUKIO_BLUE, '&:hover': { bgcolor: MATUKIO_BLUE } }}>Übernehmen</Button>
                     </Box>
                 </Box>
             )}

@@ -497,7 +497,7 @@ const FeesTabContent = () => (
 
             <FormDataConsumer>
                 {({ formData }) => formData.tieredFees && (
-                    <MCard title="Tiered fees">
+                    <MCard title="Gestaffelte Gebühren">
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                             Hier können Sie die standardmäßigen gestaffelten Gebühren (falls vorhanden) für DIESE Veranstaltung überschreiben. Damit können Sie Frühbucherrabatte oder ähnliche Angebote erstellen.
                         </Typography>
@@ -522,11 +522,11 @@ const FeesTabContent = () => (
                 <BooleanInput source="tieredFees" label="Gestaffelte Gebühren" defaultValue={false} />
             </MCard>
             <MTipsCard
-                title="Tips for fees"
+                title="Tipps für Gebühren"
                 blocks={[
-                    { heading: 'Including VAT', body: 'All fees in Matukio include VAT by default; the display can be changed in the Matukio configuration to show only net prices.' },
-                    { heading: 'Payment processing', body: 'If payment processing is deactivated, the fees will still be displayed and the event can still be booked. Only the payment processing after booking will not take place (e.g., redirection to PayPal).' },
-                    { heading: 'Tiered fee allocation', body: 'Tiered fees are always relative to the standard fee (either as a percentage or an absolute amount). Therefore, if the standard price is adjusted, all tiered fees will also change.' }
+                    { heading: 'Inklusive MwSt.', body: 'Alle Gebühren enthalten standardmäßig die Mehrwertsteuer; die Anzeige kann in den Einstellungen so geändert werden, dass nur Nettopreise angezeigt werden.' },
+                    { heading: 'Zahlungsverarbeitung', body: 'Wenn die Zahlungsverarbeitung deaktiviert ist, werden die Gebühren weiterhin angezeigt und die Veranstaltung kann weiterhin gebucht werden. Nur die Zahlungsabwicklung nach der Buchung entfällt (z. B. Weiterleitung zum Zahlungsanbieter).' },
+                    { heading: 'Gestaffelte Gebühren', body: 'Gestaffelte Gebühren beziehen sich immer auf die Standardgebühr (entweder als Prozentsatz oder als absoluter Betrag). Wird der Standardpreis angepasst, ändern sich daher auch alle gestaffelten Gebühren.' }
                 ]}
             />
         </Grid>
