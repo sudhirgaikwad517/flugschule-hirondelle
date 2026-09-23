@@ -19,7 +19,25 @@ interface Config {
   unsubscribeColor: string;
   gdprExportEnabled: boolean;
   gdprDeleteEnabled: boolean;
+  socialLinks: Record<string, string>;
 }
+
+// old: hiron_acym_configuration's social_icons (facebook/instagram/twitter/
+// linkedin/pinterest/vimeo/wordpress/youtube/x/telegram) - old's values were
+// just its own stock icon-image paths, not real profile links, so only
+// Facebook (the one confirmed real, active account - see Home.tsx's live
+// Facebook page widget) is pre-filled; the rest are left for the admin to
+// fill in if/when those accounts exist.
+const SOCIAL_PLATFORMS: { key: string; label: string }[] = [
+  { key: 'facebook', label: 'Facebook' },
+  { key: 'instagram', label: 'Instagram' },
+  { key: 'twitter', label: 'Twitter / X' },
+  { key: 'youtube', label: 'YouTube' },
+  { key: 'linkedin', label: 'LinkedIn' },
+  { key: 'pinterest', label: 'Pinterest' },
+  { key: 'vimeo', label: 'Vimeo' },
+  { key: 'telegram', label: 'Telegram' },
+];
 
 const DEFAULT_CONFIG: Config = {
   id: 'default',
@@ -36,7 +54,8 @@ const DEFAULT_CONFIG: Config = {
   unsubscribeTitle: '',
   unsubscribeColor: '#00a4ff',
   gdprExportEnabled: true,
-  gdprDeleteEnabled: true
+  gdprDeleteEnabled: true,
+  socialLinks: { facebook: 'https://www.facebook.com/fshirondelle' }
 };
 
 export const AcyConfiguration = () => {
@@ -59,7 +78,13 @@ export const AcyConfiguration = () => {
       });
       if (res.ok) {
         const data = await res.json();
-        setConfig({ ...DEFAULT_CONFIG, ...data });
+        let socialLinks = DEFAULT_CONFIG.socialLinks;
+        if (typeof data.socialLinks === 'string' && data.socialLinks) {
+          try { socialLinks = JSON.parse(data.socialLinks); } catch { /* keep default */ }
+        } else if (data.socialLinks && typeof data.socialLinks === 'object') {
+          socialLinks = data.socialLinks;
+        }
+        setConfig({ ...DEFAULT_CONFIG, ...data, socialLinks });
       }
     } catch (error) {
       console.error(error);
@@ -99,6 +124,10 @@ export const AcyConfiguration = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : type === 'number' ? Number(value) : value
     }));
+  };
+
+  const handleSocialChange = (platform: string, value: string) => {
+    setConfig(prev => ({ ...prev, socialLinks: { ...prev.socialLinks, [platform]: value } }));
   };
 
   const handleGdprExport = async () => {
@@ -156,7 +185,8 @@ export const AcyConfiguration = () => {
     { id: 'mail', label: 'Mail-Konfiguration' },
     { id: 'queue', label: 'Warteschlange' },
     { id: 'subscription', label: 'Abonnement' },
-    { id: 'gdpr', label: 'Datenschutz' }
+    { id: 'gdpr', label: 'Datenschutz' },
+    { id: 'social', label: 'Social Media' }
   ];
 
   return (
@@ -403,6 +433,28 @@ export const AcyConfiguration = () => {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'social' && (
+          <div className="space-y-6 max-w-2xl">
+            <h3 className="text-lg font-medium text-slate-800 border-b border-slate-100 pb-2">Social-Media-Links</h3>
+            <p className="text-sm text-slate-500">
+              Diese Links stehen im E-Mail-Editor (Kampagne bearbeiten) als Social-Media-Icons-Block zur Verfügung.
+              Leer lassen, wenn kein Konto für diese Plattform existiert.
+            </p>
+            {SOCIAL_PLATFORMS.map(({ key, label }) => (
+              <div key={key}>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
+                <input
+                  type="url"
+                  value={config.socialLinks[key] || ''}
+                  onChange={(e) => handleSocialChange(key, e.target.value)}
+                  placeholder={`https://...`}
+                  className="w-full px-3 py-2 border border-slate-300 rounded focus:ring-[#0ea5e9] focus:border-[#0ea5e9]"
+                />
+              </div>
+            ))}
           </div>
         )}
       </div>

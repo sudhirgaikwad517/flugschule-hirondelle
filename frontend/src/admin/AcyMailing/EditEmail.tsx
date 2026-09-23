@@ -92,6 +92,67 @@ export const AcyEditEmail = () => {
     }
   }, [isNew, templateId]);
 
+  useEffect(() => {
+    const fetchSocialLinks = async () => {
+      try {
+        const token = localStorage.getItem('auth');
+        const res = await fetch('/api/newsletterconfig/default', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (typeof data.socialLinks === 'string' && data.socialLinks) {
+            setSocialLinks(JSON.parse(data.socialLinks));
+          } else if (data.socialLinks && typeof data.socialLinks === 'object') {
+            setSocialLinks(data.socialLinks);
+          }
+        }
+      } catch (e) {}
+    };
+    fetchSocialLinks();
+  }, []);
+
+  // Appends a plain text-links row (same Unlayer "text" content type this
+  // app's own real templates already use, not the untested "social" tool -
+  // this only ever needs to render a handful of clickable links, and
+  // reusing a content type this exact Unlayer embed version is already
+  // confirmed to render correctly is safer than guessing at the "social"
+  // tool's current internal schema) with only the platforms that have a
+  // real URL configured in AcyMailing > Konfiguration > Social Media.
+  const insertSocialIcons = () => {
+    const entries = Object.entries(socialLinks).filter(([, url]) => url && url.trim());
+    if (entries.length === 0) {
+      alert('Keine Social-Media-Links konfiguriert. Bitte zuerst unter AcyMailing > Konfiguration > Social Media eintragen.');
+      return;
+    }
+    if (!window.unlayer) return;
+
+    const labels: Record<string, string> = {
+      facebook: 'Facebook', instagram: 'Instagram', twitter: 'Twitter / X',
+      youtube: 'YouTube', linkedin: 'LinkedIn', pinterest: 'Pinterest',
+      vimeo: 'Vimeo', telegram: 'Telegram'
+    };
+    const linksHtml = entries
+      .map(([key, url]) => `<a href="${url}" target="_blank" style="color:#0ea5e9;text-decoration:none;margin:0 10px;">${labels[key] || key}</a>`)
+      .join('');
+
+    window.unlayer.exportHtml((data: any) => {
+      const design = data.design;
+      design.body.rows.push({
+        cells: [1],
+        columns: [{
+          contents: [{
+            type: 'text',
+            values: { text: `<p style="text-align:center;">${linksHtml}</p>`, padding: '15px', textAlign: 'center' }
+          }],
+          values: {}
+        }],
+        values: {}
+      });
+      window.unlayer.loadDesign(design);
+    });
+  };
+
   const [saving, setSaving] = useState(false);
   const [sendMode, setSendMode] = useState<'jetzt' | 'geplant'>('jetzt');
   const editorInitialized = useRef(false);
@@ -99,6 +160,7 @@ export const AcyEditEmail = () => {
   const [dynamicTextTab, setDynamicTextTab] = useState('subscription');
   const [wrapTextInputs, setWrapTextInputs] = useState<Record<string, string>>({});
   const [uploadingAttachment, setUploadingAttachment] = useState(false);
+  const [socialLinks, setSocialLinks] = useState<Record<string, string>>({});
   const lastFocusedField = useRef<'subject' | 'previewLine'>('subject');
   const subjectRef = useRef<HTMLInputElement>(null);
   const previewLineRef = useRef<HTMLInputElement>(null);
@@ -720,6 +782,15 @@ export const AcyEditEmail = () => {
               </div>
 
               <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                <div className="px-3 py-2 border-b border-slate-100">
+                  <button
+                    type="button"
+                    onClick={insertSocialIcons}
+                    className="px-4 py-2 border border-[#0ea5e9] text-[#0ea5e9] rounded font-medium hover:bg-sky-50 transition-colors text-sm"
+                  >
+                    Social-Media-Icons einfügen
+                  </button>
+                </div>
                 <div id="editor-container" style={{ height: '600px', width: '100%' }}></div>
               </div>
 

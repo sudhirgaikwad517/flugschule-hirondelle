@@ -477,6 +477,13 @@ model NewsletterConfig {
   // Datenschutz (GDPR)
   gdprExportEnabled Boolean @default(true)
   gdprDeleteEnabled Boolean @default(true)
+
+  // old: hiron_acym_configuration's social_icons - available for a
+  // campaign's social-icons footer block. JSON string keyed by platform
+  // (facebook/instagram/twitter/linkedin/youtube/pinterest/vimeo/
+  // wordpress/x/telegram), each value the real profile URL or "" if the
+  // business has no account on that platform.
+  socialLinks String? @db.Text
 }
 
 model Organizer {

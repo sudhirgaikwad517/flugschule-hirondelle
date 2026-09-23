@@ -76,7 +76,7 @@ router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
       smtpHost, smtpPort, smtpUser, smtpPass, fromEmail, fromName,
       queueBatchSize, queuePauseSeconds, queueMaxRetries,
       requireConfirmation, unsubscribeTitle, unsubscribeColor,
-      gdprExportEnabled, gdprDeleteEnabled
+      gdprExportEnabled, gdprDeleteEnabled, socialLinks
     } = req.body;
     // Trim to guard against accidental leading/trailing spaces from copy-paste,
     // which silently break SMTP host/credential lookups (e.g. DNS resolution).
@@ -94,7 +94,8 @@ router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
       unsubscribeTitle: trim(unsubscribeTitle),
       unsubscribeColor: trim(unsubscribeColor),
       gdprExportEnabled,
-      gdprDeleteEnabled
+      gdprDeleteEnabled,
+      socialLinks: socialLinks !== undefined ? (typeof socialLinks === 'string' ? socialLinks : JSON.stringify(socialLinks)) : undefined
     };
     // Blank/omitted password means "keep the existing one" - the client never
     // receives the real value back to resend, so only overwrite when a new
