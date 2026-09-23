@@ -36,6 +36,7 @@ export const AcySubscribers = () => {
   const [filterList, setFilterList] = useState('');
   const [filterDate, setFilterDate] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [page, setPage] = useState(1);
   const [newSub, setNewSub] = useState({ email: '', name: '', listType: 'GENERAL' });
   const [mailingLists, setMailingLists] = useState<{ id: string; code: string; name: string; color: string }[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -45,6 +46,10 @@ export const AcySubscribers = () => {
     fetchSubscribers();
     fetchMailingLists();
   }, []);
+
+  useEffect(() => {
+    setPage(1);
+  }, [activeTab, searchQuery, filterList, filterDate, sortBy]);
 
   const fetchMailingLists = async () => {
     try {
@@ -196,6 +201,15 @@ export const AcySubscribers = () => {
     if (sortBy === 'id') return a.id.localeCompare(b.id);
     return 0;
   });
+
+  // With 6000+ real subscribers, rendering every filtered row into the DOM
+  // at once (no pagination existed before) made this page take 30+ seconds
+  // to become responsive - "Auswählen" (select-all) still operates on the
+  // full filtered set below, only the on-screen table is paginated.
+  const PAGE_SIZE = 100;
+  const pageCount = Math.max(1, Math.ceil(filteredSubscribers.length / PAGE_SIZE));
+  const clampedPage = Math.min(page, pageCount);
+  const paginatedSubscribers = filteredSubscribers.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
@@ -529,7 +543,7 @@ export const AcySubscribers = () => {
                   <td colSpan={9} className="px-4 py-8 text-center text-slate-400">Keine Abonnenten in dieser Kategorie gefunden.</td>
                 </tr>
               ) : (
-                filteredSubscribers.map((sub) => (
+                paginatedSubscribers.map((sub) => (
                   <tr key={sub.id} className="hover:bg-slate-50 transition-colors group">
                     <td className="px-4 py-3 text-center">
                       <input 
@@ -593,6 +607,30 @@ export const AcySubscribers = () => {
             </tbody>
           </table>
         </div>
+        {filteredSubscribers.length > 0 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 text-sm text-slate-600">
+            <span>
+              {(clampedPage - 1) * PAGE_SIZE + 1}-{Math.min(clampedPage * PAGE_SIZE, filteredSubscribers.length)} von {filteredSubscribers.length}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={clampedPage <= 1}
+                className="px-3 py-1 rounded border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50"
+              >
+                Zurück
+              </button>
+              <span>Seite {clampedPage} / {pageCount}</span>
+              <button
+                onClick={() => setPage(p => Math.min(pageCount, p + 1))}
+                disabled={clampedPage >= pageCount}
+                className="px-3 py-1 rounded border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50"
+              >
+                Weiter
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Create Modal */}
