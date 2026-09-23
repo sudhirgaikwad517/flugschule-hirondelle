@@ -63,14 +63,37 @@ html, body {
   max-width: 100vw;
 }
 
-body.admin-root .RaLayout-root {
-  min-width: 0;
+/* !important on these: MUI's own emotion-injected CSS wins over a plain
+   external-stylesheet rule here (RaLayout-appFrame's own default resolves
+   to min-width:auto) - confirmed live: without !important these computed
+   to auto instead of 0, the exact same class of bug the min-width:0 rules
+   below this comment block were written to fix, just one level further up
+   the tree (outside #main-content, wrapping the whole sidebar+content
+   layout) - a wide Datagrid still forced the ENTIRE page layout to grow
+   past the viewport instead of just its own list content, with nothing to
+   scroll it back into view since html's overflow-x:hidden clips it
+   silently with no scrollbar at all.
+   `.RaLayout-root` (the outermost wrapper, one level above appFrame) turns
+   out to NEVER actually match here - CustomLayout.tsx's own <Layout>
+   renders that element's className as "layout css-XXXXX-RaLayout-root", a
+   single compound emotion-generated token, not two separate class names,
+   so ".RaLayout-root" as a selector was silently a no-op the whole time
+   despite looking correct - `.layout` (the other, genuinely standalone
+   token on that same element) is the one that actually works, confirmed
+   live: only after targeting `.layout` did the outermost flex container
+   finally shrink to the viewport instead of staying pinned at its
+   content's full min-content width. */
+body.admin-root .layout {
+  min-width: 0 !important;
+}
+body.admin-root .RaLayout-appFrame {
+  min-width: 0 !important;
 }
 body.admin-root .RaLayout-contentWithSidebar {
-  min-width: 0;
+  min-width: 0 !important;
 }
 body.admin-root #main-content {
-  min-width: 0;
+  min-width: 0 !important;
 }
 /* This was the actual missing link the whole time: react-admin's <List>
    renders .list-page (flex row) > .RaList-main (flex column, flex:1 1
@@ -258,14 +281,37 @@ html, body {
   max-width: 100vw;
 }
 
-body.admin-root .RaLayout-root {
-  min-width: 0;
+/* !important on these: MUI's own emotion-injected CSS wins over a plain
+   external-stylesheet rule here (RaLayout-appFrame's own default resolves
+   to min-width:auto) - confirmed live: without !important these computed
+   to auto instead of 0, the exact same class of bug the min-width:0 rules
+   below this comment block were written to fix, just one level further up
+   the tree (outside #main-content, wrapping the whole sidebar+content
+   layout) - a wide Datagrid still forced the ENTIRE page layout to grow
+   past the viewport instead of just its own list content, with nothing to
+   scroll it back into view since html's overflow-x:hidden clips it
+   silently with no scrollbar at all.
+   `.RaLayout-root` (the outermost wrapper, one level above appFrame) turns
+   out to NEVER actually match here - CustomLayout.tsx's own <Layout>
+   renders that element's className as "layout css-XXXXX-RaLayout-root", a
+   single compound emotion-generated token, not two separate class names,
+   so ".RaLayout-root" as a selector was silently a no-op the whole time
+   despite looking correct - `.layout` (the other, genuinely standalone
+   token on that same element) is the one that actually works, confirmed
+   live: only after targeting `.layout` did the outermost flex container
+   finally shrink to the viewport instead of staying pinned at its
+   content's full min-content width. */
+body.admin-root .layout {
+  min-width: 0 !important;
+}
+body.admin-root .RaLayout-appFrame {
+  min-width: 0 !important;
 }
 body.admin-root .RaLayout-contentWithSidebar {
-  min-width: 0;
+  min-width: 0 !important;
 }
 body.admin-root #main-content {
-  min-width: 0;
+  min-width: 0 !important;
 }
 /* This was the actual missing link the whole time: react-admin's <List>
    renders .list-page (flex row) > .RaList-main (flex column, flex:1 1
@@ -419,6 +465,32 @@ h1, h2, h3, h4, h5, h6, .nav-item {
   to { width: 100%; }
 }
 .RaBulkActionsToolbar-collapsed { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }
+/* When rows ARE selected, the bulk-actions toolbar (Löschen etc.) is meant
+   to visually overlay/replace the normal list toolbar (+Erstellen /
+   Exportieren) at the exact same position - that's by design, react-admin
+   renders both stacked on top of each other and only one is meant to win.
+   Confirmed live via elementFromPoint at the bulk toolbar's own screen
+   coordinates: the normal RaTopToolbar was the one actually painted on
+   top, silently hiding the bulk toolbar underneath it despite the bulk
+   toolbar's own zIndex:3 and fully "visible" computed style - not a
+   collapsed/hidden state, a genuine stacking-order loss. Forcing it above
+   MUI's own AppBar z-index (1100) guarantees it wins the overlap without
+   touching RaList-actions/RaTopToolbar's own stacking at all. */
+body.admin-root .RaBulkActionsToolbar-toolbar {
+  z-index: 1200 !important;
+}
+/* z-index alone on the toolbar above doesn't reach far enough: it's nested
+   three levels inside .RaList-content (the Card wrapping the Datagrid),
+   which is RaList-actions' SIBLING under .RaList-main with no z-index of
+   its own (auto) - z-index only ever competes within a shared stacking
+   context, and .RaList-content never established one for its subtree to
+   win or lose as a unit against that sibling. Giving the Card itself an
+   explicit stacking context (any z-index other than auto) is what finally
+   lets its bulk-toolbar descendant's z-index:1200 actually count for
+   something at the point where the two toolbars visually overlap. */
+body.admin-root .RaList-content {
+  z-index: 1 !important;
+}
 
 /* Admin-authored Seiten (Unlayer CMS, see Pages.tsx/DynamicPage.tsx) content
    should look like it belongs on this site by default, without the admin
