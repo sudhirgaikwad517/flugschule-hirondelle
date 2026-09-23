@@ -47,14 +47,14 @@ export const Footer = () => {
         await fetch('/api/newsletters/subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, listType: 'GENERAL' })
+          body: JSON.stringify({ email, name, listType: 'GENERAL' })
         });
       }
       if (tandemNewsletter) {
         await fetch('/api/newsletters/subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, listType: 'TANDEM' })
+          body: JSON.stringify({ email, name, listType: 'TANDEM' })
         });
       }
       setStatusMsg('Erfolgreich abonniert!');

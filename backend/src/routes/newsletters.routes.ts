@@ -29,11 +29,12 @@ async function sendConfirmationEmail(email: string, token: string, config: { fro
 // Public subscribe endpoint
 router.post('/subscribe', async (req, res) => {
   try {
-    const { email, listType = 'GENERAL' } = req.body;
-    
+    const { email, name, listType = 'GENERAL' } = req.body;
+
     if (!email || typeof email !== 'string') {
       return res.status(400).json({ message: 'Valid email is required' });
     }
+    const cleanName = typeof name === 'string' && name.trim() ? name.trim() : null;
 
     const config = await prisma.newsletterConfig.findUnique({ where: { id: 'default' } });
     const requireConfirmation = config?.requireConfirmation || false;
@@ -57,7 +58,8 @@ router.post('/subscribe', async (req, res) => {
             isActive: true,
             subscribedAt: new Date(),
             isConfirmed: !requireConfirmation,
-            confirmToken
+            confirmToken,
+            ...(cleanName ? { name: cleanName } : {})
           }
         });
         if (requireConfirmation && confirmToken) {
@@ -72,6 +74,7 @@ router.post('/subscribe', async (req, res) => {
     await prisma.newsletter.create({
       data: {
         email: email.toLowerCase(),
+        name: cleanName,
         listType,
         isActive: true,
         isConfirmed: !requireConfirmation,

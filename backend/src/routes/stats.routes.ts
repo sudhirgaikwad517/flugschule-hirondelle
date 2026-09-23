@@ -246,19 +246,33 @@ router.get('/acymailing', authenticateJWT, authorizeAdmin, async (req, res) => {
             }
         });
 
-        // Real open/click/bounce rates from actual delivery + tracking-pixel/click-redirect data
-        const [totalSentCount, totalQueueCount, failedCount, openEvents, clickEvents] = await Promise.all([
-            prisma.newsletterQueue.count({ where: { status: 'SENT' } }),
+        // Bounce rate stays NewsletterQueue-based - a real SMTP-level delivery
+        // failure only has meaning for sends this app actually attempted, and
+        // the 677 migrated historical campaigns never had their bounce
+        // history migrated (a deliberate earlier scope decision), so there's
+        // no equivalent historical figure to fold in here.
+        const [totalQueueCount, failedCount] = await Promise.all([
             prisma.newsletterQueue.count(),
-            prisma.newsletterQueue.count({ where: { status: 'FAILED' } }),
-            prisma.newsletterTrackingEvent.findMany({ where: { type: 'OPEN' }, select: { campaignId: true, subscriberEmail: true } }),
-            prisma.newsletterTrackingEvent.findMany({ where: { type: 'CLICK' }, select: { campaignId: true, subscriberEmail: true } })
+            prisma.newsletterQueue.count({ where: { status: 'FAILED' } })
         ]);
 
-        // Count unique (campaign, subscriber) pairs so repeated pixel loads / link
-        // clicks by the same person don't inflate the rate.
-        const uniqueOpens = new Set(openEvents.map(e => `${e.campaignId}:${e.subscriberEmail}`)).size;
-        const uniqueClicks = new Set(clickEvents.map(e => `${e.campaignId}:${e.subscriberEmail}`)).size;
+        // Open/click rate, by contrast, DOES have a real historical
+        // equivalent: NewsletterCampaign.recipientsCount/opensCount/
+        // clicksCount are kept live-incremented for real sends (see
+        // newsletterQueueProcessor.ts and track.routes.ts) AND were
+        // populated for the 677 migrated historical campaigns at migration
+        // time - summing straight from NewsletterCampaign covers both, unlike
+        // the previous NewsletterQueue/NewsletterTrackingEvent-only query,
+        // which only ever saw real new-app sends and silently showed 0%
+        // globally despite individual migrated campaigns showing real,
+        // non-zero open/click rates on the Emails list.
+        const sentAggregates = await prisma.newsletterCampaign.aggregate({
+            where: { status: 'SENT' },
+            _sum: { recipientsCount: true, opensCount: true, clicksCount: true }
+        });
+        const totalRecipients = sentAggregates._sum.recipientsCount || 0;
+        const totalOpens = sentAggregates._sum.opensCount || 0;
+        const totalClicks = sentAggregates._sum.clicksCount || 0;
 
         res.json({
             overview: {
@@ -266,8 +280,8 @@ router.get('/acymailing', authenticateJWT, authorizeAdmin, async (req, res) => {
                 activeSubscribers,
                 totalLists,
                 totalCampaigns,
-                globalOpenRate: totalSentCount > 0 ? Number(((uniqueOpens / totalSentCount) * 100).toFixed(1)) : 0,
-                globalClickRate: totalSentCount > 0 ? Number(((uniqueClicks / totalSentCount) * 100).toFixed(1)) : 0,
+                globalOpenRate: totalRecipients > 0 ? Number(((totalOpens / totalRecipients) * 100).toFixed(1)) : 0,
+                globalClickRate: totalRecipients > 0 ? Number(((totalClicks / totalRecipients) * 100).toFixed(1)) : 0,
                 bounceRate: totalQueueCount > 0 ? Number(((failedCount / totalQueueCount) * 100).toFixed(1)) : 0
             },
             history: Array.from(historyMap.values())
