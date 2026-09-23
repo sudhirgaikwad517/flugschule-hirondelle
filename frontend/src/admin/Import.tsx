@@ -28,7 +28,11 @@ export const Import = () => {
         // Fetch categories for the dropdowns
         dataProvider.getList('categories', {
             pagination: { page: 1, perPage: 100 },
-            sort: { field: 'name', order: 'ASC' },
+            // Category's actual field is `title`, not `name` - sorting by a
+            // nonexistent field crashed the backend's Prisma orderBy with a
+            // 500, and the silently-swallowed catch below meant this
+            // dropdown was always empty with no visible error to the admin.
+            sort: { field: 'title', order: 'ASC' },
             filter: {}
         }).then(({ data }) => setCategories(data))
           .catch(error => console.error("Failed to load categories", error));
