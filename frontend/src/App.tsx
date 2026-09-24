@@ -46,6 +46,16 @@ import { ServiceAuftrag } from './pages/ServiceAuftrag';
 import { Team } from './pages/Team';
 import { Gelaende } from './pages/Gelaende';
 import { GelaendeDetail } from './pages/GelaendeDetail';
+import { Billings } from './pages/Billings';
+import { Erlau } from './pages/Erlau';
+import { Gadern } from './pages/Gadern';
+import { LindenfelsGelaende } from './pages/Lindenfels';
+import { NonrodNordost } from './pages/NonrodNordost';
+import { Nonrod } from './pages/Nonrod';
+import { Stauf } from './pages/Stauf';
+import { Winterkasten } from './pages/Winterkasten';
+import { BadKreuznach } from './pages/BadKreuznach';
+import { Herrenteich } from './pages/Herrenteich';
 import { Wetter } from './pages/Wetter';
 import { Medien } from './pages/Medien';
 import { Gruppenevents } from './pages/Gruppenevents';
@@ -86,47 +96,57 @@ function App() {
             </ErrorBoundary>
           } />
           <Route path="ausbildung" element={<FixedPageGate kind="ausbildung" defaultSlug="ausbildung"><Ausbildung /></FixedPageGate>} />
-          <Route path="ausbildung/schnupperkurs" element={<Schnupperkurs />} />
-          <Route path="ausbildung/l-schein" element={<LSchein />} />
-          <Route path="ausbildung/a-schein" element={<ASchein />} />
-          <Route path="ausbildung/b-schein" element={<BSchein />} />
-          <Route path="ausbildung/windenschein" element={<Windenschein />} />
-          <Route path="ausbildung/tandemschein" element={<Tandemschein />} />
-          <Route path="ausbildung/ausbildungskonzept" element={<Ausbildungskonzept />} />
+          <Route path="ausbildung/schnupperkurs" element={<FixedPageGate kind="schnupperkurs" defaultSlug="schnupperkurs"><Schnupperkurs /></FixedPageGate>} />
+          <Route path="ausbildung/l-schein" element={<FixedPageGate kind="l-schein" defaultSlug="l-schein"><LSchein /></FixedPageGate>} />
+          <Route path="ausbildung/a-schein" element={<FixedPageGate kind="a-schein" defaultSlug="a-schein"><ASchein /></FixedPageGate>} />
+          <Route path="ausbildung/b-schein" element={<FixedPageGate kind="b-schein" defaultSlug="b-schein"><BSchein /></FixedPageGate>} />
+          <Route path="ausbildung/windenschein" element={<FixedPageGate kind="windenschein" defaultSlug="windenschein"><Windenschein /></FixedPageGate>} />
+          <Route path="ausbildung/tandemschein" element={<FixedPageGate kind="tandemschein" defaultSlug="tandemschein"><Tandemschein /></FixedPageGate>} />
+          <Route path="ausbildung/ausbildungskonzept" element={<FixedPageGate kind="ausbildungskonzept" defaultSlug="ausbildungskonzept"><Ausbildungskonzept /></FixedPageGate>} />
           <Route path="performance" element={<FixedPageGate kind="performance" defaultSlug="performance"><Performance /></FixedPageGate>} />
-          <Route path="performance/sicherheitstraining" element={<Sicherheitstraining />} />
-          <Route path="performance/rettungsgeraetetraining" element={<Rettungsgeraetetraining />} />
+          <Route path="performance/sicherheitstraining" element={<FixedPageGate kind="sicherheitstraining" defaultSlug="sicherheitstraining"><Sicherheitstraining /></FixedPageGate>} />
+          <Route path="performance/rettungsgeraetetraining" element={<FixedPageGate kind="rettungsgeraetetraining" defaultSlug="rettungsgeraetetraining"><Rettungsgeraetetraining /></FixedPageGate>} />
           <Route path="performance/refresher" element={<Refresher />} />
-          <Route path="performance/groundhandling" element={<Groundhandling />} />
+          <Route path="performance/groundhandling" element={<FixedPageGate kind="groundhandling" defaultSlug="groundhandling"><Groundhandling /></FixedPageGate>} />
           <Route path="reisen" element={<FixedPageGate kind="reisen" defaultSlug="reisen"><Reisen /></FixedPageGate>} />
-          <Route path="reisen/brasilien-tour" element={<BrasilienTour />} />
-          <Route path="reisen/kolumbien-tour" element={<KolumbienTour />} />
-          <Route path="reisen/suedafrika-tour" element={<SuedafrikaTour />} />
-          <Route path="reisen/bassano-tour" element={<BassanoTour />} />
-          <Route path="reisen/griechenland-tour" element={<GriechenlandTour />} />
-          <Route path="reisen/slowenien-tour" element={<SlowenienTour />} />
-          <Route path="reisen/bergamo-tour" element={<BergamoTour />} />
-          <Route path="reisen/savoye-tour" element={<SavoyeTour />} />
-          <Route path="reisen/vogesen-tour" element={<VogesenTour />} />
-          <Route path="reisen/pfalz-tour" element={<PfalzTour />} />
+          <Route path="reisen/brasilien-tour" element={<FixedPageGate kind="brasilien-tour" defaultSlug="brasilien-tour"><BrasilienTour /></FixedPageGate>} />
+          <Route path="reisen/kolumbien-tour" element={<FixedPageGate kind="kolumbien-tour" defaultSlug="kolumbien-tour"><KolumbienTour /></FixedPageGate>} />
+          <Route path="reisen/suedafrika-tour" element={<FixedPageGate kind="suedafrika-tour" defaultSlug="suedafrika-tour"><SuedafrikaTour /></FixedPageGate>} />
+          <Route path="reisen/bassano-tour" element={<FixedPageGate kind="bassano-tour" defaultSlug="bassano-tour"><BassanoTour /></FixedPageGate>} />
+          <Route path="reisen/griechenland-tour" element={<FixedPageGate kind="griechenland-tour" defaultSlug="griechenland-tour"><GriechenlandTour /></FixedPageGate>} />
+          <Route path="reisen/slowenien-tour" element={<FixedPageGate kind="slowenien-tour" defaultSlug="slowenien-tour"><SlowenienTour /></FixedPageGate>} />
+          <Route path="reisen/bergamo-tour" element={<FixedPageGate kind="bergamo-tour" defaultSlug="bergamo-tour"><BergamoTour /></FixedPageGate>} />
+          <Route path="reisen/savoye-tour" element={<FixedPageGate kind="savoye-tour" defaultSlug="savoye-tour"><SavoyeTour /></FixedPageGate>} />
+          <Route path="reisen/vogesen-tour" element={<FixedPageGate kind="vogesen-tour" defaultSlug="vogesen-tour"><VogesenTour /></FixedPageGate>} />
+          <Route path="reisen/pfalz-tour" element={<FixedPageGate kind="pfalz-tour" defaultSlug="pfalz-tour"><PfalzTour /></FixedPageGate>} />
           <Route path="buchungskalender" element={<Buchungskalender />} />
           <Route path="buchungskalender/:eventId" element={<Buchungskalender />} />
           <Route path="tandem" element={<Tandem />} />
           <Route path="service" element={<FixedPageGate kind="service" defaultSlug="service"><Service /></FixedPageGate>} />
-          <Route path="service/2-jahres-check" element={<ZweiJahresCheck />} />
-          <Route path="service/rettungspacken" element={<Rettungspacken />} />
-          <Route path="service/trimmtuning" element={<Trimmtuning />} />
-          <Route path="service/reparatur" element={<ReparaturService />} />
+          <Route path="service/2-jahres-check" element={<FixedPageGate kind="2-jahres-check" defaultSlug="2-jahres-check"><ZweiJahresCheck /></FixedPageGate>} />
+          <Route path="service/rettungspacken" element={<FixedPageGate kind="rettungspacken" defaultSlug="rettungspacken"><Rettungspacken /></FixedPageGate>} />
+          <Route path="service/trimmtuning" element={<FixedPageGate kind="trimmtuning" defaultSlug="trimmtuning"><Trimmtuning /></FixedPageGate>} />
+          <Route path="service/reparatur" element={<FixedPageGate kind="reparatur" defaultSlug="reparatur"><ReparaturService /></FixedPageGate>} />
           <Route path="service/service-auftrag" element={<ServiceAuftrag />} />
           <Route path="infos" element={<FixedPageGate kind="infos" defaultSlug="infos"><Infos /></FixedPageGate>} />
-          <Route path="infos/team" element={<Team />} />
-          <Route path="infos/gelaende" element={<Gelaende />} />
+          <Route path="infos/team" element={<FixedPageGate kind="team" defaultSlug="team"><Team /></FixedPageGate>} />
+          <Route path="infos/gelaende" element={<FixedPageGate kind="gelaende" defaultSlug="gelaende"><Gelaende /></FixedPageGate>} />
+          <Route path="infos/gelaende/billings" element={<FixedPageGate kind="billings" defaultSlug="billings"><Billings /></FixedPageGate>} />
+          <Route path="infos/gelaende/erlau" element={<FixedPageGate kind="erlau" defaultSlug="erlau"><Erlau /></FixedPageGate>} />
+          <Route path="infos/gelaende/gadern" element={<FixedPageGate kind="gadern" defaultSlug="gadern"><Gadern /></FixedPageGate>} />
+          <Route path="infos/gelaende/lindenfels" element={<FixedPageGate kind="lindenfels" defaultSlug="lindenfels"><LindenfelsGelaende /></FixedPageGate>} />
+          <Route path="infos/gelaende/nonrod-nordost" element={<FixedPageGate kind="nonrod-nordost" defaultSlug="nonrod-nordost"><NonrodNordost /></FixedPageGate>} />
+          <Route path="infos/gelaende/nonrod" element={<FixedPageGate kind="nonrod" defaultSlug="nonrod"><Nonrod /></FixedPageGate>} />
+          <Route path="infos/gelaende/stauf" element={<FixedPageGate kind="stauf" defaultSlug="stauf"><Stauf /></FixedPageGate>} />
+          <Route path="infos/gelaende/winterkasten" element={<FixedPageGate kind="winterkasten" defaultSlug="winterkasten"><Winterkasten /></FixedPageGate>} />
+          <Route path="infos/gelaende/bad-kreuznach" element={<FixedPageGate kind="bad-kreuznach" defaultSlug="bad-kreuznach"><BadKreuznach /></FixedPageGate>} />
+          <Route path="infos/gelaende/herrenteich" element={<FixedPageGate kind="herrenteich" defaultSlug="herrenteich"><Herrenteich /></FixedPageGate>} />
           <Route path="infos/gelaende/:slug" element={<GelaendeDetail />} />
-          <Route path="infos/wetter" element={<Wetter />} />
-          <Route path="infos/medien" element={<Medien />} />
-          <Route path="infos/gruppenevents" element={<Gruppenevents />} />
-          <Route path="infos/gutscheine" element={<Gutscheine />} />
-          <Route path="infos/versicherungen" element={<Versicherungen />} />
+          <Route path="infos/wetter" element={<FixedPageGate kind="wetter" defaultSlug="wetter"><Wetter /></FixedPageGate>} />
+          <Route path="infos/medien" element={<FixedPageGate kind="medien" defaultSlug="medien"><Medien /></FixedPageGate>} />
+          <Route path="infos/gruppenevents" element={<FixedPageGate kind="gruppenevents" defaultSlug="gruppenevents"><Gruppenevents /></FixedPageGate>} />
+          <Route path="infos/gutscheine" element={<FixedPageGate kind="gutscheine" defaultSlug="gutscheine"><Gutscheine /></FixedPageGate>} />
+          <Route path="infos/versicherungen" element={<FixedPageGate kind="versicherungen" defaultSlug="versicherungen"><Versicherungen /></FixedPageGate>} />
           <Route path="agb" element={<LegalPage slug="agb" />} />
           <Route path="widerrufsbelehrung" element={<LegalPage slug="widerruf" />} />
           <Route path="faq" element={<FAQ />} />

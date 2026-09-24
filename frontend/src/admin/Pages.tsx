@@ -6,12 +6,10 @@ import {
   Box,
   Button,
   CircularProgress,
-  FormControlLabel,
   IconButton,
   InputAdornment,
   MenuItem,
   Paper,
-  Switch,
   Table,
   TableBody,
   TableCell,
@@ -165,16 +163,63 @@ const describeApiError = (res: Response, data: any, fallback: string): string =>
 // e.g. /ausbildung is a real route in App.tsx that always exists - so it
 // deletes the saved customization row instead (DELETE deletePath), which
 // resets the page back to its hardcoded default text/images/links.
+// `hasSettings: true` means this kind also has a FixedPageSettings row
+// (title/URL/publish-status, redirect-based rename - see
+// fixedPageSettings.routes.ts) on top of its content. The 7 /infos/* sub-
+// pages don't: they have no top-level hardcoded route of their own to
+// redirect from, so only their content (and, below, a full Duplizieren via
+// FixedPageDuplicate) is editable, same as the original 6.
 const FIXED_PAGES = [
-  { title: 'Startseite', editPath: '/admin/home-content', previewPath: '/', deletePath: '/api/homecontent/default', kind: 'home' },
-  { title: 'Ausbildung', editPath: '/admin/ausbildung-content', previewPath: '/ausbildung', deletePath: '/api/sitepagecontent/ausbildung', kind: 'ausbildung' },
-  { title: 'Performance', editPath: '/admin/performance-content', previewPath: '/performance', deletePath: '/api/sitepagecontent/performance', kind: 'performance' },
-  { title: 'Reisen', editPath: '/admin/reisen-content', previewPath: '/reisen', deletePath: '/api/sitepagecontent/reisen', kind: 'reisen' },
-  { title: 'Service', editPath: '/admin/service-content', previewPath: '/service', deletePath: '/api/sitepagecontent/service', kind: 'service' },
-  { title: 'Infos / Kontakt', editPath: '/admin/infos-content', previewPath: '/infos', deletePath: '/api/sitepagecontent/infos', kind: 'infos' },
+  { title: 'Startseite', editPath: '/admin/home-content', previewPath: '/', deletePath: '/api/homecontent/default', kind: 'home', hasSettings: true },
+  { title: 'Ausbildung', editPath: '/admin/ausbildung-content', previewPath: '/ausbildung', deletePath: '/api/sitepagecontent/ausbildung', kind: 'ausbildung', hasSettings: true },
+  { title: 'Performance', editPath: '/admin/performance-content', previewPath: '/performance', deletePath: '/api/sitepagecontent/performance', kind: 'performance', hasSettings: true },
+  { title: 'Reisen', editPath: '/admin/reisen-content', previewPath: '/reisen', deletePath: '/api/sitepagecontent/reisen', kind: 'reisen', hasSettings: true },
+  { title: 'Service', editPath: '/admin/service-content', previewPath: '/service', deletePath: '/api/sitepagecontent/service', kind: 'service', hasSettings: true },
+  { title: 'Infos / Kontakt', editPath: '/admin/infos-content', previewPath: '/infos', deletePath: '/api/sitepagecontent/infos', kind: 'infos', hasSettings: true },
+  { title: 'Team', editPath: '/admin/team-content', previewPath: '/infos/team', deletePath: '/api/sitepagecontent/team', kind: 'team', hasSettings: true },
+  { title: 'Fluggelände', editPath: '/admin/gelaende-content', previewPath: '/infos/gelaende', deletePath: '/api/sitepagecontent/gelaende', kind: 'gelaende', hasSettings: true },
+  { title: 'Wetter', editPath: '/admin/wetter-content', previewPath: '/infos/wetter', deletePath: '/api/sitepagecontent/wetter', kind: 'wetter', hasSettings: true },
+  { title: 'Medien', editPath: '/admin/medien-content', previewPath: '/infos/medien', deletePath: '/api/sitepagecontent/medien', kind: 'medien', hasSettings: true },
+  { title: 'Gruppenevents', editPath: '/admin/gruppenevents-content', previewPath: '/infos/gruppenevents', deletePath: '/api/sitepagecontent/gruppenevents', kind: 'gruppenevents', hasSettings: true },
+  { title: 'Gutscheine', editPath: '/admin/gutscheine-content', previewPath: '/infos/gutscheine', deletePath: '/api/sitepagecontent/gutscheine', kind: 'gutscheine', hasSettings: true },
+  { title: 'Versicherungen', editPath: '/admin/versicherungen-content', previewPath: '/infos/versicherungen', deletePath: '/api/sitepagecontent/versicherungen', kind: 'versicherungen', hasSettings: true },
+  { title: 'Schnupperkurs', editPath: '/admin/schnupperkurs-content', previewPath: '/ausbildung/schnupperkurs', deletePath: '/api/sitepagecontent/schnupperkurs', kind: 'schnupperkurs', hasSettings: true },
+  { title: 'L-Schein', editPath: '/admin/l-schein-content', previewPath: '/ausbildung/l-schein', deletePath: '/api/sitepagecontent/l-schein', kind: 'l-schein', hasSettings: true },
+  { title: 'A-Schein', editPath: '/admin/a-schein-content', previewPath: '/ausbildung/a-schein', deletePath: '/api/sitepagecontent/a-schein', kind: 'a-schein', hasSettings: true },
+  { title: 'B-Schein', editPath: '/admin/b-schein-content', previewPath: '/ausbildung/b-schein', deletePath: '/api/sitepagecontent/b-schein', kind: 'b-schein', hasSettings: true },
+  { title: 'Windenschein', editPath: '/admin/windenschein-content', previewPath: '/ausbildung/windenschein', deletePath: '/api/sitepagecontent/windenschein', kind: 'windenschein', hasSettings: true },
+  { title: 'Tandemschein', editPath: '/admin/tandemschein-content', previewPath: '/ausbildung/tandemschein', deletePath: '/api/sitepagecontent/tandemschein', kind: 'tandemschein', hasSettings: true },
+  { title: 'Ausbildungskonzept', editPath: '/admin/ausbildungskonzept-content', previewPath: '/ausbildung/ausbildungskonzept', deletePath: '/api/sitepagecontent/ausbildungskonzept', kind: 'ausbildungskonzept', hasSettings: true },
+  { title: 'Sicherheitstraining', editPath: '/admin/sicherheitstraining-content', previewPath: '/performance/sicherheitstraining', deletePath: '/api/sitepagecontent/sicherheitstraining', kind: 'sicherheitstraining', hasSettings: true },
+  { title: 'Rettungsgerätetraining', editPath: '/admin/rettungsgeraetetraining-content', previewPath: '/performance/rettungsgeraetetraining', deletePath: '/api/sitepagecontent/rettungsgeraetetraining', kind: 'rettungsgeraetetraining', hasSettings: true },
+  { title: 'Groundhandling', editPath: '/admin/groundhandling-content', previewPath: '/performance/groundhandling', deletePath: '/api/sitepagecontent/groundhandling', kind: 'groundhandling', hasSettings: true },
+  { title: 'Brasilien-Tour', editPath: '/admin/brasilien-tour-content', previewPath: '/reisen/brasilien-tour', deletePath: '/api/sitepagecontent/brasilien-tour', kind: 'brasilien-tour', hasSettings: true },
+  { title: 'Kolumbien-Tour', editPath: '/admin/kolumbien-tour-content', previewPath: '/reisen/kolumbien-tour', deletePath: '/api/sitepagecontent/kolumbien-tour', kind: 'kolumbien-tour', hasSettings: true },
+  { title: 'Südafrika-Tour', editPath: '/admin/suedafrika-tour-content', previewPath: '/reisen/suedafrika-tour', deletePath: '/api/sitepagecontent/suedafrika-tour', kind: 'suedafrika-tour', hasSettings: true },
+  { title: 'Bassano-Tour', editPath: '/admin/bassano-tour-content', previewPath: '/reisen/bassano-tour', deletePath: '/api/sitepagecontent/bassano-tour', kind: 'bassano-tour', hasSettings: true },
+  { title: 'Griechenland-Tour', editPath: '/admin/griechenland-tour-content', previewPath: '/reisen/griechenland-tour', deletePath: '/api/sitepagecontent/griechenland-tour', kind: 'griechenland-tour', hasSettings: true },
+  { title: 'Slowenien-Tour', editPath: '/admin/slowenien-tour-content', previewPath: '/reisen/slowenien-tour', deletePath: '/api/sitepagecontent/slowenien-tour', kind: 'slowenien-tour', hasSettings: true },
+  { title: 'Bergamo-Tour', editPath: '/admin/bergamo-tour-content', previewPath: '/reisen/bergamo-tour', deletePath: '/api/sitepagecontent/bergamo-tour', kind: 'bergamo-tour', hasSettings: true },
+  { title: 'Savoyer Alpentour', editPath: '/admin/savoye-tour-content', previewPath: '/reisen/savoye-tour', deletePath: '/api/sitepagecontent/savoye-tour', kind: 'savoye-tour', hasSettings: true },
+  { title: 'Vogesen-Tour', editPath: '/admin/vogesen-tour-content', previewPath: '/reisen/vogesen-tour', deletePath: '/api/sitepagecontent/vogesen-tour', kind: 'vogesen-tour', hasSettings: true },
+  { title: 'Pfalz-Tour', editPath: '/admin/pfalz-tour-content', previewPath: '/reisen/pfalz-tour', deletePath: '/api/sitepagecontent/pfalz-tour', kind: 'pfalz-tour', hasSettings: true },
+  { title: '2-Jahres-Check', editPath: '/admin/2-jahres-check-content', previewPath: '/service/2-jahres-check', deletePath: '/api/sitepagecontent/2-jahres-check', kind: '2-jahres-check', hasSettings: true },
+  { title: 'Rettungsgeräte-Packservice', editPath: '/admin/rettungspacken-content', previewPath: '/service/rettungspacken', deletePath: '/api/sitepagecontent/rettungspacken', kind: 'rettungspacken', hasSettings: true },
+  { title: 'Trimmtuning', editPath: '/admin/trimmtuning-content', previewPath: '/service/trimmtuning', deletePath: '/api/sitepagecontent/trimmtuning', kind: 'trimmtuning', hasSettings: true },
+  { title: 'Reparatur-Service', editPath: '/admin/reparatur-content', previewPath: '/service/reparatur', deletePath: '/api/sitepagecontent/reparatur', kind: 'reparatur', hasSettings: true },
+  { title: 'Billings', editPath: '/admin/billings-content', previewPath: '/infos/gelaende/billings', deletePath: '/api/sitepagecontent/billings', kind: 'billings', hasSettings: true },
+  { title: 'Erlau', editPath: '/admin/erlau-content', previewPath: '/infos/gelaende/erlau', deletePath: '/api/sitepagecontent/erlau', kind: 'erlau', hasSettings: true },
+  { title: 'Gadern', editPath: '/admin/gadern-content', previewPath: '/infos/gelaende/gadern', deletePath: '/api/sitepagecontent/gadern', kind: 'gadern', hasSettings: true },
+  { title: 'Lindenfels', editPath: '/admin/lindenfels-content', previewPath: '/infos/gelaende/lindenfels', deletePath: '/api/sitepagecontent/lindenfels', kind: 'lindenfels', hasSettings: true },
+  { title: 'Nonrod Nordost', editPath: '/admin/nonrod-nordost-content', previewPath: '/infos/gelaende/nonrod-nordost', deletePath: '/api/sitepagecontent/nonrod-nordost', kind: 'nonrod-nordost', hasSettings: true },
+  { title: 'Nonroder Höhe', editPath: '/admin/nonrod-content', previewPath: '/infos/gelaende/nonrod', deletePath: '/api/sitepagecontent/nonrod', kind: 'nonrod', hasSettings: true },
+  { title: 'Stauf', editPath: '/admin/stauf-content', previewPath: '/infos/gelaende/stauf', deletePath: '/api/sitepagecontent/stauf', kind: 'stauf', hasSettings: true },
+  { title: 'Winterkasten', editPath: '/admin/winterkasten-content', previewPath: '/infos/gelaende/winterkasten', deletePath: '/api/sitepagecontent/winterkasten', kind: 'winterkasten', hasSettings: true },
+  { title: 'Bad Kreuznach', editPath: '/admin/bad-kreuznach-content', previewPath: '/infos/gelaende/bad-kreuznach', deletePath: '/api/sitepagecontent/bad-kreuznach', kind: 'bad-kreuznach', hasSettings: true },
+  { title: 'Herrenteich', editPath: '/admin/herrenteich-content', previewPath: '/infos/gelaende/herrenteich', deletePath: '/api/sitepagecontent/herrenteich', kind: 'herrenteich', hasSettings: true },
 ];
 
-// The 6 fixed pages' titles are fixed German text, so a plain substring
+// The fixed pages' titles are fixed German text, so a plain substring
 // search would miss an admin typing the English word instead (e.g.
 // "contact" for "Infos / Kontakt") - these extra terms (both languages)
 // are matched in addition to the visible title/URL. Custom Seiten pages
@@ -186,6 +231,47 @@ const FIXED_PAGE_SEARCH_TERMS: Record<string, string[]> = {
   reisen: ['reisen', 'travel', 'trips', 'tours', 'reise'],
   service: ['service', 'dienstleistung'],
   infos: ['infos', 'kontakt', 'info', 'contact', 'information'],
+  team: ['team', 'crew', 'mannschaft'],
+  gelaende: ['gelände', 'gelaende', 'terrain', 'site', 'location', 'fluggelände'],
+  wetter: ['wetter', 'weather'],
+  medien: ['medien', 'media', 'videos'],
+  gruppenevents: ['gruppenevents', 'group events', 'events'],
+  gutscheine: ['gutscheine', 'vouchers', 'gift cards', 'geschenk'],
+  versicherungen: ['versicherungen', 'insurance'],
+  schnupperkurs: ['schnupperkurs', 'schnuppern', 'taster course', 'trial course'],
+  'l-schein': ['l-schein', 'lschein', 'grundkurs', 'basic course'],
+  'a-schein': ['a-schein', 'aschein', 'höhenflugkurs', 'hoehenflugkurs'],
+  'b-schein': ['b-schein', 'bschein', 'streckenflug'],
+  windenschein: ['windenschein', 'winde', 'winch'],
+  tandemschein: ['tandemschein', 'tandem', 'passagierflug'],
+  ausbildungskonzept: ['ausbildungskonzept', 'concept', 'ausbildungswege'],
+  sicherheitstraining: ['sicherheitstraining', 'safety training', 'gardasee'],
+  rettungsgeraetetraining: ['rettungsgerätetraining', 'rettungsgeraetetraining', 'reserve training'],
+  groundhandling: ['groundhandling', 'ground handling'],
+  'brasilien-tour': ['brasilien', 'brazil', 'brasilien-tour'],
+  'kolumbien-tour': ['kolumbien', 'colombia', 'kolumbien-tour'],
+  'suedafrika-tour': ['südafrika', 'suedafrika', 'south africa', 'suedafrika-tour'],
+  'bassano-tour': ['bassano', 'bassano-tour'],
+  'griechenland-tour': ['griechenland', 'greece', 'griechenland-tour'],
+  'slowenien-tour': ['slowenien', 'slovenia', 'slowenien-tour'],
+  'bergamo-tour': ['bergamo', 'bergamo-tour'],
+  'savoye-tour': ['savoye', 'savoyen', 'savoy', 'savoye-tour'],
+  'vogesen-tour': ['vogesen', 'vosges', 'vogesen-tour'],
+  'pfalz-tour': ['pfalz', 'palatinate', 'pfalz-tour'],
+  '2-jahres-check': ['2-jahres-check', 'jahrescheck', 'check', 'wartung', 'maintenance'],
+  rettungspacken: ['rettungspacken', 'rettungsgeräte', 'rettungsgeraete', 'packservice', 'reserve packing'],
+  trimmtuning: ['trimmtuning', 'trim tuning', 'trimmung'],
+  reparatur: ['reparatur', 'repair'],
+  billings: ['billings', 'fluggelände billings'],
+  erlau: ['erlau', 'fluggelände erlau'],
+  gadern: ['gadern', 'fluggelände gadern'],
+  lindenfels: ['lindenfels', 'fluggelände lindenfels'],
+  'nonrod-nordost': ['nonrod nordost', 'nonrod-nordost'],
+  nonrod: ['nonrod', 'nonroder höhe', 'nonroder hoehe'],
+  stauf: ['stauf', 'fluggelände stauf'],
+  winterkasten: ['winterkasten', 'fluggelände winterkasten'],
+  'bad-kreuznach': ['bad kreuznach', 'bad-kreuznach', 'mergesfeld'],
+  herrenteich: ['herrenteich', 'fluggelände herrenteich'],
 };
 
 const textMatches = (query: string, ...values: Array<string | null | undefined>) => {
@@ -193,6 +279,11 @@ const textMatches = (query: string, ...values: Array<string | null | undefined>)
   if (!q) return true;
   return values.some((v) => (v || '').toLowerCase().includes(q));
 };
+
+// Strips query/hash and a trailing slash so a menu item's `url` and a
+// page's own resolved preview path compare equal even with small
+// formatting differences (e.g. a trailing "/").
+const normalizeUrl = (url: string) => (url || '').split('?')[0].split('#')[0].replace(/\/+$/, '') || '/';
 
 // A TRUE same-design duplicate of one of the 6 fixed pages above (see
 // FixedPageDuplicate model / fixedPageDuplicates.routes.ts): rendered by the
@@ -217,6 +308,18 @@ interface FixedPageSettingsRow {
   status: string;
 }
 
+// The header nav tree (see MenuManager.tsx / menu.routes.ts), used only to
+// GROUP this same list of pages/duplicates/custom pages by where they
+// actually sit in the site's navigation instead of listing them flat - an
+// admin thinking "where's the Ausbildung page's sub-pages" can look under
+// the "Ausbildung" menu item the same way they'd find it in Menü itself.
+interface MenuItemRow {
+  id: string;
+  label: string;
+  url: string;
+  subItems: { id: string; label: string; url: string }[];
+}
+
 export const PagesManager = () => {
   const notify = useNotify();
   const navigate = useNavigate();
@@ -225,6 +328,9 @@ export const PagesManager = () => {
   const [pages, setPages] = useState<PageRow[]>([]);
   const [fixedDuplicates, setFixedDuplicates] = useState<FixedDuplicateRow[]>([]);
   const [fixedSettings, setFixedSettings] = useState<Record<string, FixedPageSettingsRow>>({});
+  const [menuItems, setMenuItems] = useState<MenuItemRow[]>([]);
+  const [menuLoading, setMenuLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'flat' | 'menu'>('flat');
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -275,9 +381,22 @@ export const PagesManager = () => {
       .catch(() => notify('Fehler beim Laden der Seiten-Einstellungen', { type: 'error' }));
   };
 
+  // The header nav tree, purely for the "Nach Menü" grouping view below -
+  // fetched once regardless of which view is active so switching to it is
+  // instant, same as the other lists here.
+  const fetchMenuItems = () => {
+    setMenuLoading(true);
+    fetch('/api/menuitems?location=header', { headers: authHeaders() })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setMenuItems(Array.isArray(data) ? data : []))
+      .catch(() => notify('Fehler beim Laden der Menüstruktur', { type: 'error' }))
+      .finally(() => setMenuLoading(false));
+  };
+
   useEffect(fetchPages, []);
   useEffect(fetchFixedDuplicates, []);
   useEffect(fetchFixedSettings, []);
+  useEffect(fetchMenuItems, []);
 
   const openCreate = () => {
     setEditing(null);
@@ -487,15 +606,17 @@ export const PagesManager = () => {
 
   const handleResetFixedPage = async (page: (typeof FIXED_PAGES)[number]) => {
     try {
-      const [contentRes, settingsRes] = await Promise.all([
-        fetch(page.deletePath, { method: 'DELETE', headers: authHeaders() }),
-        fetch(`/api/fixed-page-settings/${page.kind}`, { method: 'DELETE', headers: authHeaders() }),
-      ]);
+      const contentRes = await fetch(page.deletePath, { method: 'DELETE', headers: authHeaders() });
       const data = await contentRes.json().catch(() => ({}));
       if (!contentRes.ok) {
         notify(describeApiError(contentRes, data, 'Fehler beim Löschen'), { type: 'error' });
         return;
       }
+      if (!page.hasSettings) {
+        notify(`"${page.title}" in den Papierkorb verschoben`, { type: 'success' });
+        return;
+      }
+      const settingsRes = await fetch(`/api/fixed-page-settings/${page.kind}`, { method: 'DELETE', headers: authHeaders() });
       if (!settingsRes.ok) {
         notify('Inhalte zurückgesetzt, aber Titel/URL/Status konnten nicht zurückgesetzt werden', { type: 'warning' });
       } else {
@@ -524,32 +645,10 @@ export const PagesManager = () => {
             fullWidth={false}
             sx={{ width: 180 }}
           />
-          <TextField
-            label="Kurzbeschreibung"
-            value={metaDescription}
-            onChange={(e) => setMetaDescription(e.target.value)}
-            size="small"
-            fullWidth={false}
-            sx={{ width: 200 }}
-          />
           <TextField select label="Status" value={status} onChange={(e) => setStatus(e.target.value)} size="small" fullWidth={false} sx={{ width: 140 }}>
             <MenuItem value="published">Veröffentlicht</MenuItem>
             <MenuItem value="draft">Entwurf</MenuItem>
           </TextField>
-          <FormControlLabel
-            control={<Switch checked={showInNav} onChange={(e) => setShowInNav(e.target.checked)} />}
-            label="Im Menü"
-            sx={{ flexShrink: 0 }}
-          />
-          <TextField
-            label="Menü-Beschriftung"
-            value={navLabel}
-            onChange={(e) => setNavLabel(e.target.value)}
-            size="small"
-            fullWidth={false}
-            sx={{ width: 160 }}
-            helperText="Leer = Titel"
-          />
           <Button
             component="label"
             size="small"
@@ -600,19 +699,31 @@ export const PagesManager = () => {
     filteredFixedDuplicates.length === 0 &&
     filteredPages.length === 0;
 
-  // One combined, paginated list (fixed pages + their duplicates + custom
-  // Seiten pages) so a single "Zeilen pro Seite" control (matching
-  // Gallery.tsx's react-admin pagination) covers everything, instead of
-  // three separately-scrolling sections.
+  // One combined, paginated list (fixed pages incl. /infos/* sub-pages +
+  // their duplicates + custom Seiten pages) so a single "Zeilen pro Seite"
+  // control (matching Gallery.tsx's react-admin pagination) covers
+  // everything, instead of separately-scrolling sections - sorted A-Z by
+  // title (German collation) so it reads as one alphabetical list rather
+  // than fixed/duplicate/custom pages each clustered in their own order.
   type DisplayRow =
     | { key: string; rowKind: 'fixed'; page: (typeof FIXED_PAGES)[number] }
     | { key: string; rowKind: 'duplicate'; dup: FixedDuplicateRow }
     | { key: string; rowKind: 'custom'; page: PageRow };
+  // Title shown in the "Titel" column - same fallback logic each row type
+  // already uses when rendering, pulled out here too so the flat "Alle
+  // Seiten" view can be sorted A-Z across fixed pages, duplicates and
+  // custom Seiten pages together, not just within each group.
+  const rowTitle = (row: DisplayRow): string => {
+    if (row.rowKind === 'fixed') return fixedSettings[row.page.kind]?.title || row.page.title;
+    if (row.rowKind === 'duplicate') return row.dup.title;
+    return row.page.title;
+  };
+
   const allRows: DisplayRow[] = [
     ...filteredFixedPages.map((page): DisplayRow => ({ key: `fixed:${page.kind}`, rowKind: 'fixed', page })),
     ...filteredFixedDuplicates.map((dup): DisplayRow => ({ key: `dup:${dup.id}`, rowKind: 'duplicate', dup })),
     ...(loading ? [] : filteredPages.map((page): DisplayRow => ({ key: `custom:${page.id}`, rowKind: 'custom', page }))),
-  ];
+  ].sort((a, b) => rowTitle(a).localeCompare(rowTitle(b), 'de', { sensitivity: 'base' }));
   const pageCount = Math.max(1, Math.ceil(allRows.length / perPage));
   const clampedPage = Math.min(page, pageCount);
   const startIdx = (clampedPage - 1) * perPage;
@@ -620,10 +731,196 @@ export const PagesManager = () => {
   const rangeStart = allRows.length === 0 ? 0 : startIdx + 1;
   const rangeEnd = Math.min(startIdx + perPage, allRows.length);
 
+  // The same URL logic each row already renders in its own TableCell below
+  // - pulled out here too so a row can be matched against a menu item's
+  // `url` for the "Nach Menü" grouping.
+  const rowUrl = (row: DisplayRow): string => {
+    if (row.rowKind === 'fixed') {
+      const live = fixedSettings[row.page.kind];
+      return live?.slug ? `/${live.slug}` : row.page.previewPath;
+    }
+    if (row.rowKind === 'duplicate') return `/${row.dup.slug}`;
+    return row.page.slug === 'home' ? '/' : `/${row.page.slug}`;
+  };
+
+  // Groups the same rows above by where they sit in the header nav
+  // (MenuManager.tsx) instead of listing them flat: each top-level menu
+  // item becomes a group (rendered as its own row when it resolves to an
+  // editable page, e.g. "Ausbildung"), with its sub-items' matching pages
+  // indented underneath (e.g. Schnupperkurs, L-Schein, ...). A menu entry
+  // that doesn't resolve to any editable page (an external link, a
+  // functional route like /buchungskalender, a tour page not in this CMS)
+  // is simply left out rather than shown as a dead row. Pages that exist
+  // but aren't in the header menu at all (footer-only links, pages nobody
+  // added to nav yet) land in a trailing "Nicht im Menü" bucket so nothing
+  // silently disappears from the list.
+  const urlToRow = new Map<string, DisplayRow>();
+  allRows.forEach((row) => urlToRow.set(normalizeUrl(rowUrl(row)), row));
+  const matchedKeys = new Set<string>();
+  const menuGroups = menuItems.map((item) => {
+    const ownRow = urlToRow.get(normalizeUrl(item.url));
+    if (ownRow) matchedKeys.add(ownRow.key);
+    const subRows = item.subItems
+      .map((sub) => urlToRow.get(normalizeUrl(sub.url)))
+      .filter((row): row is DisplayRow => !!row);
+    subRows.forEach((row) => matchedKeys.add(row.key));
+    return { label: item.label, ownRow, subRows };
+  });
+  const unmatchedRows = allRows.filter((row) => !matchedKeys.has(row.key));
+
   const handleSearchChange = (value: string) => {
     setSearch(value);
     setPage(1);
   };
+
+  // `indent` > 0 only in the "Nach Menü" view, for a row shown nested under
+  // its parent menu item (e.g. Schnupperkurs under Ausbildung) - purely a
+  // visual cue (extra left padding + a small tree marker), the row itself
+  // behaves identically either way.
+  const renderRow = (row: DisplayRow, indent = 0) => {
+    const titleCellSx = { pl: indent ? 2 + indent * 3 : 2 };
+    const indentMarker = indent > 0 && <Typography component="span" sx={{ color: '#bbb', mr: 1 }}>↳</Typography>;
+
+    if (row.rowKind === 'fixed') {
+      const { page } = row;
+      const live = fixedSettings[page.kind];
+      const title = live?.title || page.title;
+      const previewPath = live?.slug ? `/${live.slug}` : page.previewPath;
+      return (
+        <TableRow key={row.key} hover onClick={() => navigate(page.editPath)} sx={{ cursor: 'pointer' }}>
+          <TableCell sx={titleCellSx}>{indentMarker}{title}</TableCell>
+          <TableCell>{previewPath}</TableCell>
+          <TableCell>{live?.status === 'draft' ? 'Entwurf' : 'Veröffentlicht'}</TableCell>
+          <TableCell align="right" onClick={(e) => e.stopPropagation()}>
+            <IconButton
+              size="small"
+              component="a"
+              href={previewPath}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Vorschau (öffnet die Seite in einem neuen Tab)"
+            >
+              <OpenInNewIcon fontSize="small" />
+            </IconButton>
+            <IconButton size="small" onClick={() => navigate(page.editPath)} title="Bearbeiten">
+              <EditIcon fontSize="small" />
+            </IconButton>
+            <IconButton size="small" onClick={() => handleDuplicateFixed(page)} title="Duplizieren (erstellt eine neue Seite mit exakt dem gleichen Design/Layout)">
+              <ContentCopyIcon fontSize="small" />
+            </IconButton>
+            <IconButton size="small" onClick={() => handleResetFixedPage(page)} title="Löschen (setzt Inhalte, Titel, URL und Status auf die Standardwerte zurück)">
+              <DeleteIcon fontSize="small" color="error" />
+            </IconButton>
+          </TableCell>
+        </TableRow>
+      );
+    }
+    if (row.rowKind === 'duplicate') {
+      const { dup } = row;
+      const original = FIXED_PAGES.find((p) => p.kind === dup.kind);
+      const editPath = original ? `${original.editPath}/${dup.slug}` : undefined;
+      return (
+        <TableRow
+          key={row.key}
+          hover
+          onClick={() => editPath && navigate(editPath)}
+          sx={{ cursor: editPath ? 'pointer' : 'default' }}
+        >
+          <TableCell sx={titleCellSx}>{indentMarker}{dup.title}</TableCell>
+          <TableCell>{`/${dup.slug}`}</TableCell>
+          <TableCell>Veröffentlicht</TableCell>
+          <TableCell align="right" onClick={(e) => e.stopPropagation()}>
+            <IconButton
+              size="small"
+              component="a"
+              href={`/${dup.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Vorschau (öffnet die Seite in einem neuen Tab)"
+            >
+              <OpenInNewIcon fontSize="small" />
+            </IconButton>
+            {editPath && (
+              <IconButton size="small" onClick={() => navigate(editPath)} title="Bearbeiten">
+                <EditIcon fontSize="small" />
+              </IconButton>
+            )}
+            <IconButton size="small" onClick={() => handleDuplicateFixedDuplicate(dup)} title="Duplizieren (erstellt eine weitere Kopie mit gleichem Design/Inhalt)">
+              <ContentCopyIcon fontSize="small" />
+            </IconButton>
+            <IconButton size="small" onClick={() => handleDeleteFixedDuplicate(dup)} title="Löschen">
+              <DeleteIcon fontSize="small" color="error" />
+            </IconButton>
+          </TableCell>
+        </TableRow>
+      );
+    }
+    const { page } = row;
+    return (
+      <TableRow key={row.key} hover onClick={() => openEdit(page)} sx={{ cursor: 'pointer' }}>
+        <TableCell sx={titleCellSx}>
+          {indentMarker}
+          {page.title}
+          {page.slug === 'home' && (
+            <Typography component="span" variant="caption" sx={{ color: '#0ea5e9', ml: 1 }}>
+              (Startseite)
+            </Typography>
+          )}
+        </TableCell>
+        <TableCell>{page.slug === 'home' ? '/' : `/${page.slug}`}</TableCell>
+        <TableCell>{page.status === 'published' ? 'Veröffentlicht' : 'Entwurf'}</TableCell>
+        <TableCell align="right" onClick={(e) => e.stopPropagation()}>
+          <IconButton
+            size="small"
+            component="a"
+            href={page.slug === 'home' ? '/' : `/${page.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Vorschau (öffnet die Seite in einem neuen Tab)"
+          >
+            <OpenInNewIcon fontSize="small" />
+          </IconButton>
+          <IconButton size="small" onClick={() => openEdit(page)} title="Bearbeiten">
+            <EditIcon fontSize="small" />
+          </IconButton>
+          <IconButton size="small" onClick={() => handleDuplicate(page)} title="Duplizieren (erstellt eine Kopie mit gleichem Design/Inhalt)">
+            <ContentCopyIcon fontSize="small" />
+          </IconButton>
+          <IconButton size="small" onClick={() => handleDelete(page)} title="Löschen">
+            <DeleteIcon fontSize="small" color="error" />
+          </IconButton>
+        </TableCell>
+      </TableRow>
+    );
+  };
+
+  // Grouped ("Nach Menü") table body: each menu item with an editable page
+  // of its own renders that row, its matching sub-items indented beneath -
+  // a group with nothing editable at all (own page AND every sub-item
+  // unmatched) is left out entirely. Anything editable that isn't in the
+  // header menu follows under "Nicht im Menü".
+  const groupedRows: React.ReactNode[] = [];
+  menuGroups.forEach((group, i) => {
+    if (!group.ownRow && group.subRows.length === 0) return;
+    if (group.ownRow) {
+      groupedRows.push(renderRow(group.ownRow, 0));
+    } else {
+      groupedRows.push(
+        <TableRow key={`menu-group:${i}`}>
+          <TableCell colSpan={4} sx={{ fontWeight: 700, bgcolor: '#f8fafc', color: '#555' }}>{group.label}</TableCell>
+        </TableRow>
+      );
+    }
+    group.subRows.forEach((row) => groupedRows.push(renderRow(row, 1)));
+  });
+  if (unmatchedRows.length > 0) {
+    groupedRows.push(
+      <TableRow key="unmatched-header">
+        <TableCell colSpan={4} sx={{ fontWeight: 700, bgcolor: '#f8fafc', color: '#555' }}>Nicht im Menü</TableCell>
+      </TableRow>
+    );
+    unmatchedRows.forEach((row) => groupedRows.push(renderRow(row, 1)));
+  }
 
   return (
     <Box sx={{ p: 2 }}>
@@ -634,23 +931,24 @@ export const PagesManager = () => {
           <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>Neue Seite</Button>
         </Box>
       </Box>
-      <TextField
-        placeholder="Suchen (Titel oder URL - auf Deutsch oder Englisch)"
-        value={search}
-        onChange={(e) => handleSearchChange(e.target.value)}
-        size="small"
-        fullWidth
-        sx={{ mb: 2 }}
-        slotProps={{
-          input: {
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" sx={{ color: '#999' }} />
-              </InputAdornment>
-            ),
-          },
-        }}
-      />
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+        <TextField
+          placeholder="Suchen (Titel oder URL - auf Deutsch oder Englisch)"
+          value={search}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          size="small"
+          sx={{ flex: 1, minWidth: 240 }}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" sx={{ color: '#999' }} />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+      </Box>
       <Paper variant="outlined">
         <Table>
           <TableHead>
@@ -658,183 +956,84 @@ export const PagesManager = () => {
               <TableCell>Titel</TableCell>
               <TableCell>URL</TableCell>
               <TableCell>Status</TableCell>
-              <TableCell>Im Menü</TableCell>
               <TableCell align="right">Aktionen</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {noResults && (
-              <TableRow><TableCell colSpan={5} align="center">Keine Seiten gefunden für "{search}".</TableCell></TableRow>
+            {viewMode === 'flat' ? (
+              <>
+                {noResults && (
+                  <TableRow><TableCell colSpan={4} align="center">Keine Seiten gefunden für "{search}".</TableCell></TableRow>
+                )}
+                {loading && pageRows.length === 0 && (
+                  <TableRow><TableCell colSpan={4} align="center">Lädt...</TableCell></TableRow>
+                )}
+                {pageRows.map((row) => renderRow(row))}
+              </>
+            ) : (
+              <>
+                {menuLoading && (
+                  <TableRow><TableCell colSpan={4} align="center">Lädt Menüstruktur...</TableCell></TableRow>
+                )}
+                {!menuLoading && noResults && (
+                  <TableRow><TableCell colSpan={4} align="center">Keine Seiten gefunden für "{search}".</TableCell></TableRow>
+                )}
+                {!menuLoading && !noResults && groupedRows}
+              </>
             )}
-            {loading && pageRows.length === 0 && (
-              <TableRow><TableCell colSpan={5} align="center">Lädt...</TableCell></TableRow>
-            )}
-            {pageRows.map((row) => {
-              if (row.rowKind === 'fixed') {
-                const { page } = row;
-                const live = fixedSettings[page.kind];
-                const title = live?.title || page.title;
-                const previewPath = live?.slug ? `/${live.slug}` : page.previewPath;
-                return (
-                  <TableRow key={row.key} hover onClick={() => navigate(page.editPath)} sx={{ cursor: 'pointer' }}>
-                    <TableCell>{title}</TableCell>
-                    <TableCell>{previewPath}</TableCell>
-                    <TableCell>{live?.status === 'draft' ? 'Entwurf' : 'Veröffentlicht'}</TableCell>
-                    <TableCell>—</TableCell>
-                    <TableCell align="right" onClick={(e) => e.stopPropagation()}>
-                      <IconButton
-                        size="small"
-                        component="a"
-                        href={previewPath}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="Vorschau (öffnet die Seite in einem neuen Tab)"
-                      >
-                        <OpenInNewIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton size="small" onClick={() => navigate(page.editPath)} title="Bearbeiten">
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton size="small" onClick={() => handleDuplicateFixed(page)} title="Duplizieren (erstellt eine neue Seite mit exakt dem gleichen Design/Layout)">
-                        <ContentCopyIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton size="small" onClick={() => handleResetFixedPage(page)} title="Löschen (setzt Inhalte, Titel, URL und Status auf die Standardwerte zurück)">
-                        <DeleteIcon fontSize="small" color="error" />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                );
-              }
-              if (row.rowKind === 'duplicate') {
-                const { dup } = row;
-                const original = FIXED_PAGES.find((p) => p.kind === dup.kind);
-                const editPath = original ? `${original.editPath}/${dup.slug}` : undefined;
-                return (
-                  <TableRow
-                    key={row.key}
-                    hover
-                    onClick={() => editPath && navigate(editPath)}
-                    sx={{ cursor: editPath ? 'pointer' : 'default' }}
-                  >
-                    <TableCell>{dup.title}</TableCell>
-                    <TableCell>{`/${dup.slug}`}</TableCell>
-                    <TableCell>Veröffentlicht</TableCell>
-                    <TableCell>{dup.showInNav ? 'Ja' : 'Nein'}</TableCell>
-                    <TableCell align="right" onClick={(e) => e.stopPropagation()}>
-                      <IconButton
-                        size="small"
-                        component="a"
-                        href={`/${dup.slug}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="Vorschau (öffnet die Seite in einem neuen Tab)"
-                      >
-                        <OpenInNewIcon fontSize="small" />
-                      </IconButton>
-                      {editPath && (
-                        <IconButton size="small" onClick={() => navigate(editPath)} title="Bearbeiten">
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      )}
-                      <IconButton size="small" onClick={() => handleDuplicateFixedDuplicate(dup)} title="Duplizieren (erstellt eine weitere Kopie mit gleichem Design/Inhalt)">
-                        <ContentCopyIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton size="small" onClick={() => handleDeleteFixedDuplicate(dup)} title="Löschen">
-                        <DeleteIcon fontSize="small" color="error" />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                );
-              }
-              const { page } = row;
-              return (
-                <TableRow key={row.key} hover onClick={() => openEdit(page)} sx={{ cursor: 'pointer' }}>
-                  <TableCell>
-                    {page.title}
-                    {page.slug === 'home' && (
-                      <Typography component="span" variant="caption" sx={{ color: '#0ea5e9', ml: 1 }}>
-                        (Startseite)
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>{page.slug === 'home' ? '/' : `/${page.slug}`}</TableCell>
-                  <TableCell>{page.status === 'published' ? 'Veröffentlicht' : 'Entwurf'}</TableCell>
-                  <TableCell>{page.showInNav ? 'Ja' : 'Nein'}</TableCell>
-                  <TableCell align="right" onClick={(e) => e.stopPropagation()}>
-                    <IconButton
-                      size="small"
-                      component="a"
-                      href={page.slug === 'home' ? '/' : `/${page.slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title="Vorschau (öffnet die Seite in einem neuen Tab)"
-                    >
-                      <OpenInNewIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" onClick={() => openEdit(page)} title="Bearbeiten">
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" onClick={() => handleDuplicate(page)} title="Duplizieren (erstellt eine Kopie mit gleichem Design/Inhalt)">
-                      <ContentCopyIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" onClick={() => handleDelete(page)} title="Löschen">
-                      <DeleteIcon fontSize="small" color="error" />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
           </TableBody>
         </Table>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap', gap: 2, px: 2, py: 1, borderTop: '1px solid #e2e8f0' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="body2" sx={{ color: '#666' }}>Zeilen pro Seite:</Typography>
-            <TextField
-              select
-              value={perPage}
-              onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); }}
-              size="small"
-              variant="standard"
-              sx={{ width: 56 }}
-            >
-              <MenuItem value={10}>10</MenuItem>
-              <MenuItem value={25}>25</MenuItem>
-              <MenuItem value={50}>50</MenuItem>
-            </TextField>
-          </Box>
-          <Typography variant="body2" sx={{ color: '#666' }}>
-            {rangeStart}-{rangeEnd} von {allRows.length}
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <IconButton size="small" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={clampedPage <= 1}>
-              <ChevronLeftIcon fontSize="small" />
-            </IconButton>
-            {Array.from({ length: pageCount }, (_, i) => i + 1).map((n) => (
-              <Box
-                key={n}
-                onClick={() => setPage(n)}
-                sx={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  fontSize: '0.85rem',
-                  bgcolor: n === clampedPage ? '#e2e8f0' : 'transparent',
-                  fontWeight: n === clampedPage ? 700 : 400,
-                  '&:hover': { bgcolor: '#f1f5f9' },
-                }}
+        {viewMode === 'flat' && (
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap', gap: 2, px: 2, py: 1, borderTop: '1px solid #e2e8f0' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body2" sx={{ color: '#666' }}>Zeilen pro Seite:</Typography>
+              <TextField
+                select
+                value={perPage}
+                onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); }}
+                size="small"
+                variant="standard"
+                sx={{ width: 56 }}
               >
-                {n}
-              </Box>
-            ))}
-            <IconButton size="small" onClick={() => setPage((p) => Math.min(pageCount, p + 1))} disabled={clampedPage >= pageCount}>
-              <ChevronRightIcon fontSize="small" />
-            </IconButton>
+                <MenuItem value={10}>10</MenuItem>
+                <MenuItem value={25}>25</MenuItem>
+                <MenuItem value={50}>50</MenuItem>
+              </TextField>
+            </Box>
+            <Typography variant="body2" sx={{ color: '#666' }}>
+              {rangeStart}-{rangeEnd} von {allRows.length}
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <IconButton size="small" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={clampedPage <= 1}>
+                <ChevronLeftIcon fontSize="small" />
+              </IconButton>
+              {Array.from({ length: pageCount }, (_, i) => i + 1).map((n) => (
+                <Box
+                  key={n}
+                  onClick={() => setPage(n)}
+                  sx={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
+                    bgcolor: n === clampedPage ? '#e2e8f0' : 'transparent',
+                    fontWeight: n === clampedPage ? 700 : 400,
+                    '&:hover': { bgcolor: '#f1f5f9' },
+                  }}
+                >
+                  {n}
+                </Box>
+              ))}
+              <IconButton size="small" onClick={() => setPage((p) => Math.min(pageCount, p + 1))} disabled={clampedPage >= pageCount}>
+                <ChevronRightIcon fontSize="small" />
+              </IconButton>
+            </Box>
           </Box>
-        </Box>
+        )}
       </Paper>
     </Box>
   );

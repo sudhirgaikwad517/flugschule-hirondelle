@@ -13,9 +13,11 @@ import {
   Grid,
   Alert,
   CircularProgress,
+  IconButton,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import UploadIcon from '@mui/icons-material/Upload';
+import CloseIcon from '@mui/icons-material/Close';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 // Makes the DATA on the (already fully designed, Tailwind-styled) home page
@@ -99,15 +101,27 @@ const ImageSlot = ({ url, onUploaded, label, shape = 'circle' }: { url: string; 
     }
   };
 
+  const dims = shape === 'circle' ? { width: 56, height: 56 } : { width: 96, height: 64 };
+
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
       {url && (
-        <Box
-          component="img"
-          src={url}
-          alt=""
-          sx={shape === 'circle' ? { width: 56, height: 56, objectFit: 'cover', borderRadius: '50%' } : { width: 96, height: 64, objectFit: 'cover', borderRadius: 1 }}
-        />
+        <Box sx={{ position: 'relative', ...dims }}>
+          <Box
+            component="img"
+            src={url}
+            alt=""
+            sx={shape === 'circle' ? { ...dims, objectFit: 'cover', borderRadius: '50%' } : { ...dims, objectFit: 'cover', borderRadius: 1 }}
+          />
+          <IconButton
+            size="small"
+            onClick={() => onUploaded('')}
+            title="Bild entfernen"
+            sx={{ position: 'absolute', top: -8, right: -8, width: 20, height: 20, bgcolor: 'white', boxShadow: 1, '&:hover': { bgcolor: '#fee2e2' } }}
+          >
+            <CloseIcon sx={{ fontSize: 14 }} />
+          </IconButton>
+        </Box>
       )}
       <Button component="label" size="small" variant="outlined" startIcon={uploading ? <CircularProgress size={16} /> : <UploadIcon />} disabled={uploading}>
         {label}

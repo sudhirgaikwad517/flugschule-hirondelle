@@ -6,6 +6,47 @@ import { Performance } from './Performance';
 import { Reisen } from './Reisen';
 import { Service } from './Service';
 import { Infos } from './Infos';
+import { Team } from './Team';
+import { Gelaende } from './Gelaende';
+import { Wetter } from './Wetter';
+import { Medien } from './Medien';
+import { Gruppenevents } from './Gruppenevents';
+import { Gutscheine } from './Gutscheine';
+import { Versicherungen } from './Versicherungen';
+import { Schnupperkurs } from './Schnupperkurs';
+import { LSchein } from './LSchein';
+import { ASchein } from './ASchein';
+import { BSchein } from './BSchein';
+import { Windenschein } from './Windenschein';
+import { Tandemschein } from './Tandemschein';
+import { Ausbildungskonzept } from './Ausbildungskonzept';
+import { Sicherheitstraining } from './Sicherheitstraining';
+import { Rettungsgeraetetraining } from './Rettungsgeraetetraining';
+import { Groundhandling } from './Groundhandling';
+import { BrasilienTour } from './BrasilienTour';
+import { KolumbienTour } from './KolumbienTour';
+import { SuedafrikaTour } from './SuedafrikaTour';
+import { BassanoTour } from './BassanoTour';
+import { GriechenlandTour } from './GriechenlandTour';
+import { SlowenienTour } from './SlowenienTour';
+import { BergamoTour } from './BergamoTour';
+import { SavoyeTour } from './SavoyeTour';
+import { VogesenTour } from './VogesenTour';
+import { PfalzTour } from './PfalzTour';
+import { ZweiJahresCheck } from './ZweiJahresCheck';
+import { Rettungspacken } from './Rettungspacken';
+import { Trimmtuning } from './Trimmtuning';
+import { ReparaturService } from './ReparaturService';
+import { Billings } from './Billings';
+import { Erlau } from './Erlau';
+import { Gadern } from './Gadern';
+import { LindenfelsGelaende } from './Lindenfels';
+import { NonrodNordost } from './NonrodNordost';
+import { Nonrod } from './Nonrod';
+import { Stauf } from './Stauf';
+import { Winterkasten } from './Winterkasten';
+import { BadKreuznach } from './BadKreuznach';
+import { Herrenteich } from './Herrenteich';
 import { DynamicPage } from './DynamicPage';
 
 const KIND_COMPONENTS: Record<string, ComponentType<{ contentId?: string }>> = {
@@ -15,6 +56,47 @@ const KIND_COMPONENTS: Record<string, ComponentType<{ contentId?: string }>> = {
   reisen: Reisen,
   service: Service,
   infos: Infos,
+  team: Team,
+  gelaende: Gelaende,
+  wetter: Wetter,
+  medien: Medien,
+  gruppenevents: Gruppenevents,
+  gutscheine: Gutscheine,
+  versicherungen: Versicherungen,
+  schnupperkurs: Schnupperkurs,
+  'l-schein': LSchein,
+  'a-schein': ASchein,
+  'b-schein': BSchein,
+  windenschein: Windenschein,
+  tandemschein: Tandemschein,
+  ausbildungskonzept: Ausbildungskonzept,
+  sicherheitstraining: Sicherheitstraining,
+  rettungsgeraetetraining: Rettungsgeraetetraining,
+  groundhandling: Groundhandling,
+  'brasilien-tour': BrasilienTour,
+  'kolumbien-tour': KolumbienTour,
+  'suedafrika-tour': SuedafrikaTour,
+  'bassano-tour': BassanoTour,
+  'griechenland-tour': GriechenlandTour,
+  'slowenien-tour': SlowenienTour,
+  'bergamo-tour': BergamoTour,
+  'savoye-tour': SavoyeTour,
+  'vogesen-tour': VogesenTour,
+  'pfalz-tour': PfalzTour,
+  '2-jahres-check': ZweiJahresCheck,
+  rettungspacken: Rettungspacken,
+  trimmtuning: Trimmtuning,
+  reparatur: ReparaturService,
+  billings: Billings,
+  erlau: Erlau,
+  gadern: Gadern,
+  lindenfels: LindenfelsGelaende,
+  'nonrod-nordost': NonrodNordost,
+  nonrod: Nonrod,
+  stauf: Stauf,
+  winterkasten: Winterkasten,
+  'bad-kreuznach': BadKreuznach,
+  herrenteich: Herrenteich,
 };
 
 interface Resolved {

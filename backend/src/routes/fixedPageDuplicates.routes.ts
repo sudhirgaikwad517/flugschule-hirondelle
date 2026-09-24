@@ -4,6 +4,7 @@ import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware'
 import { RESERVED_SLUGS } from '../data/reservedSlugs';
 import { DEFAULTS as HOME_DEFAULTS } from './homecontent.routes';
 import { DEFAULTS as SITE_PAGE_DEFAULTS } from './sitePageContent.routes';
+import { syncMenuPublishedForUrl } from '../utils/menuSync';
 
 // A TRUE same-design duplicate of one of the 6 fixed pages (see the
 // FixedPageDuplicate model comment in schema.prisma): unlike Pages.tsx's
@@ -18,7 +19,22 @@ import { DEFAULTS as SITE_PAGE_DEFAULTS } from './sitePageContent.routes';
 
 const router = Router();
 
-const FIXED_KINDS = ['home', 'ausbildung', 'performance', 'reisen', 'service', 'infos'] as const;
+const FIXED_KINDS = [
+  'home', 'ausbildung', 'performance', 'reisen', 'service', 'infos',
+  // /infos/* sub-pages - same duplicate mechanism.
+  'team', 'gelaende', 'wetter', 'medien', 'gruppenevents', 'gutscheine', 'versicherungen',
+  // /ausbildung/* and /performance/* sub-pages - same duplicate mechanism.
+  'schnupperkurs', 'l-schein', 'a-schein', 'b-schein', 'windenschein', 'tandemschein', 'ausbildungskonzept',
+  'sicherheitstraining', 'rettungsgeraetetraining', 'groundhandling',
+  // /reisen/* tour sub-pages - same duplicate mechanism.
+  'brasilien-tour', 'kolumbien-tour', 'suedafrika-tour', 'bassano-tour', 'griechenland-tour',
+  'slowenien-tour', 'bergamo-tour', 'savoye-tour', 'vogesen-tour', 'pfalz-tour',
+  // /service/* sub-pages - same duplicate mechanism.
+  '2-jahres-check', 'rettungspacken', 'trimmtuning', 'reparatur',
+  // /infos/gelaende/* detail sub-pages - same duplicate mechanism.
+  'billings', 'erlau', 'gadern', 'lindenfels', 'nonrod-nordost', 'nonrod',
+  'stauf', 'winterkasten', 'bad-kreuznach', 'herrenteich',
+] as const;
 type FixedKind = (typeof FIXED_KINDS)[number];
 
 const KIND_LABELS: Record<FixedKind, string> = {
@@ -28,7 +44,157 @@ const KIND_LABELS: Record<FixedKind, string> = {
   reisen: 'Reisen',
   service: 'Service',
   infos: 'Infos / Kontakt',
+  team: 'Team',
+  gelaende: 'Fluggelände',
+  wetter: 'Wetter',
+  medien: 'Medien',
+  gruppenevents: 'Gruppenevents',
+  gutscheine: 'Gutscheine',
+  versicherungen: 'Versicherungen',
+  schnupperkurs: 'Schnupperkurs',
+  'l-schein': 'L-Schein',
+  'a-schein': 'A-Schein',
+  'b-schein': 'B-Schein',
+  windenschein: 'Windenschein',
+  tandemschein: 'Tandemschein',
+  ausbildungskonzept: 'Ausbildungskonzept',
+  sicherheitstraining: 'Sicherheitstraining',
+  rettungsgeraetetraining: 'Rettungsgerätetraining',
+  groundhandling: 'Groundhandling',
+  'brasilien-tour': 'Brasilien-Tour',
+  'kolumbien-tour': 'Kolumbien-Tour',
+  'suedafrika-tour': 'Südafrika-Tour',
+  'bassano-tour': 'Bassano-Tour',
+  'griechenland-tour': 'Griechenland-Tour',
+  'slowenien-tour': 'Slowenien-Tour',
+  'bergamo-tour': 'Bergamo-Tour',
+  'savoye-tour': 'Savoyer Alpentour',
+  'vogesen-tour': 'Vogesen-Tour',
+  'pfalz-tour': 'Pfalz-Tour',
+  '2-jahres-check': '2-Jahres-Check',
+  rettungspacken: 'Rettungsgeräte-Packservice',
+  trimmtuning: 'Trimmtuning',
+  reparatur: 'Reparatur-Service',
+  billings: 'Billings',
+  erlau: 'Erlau',
+  gadern: 'Gadern',
+  lindenfels: 'Lindenfels',
+  'nonrod-nordost': 'Nonrod Nordost',
+  nonrod: 'Nonroder Höhe',
+  stauf: 'Stauf',
+  winterkasten: 'Winterkasten',
+  'bad-kreuznach': 'Bad Kreuznach',
+  herrenteich: 'Herrenteich',
 };
+
+// Each kind's default (un-renamed) URL, and whether it also has its own
+// FixedPageSettings row (title/URL/publish-status - only the original 6
+// have one, since only they have a top-level hardcoded route of their own
+// to redirect from on rename). This is the SINGLE registry the "Seiten"
+// pickers in Pages.tsx and MenuManager.tsx both read via GET /kinds below -
+// adding a genuinely new fixed page means adding it to FIXED_KINDS/
+// KIND_LABELS/FIXED_PAGE_URLS here (plus its own React component wired into
+// FixedPageRouter.tsx's KIND_COMPONENTS, its own admin editor route, and a
+// DEFAULTS entry in sitePageContent.routes.ts for its content) and it then
+// appears automatically in every admin picker, with nothing else to update.
+const FIXED_PAGE_URLS: Record<FixedKind, string> = {
+  home: '/',
+  ausbildung: '/ausbildung',
+  performance: '/performance',
+  reisen: '/reisen',
+  service: '/service',
+  infos: '/infos',
+  team: '/infos/team',
+  gelaende: '/infos/gelaende',
+  wetter: '/infos/wetter',
+  medien: '/infos/medien',
+  gruppenevents: '/infos/gruppenevents',
+  gutscheine: '/infos/gutscheine',
+  versicherungen: '/infos/versicherungen',
+  schnupperkurs: '/ausbildung/schnupperkurs',
+  'l-schein': '/ausbildung/l-schein',
+  'a-schein': '/ausbildung/a-schein',
+  'b-schein': '/ausbildung/b-schein',
+  windenschein: '/ausbildung/windenschein',
+  tandemschein: '/ausbildung/tandemschein',
+  ausbildungskonzept: '/ausbildung/ausbildungskonzept',
+  sicherheitstraining: '/performance/sicherheitstraining',
+  rettungsgeraetetraining: '/performance/rettungsgeraetetraining',
+  groundhandling: '/performance/groundhandling',
+  'brasilien-tour': '/reisen/brasilien-tour',
+  'kolumbien-tour': '/reisen/kolumbien-tour',
+  'suedafrika-tour': '/reisen/suedafrika-tour',
+  'bassano-tour': '/reisen/bassano-tour',
+  'griechenland-tour': '/reisen/griechenland-tour',
+  'slowenien-tour': '/reisen/slowenien-tour',
+  'bergamo-tour': '/reisen/bergamo-tour',
+  'savoye-tour': '/reisen/savoye-tour',
+  'vogesen-tour': '/reisen/vogesen-tour',
+  'pfalz-tour': '/reisen/pfalz-tour',
+  '2-jahres-check': '/service/2-jahres-check',
+  rettungspacken: '/service/rettungspacken',
+  trimmtuning: '/service/trimmtuning',
+  reparatur: '/service/reparatur',
+  billings: '/infos/gelaende/billings',
+  erlau: '/infos/gelaende/erlau',
+  gadern: '/infos/gelaende/gadern',
+  lindenfels: '/infos/gelaende/lindenfels',
+  'nonrod-nordost': '/infos/gelaende/nonrod-nordost',
+  nonrod: '/infos/gelaende/nonrod',
+  stauf: '/infos/gelaende/stauf',
+  winterkasten: '/infos/gelaende/winterkasten',
+  'bad-kreuznach': '/infos/gelaende/bad-kreuznach',
+  herrenteich: '/infos/gelaende/herrenteich',
+};
+const KINDS_WITH_SETTINGS = new Set<FixedKind>([
+  'home',
+  'ausbildung',
+  'performance',
+  'reisen',
+  'service',
+  'infos',
+  'team',
+  'gelaende',
+  'wetter',
+  'medien',
+  'gruppenevents',
+  'gutscheine',
+  'versicherungen',
+  'schnupperkurs',
+  'l-schein',
+  'a-schein',
+  'b-schein',
+  'windenschein',
+  'tandemschein',
+  'ausbildungskonzept',
+  'sicherheitstraining',
+  'rettungsgeraetetraining',
+  'groundhandling',
+  'brasilien-tour',
+  'kolumbien-tour',
+  'suedafrika-tour',
+  'bassano-tour',
+  'griechenland-tour',
+  'slowenien-tour',
+  'bergamo-tour',
+  'savoye-tour',
+  'vogesen-tour',
+  'pfalz-tour',
+  '2-jahres-check',
+  'rettungspacken',
+  'trimmtuning',
+  'reparatur',
+  'billings',
+  'erlau',
+  'gadern',
+  'lindenfels',
+  'nonrod-nordost',
+  'nonrod',
+  'stauf',
+  'winterkasten',
+  'bad-kreuznach',
+  'herrenteich',
+]);
 
 const normalizeSlug = (value: string) =>
   String(value || '')
@@ -73,6 +239,23 @@ router.get('/', authenticateJWT, authorizeAdmin, async (_req, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch duplicates' });
   }
+});
+
+// Admin: the full registry of fixed-page kinds (label/default URL/whether
+// it has its own FixedPageSettings row) - consumed by Pages.tsx (Seiten
+// list) and MenuManager.tsx ("Seiten" add-to-menu picker) so both stay in
+// sync with FIXED_KINDS above without their own separate hardcoded list.
+// Declared before the "/:id" route below so "kinds" is never swallowed as
+// an :id value.
+router.get('/kinds', authenticateJWT, authorizeAdmin, async (_req, res) => {
+  res.json(
+    FIXED_KINDS.map((kind) => ({
+      kind,
+      label: KIND_LABELS[kind],
+      defaultUrl: FIXED_PAGE_URLS[kind],
+      hasSettings: KINDS_WITH_SETTINGS.has(kind),
+    }))
+  );
 });
 
 // Admin: get one (by id or slug) - used by the content editors to load the
@@ -184,6 +367,7 @@ router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
         navLabel: req.body.navLabel ?? existing.navLabel,
       },
     });
+    await syncMenuPublishedForUrl(`/${updated.slug}`, updated.status !== 'draft');
     res.json(updated);
   } catch (error) {
     console.error('Error updating fixed page duplicate:', error);

@@ -1,19 +1,23 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, type DragEvent } from 'react';
 import { useNotify } from 'react-admin';
 import {
   Box,
   Button,
+  Checkbox,
   CircularProgress,
   Collapse,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   FormControlLabel,
   IconButton,
   MenuItem as SelectMenuItem,
   Paper,
   Switch,
+  Tab,
+  Tabs,
   TextField,
   Typography,
 } from '@mui/material';
@@ -21,18 +25,27 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import UploadIcon from '@mui/icons-material/Upload';
 import CloseIcon from '@mui/icons-material/Close';
+import DescriptionIcon from '@mui/icons-material/Description';
+import LinkIcon from '@mui/icons-material/Link';
 
 // "Menü" - admin management for the header's top-level navigation items and
-// their sub-items (Ausbildung > Schnupperkurs, etc.), backed by the
-// MenuItem/MenuSubItem models and menu.routes.ts. Replaces what used to be
-// hardcoded directly in Header.tsx. Drag-and-drop reordering mirrors
-// Gallery.tsx's GalleryImagesInput (plain HTML5 drag events, no library).
-// Registered as a CustomRoute at /admin/menu in AdminApp.tsx, right before
-// Galerie in CustomMenu.tsx's Komponenten group.
+// their sub-items (Ausbildung > Schnupperkurs, etc.) AND the footer's flat
+// link list, both backed by the same MenuItem/MenuSubItem models
+// (menu.routes.ts), distinguished by MenuItem.location ("header" | "footer").
+// Replaces what used to be hardcoded directly in Header.tsx/Footer.tsx.
+// Drag-and-drop reordering mirrors Gallery.tsx's GalleryImagesInput (plain
+// HTML5 drag events, no library). Registered as a CustomRoute at /admin/menu
+// in AdminApp.tsx, right before Galerie in CustomMenu.tsx's Komponenten
+// group.
+//
+// Footer items never have sub-items (the footer is a flat link list, not a
+// dropdown nav), so the "Header"/"Footer" tab below hides all sub-item UI
+// while on the Footer tab.
 //
 // Shop, the "Seiten" dropdown (auto-populated from admin-created pages) and
 // the Konto/login menu are NOT managed here - they stay hardcoded in
@@ -72,8 +85,23 @@ const describeApiError = (res: Response, fallback: string): string => {
 const emptyItemForm = { label: '', url: '', target: '_self', published: true };
 const emptySubItemForm = { label: '', url: '', target: '_self', imageUrl: '', published: true };
 
+// The hand-built "fixed" pages (same set as Pages.tsx's own list), offered
+// in the left "Seiten" picker alongside admin-created Seiten pages, so an
+// admin can add an existing page to the menu by ticking a checkbox instead
+// of retyping its URL - the same "pick from Pages" flow WordPress's own
+// Appearance > Menus screen uses. This list is fetched from GET
+// /api/fixed-page-duplicates/kinds (the same registry Pages.tsx reads) -
+// NOT hardcoded here - so a new fixed page (e.g. a future /infos/* sub-page)
+// shows up in this picker automatically the moment it's added to that
+// registry, with nothing in this file to update. Only kinds with
+// `hasSettings: true` get their title/URL live-overridden from
+// /api/fixed-page-settings below (a rename, e.g. Ausbildung -> "Training"
+// at /education) - the rest always use their fixed `defaultUrl`.
+interface FixedPageKindInfo { kind: string; label: string; defaultUrl: string; hasSettings: boolean }
+
 export const MenuManager = () => {
   const notify = useNotify();
+  const [location, setLocation] = useState<'header' | 'footer'>('header');
   const [items, setItems] = useState<ItemRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -91,19 +119,201 @@ export const MenuManager = () => {
   const [uploadingSubItemImage, setUploadingSubItemImage] = useState(false);
   const subItemFileInputRef = useRef<HTMLInputElement>(null);
 
+  const [dirty, setDirty] = useState(false);
+  const [publishedAt, setPublishedAt] = useState<string | null>(null);
+  const [publishing, setPublishing] = useState(false);
+
   const [dragItemIndex, setDragItemIndex] = useState<number | null>(null);
   const [dragSubItem, setDragSubItem] = useState<{ parentId: string; index: number } | null>(null);
+  // Feedback for what dropping onto a top-level item's row will do: reorder
+  // before/after it, or ("into") nest the dragged item/sub-item as one of
+  // its own Untermenüpunkte. Computed live from the pointer's vertical
+  // position within the row during dragover.
+  const [overTarget, setOverTarget] = useState<{ index: number; mode: 'before' | 'after' | 'into' } | null>(null);
+
+  // --- "Menüpunkt hinzufügen" picker (left panel) ---
+  const [fixedPageKinds, setFixedPageKinds] = useState<FixedPageKindInfo[]>([]);
+  const [fixedPageSettings, setFixedPageSettings] = useState<Record<string, { slug: string | null; title: string }>>({});
+  const [customPages, setCustomPages] = useState<{ key: string; label: string; url: string }[]>([]);
+  const [duplicatePages, setDuplicatePages] = useState<{ key: string; label: string; url: string }[]>([]);
+  const [selectedPageKeys, setSelectedPageKeys] = useState<Set<string>>(new Set());
+  const [customLinkLabel, setCustomLinkLabel] = useState('');
+  const [customLinkUrl, setCustomLinkUrl] = useState('');
+  const [addingSelected, setAddingSelected] = useState(false);
+  const [addingCustomLink, setAddingCustomLink] = useState(false);
+
+  // The full fixed-page registry (see fixedPageDuplicates.routes.ts's
+  // GET /kinds) - every kind listed there appears in the picker below, so a
+  // newly-added fixed page needs no change in this file.
+  useEffect(() => {
+    fetch('/api/fixed-page-duplicates/kinds', { headers: authHeaders() })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: FixedPageKindInfo[]) => setFixedPageKinds(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
+
+  // Live title/URL for kinds with `hasSettings: true`, keyed by kind - same
+  // source Pages.tsx itself reads (fetchFixedSettings), so a renamed fixed
+  // page (e.g. Ausbildung -> "Training" at /education via "Seiten-
+  // Einstellungen") shows up here with its actual current title/URL instead
+  // of the default.
+  useEffect(() => {
+    fetch('/api/fixed-page-settings', { headers: authHeaders() })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: { kind: string; slug: string | null; title: string }[]) => {
+        const byKind: Record<string, { slug: string | null; title: string }> = {};
+        (Array.isArray(data) ? data : []).forEach((row) => { byKind[row.kind] = row; });
+        setFixedPageSettings(byKind);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Same admin endpoint Admin > Seiten (Pages.tsx) itself lists from, so
+  // every custom-created page shown there - published or draft, nav-visible
+  // or not - appears in this picker too, not just the subset /pages/public
+  // exposes for the live site's own "Seiten" dropdown. "home" is excluded
+  // since it's covered by the Startseite fixed-page entry above.
+  useEffect(() => {
+    fetch('/api/pages?_start=0&_end=200', { headers: authHeaders() })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: { slug: string; title: string; navLabel?: string | null }[]) => {
+        setCustomPages(
+          (Array.isArray(data) ? data : [])
+            .filter((p) => p.slug !== 'home')
+            .map((p) => ({ key: `page:${p.slug}`, label: p.navLabel || p.title, url: `/${p.slug}` }))
+        );
+      })
+      .catch(() => {});
+  }, []);
+
+  // A "Duplizieren" copy of one of the 6 fixed pages (Pages.tsx > Seiten,
+  // rendered by FixedPageRouter.tsx at its own slug) is stored as a
+  // FixedPageDuplicate, NOT a Page row - Admin > Seiten lists both in one
+  // table, so this picker needs both too, or a duplicated page (like
+  // "testtttt") would silently be missing from it.
+  useEffect(() => {
+    fetch('/api/fixed-page-duplicates', { headers: authHeaders() })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: { slug: string; title: string; navLabel?: string | null }[]) => {
+        setDuplicatePages(
+          (Array.isArray(data) ? data : []).map((d) => ({ key: `dup:${d.slug}`, label: d.navLabel || d.title, url: `/${d.slug}` }))
+        );
+      })
+      .catch(() => {});
+  }, []);
+
+  const fixedPages = fixedPageKinds.map((d) => {
+    const live = d.hasSettings ? fixedPageSettings[d.kind] : undefined;
+    const label = live?.title || d.label;
+    const url = d.kind === 'home' ? '/' : live?.slug ? `/${live.slug}` : d.defaultUrl;
+    return { key: `fixed:${d.kind}`, label, url };
+  });
+
+  useEffect(() => {
+    setSelectedPageKeys(new Set());
+  }, [location]);
+
+  const pageOptions = [...fixedPages, ...customPages, ...duplicatePages];
+
+  const togglePageSelected = (key: string) => {
+    setSelectedPageKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  // Shared by both "add selected pages" and "add custom link": always
+  // creates a new top-level MenuItem. Nesting an entry under another item as
+  // a sub-item is still done from the Menüstruktur panel on the right (the
+  // per-item "Untermenüpunkt hinzufügen" button), not from this picker.
+  const addEntriesToMenu = async (entries: { label: string; url: string }[]) => {
+    if (entries.length === 0) return;
+    try {
+      for (const entry of entries) {
+        await fetch('/api/menuitems', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ label: entry.label, url: entry.url, target: '_self', published: true, location }),
+        });
+      }
+      notify(entries.length === 1 ? 'Zum Menü hinzugefügt' : `${entries.length} Einträge zum Menü hinzugefügt`, { type: 'success' });
+      fetchItems();
+    } catch {
+      notify('Fehler beim Hinzufügen', { type: 'error' });
+    }
+  };
+
+  const addSelectedPages = async () => {
+    const entries = pageOptions.filter((p) => selectedPageKeys.has(p.key)).map((p) => ({ label: p.label, url: p.url }));
+    if (entries.length === 0) {
+      notify('Bitte mindestens eine Seite auswählen.', { type: 'warning' });
+      return;
+    }
+    setAddingSelected(true);
+    await addEntriesToMenu(entries);
+    setSelectedPageKeys(new Set());
+    setAddingSelected(false);
+  };
+
+  const addCustomLink = async () => {
+    if (!customLinkLabel.trim() || !customLinkUrl.trim()) {
+      notify('Bitte Link-Text und URL eingeben.', { type: 'warning' });
+      return;
+    }
+    setAddingCustomLink(true);
+    await addEntriesToMenu([{ label: customLinkLabel.trim(), url: customLinkUrl.trim() }]);
+    setCustomLinkLabel('');
+    setCustomLinkUrl('');
+    setAddingCustomLink(false);
+  };
 
   const fetchItems = () => {
     setLoading(true);
-    fetch('/api/menuitems', { headers: authHeaders() })
+    fetch(`/api/menuitems?location=${location}`, { headers: authHeaders() })
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => setItems(Array.isArray(data) ? data : []))
       .catch(() => notify('Fehler beim Laden des Menüs', { type: 'error' }))
       .finally(() => setLoading(false));
+    fetchPublishStatus();
   };
 
-  useEffect(fetchItems, []);
+  useEffect(fetchItems, [location]);
+
+  // --- Publish (the live MenuItem/MenuSubItem tree above is what admin
+  // edits always save to immediately - the PUBLIC site instead reads the
+  // separate, explicitly-published MenuSnapshot, so none of those edits
+  // reach the front-end until "Speichern" here. See menu.routes.ts. ---
+
+  const fetchPublishStatus = () => {
+    fetch(`/api/menu/publish-status?location=${location}`, { headers: authHeaders() })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data) return;
+        setDirty(!!data.dirty);
+        setPublishedAt(data.publishedAt);
+      })
+      .catch(() => {});
+  };
+
+  const publishMenu = async () => {
+    setPublishing(true);
+    try {
+      const res = await fetch('/api/menu/publish', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ location }),
+      });
+      if (!res.ok) throw new Error(describeApiError(res, 'Fehler beim Veröffentlichen'));
+      notify(location === 'header' ? 'Hauptmenü veröffentlicht' : 'Footer-Links veröffentlicht', { type: 'success' });
+      fetchPublishStatus();
+    } catch (e: any) {
+      notify(e.message || 'Fehler beim Veröffentlichen', { type: 'error' });
+    } finally {
+      setPublishing(false);
+    }
+  };
 
   const toggleExpanded = (id: string) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
@@ -130,7 +340,7 @@ export const MenuManager = () => {
     try {
       const url = editingItem ? `/api/menuitems/${editingItem.id}` : '/api/menuitems';
       const method = editingItem ? 'PUT' : 'POST';
-      const body = editingItem ? { ...itemForm, order: editingItem.order } : itemForm;
+      const body = editingItem ? { ...itemForm, order: editingItem.order } : { ...itemForm, location };
       const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
       if (!res.ok) throw new Error(describeApiError(res, 'Fehler beim Speichern'));
       notify(editingItem ? 'Menüpunkt gespeichert' : 'Menüpunkt erstellt', { type: 'success' });
@@ -144,7 +354,10 @@ export const MenuManager = () => {
   };
 
   const deleteItem = async (item: ItemRow) => {
-    if (!window.confirm(`"${item.label}" und alle seine Untermenüpunkte wirklich löschen?`)) return;
+    const confirmMsg = location === 'header'
+      ? `"${item.label}" und alle seine Untermenüpunkte wirklich löschen?`
+      : `"${item.label}" wirklich aus dem Footer löschen?`;
+    if (!window.confirm(confirmMsg)) return;
     try {
       const res = await fetch(`/api/menuitems/${item.id}`, { method: 'DELETE', headers: authHeaders() });
       if (!res.ok) throw new Error(describeApiError(res, 'Fehler beim Löschen'));
@@ -163,6 +376,7 @@ export const MenuManager = () => {
         headers: authHeaders(),
         body: JSON.stringify({ label: item.label, url: item.url, target: item.target, published: !item.published, order: item.order }),
       });
+      fetchPublishStatus();
     } catch {
       notify('Fehler beim Aktualisieren', { type: 'error' });
       fetchItems();
@@ -181,10 +395,87 @@ export const MenuManager = () => {
         headers: authHeaders(),
         body: JSON.stringify(next.map((i, idx) => ({ id: i.id, order: idx }))),
       });
+      fetchPublishStatus();
     } catch {
       notify('Fehler beim Sortieren', { type: 'error' });
       fetchItems();
     }
+  };
+
+  // Drag a top-level item onto another top-level item's row (the middle
+  // band, see computeDropMode below) to make it a sub-item of that item
+  // instead of reordering it. Rejected server-side (with a clear message)
+  // if the dragged item has its own sub-items already, since this menu is
+  // only 2 levels deep.
+  const nestItemUnder = async (source: ItemRow, target: ItemRow) => {
+    try {
+      const res = await fetch(`/api/menuitems/${source.id}/nest`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ targetId: target.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || describeApiError(res, 'Fehler beim Verschachteln'));
+      notify(`"${source.label}" ist jetzt ein Untermenüpunkt von "${target.label}"`, { type: 'success' });
+      setExpanded((prev) => ({ ...prev, [target.id]: true }));
+      fetchItems();
+    } catch (e: any) {
+      notify(e.message || 'Fehler beim Verschachteln', { type: 'error' });
+    }
+  };
+
+  // Drag a sub-item onto a DIFFERENT top-level item's row to move it into
+  // that item's sub-items instead of its current parent's.
+  const reparentSubItem = async (source: { parentId: string; index: number }, target: ItemRow) => {
+    const parent = items.find((i) => i.id === source.parentId);
+    const sub = parent?.subItems[source.index];
+    if (!sub) return;
+    try {
+      const res = await fetch(`/api/menusubitems/${sub.id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          label: sub.label, url: sub.url, target: sub.target, imageUrl: sub.imageUrl || '',
+          published: sub.published, order: target.subItems.length, menuItemId: target.id,
+        }),
+      });
+      if (!res.ok) throw new Error(describeApiError(res, 'Fehler beim Verschieben'));
+      notify(`"${sub.label}" wurde zu "${target.label}" verschoben`, { type: 'success' });
+      setExpanded((prev) => ({ ...prev, [target.id]: true }));
+      fetchItems();
+    } catch (e: any) {
+      notify(e.message || 'Fehler beim Verschieben', { type: 'error' });
+    }
+  };
+
+  // The reverse of nestItemUnder: pulls a sub-item back out to become its
+  // own top-level item. Triggered from a button on the sub-item row rather
+  // than a drag gesture (there's no obvious empty drop zone to drag it
+  // onto), but shares the same backend "un-nest" idea.
+  const promoteSubItem = async (sub: SubItemRow) => {
+    try {
+      const res = await fetch(`/api/menusubitems/${sub.id}/promote`, { method: 'POST', headers: authHeaders() });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || describeApiError(res, 'Fehler beim Verschieben'));
+      notify(`"${sub.label}" ist jetzt ein eigener Menüpunkt`, { type: 'success' });
+      fetchItems();
+    } catch (e: any) {
+      notify(e.message || 'Fehler beim Verschieben', { type: 'error' });
+    }
+  };
+
+  // Where within a top-level row the pointer is decides what dropping there
+  // does: top/bottom edge = reorder before/after, middle band = nest into
+  // it. A sub-item being dragged always means "nest here" (there's no
+  // "reorder top-level items around a sub-item" concept), and the footer
+  // tab never nests (footer is a flat list), so both skip the band split.
+  const computeDropMode = (e: DragEvent<HTMLElement>): 'before' | 'after' | 'into' => {
+    if (dragSubItem || location === 'footer') return dragSubItem ? 'into' : 'before';
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = (e.clientY - rect.top) / rect.height;
+    if (ratio < 0.25) return 'before';
+    if (ratio > 0.75) return 'after';
+    return 'into';
   };
 
   // --- Sub-items ---
@@ -276,6 +567,7 @@ export const MenuManager = () => {
         headers: authHeaders(),
         body: JSON.stringify({ label: sub.label, url: sub.url, target: sub.target, published: !sub.published, order: sub.order }),
       });
+      fetchPublishStatus();
     } catch {
       notify('Fehler beim Aktualisieren', { type: 'error' });
       fetchItems();
@@ -295,6 +587,7 @@ export const MenuManager = () => {
         headers: authHeaders(),
         body: JSON.stringify(nextSubs.map((s, idx) => ({ id: s.id, order: idx }))),
       });
+      fetchPublishStatus();
     } catch {
       notify('Fehler beim Sortieren', { type: 'error' });
       fetchItems();
@@ -303,25 +596,132 @@ export const MenuManager = () => {
 
   return (
     <Box sx={{ p: 2 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-        <Box>
-          <Typography variant="h5">Menü</Typography>
-          <Typography variant="body2" sx={{ color: '#666' }}>
-            Verwaltet die Hauptnavigation der Webseite (Header) und ihre Untermenüpunkte.
-          </Typography>
-        </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreateItem}>Neuer Menüpunkt</Button>
+      <Box sx={{ mb: 1 }}>
+        <Typography variant="h5">Menü</Typography>
+        <Typography variant="body2" sx={{ color: '#666' }}>
+          {location === 'header'
+            ? 'Verwaltet die Hauptnavigation der Webseite (Header) und ihre Untermenüpunkte.'
+            : 'Verwaltet die Link-Liste im Footer der Webseite.'}
+        </Typography>
       </Box>
 
-      {loading && items.length === 0 && (
-        <Typography sx={{ mt: 3, color: '#999' }}>Lädt...</Typography>
-      )}
+      <Tabs value={location} onChange={(_, v) => { setLocation(v); setExpanded({}); }} sx={{ mb: 2, borderBottom: '1px solid #e0e0e0' }}>
+        <Tab label="Header" value="header" />
+        <Tab label="Footer" value="footer" />
+      </Tabs>
 
-      {!loading && items.length === 0 && (
-        <Paper variant="outlined" sx={{ p: 4, textAlign: 'center', color: '#999', mt: 2 }}>
-          Noch keine Menüpunkte vorhanden.
+      {/* Every edit below (drag, toggle, add/edit/delete, nest/promote)
+          saves immediately - but only to the working menu, not the live
+          site. The live header/footer only picks up those changes once
+          "Speichern" here publishes them (see loadPublicTree in
+          menu.routes.ts), so an admin can freely rearrange things without
+          it going live mid-edit. */}
+      <Paper
+        variant="outlined"
+        sx={{
+          display: 'flex', alignItems: 'center', gap: 1.5, p: 1.5, mb: 2,
+          bgcolor: dirty ? '#fff8e1' : '#f6f8f6',
+          borderColor: dirty ? '#f0c14b' : undefined,
+        }}
+      >
+        <Typography variant="body2" sx={{ flex: 1, color: dirty ? '#8a6d1f' : '#557a5e' }}>
+          {dirty
+            ? (location === 'header' ? 'Das Hauptmenü hat ungespeicherte Änderungen - auf der Webseite ist noch der zuletzt veröffentlichte Stand zu sehen.' : 'Der Footer hat ungespeicherte Änderungen - auf der Webseite ist noch der zuletzt veröffentlichte Stand zu sehen.')
+            : (publishedAt ? `Veröffentlicht - zuletzt am ${new Date(publishedAt).toLocaleString('de-DE')}.` : 'Noch nichts veröffentlicht.')}
+        </Typography>
+        <Button
+          variant="contained"
+          color={dirty ? 'warning' : 'success'}
+          size="small"
+          onClick={publishMenu}
+          disabled={publishing || !dirty}
+        >
+          {publishing ? 'Wird veröffentlicht...' : (location === 'header' ? 'Menü veröffentlichen' : 'Footer veröffentlichen')}
+        </Button>
+      </Paper>
+
+      <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', flexDirection: { xs: 'column', md: 'row' } }}>
+
+        {/* Left panel - "Menüpunkt hinzufügen", mirrors WordPress's Appearance > Menus
+            "Add menu items" panel: pick existing pages or type a custom link, then
+            choose whether it becomes a new top-level entry or a sub-item of an
+            existing one (header only - the footer is always a flat list). */}
+        <Paper variant="outlined" sx={{ width: { xs: '100%', md: 320 }, flexShrink: 0, p: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5 }}>Menüpunkt hinzufügen</Typography>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            <DescriptionIcon fontSize="small" sx={{ color: '#666' }} />
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>Seiten</Typography>
+          </Box>
+          <Box sx={{ maxHeight: 220, overflowY: 'auto', border: '1px solid #eee', borderRadius: '6px', mb: 1.5 }}>
+            {pageOptions.length === 0 && (
+              <Typography variant="body2" sx={{ color: '#999', p: 1.5 }}>Keine Seiten gefunden.</Typography>
+            )}
+            {pageOptions.map((p) => (
+              <Box key={p.key} sx={{ display: 'flex', alignItems: 'center', px: 0.5 }}>
+                <Checkbox size="small" checked={selectedPageKeys.has(p.key)} onChange={() => togglePageSelected(p.key)} />
+                <Typography variant="body2" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.label}</Typography>
+              </Box>
+            ))}
+          </Box>
+
+          <Button
+            fullWidth variant="outlined" size="small"
+            onClick={addSelectedPages}
+            disabled={addingSelected || selectedPageKeys.size === 0}
+          >
+            {addingSelected ? 'Wird hinzugefügt...' : 'Zum Menü hinzufügen'}
+          </Button>
+
+          <Divider sx={{ my: 2 }} />
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            <LinkIcon fontSize="small" sx={{ color: '#666' }} />
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>Eigener Link</Typography>
+          </Box>
+          <TextField
+            fullWidth size="small" label="URL" placeholder="https://... oder /pfad"
+            value={customLinkUrl} onChange={(e) => setCustomLinkUrl(e.target.value)}
+            sx={{ mb: 1 }}
+          />
+          <TextField
+            fullWidth size="small" label="Link-Text"
+            value={customLinkLabel} onChange={(e) => setCustomLinkLabel(e.target.value)}
+            sx={{ mb: 1.5 }}
+          />
+          <Button
+            fullWidth variant="outlined" size="small"
+            onClick={addCustomLink}
+            disabled={addingCustomLink || !customLinkLabel.trim() || !customLinkUrl.trim()}
+          >
+            {addingCustomLink ? 'Wird hinzugefügt...' : 'Zum Menü hinzufügen'}
+          </Button>
         </Paper>
-      )}
+
+        {/* Right panel - "Menüstruktur": the current ordered/nested tree, drag to
+            reorder within a level, expand a header item to manage its sub-items. */}
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Menüstruktur</Typography>
+            <Button size="small" startIcon={<AddIcon />} onClick={openCreateItem}>
+              {location === 'header' ? 'Manueller Eintrag' : 'Manueller Footer-Link'}
+            </Button>
+          </Box>
+          {location === 'header' && !loading && items.length > 0 && (
+            <Typography variant="body2" sx={{ color: '#999', mb: 1 }}>
+              Tipp: einen Menüpunkt auf die Mitte eines anderen ziehen, um ihn zu dessen Untermenüpunkt zu machen - auf den oberen/unteren Rand ziehen, um nur die Reihenfolge zu ändern.
+            </Typography>
+          )}
+
+          {loading && items.length === 0 && (
+            <Typography sx={{ mt: 3, color: '#999' }}>Lädt...</Typography>
+          )}
+
+          {!loading && items.length === 0 && (
+            <Paper variant="outlined" sx={{ p: 4, textAlign: 'center', color: '#999', mt: 2 }}>
+              {location === 'header' ? 'Noch keine Menüpunkte vorhanden.' : 'Noch keine Footer-Links vorhanden.'}
+            </Paper>
+          )}
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 2 }}>
         {items.map((item, index) => (
@@ -330,25 +730,49 @@ export const MenuManager = () => {
             variant="outlined"
             draggable
             onDragStart={() => setDragItemIndex(index)}
-            onDragOver={(e) => e.preventDefault()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              if (dragItemIndex === index) return;
+              setOverTarget({ index, mode: computeDropMode(e) });
+            }}
             onDrop={(e) => {
               e.preventDefault();
-              if (dragItemIndex !== null) moveItem(dragItemIndex, index);
+              const mode = computeDropMode(e);
+              if (dragSubItem) {
+                if (dragSubItem.parentId !== item.id) reparentSubItem(dragSubItem, item);
+              } else if (dragItemIndex !== null && dragItemIndex !== index) {
+                if (mode === 'into') nestItemUnder(items[dragItemIndex], item);
+                else moveItem(dragItemIndex, index);
+              }
               setDragItemIndex(null);
+              setDragSubItem(null);
+              setOverTarget(null);
             }}
-            onDragEnd={() => setDragItemIndex(null)}
-            sx={{ opacity: dragItemIndex === index ? 0.4 : 1 }}
+            onDragEnd={() => { setDragItemIndex(null); setDragSubItem(null); setOverTarget(null); }}
+            sx={{
+              opacity: dragItemIndex === index ? 0.4 : 1,
+              transition: 'box-shadow 0.1s, background-color 0.1s',
+              ...(overTarget?.index === index && overTarget.mode === 'into'
+                ? { boxShadow: (t) => `inset 0 0 0 2px ${t.palette.primary.main}`, bgcolor: 'action.hover' }
+                : overTarget?.index === index && overTarget.mode === 'before'
+                ? { boxShadow: (t) => `inset 0 2px 0 0 ${t.palette.primary.main}` }
+                : overTarget?.index === index && overTarget.mode === 'after'
+                ? { boxShadow: (t) => `inset 0 -2px 0 0 ${t.palette.primary.main}` }
+                : {}),
+            }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1.5 }}>
               <DragIndicatorIcon sx={{ color: '#aaa', cursor: 'grab' }} fontSize="small" />
-              <IconButton size="small" onClick={() => toggleExpanded(item.id)}>
-                {expanded[item.id] ? <ExpandMoreIcon fontSize="small" /> : <ChevronRightIcon fontSize="small" />}
-              </IconButton>
+              {location === 'header' && (
+                <IconButton size="small" onClick={() => toggleExpanded(item.id)}>
+                  {expanded[item.id] ? <ExpandMoreIcon fontSize="small" /> : <ChevronRightIcon fontSize="small" />}
+                </IconButton>
+              )}
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{item.label}</Typography>
                 <Typography variant="body2" sx={{ color: '#666' }}>
                   {item.url || '—'}
-                  {item.subItems.length > 0 && ` · ${item.subItems.length} Untermenüpunkt${item.subItems.length === 1 ? '' : 'e'}`}
+                  {location === 'header' && item.subItems.length > 0 && ` · ${item.subItems.length} Untermenüpunkt${item.subItems.length === 1 ? '' : 'e'}`}
                 </Typography>
               </Box>
               <FormControlLabel
@@ -360,7 +784,13 @@ export const MenuManager = () => {
               <IconButton size="small" onClick={() => deleteItem(item)} title="Löschen"><DeleteIcon fontSize="small" color="error" /></IconButton>
             </Box>
 
-            <Collapse in={!!expanded[item.id]} timeout="auto" unmountOnExit>
+            {/* Always mounted (never conditionally removed from the tree) so
+                switching the Header/Footer tab can't yank this out mid-
+                animation while `in` is still true - that abrupt unmount is
+                what crashes Collapse/react-transition-group with a
+                "removeChild" DOM error. `in` itself already stays false for
+                footer items since the expand chevron above is header-only. */}
+            <Collapse in={location === 'header' && !!expanded[item.id]} timeout="auto" unmountOnExit>
               <Box sx={{ pl: 6, pr: 2, pb: 2 }}>
                 {item.subItems.length === 0 && (
                   <Typography variant="body2" sx={{ color: '#999', mb: 1 }}>Keine Untermenüpunkte.</Typography>
@@ -370,14 +800,15 @@ export const MenuManager = () => {
                     <Box
                       key={sub.id}
                       draggable
-                      onDragStart={() => setDragSubItem({ parentId: item.id, index: subIndex })}
-                      onDragOver={(e) => e.preventDefault()}
+                      onDragStart={(e) => { e.stopPropagation(); setDragSubItem({ parentId: item.id, index: subIndex }); }}
+                      onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
                       onDrop={(e) => {
                         e.preventDefault();
+                        e.stopPropagation();
                         if (dragSubItem && dragSubItem.parentId === item.id) moveSubItem(item.id, dragSubItem.index, subIndex);
                         setDragSubItem(null);
                       }}
-                      onDragEnd={() => setDragSubItem(null)}
+                      onDragEnd={(e) => { e.stopPropagation(); setDragSubItem(null); }}
                       sx={{
                         display: 'flex', alignItems: 'center', gap: 1, p: 1,
                         border: '1px solid #eee', borderRadius: '6px',
@@ -393,6 +824,7 @@ export const MenuManager = () => {
                         <Typography variant="caption" sx={{ color: '#888' }}>{sub.url || '—'}</Typography>
                       </Box>
                       <Switch size="small" checked={sub.published} onChange={() => togglePublishedSubItem(sub)} />
+                      <IconButton size="small" onClick={() => promoteSubItem(sub)} title="Zu eigenem Menüpunkt machen"><ArrowUpwardIcon fontSize="small" /></IconButton>
                       <IconButton size="small" onClick={() => openEditSubItem(item.id, sub)} title="Bearbeiten"><EditIcon fontSize="small" /></IconButton>
                       <IconButton size="small" onClick={() => deleteSubItem(sub)} title="Löschen"><DeleteIcon fontSize="small" color="error" /></IconButton>
                     </Box>
@@ -406,10 +838,16 @@ export const MenuManager = () => {
           </Paper>
         ))}
       </Box>
+        </Box>
+      </Box>
 
       {/* Top-level item dialog */}
       <Dialog open={itemDialogOpen} onClose={() => setItemDialogOpen(false)} fullWidth maxWidth="sm">
-        <DialogTitle>{editingItem ? 'Menüpunkt bearbeiten' : 'Neuer Menüpunkt'}</DialogTitle>
+        <DialogTitle>
+          {location === 'header'
+            ? (editingItem ? 'Menüpunkt bearbeiten' : 'Neuer Menüpunkt')
+            : (editingItem ? 'Footer-Link bearbeiten' : 'Neuer Footer-Link')}
+        </DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
           <TextField
             label="Titel" fullWidth autoFocus

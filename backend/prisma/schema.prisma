@@ -578,22 +578,27 @@ model WebLinkCategory {
   links       WebLink[]
 }
 
-// NEW MODEL - admin-managed header navigation (Admin > Menü, right before
-// Galerie in the Komponenten group). Replaces the previously hardcoded
-// Ausbildung/Performance/Reisen/Service/Infos dropdowns and their direct
-// links in Header.tsx: each MenuItem is one top-level nav entry, rendered as
-// a hover dropdown when it has subItems or as a plain link otherwise. Shop,
-// the "Seiten" dropdown (admin-created pages, still auto-populated from
+// NEW MODEL - admin-managed header AND footer navigation (Admin > Menü,
+// right before Galerie in the Komponenten group, with a Header/Footer tab).
+// Replaces the previously hardcoded Ausbildung/Performance/Reisen/Service/
+// Infos dropdowns and their direct links in Header.tsx, and the flat
+// NAV_LINKS list in Footer.tsx: each MenuItem is one top-level entry,
+// distinguished by `location` ("header" | "footer"). A "header" item renders
+// as a hover dropdown when it has subItems or as a plain link otherwise;
+// a "footer" item never has subItems - the footer is a flat link list, so
+// MenuManager.tsx hides the sub-item UI for that tab. Shop, the "Seiten"
+// dropdown (admin-created pages, still auto-populated from
 // /api/pages/public) and the Konto/login menu stay hardcoded in Header.tsx
 // since they carry auth/e-commerce behavior beyond a label+link. See
 // backend/src/routes/menu.routes.ts and frontend/src/admin/MenuManager.tsx.
 // To revert: drop these two models, delete menu.routes.ts, remove its mount
-// in index.ts, and restore Header.tsx's hardcoded dropdown markup.
+// in index.ts, and restore Header.tsx's/Footer.tsx's hardcoded markup.
 model MenuItem {
   id        String        @id @default(uuid())
   label     String
   url       String        @default("")
   target    String        @default("_self") // "_self" | "_blank"
+  location  String        @default("header") // "header" | "footer"
   published Boolean       @default(true)
   order     Int           @default(0)
   createdAt DateTime      @default(now())
@@ -613,6 +618,21 @@ model MenuSubItem {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+}
+
+// The currently PUBLISHED menu tree for one location ("header" | "footer"),
+// one row each. GET /menu/public and GET /footerlinks/public serve THIS,
+// not the live MenuItem/MenuSubItem tables directly - every edit in
+// MenuManager.tsx (drag reorder, nest, toggle, add/remove...) still saves
+// straight to MenuItem/MenuSubItem immediately (so nothing is lost if the
+// admin navigates away mid-edit), but the public site only picks up those
+// changes once the admin clicks "Speichern" there, which snapshots the
+// current MenuItem/MenuSubItem tree into this row. See menu.routes.ts.
+model MenuSnapshot {
+  id        String   @id @default(uuid())
+  location  String   @unique // "header" | "footer"
+  data      String   @db.LongText // JSON: nested items+subItems tree, same shape GET /menuitems returns
+  updatedAt DateTime @updatedAt
 }
 
 enum Role {
