@@ -363,6 +363,26 @@ export const Events = () => {
                 const totalCapacity = event.maxParticipants || 0;
                 const totalBooked = event.tickets?.reduce((sum, t) => sum + (t.bookedCount || 0), 0) || 0;
                 const spacesLeft = Math.max(0, totalCapacity - totalBooked);
+
+                // Old Matukio's real 3-state "Ampel" (traffic light) logic
+                // (getEventBookableArray, art=0, the default/public-list case):
+                //   buchgraf=2 (green) by default - bookable, has room
+                //   buchgraf=0 (red) if now > registration deadline (booking closed),
+                //     OR the event is cancelled,
+                //     OR full AND stopbooking=1 (old: "unbookable")
+                //   buchgraf=1 (yellow) if full AND stopbooking is 0 or 2 (old: "on
+                //     the waitlist" - still bookable, onto a real waitlist)
+                // New's onExceed ('stop' | 'waitlist') is the exact same field old
+                // called stopbooking, just as a named string instead of 0/1/2.
+                const registrationClosed = !!event.registrationDeadline && new Date() > new Date(event.registrationDeadline);
+                const isFull = totalCapacity > 0 && spacesLeft <= 0;
+                const trafficLight: 'green' | 'yellow' | 'red' | 'cancelled' | 'unlimited' =
+                  event.cancelled ? 'cancelled'
+                  : totalCapacity <= 0 ? 'unlimited'
+                  : registrationClosed ? 'red'
+                  : isFull && event.onExceed === 'stop' ? 'red'
+                  : isFull ? 'yellow' // full, but onExceed is 'waitlist' (or unset - old's own default)
+                  : 'green';
                 
                 const validPrices = (event.tickets || []).map(t => t.price).filter(p => p > 0);
                 let minPrice = validPrices.length > 0 ? Math.min(...validPrices) : 0;
@@ -446,22 +466,32 @@ export const Events = () => {
 
                         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t pt-4">
                           <div className="flex items-center gap-2">
-                            {event.cancelled ? (
+                            {trafficLight === 'cancelled' ? (
                               <>
                                 <div className="w-3 h-3 rounded-full bg-red-500"></div>
                                 <span className="text-sm font-medium text-red-700">Storniert</span>
                               </>
-                            ) : totalCapacity > 0 ? (
-                              <>
-                                <div className={`w-3 h-3 rounded-full ${spacesLeft > 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                                <span className="text-sm font-medium text-gray-700">
-                                  {spacesLeft > 0 ? `${spacesLeft} Plätze frei` : 'Ausgebucht (Warteliste)'}
-                                </span>
-                              </>
-                            ) : (
+                            ) : trafficLight === 'unlimited' ? (
                               <>
                                 <div className="w-3 h-3 rounded-full bg-blue-500"></div>
                                 <span className="text-sm font-medium text-gray-700">Unbegrenzte Plätze</span>
+                              </>
+                            ) : trafficLight === 'red' ? (
+                              <>
+                                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                <span className="text-sm font-medium text-gray-700">
+                                  {registrationClosed ? 'Anmeldeschluss erreicht' : 'Ausgebucht'}
+                                </span>
+                              </>
+                            ) : trafficLight === 'yellow' ? (
+                              <>
+                                <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                                <span className="text-sm font-medium text-gray-700">Ausgebucht (Warteliste möglich)</span>
+                              </>
+                            ) : (
+                              <>
+                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                <span className="text-sm font-medium text-gray-700">{spacesLeft} Plätze frei</span>
                               </>
                             )}
                           </div>
