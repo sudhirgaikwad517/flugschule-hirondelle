@@ -11,6 +11,10 @@ interface List {
   active: boolean;
   createdAt: string;
   subscriberCount?: number;
+  welcomeSubject?: string | null;
+  welcomeBody?: string | null;
+  goodbyeSubject?: string | null;
+  goodbyeBody?: string | null;
 }
 
 export const AcyLists = () => {
@@ -217,6 +221,46 @@ export const AcyLists = () => {
                   <input type="checkbox" checked={editingList.active || false} onChange={(e) => setEditingList({...editingList, active: e.target.checked})} className="rounded text-[#0ea5e9] focus:ring-[#0ea5e9]" />
                   <span className="text-sm text-slate-700">Aktiv</span>
                 </label>
+              </div>
+
+              {/* Autoresponder - fired automatically the moment someone
+                  actually joins/leaves this specific list (see
+                  newsletters.routes.ts). Leaving the subject empty for
+                  either one turns that autoresponder off - a list doesn't
+                  need both, or either. */}
+              <div className="pt-4 border-t border-slate-200">
+                <p className="text-sm font-semibold text-slate-700 mb-2">Willkommens-E-Mail (bei Anmeldung)</p>
+                <input
+                  type="text"
+                  placeholder="Betreff (leer = kein Willkommensmail)"
+                  value={editingList.welcomeSubject || ''}
+                  onChange={(e) => setEditingList({ ...editingList, welcomeSubject: e.target.value })}
+                  className="w-full px-4 py-2 border border-slate-200 rounded-md mb-2 focus:outline-none focus:ring-2 focus:ring-[#0ea5e9]/20 focus:border-[#0ea5e9]"
+                />
+                <textarea
+                  placeholder="Inhalt (HTML erlaubt)"
+                  value={editingList.welcomeBody || ''}
+                  onChange={(e) => setEditingList({ ...editingList, welcomeBody: e.target.value })}
+                  className="w-full px-4 py-2 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0ea5e9]/20 focus:border-[#0ea5e9]"
+                  rows={3}
+                />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-700 mb-2">Abschieds-E-Mail (bei Abmeldung)</p>
+                <input
+                  type="text"
+                  placeholder="Betreff (leer = keine Abschiedsmail)"
+                  value={editingList.goodbyeSubject || ''}
+                  onChange={(e) => setEditingList({ ...editingList, goodbyeSubject: e.target.value })}
+                  className="w-full px-4 py-2 border border-slate-200 rounded-md mb-2 focus:outline-none focus:ring-2 focus:ring-[#0ea5e9]/20 focus:border-[#0ea5e9]"
+                />
+                <textarea
+                  placeholder="Inhalt (HTML erlaubt)"
+                  value={editingList.goodbyeBody || ''}
+                  onChange={(e) => setEditingList({ ...editingList, goodbyeBody: e.target.value })}
+                  className="w-full px-4 py-2 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0ea5e9]/20 focus:border-[#0ea5e9]"
+                  rows={3}
+                />
               </div>
             </div>
 

@@ -353,6 +353,10 @@ const ContentsTabContent = () => (
             <MCard title="Veranstaltungs-Anzeige">
                 <BooleanInput source="isTopEvent" label="Top-Veranstaltung" />
                 <BooleanInput source="isHotEvent" label="Hot-Event" />
+                <BooleanInput source="allDay" label="Ganztägig / mehrtägig (keine Uhrzeit relevant)" defaultValue={false} />
+                <BooleanInput source="showStartTime" label="Startzeit anzeigen" defaultValue={true} />
+                <BooleanInput source="showEndTime" label="Endzeit anzeigen" defaultValue={true} />
+                <BooleanInput source="showRegistrationDeadline" label="Anmeldeschluss anzeigen" defaultValue={true} />
             </MCard>
             <MCard title="Verschiedenes">
                 <ReferenceInput source="organizerId" reference="organizers" label="Veranstalter">

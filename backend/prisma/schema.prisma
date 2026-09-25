@@ -127,6 +127,17 @@ model Event {
   views                Int           @default(0)
   seriesId             String?       // groups every date-occurrence generated together (single add or batch-recurring)
   cancelled            Boolean       @default(false) // distinct from `published` - a cancelled date stays visible but not bookable
+  // Old Matukio's allday/showbegin/showend/showbooked toggles
+  // (administrator/components/com_matukio/models/events.php) - let an
+  // admin hide a specific time-of-day for a multi-day/all-day event (e.g.
+  // a week-long tour) where showing one arbitrary hour looks wrong, or
+  // hide the registration-deadline line entirely for an event that has
+  // none worth mentioning. Purely display toggles - booking eligibility
+  // logic (registrationDeadline, capacity) is unaffected either way.
+  allDay                   Boolean @default(false)
+  showStartTime            Boolean @default(true)
+  showEndTime              Boolean @default(true)
+  showRegistrationDeadline Boolean @default(true)
   bookings             Booking[]
   Comment              Comment[]
   categoryRef          Category?     @relation(fields: [categoryId], references: [id])
@@ -189,6 +200,30 @@ model Booking {
   // that never fully died) resends the same email every time it fires.
   reminderSentAt       DateTime?
   ratingRequestSentAt  DateTime?
+  // Old Matukio's matukio_bookings.payment_netto/_tax/_brutto - frozen at
+  // booking time from the event's taxRate as it existed THEN, so a later
+  // change to that rate (or to the TaxRate table) can never rewrite what a
+  // past booking's invoice actually showed. `totalPrice` remains the
+  // brutto/gross total; these two let it be split back out. Null for
+  // free bookings or events with no tax rate configured - never a real
+  // 0/0 split in that case, so callers must check for null before
+  // treating netto+tax as authoritative.
+  priceNet             Float?
+  priceTax             Float?
+  priceTaxRatePercent  Float?
+  // Old Matukio stored the redeemed coupon on the booking row itself
+  // (matukio_bookings.coupon_used), not just inside a free-form JSON blob
+  // - needed so "who used code X" can be a plain indexed query instead of
+  // scanning every booking's customerDetails. Still also duplicated into
+  // customerDetails.appliedVoucher (see bookings.routes.ts) for whatever
+  // already reads it from there; this is the authoritative copy.
+  voucherCode          String?
+  // Old Matukio's matukio_bookings.payment_plugin_data - the raw gateway
+  // response, kept for dispute/refund troubleshooting (e.g. "PayPal says X
+  // was captured, what did they actually send us back?"). Populated from
+  // PayPal's OrdersCaptureRequest result in payments.routes.ts; stays null
+  // for bookings paid by any other method.
+  paymentGatewayResponse Json?
   event           Event         @relation(fields: [eventId], references: [id])
   user            User?         @relation(fields: [userId], references: [id])
   items           BookingItem[]
@@ -239,8 +274,36 @@ model Newsletter {
   // real customers left genuine complaints/reasons there, which had no
   // equivalent field to land in here at all.
   unsubscribeReason String? @db.Text
+  // Old AcyMailing's acymailing_fields - admin-definable extra subscriber
+  // data (phone, interests, birthday, ...), answers stored per-subscriber
+  // as {[NewsletterFieldDefinition.id]: value}. The field DEFINITIONS
+  // themselves live in NewsletterFieldDefinition below, same split as the
+  // existing CustomField (definition) / Event.customFieldValues (answer)
+  // pattern already used for events.
+  customFields Json?
+  // Old AcyMailing's acymailing_tag/tagmail - simple comma-separated tag
+  // list rather than a full join table (matches CustomField.categoryIds'
+  // own comma-separated convention elsewhere in this schema), since real
+  // usage here is "a handful of freeform labels", not a large controlled
+  // vocabulary needing referential integrity.
+  tags String?
 
   @@unique([email, listType])
+}
+
+// Old AcyMailing's acymailing_fields table - see Newsletter.customFields'
+// own comment for the definition/answer split.
+model NewsletterFieldDefinition {
+  id         String   @id @default(uuid())
+  title      String
+  slug       String   @unique
+  fieldType  String   @default("text") // text | textarea | select | checkbox | date
+  options    String?  @db.Text // for "select": one choice per line
+  required   Boolean  @default(false)
+  showOnForm Boolean  @default(true) // visible on the public subscribe form, not just the admin editor
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model NewsletterList {
@@ -253,6 +316,16 @@ model NewsletterList {
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  // Old AcyMailing's acymailing_list.welmailid/unsubmailid - autoresponder
+  // mails fired at subscribe/unsubscribe time, per list (a "Tandemflüge
+  // Newsletter" subscriber gets a different welcome mail than a general
+  // one). Null subject = that autoresponder is off for this list; see
+  // newsletters.routes.ts's confirm/unsubscribe handlers for where these
+  // actually get sent.
+  welcomeSubject String?
+  welcomeBody    String? @db.LongText
+  goodbyeSubject String?
+  goodbyeBody    String? @db.LongText
 }
 
 model AdBanner {
@@ -415,6 +488,13 @@ model NewsletterCampaign {
   bcc             String?
   bounceEmail     String?
   trackingEnabled Boolean   @default(true)
+  // Old AcyMailing's mail.type ("news"/"autonews"/"welcome"/"notification"
+  // etc.) - simplified to just the distinction that's actually useful in
+  // the campaign list/reporting here: a regular one-off newsletter vs. an
+  // autoresponder-generated send (welcome/goodbye, see NewsletterList
+  // above) vs. a system notification. Purely a label, doesn't change
+  // sending behavior on its own.
+  type            String    @default("news") // news | autoresponder | notification
 }
 
 model NewsletterTemplate {
@@ -425,6 +505,10 @@ model NewsletterTemplate {
   thumbnailUrl String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  // Old AcyMailing's template.category - lets the "Vorlage wählen" screen
+  // group templates instead of one flat list once there are more than a
+  // handful.
+  category     String?  @default("Allgemein")
 }
 
 model NewsletterQueue {
@@ -449,6 +533,16 @@ model NewsletterTrackingEvent {
   type            String   // OPEN or CLICK
   url             String?  // original destination, only set for CLICK
   createdAt       DateTime @default(now())
+  // Old AcyMailing's userstats captured browser/browser_version/is_mobile/
+  // user_agent per open (plus geolocation - deliberately NOT reproduced
+  // here, since real geo-IP lookup needs a paid/rate-limited external
+  // service this project has no credentials or budget decision for; ask
+  // before adding one). Parsed from the request's own User-Agent header at
+  // tracking time in track.routes.ts - no third-party call needed for this
+  // part.
+  userAgent String? @db.Text
+  browser   String?
+  isMobile  Boolean @default(false)
 
   @@index([campaignId, type])
   @@index([subscriberEmail])

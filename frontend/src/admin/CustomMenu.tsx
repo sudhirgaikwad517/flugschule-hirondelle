@@ -79,18 +79,13 @@ const EVENT_ITEMS: Item[] = [
 ];
 
 const BOTTOM_ITEMS: Item[] = [
-    { label: 'AcyMailing (Newsletter)', to: '/admin/acymailing/dashboard', icon: <EmailIcon fontSize="small" /> },
-    { label: 'Kommentare', to: '/admin/comments', icon: <CommentIcon fontSize="small" /> },
     { label: 'Neuigkeiten / Blog', to: '/admin/news', icon: <ArticleIcon fontSize="small" /> },
     { label: 'Download Kategorien', to: '/admin/downloadcategories', icon: <FolderIcon fontSize="small" /> },
-    { label: 'Downloads', to: '/admin/files', icon: <DownloadIcon fontSize="small" /> },
     { label: 'Link Kategorien', to: '/admin/weblinkcategories', icon: <FolderIcon fontSize="small" /> },
     { label: 'Links', to: '/admin/links', icon: <LinkIcon fontSize="small" /> },
     { label: 'Werbebanner', to: '/admin/banners', icon: <ViewCarouselIcon fontSize="small" /> },
-    { label: 'Seitenmedien', to: '/admin/pagemedia', icon: <PermMediaIcon fontSize="small" /> },
+    { label: 'Seitenmedien (Sicherheitstraining)', to: '/admin/pagemedia', icon: <PermMediaIcon fontSize="small" /> },
     { label: 'Service Aufträge', to: '/admin/serviceorders', icon: <AssignmentIcon fontSize="small" /> },
-    { label: 'Rechtliche Seiten', to: '/admin/legalPages', icon: <ArticleIcon fontSize="small" /> },
-    { label: 'Ecwid Settings', to: '/admin/ecwid-config', icon: <StorefrontIcon fontSize="small" /> },
     { label: 'Cookie-Hinweis', to: '/admin/cookie-consent', icon: <CookieIcon fontSize="small" /> },
 ];
 
@@ -104,6 +99,11 @@ const COMPONENT_ITEMS: Item[] = [
     { label: 'Menü', to: '/admin/menu', icon: <MenuIcon fontSize="small" /> },
     { label: 'Galerie', to: '/admin/pagegallery', icon: <ViewCarouselIcon fontSize="small" /> },
     { label: 'Seiten', to: '/admin/pages', icon: <WebIcon fontSize="small" /> },
+    { label: 'AcyMailing (Newsletter)', to: '/admin/acymailing/dashboard', icon: <EmailIcon fontSize="small" /> },
+    { label: 'Kommentare', to: '/admin/comments', icon: <CommentIcon fontSize="small" /> },
+    { label: 'Downloads', to: '/admin/files', icon: <DownloadIcon fontSize="small" /> },
+    { label: 'Rechtliche Seiten', to: '/admin/legalPages', icon: <ArticleIcon fontSize="small" /> },
+    { label: 'Ecwid Settings', to: '/admin/ecwid-config', icon: <StorefrontIcon fontSize="small" /> },
 ];
 
 // Inline `style` for color (not just `sx`) so nothing in the app's global

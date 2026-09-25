@@ -29,6 +29,15 @@ interface PriceResult {
   voucherDiscount: number;
   appliedVoucherCode: string | null;
   finalPrice: number;
+  // Net/tax split of `finalPrice`, frozen at booking time from the event's
+  // taxRate as it exists right now - see Booking.priceNet/priceTax's own
+  // comment in schema.prisma for why this must be computed and stored
+  // here rather than re-derived later from a Event.taxRate that could
+  // since have changed. Null (not 0) when the event has no tax rate
+  // configured, so callers can tell "no tax" from "not computed".
+  priceNet: number | null;
+  priceTax: number | null;
+  taxRatePercent: number | null;
 }
 
 // Finds the first tiered fee (Matukio's "different fee") on this event that is
@@ -149,6 +158,21 @@ export async function calculateBookingPrice(
     }
   }
 
+  const finalPrice = Math.max(0, runningTotal);
+
+  // Matches pdf.service.ts's own existing formula (netAmount = gross / (1 +
+  // rate/100)) so the invoice PDF and the stored booking record can never
+  // disagree about how the split was computed - just done here, once, at
+  // booking time, instead of on every PDF render from a rate that may have
+  // since changed.
+  const taxRatePercent = parseFloat(event.taxRate || '');
+  let priceNet: number | null = null;
+  let priceTax: number | null = null;
+  if (taxRatePercent > 0) {
+    priceNet = finalPrice / (1 + taxRatePercent / 100);
+    priceTax = finalPrice - priceNet;
+  }
+
   return {
     baseTotal,
     tieredDiscount,
@@ -156,6 +180,9 @@ export async function calculateBookingPrice(
     extrasTotal,
     voucherDiscount,
     appliedVoucherCode,
-    finalPrice: Math.max(0, runningTotal)
+    finalPrice,
+    priceNet,
+    priceTax,
+    taxRatePercent: taxRatePercent > 0 ? taxRatePercent : null,
   };
 }

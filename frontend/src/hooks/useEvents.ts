@@ -68,6 +68,10 @@ export interface CalendarEvent {
   seriesId?: string;
   cancelled?: boolean;
   onExceed?: string; // 'waitlist' | 'stop' - old: stopbooking (0/2 = waitlist, 1 = stop)
+  allDay?: boolean;
+  showStartTime?: boolean;
+  showEndTime?: boolean;
+  showRegistrationDeadline?: boolean;
   tieredFees?: boolean;
   eventTieredFees?: {
     title?: string;
@@ -117,6 +121,10 @@ export const useEvents = () => {
           seriesId: e.seriesId,
           cancelled: e.cancelled,
           onExceed: e.onExceed,
+          allDay: e.allDay,
+          showStartTime: e.showStartTime,
+          showEndTime: e.showEndTime,
+          showRegistrationDeadline: e.showRegistrationDeadline,
           tieredFees: e.tieredFees,
           eventTieredFees: e.eventTieredFees,
           extraFeeOptions: e.extraFeeOptions

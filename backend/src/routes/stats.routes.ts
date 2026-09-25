@@ -274,6 +274,26 @@ router.get('/acymailing', authenticateJWT, authorizeAdmin, async (req, res) => {
         const totalOpens = sentAggregates._sum.opensCount || 0;
         const totalClicks = sentAggregates._sum.clicksCount || 0;
 
+        // Device/browser breakdown - old AcyMailing's userstats tracked this
+        // per open; this app only started recording it once
+        // NewsletterTrackingEvent.browser/isMobile existed, so opens from
+        // before that will show as "Unbekannt" here rather than being
+        // silently dropped. Geo-location is deliberately NOT included (see
+        // NewsletterTrackingEvent's schema comment - needs a paid/rate-
+        // limited external service this project hasn't set up).
+        const opens = await prisma.newsletterTrackingEvent.findMany({
+            where: { type: 'OPEN' },
+            select: { browser: true, isMobile: true }
+        });
+        const browserCounts: Record<string, number> = {};
+        let mobileCount = 0;
+        let desktopCount = 0;
+        for (const o of opens) {
+            const key = o.browser || 'Unbekannt';
+            browserCounts[key] = (browserCounts[key] || 0) + 1;
+            if (o.browser) { o.isMobile ? mobileCount++ : desktopCount++; }
+        }
+
         res.json({
             overview: {
                 totalSubscribers,
@@ -284,7 +304,8 @@ router.get('/acymailing', authenticateJWT, authorizeAdmin, async (req, res) => {
                 globalClickRate: totalRecipients > 0 ? Number(((totalClicks / totalRecipients) * 100).toFixed(1)) : 0,
                 bounceRate: totalQueueCount > 0 ? Number(((failedCount / totalQueueCount) * 100).toFixed(1)) : 0
             },
-            history: Array.from(historyMap.values())
+            history: Array.from(historyMap.values()),
+            devices: { browserCounts, mobileCount, desktopCount }
         });
     } catch (error) {
         console.error('AcyMailing stats error:', error);

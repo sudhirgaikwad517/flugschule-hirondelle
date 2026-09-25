@@ -4,11 +4,16 @@ import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware'
 
 const router = Router();
 
-// GET active banners for public (by position)
+// GET active banners for public (by position) - the live site only has two
+// real slots ("home" - the home page's own slideshow, "subpage" - every
+// other page's shared slideshow, see frontend/src/components/common/
+// Banner.tsx), so ?position= filters to just one of them; omitting it
+// keeps the old unfiltered behavior for any other caller.
 router.get('/public', async (req, res) => {
   try {
+    const { position } = req.query;
     const banners = await prisma.adBanner.findMany({
-      where: { published: true },
+      where: { published: true, ...(position ? { position: position as string } : {}) },
       orderBy: { order: 'asc' }
     });
     res.json(banners);
@@ -20,14 +25,15 @@ router.get('/public', async (req, res) => {
 // Admin routes for AdBanners
 router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    const { _sort, _order, _start, _end } = req.query;
+    const { _sort, _order, _start, _end, position } = req.query;
     const skip = _start ? Number(_start) : 0;
     const take = _end ? Number(_end) - skip : 100;
     const orderBy: any = _sort ? { [_sort as string]: _order ? (_order as string).toLowerCase() : 'asc' } : { order: 'asc' };
+    const where = position ? { position: position as string } : {};
 
     const [banners, total] = await Promise.all([
-      prisma.adBanner.findMany({ skip, take, orderBy }),
-      prisma.adBanner.count()
+      prisma.adBanner.findMany({ where, skip, take, orderBy }),
+      prisma.adBanner.count({ where })
     ]);
     res.set('Content-Range', `banners ${skip}-${skip + banners.length}/${total}`);
     res.json(banners);

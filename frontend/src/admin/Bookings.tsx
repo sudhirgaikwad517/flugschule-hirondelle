@@ -75,7 +75,7 @@ const timeChoices = [
 
 const BookingFilter = (props: any) => (
     <Filter {...props}>
-        <TextInput label="Suche (Name, E-Mail, id:123)" source="q" alwaysOn />
+        <TextInput label="Suche (Name, E-Mail, id:123, code:GUTSCHEIN10)" source="q" alwaysOn />
         <SelectInput label="Status" source="status" choices={statusChoices} alwaysOn emptyText="Alle" />
         <ReferenceInput label="Event" source="eventId" reference="events" perPage={500} sort={{ field: 'startDate', order: 'DESC' }} alwaysOn>
             <SelectInput optionText="title" emptyText="Alle Events" />
@@ -642,12 +642,41 @@ const CustomBookingDetails = () => {
                             <TableCell component="th" scope="row" style={{ fontWeight: 'bold' }}>Gesamtpreis</TableCell>
                             <TableCell>
                                 {new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(record.totalPrice || 0)}
+                                {/* Net/tax split frozen at booking time (see bookingPrice.ts) -
+                                    only shown when the event actually had a tax rate configured,
+                                    matching old Matukio's payment_netto/_tax invoice breakdown. */}
+                                {record.priceNet != null && record.priceTax != null && (
+                                    <span style={{ color: '#666', fontSize: '0.85em', marginLeft: 8 }}>
+                                        (netto {new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(record.priceNet)}
+                                        {' '}+ {record.priceTaxRatePercent}% MwSt.{' '}
+                                        {new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(record.priceTax)})
+                                    </span>
+                                )}
                             </TableCell>
                         </TableRow>
+                        {record.voucherCode && (
+                            <TableRow>
+                                <TableCell component="th" scope="row" style={{ fontWeight: 'bold' }}>Gutschein-Code</TableCell>
+                                <TableCell>{record.voucherCode}</TableCell>
+                            </TableRow>
+                        )}
                         <TableRow>
                             <TableCell component="th" scope="row" style={{ fontWeight: 'bold' }}>Zahlungsart</TableCell>
                             <TableCell>{record.paymentMethod}</TableCell>
                         </TableRow>
+                        {record.paymentGatewayResponse && (
+                            <TableRow>
+                                <TableCell component="th" scope="row" style={{ fontWeight: 'bold', verticalAlign: 'top' }}>Zahlungsanbieter-Antwort</TableCell>
+                                <TableCell>
+                                    <details>
+                                        <summary style={{ cursor: 'pointer', color: '#428bca' }}>Rohdaten anzeigen (für Rückerstattungen/Reklamationen)</summary>
+                                        <pre style={{ fontSize: '0.75em', whiteSpace: 'pre-wrap', wordBreak: 'break-all', marginTop: 8 }}>
+                                            {JSON.stringify(record.paymentGatewayResponse, null, 2)}
+                                        </pre>
+                                    </details>
+                                </TableCell>
+                            </TableRow>
+                        )}
                         <TableRow>
                             <TableCell component="th" scope="row" style={{ fontWeight: 'bold' }}>Erstellt am</TableCell>
                             <TableCell>{new Date(record.createdAt).toLocaleString('de-DE')}</TableCell>

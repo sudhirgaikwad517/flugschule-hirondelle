@@ -181,8 +181,14 @@ function buildBookingWhereClause(query: any) {
   if (q) {
     const qStr = String(q);
     const idMatch = qStr.match(/^id:(.+)$/i);
+    // "code:XYZ" - find every booking that redeemed a given voucher code,
+    // the reporting use case old Matukio's own coupon_used column existed
+    // for (see Booking.voucherCode's comment in schema.prisma).
+    const codeMatch = qStr.match(/^code:(.+)$/i);
     if (idMatch) {
       whereClause.id = idMatch[1].trim();
+    } else if (codeMatch) {
+      whereClause.voucherCode = codeMatch[1].trim();
     } else {
       andConditions.push({
         OR: [
@@ -867,6 +873,10 @@ async function createBookingAtomic(params: {
         userId,
         status: finalStatus as any,
         totalPrice: priceResult.finalPrice,
+        priceNet: priceResult.priceNet ?? undefined,
+        priceTax: priceResult.priceTax ?? undefined,
+        priceTaxRatePercent: priceResult.taxRatePercent ?? undefined,
+        voucherCode: priceResult.appliedVoucherCode ?? undefined,
         customerDetails: customerDetails ?? undefined,
         paymentMethod: paymentMethod ?? undefined,
         remarks: remarks ?? undefined,

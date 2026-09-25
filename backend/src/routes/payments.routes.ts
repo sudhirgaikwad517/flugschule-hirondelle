@@ -122,9 +122,12 @@ router.post('/capture-paypal', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Payment amount does not match this booking' });
     }
 
+    // Old Matukio's matukio_bookings.payment_plugin_data - keeps the raw
+    // gateway response for dispute/refund troubleshooting later, since
+    // capture.result is otherwise discarded the moment this request ends.
     const updated = await prisma.booking.update({
       where: { id: bookingId },
-      data: { status: 'CONFIRMED', paid: true }
+      data: { status: 'CONFIRMED', paid: true, paymentGatewayResponse: capture.result as any }
     });
     // Send confirmation email asynchronously
     sendBookingConfirmationEmail(updated.id).catch(console.error);

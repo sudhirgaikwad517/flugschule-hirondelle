@@ -9,7 +9,8 @@ import {
   AlignLeft,
   BarChart2,
   Settings,
-  ArrowLeft
+  ArrowLeft,
+  ListChecks
 } from 'lucide-react';
 
 interface AcyLayoutProps {
@@ -21,6 +22,7 @@ const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/admin/acymailing/dashboard' },
   { id: 'subscribers', label: 'Abonnenten', icon: Users, path: '/admin/acymailing/subscribers' },
   { id: 'lists', label: 'Listen', icon: List, path: '/admin/acymailing/lists' },
+  { id: 'fields', label: 'Felder', icon: ListChecks, path: '/admin/acymailing/fields' },
   { id: 'templates', label: 'Vorlagen', icon: LayoutTemplate, path: '/admin/acymailing/templates' },
   { id: 'emails', label: 'E-Mails', icon: Mail, path: '/admin/acymailing/emails' },
   { id: 'queue', label: 'Warteschlange', icon: AlignLeft, path: '/admin/acymailing/queue' },

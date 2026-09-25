@@ -30,6 +30,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import SearchIcon from '@mui/icons-material/Search';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 
 // "Seiten" - the CMS feature that lets an admin create an entirely new page
 // from scratch (title, URL slug, description, header image, content) that
@@ -103,6 +104,15 @@ const inlineUnlayerLayoutCss = (html: string): string => {
     container.style.width = '1200px';
     container.innerHTML = doc.body.innerHTML;
     document.body.appendChild(container);
+
+    // Rows saved before contentWidth was fixed to 1200px in onEditorLoad
+    // (or any row someone narrows again by hand) still carry Unlayer's
+    // email-default max-width:500px on their own .container div - stretch
+    // those to fill whatever width the live page actually gives them
+    // instead of leaving a narrow island surrounded by empty gutters.
+    container.querySelectorAll<HTMLElement>('.u-row > .container').forEach((el) => {
+      el.style.maxWidth = '100%';
+    });
 
     container.querySelectorAll('.u-row').forEach((rowEl) => {
       const cs = getComputedStyle(rowEl);
@@ -437,6 +447,57 @@ export const PagesManager = () => {
         console.error('Failed to parse page design JSON', e);
       }
     }
+    // Unlayer defaults every row's content width to 500px (an email-template
+    // default, since the same editor is also used for AcyMailing newsletters
+    // - see EditEmail.tsx). Left alone, that's the actual root cause of the
+    // "alignment problem" reported for Seiten pages: a 500px-wide island of
+    // content sitting inside DynamicPage.tsx's ~1200px container, with huge
+    // empty gutters on both sides, no matter how careful the design is.
+    // Setting it here makes the editor's own canvas match the live page's
+    // real width, so what the admin designs is what actually renders -
+    // applies to rows added from here on; existing pages' already-saved
+    // rows are additionally corrected at export time, see
+    // inlineUnlayerLayoutCss below.
+    emailEditorRef.current?.editor?.setBodyValues({ contentWidth: '1200px' });
+  };
+
+  // Lets a Seiten page embed the same admin-managed gallery (Admin >
+  // Galerie) that the hardcoded pages use via usePageGallery - Unlayer
+  // itself can only ever export static HTML, so this inserts a plain
+  // placeholder div carrying this page's slug as a data attribute; the live
+  // DynamicPage.tsx finds that placeholder after render and mounts the
+  // actual gallery into it via a React portal (see PageGalleryBlock.tsx).
+  // Requires the URL field to be filled in first, since the placeholder has
+  // to be tied to a real slug - "Admin > Galerie" is where the images for
+  // that slug then get uploaded/managed, exactly as for any other page.
+  const insertGallery = () => {
+    const normalizedSlug = normalizeSlug(slug || title);
+    if (!normalizedSlug) {
+      notify('Bitte zuerst Titel oder URL ausfüllen, bevor eine Galerie eingefügt wird.', { type: 'warning' });
+      return;
+    }
+    const editor = emailEditorRef.current?.editor;
+    if (!editor) return;
+    const placeholderHtml =
+      `<div class="page-gallery-block" data-gallery-slug="${normalizedSlug}" ` +
+      `style="border:2px dashed #0ea5e9;padding:24px;text-align:center;color:#0ea5e9;font-family:sans-serif;font-size:14px;">` +
+      `📷 Galerie-Platzhalter (Bilder unter Admin &gt; Galerie &gt; "${normalizedSlug}" verwalten)</div>`;
+
+    editor.exportHtml((data: any) => {
+      const design = data.design;
+      design.body.rows.push({
+        cells: [1],
+        columns: [{
+          contents: [{
+            type: 'text',
+            values: { text: placeholderHtml, padding: '0px' }
+          }],
+          values: {}
+        }],
+        values: {}
+      });
+      editor.loadDesign(design);
+    });
   };
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -660,6 +721,9 @@ export const PagesManager = () => {
             <input type="file" accept="image/*" hidden onChange={handleUpload} />
           </Button>
           {headerImageUrl && <Box component="img" src={headerImageUrl} alt="" sx={{ height: 36, borderRadius: 1 }} />}
+          <Button variant="outlined" startIcon={<PhotoLibraryIcon />} onClick={insertGallery}>
+            Galerie einfügen
+          </Button>
           <Box sx={{ flexGrow: 1 }} />
           <Button variant="contained" color="success" startIcon={<SaveIcon />} onClick={handleSave} disabled={saving}>
             Speichern

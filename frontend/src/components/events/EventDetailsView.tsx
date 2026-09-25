@@ -143,8 +143,16 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
                     displayed date/time depending on where they are.
                     timeZone: 'UTC' displays the stored value as-is for
                     every viewer, everywhere. */}
+                {/* Old Matukio's allday/showbegin/showend toggles - an
+                    all-day/multi-day event (e.g. a week-long tour) has no
+                    single relevant hour, so the time is hidden entirely
+                    rather than showing an arbitrary default like 00:00. */}
                 {new Date(event.start || event.startDate).toLocaleDateString('de-DE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}
+                {!event.allDay && event.showStartTime !== false &&
+                  ` · ${new Date(event.start || event.startDate).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })} Uhr`}
                 {event.end && event.end !== event.start ? ` bis ${new Date(event.end || event.endDate).toLocaleDateString('de-DE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}` : ''}
+                {event.end && event.end !== event.start && !event.allDay && event.showEndTime !== false &&
+                  ` · ${new Date(event.end || event.endDate).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })} Uhr`}
               </span>
             </div>
             
@@ -327,12 +335,14 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
                       Beachten Sie die Verfügbarkeit pro Ticketkategorie.
                     </td>
                   </tr>
-                  <tr className="border-b border-gray-100">
-                    <td className="py-3 px-5 font-semibold text-gray-500">Anmelde-schluss</td>
-                    <td className="py-3 px-5 text-gray-700">
-                      {event.registrationDeadline ? new Date(event.registrationDeadline).toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) : '-'}
-                    </td>
-                  </tr>
+                  {event.showRegistrationDeadline !== false && (
+                    <tr className="border-b border-gray-100">
+                      <td className="py-3 px-5 font-semibold text-gray-500">Anmelde-schluss</td>
+                      <td className="py-3 px-5 text-gray-700">
+                        {event.registrationDeadline ? new Date(event.registrationDeadline).toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) : '-'}
+                      </td>
+                    </tr>
+                  )}
                   <tr>
                     <td className="py-3 px-5 font-semibold text-gray-500">Gebühren</td>
                     <td className="py-3 px-5 font-bold text-luxury-gold">

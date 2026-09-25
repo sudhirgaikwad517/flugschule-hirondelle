@@ -23,6 +23,7 @@ interface Subscriber {
   subscribedAt: string;
   listType: string;
   language: string;
+  tags: string | null;
 }
 
 export const AcySubscribers = () => {
@@ -171,8 +172,9 @@ export const AcySubscribers = () => {
     let searchMatch = true;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      searchMatch = s.email.toLowerCase().includes(q) || 
-                    (s.name && s.name.toLowerCase().includes(q));
+      searchMatch = s.email.toLowerCase().includes(q) ||
+                    (s.name && s.name.toLowerCase().includes(q)) ||
+                    (s.tags && s.tags.toLowerCase().includes(q));
     }
     
     // Filter by list dropdown

@@ -26,6 +26,39 @@ async function sendConfirmationEmail(email: string, token: string, config: { fro
   });
 }
 
+// Old AcyMailing's acymailing_list.welmailid/unsubmailid - an admin-
+// configured welcome mail fired the moment a subscriber actually joins a
+// list (immediately if no confirmation is required, otherwise once they
+// confirm), and a goodbye mail fired on unsubscribe. Both are entirely
+// optional per list (see NewsletterList.welcomeSubject/goodbyeSubject) -
+// this silently does nothing if the admin hasn't configured one, so it can
+// never block or delay the actual subscribe/unsubscribe it's attached to.
+async function sendAutoresponderEmail(
+  listType: string,
+  kind: 'welcome' | 'goodbye',
+  email: string,
+  config: { fromEmail: string | null; fromName: string | null } | null
+) {
+  try {
+    const list = await prisma.newsletterList.findUnique({ where: { code: listType } });
+    const subject = kind === 'welcome' ? list?.welcomeSubject : list?.goodbyeSubject;
+    const body = kind === 'welcome' ? list?.welcomeBody : list?.goodbyeBody;
+    if (!list || !subject || !body) return;
+
+    const { transporter } = await getNewsletterTransporter();
+    await transporter.sendMail({
+      from: config?.fromEmail ? `"${config.fromName || 'Flugschule Hirondelle'}" <${config.fromEmail}>` : '"Flugschule Hirondelle" <info@fs-hirondelle.de>',
+      to: email,
+      subject,
+      html: body,
+    });
+  } catch (error) {
+    // Never let a missing/misconfigured autoresponder break the real
+    // subscribe/confirm/unsubscribe flow it's attached to.
+    console.error(`Autoresponder (${kind}) send error:`, error);
+  }
+}
+
 // Public subscribe endpoint
 router.post('/subscribe', async (req, res) => {
   try {
@@ -66,6 +99,7 @@ router.post('/subscribe', async (req, res) => {
           await sendConfirmationEmail(email.toLowerCase(), confirmToken, config);
           return res.json({ message: 'Bitte bestätigen Sie Ihre E-Mail-Adresse - wir haben Ihnen einen Link geschickt.' });
         }
+        await sendAutoresponderEmail(listType, 'welcome', email.toLowerCase(), config);
         return res.json({ message: 'Successfully resubscribed' });
       }
       return res.status(400).json({ message: 'Email is already subscribed to this list' });
@@ -87,6 +121,7 @@ router.post('/subscribe', async (req, res) => {
       return res.status(201).json({ message: 'Bitte bestätigen Sie Ihre E-Mail-Adresse - wir haben Ihnen einen Link geschickt.' });
     }
 
+    await sendAutoresponderEmail(listType, 'welcome', email.toLowerCase(), config);
     res.status(201).json({ message: 'Successfully subscribed' });
   } catch (error) {
     console.error('Newsletter subscribe error:', error);
@@ -111,6 +146,9 @@ router.post('/public/confirm', async (req, res) => {
       where: { id: subscriber.id },
       data: { isConfirmed: true, confirmToken: null }
     });
+
+    const config = await prisma.newsletterConfig.findUnique({ where: { id: 'default' } });
+    await sendAutoresponderEmail(subscriber.listType, 'welcome', subscriber.email, config);
 
     res.json({ message: 'E-Mail-Adresse erfolgreich bestätigt' });
   } catch (error) {
@@ -189,6 +227,8 @@ router.get('/email/:email/details', authenticateJWT, authorizeAdmin, async (req,
     const uniqueOpenedCampaigns = new Set(openEvents.map(e => e.campaignId)).size;
     const uniqueClickedCampaigns = new Set(clickEvents.map(e => e.campaignId)).size;
 
+    const fieldDefinitions = await prisma.newsletterFieldDefinition.findMany({ orderBy: { order: 'asc' } });
+
     res.json({
       email: base.email,
       name: base.name,
@@ -197,6 +237,8 @@ router.get('/email/:email/details', authenticateJWT, authorizeAdmin, async (req,
       isConfirmed: base.isConfirmed,
       trackStatus: base.trackStatus,
       creationDate: base.subscribedAt,
+      tags: base.tags,
+      customFields: base.customFields,
       subscriptions: subs.map(s => ({
         id: s.id,
         listType: s.listType,
@@ -204,6 +246,7 @@ router.get('/email/:email/details', authenticateJWT, authorizeAdmin, async (req,
         unsubscribeReason: s.unsubscribeReason
       })),
       allLists,
+      fieldDefinitions,
       history,
       stats: {
         sentCount,
@@ -220,7 +263,7 @@ router.get('/email/:email/details', authenticateJWT, authorizeAdmin, async (req,
 router.put('/email/:email/details', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
     const email = req.params.email as string;
-    const { name, language, isActive, isConfirmed, trackStatus } = req.body;
+    const { name, language, isActive, isConfirmed, trackStatus, tags, customFields } = req.body;
 
     // Update all newsletter rows for this email
     await prisma.newsletter.updateMany({
@@ -231,6 +274,8 @@ router.put('/email/:email/details', authenticateJWT, authorizeAdmin, async (req,
         ...(isActive !== undefined && { isActive }),
         ...(isConfirmed !== undefined && { isConfirmed }),
         ...(trackStatus !== undefined && { trackStatus }),
+        ...(tags !== undefined && { tags }),
+        ...(customFields !== undefined && { customFields }),
       }
     });
 
@@ -455,10 +500,23 @@ router.post('/public/unsubscribe', async (req, res) => {
     // block or delay the actual unsubscribe) - only overwrite it when present
     // so that follow-up call doesn't clobber isActive back to true.
     const cleanReason = typeof reason === 'string' ? reason.trim().slice(0, 1000) : null;
+    const where = listType ? { email: email.toLowerCase(), listType } : { email: email.toLowerCase() };
+    // Fetch which rows are actually still active BEFORE updating, so the
+    // goodbye autoresponder only fires on the real unsubscribe transition
+    // (isActive true -> false) - never on the follow-up reason-only call
+    // above, which would otherwise re-trigger it a second time for the
+    // same unsubscribe.
+    const stillActive = await prisma.newsletter.findMany({ where: { ...where, isActive: true } });
+
     await prisma.newsletter.updateMany({
-      where: listType ? { email: email.toLowerCase(), listType } : { email: email.toLowerCase() },
+      where,
       data: { isActive: false, ...(cleanReason ? { unsubscribeReason: cleanReason } : {}) }
     });
+
+    if (stillActive.length > 0) {
+      const config = await prisma.newsletterConfig.findUnique({ where: { id: 'default' } });
+      await Promise.all(stillActive.map((s) => sendAutoresponderEmail(s.listType, 'goodbye', s.email, config)));
+    }
 
     res.json({ message: 'Erfolgreich abgemeldet' });
   } catch (error) {

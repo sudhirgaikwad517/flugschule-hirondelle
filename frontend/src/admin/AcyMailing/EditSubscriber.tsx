@@ -26,6 +26,14 @@ interface HistoryItem {
   errorLog: string | null;
 }
 
+interface FieldDefinition {
+  id: string;
+  title: string;
+  fieldType: string;
+  options: string | null;
+  required: boolean;
+}
+
 interface SubscriberDetails {
   email: string;
   name: string | null;
@@ -36,12 +44,15 @@ interface SubscriberDetails {
   creationDate: string;
   subscriptions: Subscription[];
   allLists: List[];
+  fieldDefinitions: FieldDefinition[];
   history: HistoryItem[];
   stats: {
     sentCount: number;
     openRate: number | null;
     clickRate: number | null;
   };
+  tags: string | null;
+  customFields: Record<string, string> | null;
 }
 
 export const AcyEditSubscriber = () => {
@@ -133,7 +144,9 @@ export const AcyEditSubscriber = () => {
           language: data.language,
           isActive: data.isActive,
           isConfirmed: data.isConfirmed,
-          trackStatus: data.trackStatus
+          trackStatus: data.trackStatus,
+          tags: data.tags,
+          customFields: data.customFields
         })
       });
       if (exit) {
@@ -255,6 +268,46 @@ export const AcyEditSubscriber = () => {
                 </label>
               </div>
             </div>
+
+            <div>
+              <label className="block text-sm text-slate-500 mb-1">Tags (kommagetrennt)</label>
+              <input
+                type="text"
+                value={data.tags || ''}
+                onChange={(e) => handleChange('tags', e.target.value)}
+                placeholder="z.B. Stammkunde, Tandemflug-Interessent"
+                className="w-full px-4 py-2 border border-slate-200 rounded-md focus:outline-none focus:border-[#0ea5e9] text-slate-700"
+              />
+            </div>
+
+            {data.fieldDefinitions.length > 0 && (
+              <div className="space-y-4 pt-2 border-t border-slate-100">
+                <span className="text-sm font-medium text-slate-700 block pt-4">Weitere Angaben</span>
+                {data.fieldDefinitions.map((field) => {
+                  const value = data.customFields?.[field.id] || '';
+                  const setValue = (v: string) => handleChange('customFields', { ...(data.customFields || {}), [field.id]: v });
+                  return (
+                    <div key={field.id}>
+                      <label className="block text-sm text-slate-500 mb-1">{field.title}{field.required && ' *'}</label>
+                      {field.fieldType === 'textarea' ? (
+                        <textarea value={value} onChange={(e) => setValue(e.target.value)} rows={2} className="w-full px-4 py-2 border border-slate-200 rounded-md focus:outline-none focus:border-[#0ea5e9] text-slate-700" />
+                      ) : field.fieldType === 'select' ? (
+                        <select value={value} onChange={(e) => setValue(e.target.value)} className="w-full px-4 py-2 border border-slate-200 rounded-md focus:outline-none focus:border-[#0ea5e9] text-slate-700 bg-white">
+                          <option value="">-</option>
+                          {(field.options || '').split('\n').map((o) => o.trim()).filter(Boolean).map((o) => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      ) : field.fieldType === 'checkbox' ? (
+                        <input type="checkbox" checked={value === 'true'} onChange={(e) => setValue(e.target.checked ? 'true' : 'false')} className="rounded text-[#0ea5e9] focus:ring-[#0ea5e9]" />
+                      ) : field.fieldType === 'date' ? (
+                        <input type="date" value={value} onChange={(e) => setValue(e.target.value)} className="w-full px-4 py-2 border border-slate-200 rounded-md focus:outline-none focus:border-[#0ea5e9] text-slate-700" />
+                      ) : (
+                        <input type="text" value={value} onChange={(e) => setValue(e.target.value)} className="w-full px-4 py-2 border border-slate-200 rounded-md focus:outline-none focus:border-[#0ea5e9] text-slate-700" />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             <div className="pt-4 mt-4 border-t border-slate-100 text-xs text-slate-500">
               Erstellungsdatum: {new Date(data.creationDate).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}, Quelle: System

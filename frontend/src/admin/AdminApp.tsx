@@ -15,6 +15,7 @@ import { AcyQueue } from './AcyMailing/Queue';
 import { AcySubscribers } from './AcyMailing/Subscribers';
 import { AcyEditSubscriber } from './AcyMailing/EditSubscriber';
 import { AcyLists } from './AcyMailing/Lists';
+import { AcyFields } from './AcyMailing/Fields';
 import { AcyStatistics } from './AcyMailing/Statistics';
 import { AcyEmails } from './AcyMailing/Emails';
 import { AcyChooseCampaignType } from './AcyMailing/ChooseCampaignType';
@@ -34,8 +35,8 @@ import { BookingFormBuilder } from './BookingFormBuilder';
 import { NewsList, NewsEdit, NewsCreate } from './News';
 import { DownloadCategoryList, DownloadCategoryEdit, DownloadCategoryCreate, DownloadFileList, DownloadFileEdit, DownloadFileCreate } from './Downloads';
 import { WebLinkCategoryList, WebLinkCategoryEdit, WebLinkCategoryCreate, WebLinkList, WebLinkEdit, WebLinkCreate } from './WebLinks';
-import { AdBannerList, AdBannerEdit, AdBannerCreate } from './Banners';
-import { PageMediaList, PageMediaEdit, PageMediaCreate } from './PageMedia';
+import { BannerGroupsOverview, BannerGroupManager } from './Banners';
+import { PageMediaConfigPage } from './PageMedia';
 import { GalleryList, GalleryEdit, GalleryCreate } from './Gallery'; // NEW - standalone Galerie feature, separate from PageMedia
 import { PagesManager } from './Pages'; // NEW - "Seiten" CMS: admin-created pages with their own URL, Unlayer-based editor
 import { MenuManager } from './MenuManager'; // NEW - "Menü": header nav items and their sub-items
@@ -129,8 +130,6 @@ const customGermanMessages = {
         files: { empty: 'Noch keine Downloads vorhanden.' },
         weblinkcategories: { empty: 'Noch keine Link-Kategorien vorhanden.' },
         links: { empty: 'Noch keine Links vorhanden.' },
-        banners: { empty: 'Noch keine Werbebanner vorhanden.' },
-        pagemedia: { empty: 'Noch keine Seitenmedien vorhanden.' },
         legalPages: { empty: 'Noch keine rechtlichen Seiten vorhanden.' },
     }
 };
@@ -212,6 +211,7 @@ export const AdminApp = () => {
             <Route path="/events-dashboard" element={<Authenticated><EventsDashboard /></Authenticated>} />
             <Route path="/event-statistics" element={<Authenticated><EventStatistics /></Authenticated>} />
             <Route path="/menu" element={<Authenticated><MenuManager /></Authenticated>} />
+            <Route path="/banners/manage/:position" element={<Authenticated><BannerGroupManager /></Authenticated>} />
             <Route path="/pages" element={<Authenticated><PagesManager /></Authenticated>} />
             {/* :contentId? is only present when editing a fixed-page
                 duplicate (Pages.tsx > "Duplizieren") - see
@@ -285,6 +285,7 @@ export const AdminApp = () => {
             <Route path="/templates" element={<Authenticated><TemplatesBuilder /></Authenticated>} />
             <Route path="/import" element={<Authenticated><Import /></Authenticated>} />
             <Route path="/ecwid-config" element={<Authenticated><EcwidConfigPage /></Authenticated>} />
+            <Route path="/pagemedia" element={<Authenticated><PageMediaConfigPage /></Authenticated>} />
             <Route path="/cookie-consent" element={<Authenticated><CookieConsentConfigPage /></Authenticated>} />
             <Route path="/payment-config" element={<Authenticated><PaymentConfigPage /></Authenticated>} />
             <Route path="/settings-config" element={<Authenticated><SettingsConfigPage /></Authenticated>} />
@@ -297,6 +298,7 @@ export const AdminApp = () => {
             <Route path="/acymailing/subscribers" element={<Authenticated><AcySubscribers /></Authenticated>} />
             <Route path="/acymailing/subscribers/edit/:email" element={<Authenticated><AcyEditSubscriber /></Authenticated>} />
             <Route path="/acymailing/lists" element={<Authenticated><AcyLists /></Authenticated>} />
+            <Route path="/acymailing/fields" element={<Authenticated><AcyFields /></Authenticated>} />
             <Route path="/acymailing/statistics" element={<Authenticated><AcyStatistics /></Authenticated>} />
             <Route path="/acymailing/templates" element={<Authenticated><AcyTemplates /></Authenticated>} />
             <Route path="/acymailing/emails" element={<Authenticated><AcyEmails /></Authenticated>} />
@@ -313,8 +315,7 @@ export const AdminApp = () => {
         <Resource name="files" options={{ label: 'Downloads' }} list={DownloadFileList} edit={DownloadFileEdit} create={DownloadFileCreate} />
         <Resource name="weblinkcategories" options={{ label: 'Link Kategorien' }} list={WebLinkCategoryList} edit={WebLinkCategoryEdit} create={WebLinkCategoryCreate} />
         <Resource name="links" options={{ label: 'Links' }} list={WebLinkList} edit={WebLinkEdit} create={WebLinkCreate} />
-        <Resource name="banners" options={{ label: 'Werbebanner' }} list={AdBannerList} edit={AdBannerEdit} create={AdBannerCreate} />
-        <Resource name="pagemedia" options={{ label: 'Seitenmedien' }} list={PageMediaList} edit={PageMediaEdit} create={PageMediaCreate} />
+        <Resource name="banners" options={{ label: 'Werbebanner' }} list={BannerGroupsOverview} />
         {/* NEW - standalone Galerie feature, separate resource/table from pagemedia above */}
         <Resource name="pagegallery" options={{ label: 'Galerie' }} list={GalleryList} edit={GalleryEdit} create={GalleryCreate} />
         <Resource name="serviceorders" options={{ label: 'Service Aufträge' }} list={ServiceOrderList} show={ServiceOrderShow} />

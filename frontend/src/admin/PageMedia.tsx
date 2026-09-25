@@ -1,214 +1,176 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNotify } from 'react-admin';
 import {
-  List,
-  Datagrid,
+  Box,
+  Typography,
+  Button,
+  CircularProgress,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
   TextField,
-  EditButton,
-  Edit,
-  Create,
-  SimpleForm,
-  TextInput,
-  RadioButtonGroupInput,
-  SelectInput,
-  useRecordContext,
-  useNotify,
-  useInput,
-  ArrayInput,
-  SimpleFormIterator,
-  FormDataConsumer
-} from 'react-admin';
+} from '@mui/material';
+import SaveIcon from '@mui/icons-material/Save';
 
-// List of predefined static pages that have media slots
-const PAGE_CHOICES = [
-  { id: 'home', name: 'Startseite' },
-  { id: 'sicherheitstraining', name: 'Performance - Sicherheitstraining' },
-  { id: 'rettungsgeraetetraining', name: 'Performance - Rettungsgerätetraining' },
-  { id: 'refresher', name: 'Performance - Refresher' },
-  { id: 'groundhandling', name: 'Performance - Groundhandling' },
-  { id: 'tandem', name: 'Tandemfliegen' },
-  { id: 'schnupperkurs', name: 'Ausbildung - Schnupperkurs' },
-  { id: 'l-schein', name: 'Ausbildung - L-Schein' },
-  { id: 'a-schein', name: 'Ausbildung - A-Schein' },
-  { id: 'b-schein', name: 'Ausbildung - B-Schein' },
-  { id: 'windenschein', name: 'Ausbildung - Winde' },
-  { id: 'tandemschein', name: 'Ausbildung - Tandem' },
-];
+// "Seitenmedien" used to be a generic slug-picker covering 12 pages, but
+// checking what each page actually reads from it (frontend/src/pages/*.tsx)
+// showed only one field is still genuinely load-bearing: Sicherheitstraining
+// (/performance/sicherheitstraining)'s hero image/video toggle - see
+// Sicherheitstraining.tsx's own `media.contentImageUrl` /
+// `media.contentMediaType` / `media.contentYoutubeUrl` reads, and
+// SicherheitstrainingContentEditor.tsx's own note that this field is
+// deliberately kept separate from it. Every other page/field
+// (headerImageUrl, galleryImages, the other 11 page choices) turned out to
+// be dead: Home.tsx's own galleryImages read is now superseded by
+// HomeContentEditor's own per-card image uploads (confirmed no PageMedia
+// row for "home" even exists in the database), and no other page reads
+// this API at all. So this is now a single fixed settings screen for that
+// one real field, instead of a full CRUD list/edit/create for 12 mostly-
+// unused rows - same "single fixed record" pattern as
+// CookieConsentConfigPage.tsx, adapted since PageMedia's row is
+// slug-keyed rather than a true singleton (created on first save here if
+// it doesn't exist yet).
+const SLUG = 'sicherheitstraining';
+const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem('auth')}` });
 
-const MediaPreview = ({ source }: { source: string }) => {
-  const record = useRecordContext();
-  if (!record || !record[source]) return null;
-  return (
-    <img src={record[source]} alt="Preview" style={{ width: '100px', height: 'auto', borderRadius: '4px' }} />
-  );
-};
+interface MediaState {
+  id?: string;
+  contentMediaType: 'IMAGE' | 'VIDEO';
+  contentImageUrl: string;
+  contentYoutubeUrl: string;
+}
 
-// Custom Image Upload component using our /api/upload endpoint
-const ImageUploadInput = (props: any) => {
-  const { source, label } = props;
-  const { field } = useInput({ source });
-  const [uploading, setUploading] = useState(false);
+const DEFAULTS: MediaState = { contentMediaType: 'IMAGE', contentImageUrl: '', contentYoutubeUrl: '' };
+
+export const PageMediaConfigPage = () => {
   const notify = useNotify();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [media, setMedia] = useState<MediaState>(DEFAULTS);
+
+  useEffect(() => {
+    fetch('/api/pagemedia', { headers: authHeaders() })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((rows: any[]) => {
+        const row = Array.isArray(rows) ? rows.find((r) => r.slug === SLUG) : null;
+        if (row) {
+          setMedia({
+            ...DEFAULTS,
+            ...row,
+            contentImageUrl: row.contentImageUrl ?? '',
+            contentYoutubeUrl: row.contentYoutubeUrl ?? '',
+          });
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        notify('Fehler beim Laden', { type: 'error' });
+        setLoading(false);
+      });
+  }, [notify]);
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
     setUploading(true);
     const formData = new FormData();
     formData.append('file', file);
-
     try {
-      const token = localStorage.getItem('auth');
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
+      const res = await fetch('/api/upload', { method: 'POST', headers: authHeaders(), body: formData });
       const data = await res.json();
-      if (res.ok) {
-        field.onChange(data.url);
-        notify('Bild erfolgreich hochgeladen', { type: 'success' });
-      } else {
-        notify(data.message || 'Fehler beim Upload', { type: 'warning' });
-      }
-    } catch (error) {
+      if (res.ok) setMedia((prev) => ({ ...prev, contentImageUrl: data.url }));
+      else notify(data.message || 'Fehler beim Upload', { type: 'warning' });
+    } catch {
       notify('Netzwerkfehler beim Upload', { type: 'warning' });
     } finally {
       setUploading(false);
+      event.target.value = '';
     }
   };
 
-  const currentUrl = field.value;
+  const handleSave = async () => {
+    setSaving(true);
+    const body = { slug: SLUG, ...media };
+    try {
+      const res = media.id
+        ? await fetch(`/api/pagemedia/${media.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', ...authHeaders() },
+            body: JSON.stringify(body),
+          })
+        : await fetch('/api/pagemedia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...authHeaders() },
+            body: JSON.stringify(body),
+          });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        notify(data.error || 'Fehler beim Speichern', { type: 'error' });
+        return;
+      }
+      setMedia({ ...DEFAULTS, ...data });
+      notify('Gespeichert', { type: 'success' });
+    } catch {
+      notify('Netzwerkfehler beim Speichern', { type: 'error' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <CircularProgress sx={{ m: 3 }} size={24} />;
 
   return (
-    <div style={{ marginBottom: '1.5rem', width: '100%' }}>
-      <label style={{ display: 'block', fontSize: '12px', color: 'rgba(0, 0, 0, 0.6)', marginBottom: '8px' }}>{label}</label>
-      <input type="file" accept="image/*" onChange={handleUpload} disabled={uploading} />
-      {uploading && <span style={{ marginLeft: '10px', fontSize: '12px' }}>Lädt hoch...</span>}
-      
-      {currentUrl && (
-        <div style={{ marginTop: '10px' }}>
-          <img src={currentUrl} alt="Preview" style={{ maxWidth: '200px', borderRadius: '4px', border: '1px solid #ccc' }} />
-          <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>Gespeicherte URL: {currentUrl}</div>
-        </div>
-      )}
-    </div>
+    <Box sx={{ p: 3, maxWidth: 640 }}>
+      <Typography variant="h5" sx={{ mb: 0.5 }}>Seitenmedien</Typography>
+      <Typography variant="body2" sx={{ color: '#666', mb: 3 }}>
+        Titelbild / Video für "Performance &gt; Sicherheitstraining". Jede andere Seite verwaltet ihre Bilder
+        mittlerweile direkt unter Admin &gt; Seiten bzw. Admin &gt; Galerie.
+      </Typography>
+
+      <Box sx={{ p: '20px', bgcolor: '#e3f2fd', borderRadius: '8px' }}>
+        <Typography variant="subtitle1" sx={{ mb: 1.5 }}>Was soll auf der Seite angezeigt werden?</Typography>
+        <RadioGroup
+          row
+          value={media.contentMediaType}
+          onChange={(e) => setMedia((prev) => ({ ...prev, contentMediaType: e.target.value as 'IMAGE' | 'VIDEO' }))}
+        >
+          <FormControlLabel value="IMAGE" control={<Radio />} label="Bild" />
+          <FormControlLabel value="VIDEO" control={<Radio />} label="YouTube Video" />
+        </RadioGroup>
+
+        <Box sx={{ mt: 2 }}>
+          <Button component="label" variant="outlined" size="small" disabled={uploading}>
+            {uploading ? 'Lädt hoch...' : media.contentImageUrl ? 'Bild ersetzen' : 'Bild hochladen'}
+            <input type="file" accept="image/*" hidden onChange={handleUpload} />
+          </Button>
+          {media.contentImageUrl && (
+            <Box sx={{ mt: 1.5 }}>
+              <Box component="img" src={media.contentImageUrl} alt="" sx={{ maxWidth: 240, borderRadius: '4px', border: '1px solid #ccc', display: 'block' }} />
+            </Box>
+          )}
+        </Box>
+
+        <TextField
+          label="YouTube Embed Link (z.B. https://www.youtube.com/embed/...)"
+          value={media.contentYoutubeUrl}
+          onChange={(e) => setMedia((prev) => ({ ...prev, contentYoutubeUrl: e.target.value }))}
+          fullWidth
+          size="small"
+          sx={{ mt: 2, bgcolor: '#fff' }}
+        />
+      </Box>
+
+      <Button
+        variant="contained"
+        color="success"
+        startIcon={<SaveIcon />}
+        onClick={handleSave}
+        disabled={saving}
+        sx={{ mt: 3 }}
+      >
+        Speichern
+      </Button>
+    </Box>
   );
 };
-
-export const PageMediaList = () => (
-  <List>
-    <Datagrid rowClick="edit">
-      <TextField source="slug" label="Seiten-Kennung (Slug)" />
-      <TextField source="contentMediaType" label="Media Typ" />
-      <MediaPreview source="headerImageUrl" />
-      <EditButton />
-    </Datagrid>
-  </List>
-);
-
-export const PageMediaEdit = () => {
-  return (
-    <Edit>
-      <SimpleForm>
-        <SelectInput source="slug" choices={PAGE_CHOICES} label="Seite auswählen" fullWidth />
-        
-        <div style={{ padding: '20px', background: '#f5f5f5', borderRadius: '8px', width: '100%', marginBottom: '20px' }}>
-          <h3 style={{ marginTop: 0 }}>Header Bild (Top Banner)</h3>
-          <ImageUploadInput source="headerImageUrl" label="Bild hochladen" />
-        </div>
-
-        <div style={{ padding: '20px', background: '#e3f2fd', borderRadius: '8px', width: '100%', marginBottom: '20px' }}>
-          <h3 style={{ marginTop: 0 }}>Content Media (Zentrales Bild / Video)</h3>
-          <RadioButtonGroupInput 
-            source="contentMediaType" 
-            label="Was soll auf der Seite angezeigt werden?" 
-            choices={[
-              { id: 'IMAGE', name: 'Bild (Image)' },
-              { id: 'VIDEO', name: 'YouTube Video' }
-            ]} 
-          />
-          
-          <div style={{ marginTop: '20px' }}>
-             <ImageUploadInput source="contentImageUrl" label="Bild hochladen (Wenn Image ausgewählt ist)" />
-             <TextInput source="contentYoutubeUrl" label="YouTube Embed Link (z.B. https://www.youtube.com/embed/...)" fullWidth />
-          </div>
-        </div>
-
-        <div style={{ padding: '20px', background: '#fff3e0', borderRadius: '8px', width: '100%', marginBottom: '20px' }}>
-          <h3 style={{ marginTop: 0 }}>Impressionen (Bildergalerie)</h3>
-          <p style={{ fontSize: '13px', color: '#666', marginTop: 0 }}>Fügen Sie hier Bilder für die Galerie am Ende der Seite hinzu.</p>
-          <FormDataConsumer>
-            {({ formData }) =>
-              formData.slug === 'home' ? (
-                <p style={{ fontSize: '13px', color: '#a15c00', marginTop: 0 }}>
-                  Für die Startseite werden die ersten 3 Bilder in dieser Liste für die drei Highlight-Kacheln
-                  verwendet: Bild 1 = "Fliegen Lernen", Bild 2 = "Shop Geöffnet", Bild 3 = "On Tour...".
-                </p>
-              ) : null
-            }
-          </FormDataConsumer>
-          <ArrayInput source="galleryImages" label="Bilder">
-            <SimpleFormIterator>
-              <ImageUploadInput source="" label="Bild" />
-            </SimpleFormIterator>
-          </ArrayInput>
-        </div>
-
-      </SimpleForm>
-    </Edit>
-  );
-};
-
-export const PageMediaCreate = () => (
-  <Create>
-    <SimpleForm>
-        <SelectInput source="slug" choices={PAGE_CHOICES} label="Seite auswählen" fullWidth />
-        
-        <div style={{ padding: '20px', background: '#f5f5f5', borderRadius: '8px', width: '100%', marginBottom: '20px' }}>
-          <h3 style={{ marginTop: 0 }}>Header Bild (Top Banner)</h3>
-          <ImageUploadInput source="headerImageUrl" label="Bild hochladen" />
-        </div>
-
-        <div style={{ padding: '20px', background: '#e3f2fd', borderRadius: '8px', width: '100%', marginBottom: '20px' }}>
-          <h3 style={{ marginTop: 0 }}>Content Media (Zentrales Bild / Video)</h3>
-          <RadioButtonGroupInput 
-            source="contentMediaType" 
-            label="Was soll auf der Seite angezeigt werden?" 
-            choices={[
-              { id: 'IMAGE', name: 'Bild (Image)' },
-              { id: 'VIDEO', name: 'YouTube Video' }
-            ]} 
-            defaultValue="IMAGE"
-          />
-          
-          <div style={{ marginTop: '20px' }}>
-             <ImageUploadInput source="contentImageUrl" label="Bild hochladen (Wenn Image ausgewählt ist)" />
-             <TextInput source="contentYoutubeUrl" label="YouTube Embed Link (z.B. https://www.youtube.com/embed/...)" fullWidth />
-          </div>
-        </div>
-
-        <div style={{ padding: '20px', background: '#fff3e0', borderRadius: '8px', width: '100%', marginBottom: '20px' }}>
-          <h3 style={{ marginTop: 0 }}>Impressionen (Bildergalerie)</h3>
-          <p style={{ fontSize: '13px', color: '#666', marginTop: 0 }}>Fügen Sie hier Bilder für die Galerie am Ende der Seite hinzu.</p>
-          <FormDataConsumer>
-            {({ formData }) =>
-              formData.slug === 'home' ? (
-                <p style={{ fontSize: '13px', color: '#a15c00', marginTop: 0 }}>
-                  Für die Startseite werden die ersten 3 Bilder in dieser Liste für die drei Highlight-Kacheln
-                  verwendet: Bild 1 = "Fliegen Lernen", Bild 2 = "Shop Geöffnet", Bild 3 = "On Tour...".
-                </p>
-              ) : null
-            }
-          </FormDataConsumer>
-          <ArrayInput source="galleryImages" label="Bilder">
-            <SimpleFormIterator>
-              <ImageUploadInput source="" label="Bild" />
-            </SimpleFormIterator>
-          </ArrayInput>
-        </div>
-    </SimpleForm>
-  </Create>
-);

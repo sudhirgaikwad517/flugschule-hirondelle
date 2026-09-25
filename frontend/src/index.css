@@ -465,31 +465,32 @@ h1, h2, h3, h4, h5, h6, .nav-item {
   to { width: 100%; }
 }
 .RaBulkActionsToolbar-collapsed { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }
-/* When rows ARE selected, the bulk-actions toolbar (Löschen etc.) is meant
-   to visually overlay/replace the normal list toolbar (+Erstellen /
-   Exportieren) at the exact same position - that's by design, react-admin
-   renders both stacked on top of each other and only one is meant to win.
-   Confirmed live via elementFromPoint at the bulk toolbar's own screen
-   coordinates: the normal RaTopToolbar was the one actually painted on
-   top, silently hiding the bulk toolbar underneath it despite the bulk
-   toolbar's own zIndex:3 and fully "visible" computed style - not a
-   collapsed/hidden state, a genuine stacking-order loss. Forcing it above
-   MUI's own AppBar z-index (1100) guarantees it wins the overlap without
-   touching RaList-actions/RaTopToolbar's own stacking at all. */
+/* When rows ARE selected, react-admin's own design has the bulk-actions
+   toolbar (Löschen etc.) visually overlay/replace the normal list toolbar
+   (+Erstellen / Exportieren) at the exact same position via
+   position:absolute + a translateY transform, stacked on top of each
+   other with only one meant to win via z-index. In this app that overlay
+   never wins: the bulk toolbar sits 3 DOM levels inside .RaList-content
+   (the Card wrapping the Datagrid), which is RaList-actions' SIBLING
+   under .RaList-main - z-index only competes within a shared stacking
+   context, so no z-index given to the toolbar or to .RaList-content ever
+   made the descendant's z-index count against that sibling (verified live
+   via elementFromPoint + addStyleTag experiments: even z-index:1300 with
+   isolation:isolate on every ancestor still lost to RaTopToolbar).
+   Simplest reliable fix: stop fighting the absolute-overlay positioning
+   entirely and let the bulk toolbar render in normal document flow
+   instead, directly below the real toolbar and above the table header -
+   this can never overlap anything because it no longer shares any
+   coordinates with another element. */
 body.admin-root .RaBulkActionsToolbar-toolbar {
-  z-index: 1200 !important;
+  position: static !important;
+  transform: none !important;
+  z-index: auto !important;
+  background-color: #fff !important;
+  border-bottom: 1px solid #e0e0e0 !important;
 }
-/* z-index alone on the toolbar above doesn't reach far enough: it's nested
-   three levels inside .RaList-content (the Card wrapping the Datagrid),
-   which is RaList-actions' SIBLING under .RaList-main with no z-index of
-   its own (auto) - z-index only ever competes within a shared stacking
-   context, and .RaList-content never established one for its subtree to
-   win or lose as a unit against that sibling. Giving the Card itself an
-   explicit stacking context (any z-index other than auto) is what finally
-   lets its bulk-toolbar descendant's z-index:1200 actually count for
-   something at the point where the two toolbars visually overlap. */
-body.admin-root .RaList-content {
-  z-index: 1 !important;
+body.admin-root .RaBulkActionsToolbar-root {
+  position: static !important;
 }
 
 /* Admin-authored Seiten (Unlayer CMS, see Pages.tsx/DynamicPage.tsx) content

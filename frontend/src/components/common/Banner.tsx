@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useBannerSlides } from '../../hooks/useBannerSlides';
 
 interface BannerSlide {
   image: string;
@@ -113,15 +114,17 @@ interface BannerProps {
 }
 
 export const Banner = ({ variant = 'subpage' }: BannerProps) => {
-  // Was previously swappable for admin-configured AdBanner rows (position
-  // 'home_top'), but that override had no way to validate the fetched URLs
-  // and would silently replace the real, curated 37-slide set with
-  // whatever (possibly stale) AdBanner rows exist - causing the reported
-  // "some images play, then it snaps back to the first image" bug the
-  // moment that fetch resolved. Removed: the home/subpage slide sets below
-  // are the site's actual accurate content now, not a placeholder meant to
-  // be overridden.
-  const slides = variant === 'home' ? HOME_SLIDES : SUBPAGE_SLIDES;
+  // Admin-manageable again (Admin > Werbebanner), reconnected via
+  // useBannerSlides - which is what actually fixes the previous "some
+  // images play, then it snaps back to the first image" bug: every
+  // candidate URL is preloaded and validated before ever being swapped in,
+  // and the `slides` effect below resets activeSlides whenever this
+  // array's identity changes, so a mid-animation swap can never leave a
+  // stale index pointing at the wrong photo. Falls back to the site's own
+  // curated set (below) whenever the admin hasn't configured this
+  // position yet, or none of its image URLs actually load.
+  const fallback = variant === 'home' ? HOME_SLIDES : SUBPAGE_SLIDES;
+  const slides = useBannerSlides(variant === 'home' ? 'home' : 'subpage', fallback, variant === 'home');
 
   // Camera.js keeps exactly two slides "active" at any moment - the newest
   // (fading/zooming in) and the one before it (already fully zoomed in,
@@ -140,9 +143,14 @@ export const Banner = ({ variant = 'subpage' }: BannerProps) => {
   // (just with a faster 400ms crossfade override), so this restores that.
   const [activeSlides, setActiveSlides] = useState<{ index: number; origin: string }[]>([]);
 
+  // Re-runs (not just on mount) whenever `slides` itself changes identity -
+  // i.e. the moment useBannerSlides swaps from the fallback array to a
+  // validated admin-configured one (or back) - so a stale index from the
+  // previous array can never end up pointing at the wrong photo, or past
+  // the end of a shorter one.
   useEffect(() => {
     setActiveSlides([{ index: 0, origin: randomTransformOrigin() }]);
-  }, []);
+  }, [slides]);
 
   const nextSlide = () => {
     setActiveSlides((prev) => {

@@ -17,6 +17,11 @@ interface StatsData {
     date: string;
     sent: number;
   }[];
+  devices?: {
+    browserCounts: Record<string, number>;
+    mobileCount: number;
+    desktopCount: number;
+  };
 }
 
 export const AcyStatistics = () => {
@@ -172,6 +177,34 @@ export const AcyStatistics = () => {
             </div>
           </div>
         </div>
+
+        {/* Old AcyMailing's userstats tracked browser/is_mobile per open -
+            geo-location is deliberately not included, see
+            NewsletterTrackingEvent's schema comment (needs an external
+            geo-IP service this project has no credentials/budget for). */}
+        {data.devices && (data.devices.mobileCount + data.devices.desktopCount) > 0 && (
+          <div className="bg-white rounded-lg shadow-sm border border-slate-100 p-6 mt-6">
+            <h3 className="text-slate-800 font-semibold mb-4">Geräte & Browser (bei Öffnungen)</h3>
+            <div className="flex flex-wrap gap-8">
+              <div>
+                <p className="text-sm text-slate-500 mb-1">Mobil vs. Desktop</p>
+                <p className="text-slate-800">
+                  <span className="font-bold">{data.devices.mobileCount}</span> mobil ·{' '}
+                  <span className="font-bold">{data.devices.desktopCount}</span> Desktop
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-slate-500 mb-1">Browser</p>
+                <p className="text-slate-800">
+                  {Object.entries(data.devices.browserCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([browser, count]) => `${browser}: ${count}`)
+                    .join(' · ')}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AcyLayout>
   );

@@ -97,14 +97,16 @@ export async function generateInvoicePDF(bookingId: string): Promise<Buffer> {
     }
 
     // old's real invoice template shows a full net/tax/gross breakdown
-    // (MAT_BOOKING_PAYMENT_NETTO / _TAX / _BRUTTO) - Event.taxRate already
-    // existed in the schema but nothing fed it into invoice output before.
-    // totalPrice is treated as the gross amount, matching old's own
-    // payment_brutto (what this field was migrated from).
-    const taxRatePercent = parseFloat(booking.event.taxRate || '');
+    // (MAT_BOOKING_PAYMENT_NETTO / _TAX / _BRUTTO). Uses the split FROZEN
+    // on the booking at the time it was created (bookingPrice.ts) rather
+    // than recomputing live from booking.event.taxRate - a tax rate edited
+    // after the fact must never rewrite what a past invoice already showed.
+    // Falls back to a live computation only for bookings created before
+    // these columns existed (priceNet/priceTax null).
+    const taxRatePercent = booking.priceTaxRatePercent ?? parseFloat(booking.event.taxRate || '');
     if (taxRatePercent > 0) {
-      const netAmount = booking.totalPrice / (1 + taxRatePercent / 100);
-      const taxAmount = booking.totalPrice - netAmount;
+      const netAmount = booking.priceNet ?? booking.totalPrice / (1 + taxRatePercent / 100);
+      const taxAmount = booking.priceTax ?? booking.totalPrice - netAmount;
       doc.font('Helvetica');
       doc.text('Nettobetrag:', 350, y);
       doc.text(`${netAmount.toFixed(2)} €`, 500, y);
