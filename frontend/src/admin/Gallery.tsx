@@ -33,6 +33,7 @@ import RestoreFromTrashIcon from '@mui/icons-material/RestoreFromTrash';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
+import AddIcon from '@mui/icons-material/Add';
 
 // Standalone "Galerie" admin feature, separate from PageMedia.tsx on purpose
 // (per request: don't touch PageMedia's existing header/content image
@@ -438,6 +439,19 @@ const GalleryListHeader = () => {
           <Typography variant="h5">Galerie</Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          {/* <List actions={false}> suppresses react-admin's own default
+              Create button along with the rest of its toolbar - without
+              this, GalleryCreate (registered in AdminApp.tsx and reachable
+              at /admin/pagegallery/create) was completely unreachable from
+              the UI. */}
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<AddIcon />}
+            onClick={() => navigate('/admin/pagegallery/create')}
+          >
+            Neu erstellen
+          </Button>
           {/* Same "Papierkorb" button/icon/placement as Pages.tsx's header -
               deleted galleries land in the same shared trash as pages. */}
           <Button
