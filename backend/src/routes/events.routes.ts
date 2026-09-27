@@ -25,7 +25,7 @@ function buildTicketsCreate(tickets: any[] | undefined) {
 // Allow public access to GET events for the frontend calendar
 router.get('/', async (req, res) => {
   try {
-    const { _sort, _order, _start, _end, q, categoryId, locationId, organizerId, published, cancelled, ids } = req.query;
+    const { _sort, _order, _start, _end, q, categoryId, locationId, organizerId, published, cancelled, ids, status } = req.query;
 
     let whereClause: any = {};
     if (ids) {
@@ -52,6 +52,23 @@ router.get('/', async (req, res) => {
     if (organizerId) whereClause.organizerId = organizerId;
     if (published !== undefined) whereClause.published = published === 'true';
     if (cancelled !== undefined) whereClause.cancelled = cancelled === 'true';
+    // Old Matukio's real "modal_event" popup (booking edit's "Veranstaltung
+    // auswählen" button) defaults to status=current when no filter is
+    // explicitly chosen - matukio_recurring model's getListQuery():
+    // `r.end > curdate()`, i.e. only events that haven't finished yet, not
+    // the full historical list. Matches that here for status=current.
+    if (status === 'current') {
+      const now = new Date();
+      const currentFilter = {
+        OR: [
+          { endDate: { gt: now } },
+          { endDate: null, startDate: { gt: now } }
+        ]
+      };
+      whereClause = whereClause.OR
+        ? { AND: [{ OR: whereClause.OR }, currentFilter] }
+        : { ...whereClause, ...currentFilter };
+    }
 
     const skip = _start ? Number(_start) : 0;
     const take = _end ? Number(_end) - skip : 100;

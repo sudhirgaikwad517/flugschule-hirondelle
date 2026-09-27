@@ -500,12 +500,13 @@ const AdminActions = () => {
         })();
     }, []);
 
-    // Matches old's real modal list (views/dates/tmpl/element.php): no
-    // status/category pre-filter - every event, regardless of published
-    // state, is listed by default (that's what its own "All/Published/
-    // Unpublished" filter defaults to), paginated (old's own
-    // getListFooter()), narrowed only by the search box. 20 per page
-    // matches Joomla's own default list limit.
+    // Matches old's real modal list (views/dates/tmpl/element.php +
+    // models/dates.php::getListQuery()) - its own default, whenever no
+    // status filter has been explicitly picked, is "current"
+    // (`r.end > curdate()`, MatukioModelDates::getListQuery()), sorted by
+    // begin ascending (soonest first) - NOT every event ever created (that
+    // list has 1300+ historical rows; old's own popup showed only 13).
+    // 20 per page matches Joomla's own default list limit.
     const EVENT_DIALOG_PAGE_SIZE = 20;
     const eventDialogTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const fetchEventDialogPage = async (query: string, page: number) => {
@@ -513,7 +514,7 @@ const AdminActions = () => {
         try {
             const start = page * EVENT_DIALOG_PAGE_SIZE;
             const qs = query ? `q=${encodeURIComponent(query)}&` : '';
-            const res = await fetch(`/api/events?${qs}_start=${start}&_end=${start + EVENT_DIALOG_PAGE_SIZE}&_sort=startDate&_order=DESC`);
+            const res = await fetch(`/api/events?${qs}status=current&_start=${start}&_end=${start + EVENT_DIALOG_PAGE_SIZE}&_sort=startDate&_order=ASC`);
             const data = await res.json();
             setEventDialogResults(Array.isArray(data) ? data.map((e: any) => ({ id: e.id, title: e.title, eventNumber: e.eventNumber, startDate: e.startDate, endDate: e.endDate })) : []);
             const contentRange = res.headers.get('Content-Range');
