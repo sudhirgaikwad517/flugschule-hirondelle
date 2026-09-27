@@ -1057,7 +1057,7 @@ export const AcyEditEmail = () => {
                   <button
                     type="button"
                     disabled
-                    title="Nur in der Pro-Version verfügbar"
+                    title="Um diese Funktion zu nutzen, aktualisieren Sie bitte auf AcyMailing Enterprise"
                     className="py-2.5 rounded font-medium border-2 border-slate-100 text-slate-300 cursor-not-allowed"
                   >
                     Automatisch
