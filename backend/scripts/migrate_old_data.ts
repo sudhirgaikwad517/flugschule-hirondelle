@@ -298,7 +298,24 @@ async function migrateEventsAndBookings(
 
     if (row.extra_fee_options) {
       try {
-        eventExtraOptions.set(event.id, JSON.parse(row.extra_fee_options));
+        const rawOptions = JSON.parse(row.extra_fee_options);
+        eventExtraOptions.set(event.id, rawOptions);
+
+        // Also persist onto the Event record itself in the same shape the
+        // live booking flow already stores under customerDetails.
+        // selectedExtras ({title,value,perPlace}) - this was previously
+        // only kept in the in-memory map above (used just to resolve
+        // bookings' own selectedExtras indices below), so every migrated
+        // event's own extraFeeOptions ended up permanently null even
+        // though old's real data for it existed right here.
+        if (Array.isArray(rawOptions) && rawOptions.length) {
+          const normalized = rawOptions.map((o: any) => ({
+            title: htmlToPlainText(o.title) || 'Option',
+            value: parseFloat(o.value) || 0,
+            perPlace: [true, 'true', 1, '1'].includes(o.perPlace),
+          }));
+          await prisma.event.update({ where: { id: event.id }, data: { extraFeeOptions: normalized } });
+        }
       } catch (e) {
         console.warn(`Could not parse extra_fee_options for event ${row.id}:`, e);
       }
