@@ -982,12 +982,16 @@ router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
     // capacity for either side. The admin UI itself never sends these
     // fields; this just closes the gap for anyone hitting the endpoint
     // directly.
-    const { items, id, user, event, totalPrice, eventId, userId, ...bookingData } = req.body;
+    // notifyParticipant/notifyParticipantInvoice/updateAmount are old
+    // Matukio's real "Benachrichtigungen und Aktualisierungen" checkboxes
+    // (administrator/components/com_matukio/layouts/booking/edit.php) -
+    // one-time actions to run as part of THIS save, not booking fields.
+    const { items, id, user, event, totalPrice, eventId, userId, notifyParticipant, notifyParticipantInvoice, updateAmount, ...bookingData } = req.body;
     if (items && items.some((i: any) => !Number.isInteger(Number(i.quantity)) || Number(i.quantity) < 1)) {
       return res.status(400).json({ message: 'Ungültige Anzahl' });
     }
-    const existing = await prisma.booking.findUnique({ where: { id: req.params.id as string }, select: { status: true } });
-    const booking = await prisma.booking.update({
+    const existing = await prisma.booking.findUnique({ where: { id: req.params.id as string } });
+    let booking = await prisma.booking.update({
       where: { id: req.params.id as string },
       data: {
         ...bookingData,
@@ -1004,8 +1008,46 @@ router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
     if (bookingData.status === 'CANCELLED' && existing?.status !== 'CANCELLED') {
       sendCancellationEmail(booking.id, 'adminCancellation');
     }
+
+    if (updateAmount && existing) {
+      // Re-derive from the (possibly just-changed) items/tickets and the
+      // booking's own voucher - old's "Betrag aktualisieren" for when an
+      // admin adjusts the ticket selection and the total needs recomputing
+      // to match. Selected extras keep their originally-stored value
+      // rather than being re-resolved from event.extraFeeOptions indices,
+      // since this edit form never changes which extras were chosen.
+      const priceResult = await calculateBookingPrice(
+        booking.eventId,
+        booking.items.map((i) => ({ ticketId: i.ticketId, quantity: i.quantity })),
+        existing.voucherCode || undefined,
+        !!booking.userId
+      );
+      const storedExtras = (existing.customerDetails as any)?.selectedExtras;
+      const extrasTotal = Array.isArray(storedExtras)
+        ? storedExtras.reduce((sum: number, ex: any) => {
+            const value = Number(ex.value) || 0;
+            const seats = booking.items.reduce((s, i) => s + i.quantity, 0);
+            return sum + (ex.perPlace ? value * seats : value);
+          }, 0)
+        : 0;
+      const finalPrice = Math.max(0, priceResult.finalPrice + extrasTotal);
+      const taxRatePercent = priceResult.taxRatePercent;
+      const priceNet = taxRatePercent ? finalPrice / (1 + taxRatePercent / 100) : null;
+      const priceTax = priceNet !== null ? finalPrice - priceNet : null;
+      booking = await prisma.booking.update({
+        where: { id: booking.id },
+        data: { totalPrice: finalPrice, priceNet: priceNet ?? undefined, priceTax: priceTax ?? undefined, priceTaxRatePercent: taxRatePercent ?? undefined },
+        include: { items: { include: { ticket: true } } }
+      });
+    }
+
+    if (notifyParticipant || notifyParticipantInvoice) {
+      sendBookingConfirmationEmail(booking.id).catch(console.error);
+    }
+
     res.json(booking);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

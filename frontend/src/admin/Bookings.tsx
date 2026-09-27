@@ -25,7 +25,8 @@ import { useState, useEffect } from 'react';
 import {
     Table, TableBody, TableCell, TableRow, Paper, Typography, Box, Grid, Card, CardContent,
     FormControl, InputLabel, Select, MenuItem, Button, TextField as MuiTextField, Divider,
-    Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Tooltip, Chip
+    Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Tooltip, Chip,
+    Checkbox, FormControlLabel
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -426,6 +427,14 @@ const AdminActions = () => {
     const [participants, setParticipants] = useState<any[]>([]);
     const [customFields, setCustomFields] = useState<Array<{ key: string; value: string }>>([]);
     const [adminComment, setAdminComment] = useState('');
+    const [paid, setPaid] = useState(false);
+    const [checkedIn, setCheckedIn] = useState(false);
+    // Old Matukio's "Benachrichtigungen und Aktualisierungen" card
+    // (administrator/components/com_matukio/layouts/booking/edit.php) -
+    // one-time actions to run as part of THIS save, not stored fields.
+    const [notifyParticipant, setNotifyParticipant] = useState(false);
+    const [notifyParticipantInvoice, setNotifyParticipantInvoice] = useState(false);
+    const [updateAmount, setUpdateAmount] = useState(false);
 
     useEffect(() => {
         if (record) {
@@ -436,6 +445,11 @@ const AdminActions = () => {
             const cf = d.customFields && typeof d.customFields === 'object' ? d.customFields : {};
             setCustomFields(Object.entries(cf).map(([key, value]) => ({ key, value: String(value ?? '') })));
             setAdminComment(record.adminComment || '');
+            setPaid(!!record.paid);
+            setCheckedIn(!!record.checkedIn);
+            setNotifyParticipant(false);
+            setNotifyParticipantInvoice(false);
+            setUpdateAmount(false);
         }
     }, [record]);
 
@@ -452,7 +466,11 @@ const AdminActions = () => {
         };
         update(
             'bookings',
-            { id: record.id, data: { status, customerDetails, adminComment }, previousData: record },
+            {
+                id: record.id,
+                data: { status, customerDetails, adminComment, paid, checkedIn, notifyParticipant, notifyParticipantInvoice, updateAmount },
+                previousData: record
+            },
             {
                 onSuccess: () => {
                     notify('Buchung erfolgreich aktualisiert!', { type: 'success' });
@@ -506,6 +524,17 @@ const AdminActions = () => {
                     value={adminComment} onChange={(e) => setAdminComment(e.target.value)}
                 />
 
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                    <FormControlLabel
+                        control={<Checkbox checked={paid} onChange={(e) => setPaid(e.target.checked)} />}
+                        label="Bezahlt"
+                    />
+                    <FormControlLabel
+                        control={<Checkbox checked={checkedIn} onChange={(e) => setCheckedIn(e.target.checked)} />}
+                        label="Eingecheckt"
+                    />
+                </Box>
+
                 <NameTagButton />
 
                 <Divider sx={{ my: 2 }} />
@@ -554,6 +583,26 @@ const AdminActions = () => {
                         <IconButton size="small" onClick={() => removeCustomField(idx)}><DeleteIcon fontSize="small" /></IconButton>
                     </Box>
                 ))}
+
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="subtitle2" gutterBottom>Benachrichtigungen und Aktualisierungen</Typography>
+                <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
+                    Wird beim Speichern einmalig ausgeführt - keine gespeicherten Einstellungen.
+                </Typography>
+                <FormControlLabel
+                    control={<Checkbox checked={notifyParticipant} onChange={(e) => setNotifyParticipant(e.target.checked)} />}
+                    label="Teilnehmer per E-Mail benachrichtigen (Buchungsbestätigung)"
+                />
+                <br />
+                <FormControlLabel
+                    control={<Checkbox checked={notifyParticipantInvoice} onChange={(e) => setNotifyParticipantInvoice(e.target.checked)} />}
+                    label="Teilnehmer benachrichtigen inkl. Rechnung/Ticket"
+                />
+                <br />
+                <FormControlLabel
+                    control={<Checkbox checked={updateAmount} onChange={(e) => setUpdateAmount(e.target.checked)} />}
+                    label="Betrag aktualisieren (aus aktuellen Tickets/Gutschein neu berechnen)"
+                />
 
                 <Box sx={{ mt: 2 }}>
                     <Button
