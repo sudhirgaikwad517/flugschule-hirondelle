@@ -23,20 +23,29 @@ export const SafeHtml = ({ html, className }: { html: string; className?: string
   });
 
   // Some migrated CMS content (event/location/organizer descriptions) has
-  // anchor hrefs saved without a protocol, e.g. "service.dhv.de" instead of
-  // "https://service.dhv.de". Rendered as-is, the browser treats that as a
-  // path relative to the current SPA route (/events -> /service.dhv.de),
-  // and react-router's catch-all ":slug" route (App.tsx) swallows the click
-  // into one of the app's own fixed pages instead of the real external
-  // site. Give any scheme-less href an https:// prefix, and open all
-  // external links in a new tab so a bad/legacy link can never hijack SPA
+  // anchor hrefs saved without a protocol. Two distinct patterns show up in
+  // the real data:
+  // 1. Old Joomla's own internal article links, e.g.
+  //    "index.php?option=com_content&view=article&id=9&Itemid=702" - these
+  //    only resolve on the OLD site's domain (still live at fs-hirondelle.de),
+  //    never on this app, which has no /index.php route.
+  // 2. A bare external domain, e.g. "service.dhv.de" instead of
+  //    "https://service.dhv.de".
+  // Left as-is, the browser treats either as a path relative to the current
+  // SPA route (/events -> /index.php or /service.dhv.de), and react-router's
+  // catch-all ":slug" route (App.tsx) swallows the click into one of the
+  // app's own fixed pages instead of the real target. Route case 1 back to
+  // the old site's domain, give case 2 an https:// prefix, and open all
+  // external links in a new tab so a legacy/broken link can never hijack SPA
   // navigation again.
   const withFixedLinks = (() => {
     const container = document.createElement('div');
     container.innerHTML = clean;
     container.querySelectorAll('a[href]').forEach((a) => {
       const href = a.getAttribute('href') || '';
-      if (href && !/^([a-z][a-z0-9+.-]*:|\/|#)/i.test(href)) {
+      if (/^index\.php\b/i.test(href)) {
+        a.setAttribute('href', `https://fs-hirondelle.de/${href}`);
+      } else if (href && !/^([a-z][a-z0-9+.-]*:|\/|#)/i.test(href)) {
         a.setAttribute('href', `https://${href}`);
       }
       if (/^https?:\/\//i.test(a.getAttribute('href') || '')) {
