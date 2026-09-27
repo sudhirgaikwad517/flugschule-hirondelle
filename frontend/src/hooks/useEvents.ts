@@ -70,6 +70,11 @@ export interface CalendarEvent {
   organizer?: string;
   organizerId?: string;
   maxParticipants?: number;
+  // Old's real getFeeText() always prices the card off event.fees (this
+  // field) - not the cheapest ticket, which can be an add-on/upsell line
+  // item (e.g. "Zusatztag" at €149 on an event whose real base course fee
+  // is €620) rather than the actual course price.
+  feePerPerson?: number;
   tickets?: Ticket[];
   tags?: string;
   eventNumber?: string;
@@ -124,6 +129,7 @@ export const useEvents = () => {
           organizer: e.organizer,
           organizerId: e.organizerId,
           maxParticipants: e.maxParticipants,
+          feePerPerson: e.feePerPerson,
           tickets: e.tickets,
           tags: e.tags,
           eventNumber: e.eventNumber,

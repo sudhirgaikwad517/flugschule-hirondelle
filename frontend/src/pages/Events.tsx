@@ -463,8 +463,15 @@ export const Events = () => {
                 // `$result->free = $event->maxpupil - $booked;`, no floor).
                 const freiePlaetzeRaw = totalCapacity - totalBooked;
 
-                const validPrices = (event.tickets || []).map(t => t.price).filter(p => p > 0);
-                let minPrice = validPrices.length > 0 ? Math.min(...validPrices) : 0;
+                // Old's real getFeeText() prices the card off event.fees
+                // (feePerPerson) itself, not the cheapest ticket - ticket
+                // rows can include add-ons/upsells (e.g. "Zusatztag",
+                // "Kombikurs") priced far above or below the actual base
+                // course fee. The "*" only means "several fee options
+                // exist, see the detail page" (different_fees), it's not
+                // about which number is shown.
+                const hasMultipleFeeOptions = (event.tickets || []).length > 1;
+                const displayPrice = event.feePerPerson ?? 0;
 
                 return (
                   <div
@@ -526,7 +533,7 @@ export const Events = () => {
                               {/* Old's getFeeText() appends "*" whenever the event has
                                   several fee options (different_fees) - not a net/gross
                                   marker, just "see detail page for other prices". */}
-                              {minPrice > 0 ? `${validPrices.length > 1 ? 'ab ' : ''}€ ${minPrice.toFixed(2)}${validPrices.length > 1 ? ' *' : ''}` : 'Kostenlos'}
+                              {displayPrice > 0 ? `€ ${displayPrice.toFixed(2)}${hasMultipleFeeOptions ? ' *' : ''}` : 'Kostenlos'}
                             </span>
                           </div>
                         </div>
