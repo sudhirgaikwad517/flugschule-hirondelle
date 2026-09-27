@@ -26,6 +26,16 @@ import {
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
+// Old's real event selector builds its dropdown text via raw SQL:
+// CONCAT(a.title, ' ', r.begin) - title first, then the raw DATETIME
+// value verbatim (YYYY-MM-DD HH:MM), not a German-locale date - confirmed
+// against old's own live dropdown (same fix as Bookings.tsx).
+const eventOptionSqlDate = (isoDate: string) => {
+    const d = new Date(isoDate);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+};
+
 const VoucherBulkActionButtons = () => {
     const { selectedIds, resource } = useListContext();
     const notify = useNotify();
@@ -114,7 +124,7 @@ const VoucherForm = () => (
         
         <ReferenceInput source="eventId" reference="events" sort={{ field: 'startDate', order: 'DESC' }}>
             <SelectInput
-                optionText={(record: any) => `${new Date(record.startDate).toLocaleDateString('de-DE')} - ${record.title}`}
+                optionText={(record: any) => `${record.title} ${eventOptionSqlDate(record.startDate)}`}
                 label="Veranstaltung"
                 emptyText="Alle Veranstaltungen"
                 fullWidth

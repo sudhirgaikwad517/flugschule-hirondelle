@@ -41,6 +41,16 @@ const salutationChoices = ['Bitte wählen', 'Herr', 'Frau', 'Divers'];
 
 const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem('auth')}` });
 
+// Old's real event filter/selector (bookings list + voucher form) builds
+// its dropdown text via raw SQL: CONCAT(a.title, ' ', r.begin) - title
+// first, then the raw DATETIME value verbatim (YYYY-MM-DD HH:MM), not a
+// German-locale date - confirmed against old's own live dropdown.
+const eventOptionSqlDate = (isoDate: string) => {
+    const d = new Date(isoDate);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+};
+
 async function postBulk(path: string, body: any) {
     const res = await fetch(`/api/bookings${path}`, {
         method: 'POST',
@@ -87,7 +97,7 @@ const BookingFilter = (props: any) => (
                 Date first (old's real per-user-report layout) since events
                 are already sorted newest-first. */}
             <SelectInput
-                optionText={(record: any) => `${new Date(record.startDate).toLocaleDateString('de-DE')} - ${record.title}`}
+                optionText={(record: any) => `${record.title} ${eventOptionSqlDate(record.startDate)}`}
                 emptyText="Alle Events"
             />
         </ReferenceInput>
