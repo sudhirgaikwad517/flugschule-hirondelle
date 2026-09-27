@@ -22,6 +22,17 @@ export const Events = () => {
   const [selectedOrganizers, setSelectedOrganizers] = useState<Set<string>>(new Set());
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
 
+  // Old's real eventlist page (views/eventlist/tmpl/bootstrap3.php) has two
+  // dropdowns top-right of the results: an "ordering" select (Standard /
+  // Datum auf-/absteigend / Titel auf-/absteigend, models/eventlist.php's
+  // getOrderBy()) and an unlabeled "limit" select (3/5/10/20/50 per page,
+  // MatukioHelperRendering::getLimitSelect()) - neither existed here before,
+  // the sort label was a hardcoded "Datum aufsteigend" that never changed.
+  type SortOrder = 'standard' | 'date_asc' | 'date_desc' | 'title_asc' | 'title_desc';
+  const [sortOrder, setSortOrder] = useState<SortOrder>('date_asc');
+  const [pageLimit, setPageLimit] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+
   // Sync state to URL
   useEffect(() => {
     const newParams = new URLSearchParams();
@@ -118,11 +129,40 @@ export const Events = () => {
       result = result.filter(e => e.start.getFullYear() === now.getFullYear());
     }
 
-    // Sort by date ascending
-    result.sort((a, b) => a.start.getTime() - b.start.getTime());
+    // Old's real 5 ordering options (models/eventlist.php's getOrderBy()) -
+    // "Standard" falls back to the component's own default ordering, which
+    // in practice is r.begin ASC, same as "Datum aufsteigend".
+    switch (sortOrder) {
+      case 'date_desc':
+        result.sort((a, b) => b.start.getTime() - a.start.getTime());
+        break;
+      case 'title_asc':
+        result.sort((a, b) => a.title.localeCompare(b.title, 'de'));
+        break;
+      case 'title_desc':
+        result.sort((a, b) => b.title.localeCompare(a.title, 'de'));
+        break;
+      case 'date_asc':
+      case 'standard':
+      default:
+        result.sort((a, b) => a.start.getTime() - b.start.getTime());
+        break;
+    }
 
     return result;
-  }, [events, searchTerm, selectedCategories, selectedLocations, selectedOrganizers, selectedTags, feeFilter, dateFilter]);
+  }, [events, searchTerm, selectedCategories, selectedLocations, selectedOrganizers, selectedTags, feeFilter, dateFilter, sortOrder]);
+
+  // Reset to page 1 whenever the result set or its ordering/size changes,
+  // so a filter change never leaves the view stranded on an out-of-range page.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCategories, selectedLocations, selectedOrganizers, selectedTags, feeFilter, dateFilter, sortOrder, pageLimit]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredEvents.length / pageLimit));
+  const paginatedEvents = useMemo(
+    () => filteredEvents.slice((currentPage - 1) * pageLimit, currentPage * pageLimit),
+    [filteredEvents, currentPage, pageLimit]
+  );
 
   // Handlers for Checkboxes
   const toggleSet = (set: Set<any>, value: any, setter: React.Dispatch<React.SetStateAction<Set<any>>>) => {
@@ -313,13 +353,34 @@ export const Events = () => {
         {/* MAIN LIST VIEW */}
         <div className="w-full md:w-3/4">
           {/* Header */}
-          <div className="bg-white p-4 rounded-lg shadow-sm mb-6 flex justify-between items-center">
+          <div className="bg-white p-4 rounded-lg shadow-sm mb-6 flex flex-wrap justify-between items-center gap-3">
             <h2 className="text-lg font-medium text-gray-700">
-              <span className="font-bold text-blue-600 mr-2">{filteredEvents.length}</span> 
+              <span className="font-bold text-blue-600 mr-2">{filteredEvents.length}</span>
               Ergebnis(se) gefunden
             </h2>
-            <div className="text-sm text-gray-500">
-              Sortiert nach: <span className="font-semibold">Datum aufsteigend</span>
+            <div className="flex items-center gap-2">
+              {/* Old's unlabeled "limit" select (MatukioHelperRendering::
+                  getLimitSelect()) - items per page, no visible label. */}
+              <select
+                value={pageLimit}
+                onChange={(e) => setPageLimit(Number(e.target.value))}
+                className="text-sm border border-gray-300 rounded px-2 py-1.5 text-gray-700 bg-white"
+                aria-label="Anzahl pro Seite"
+              >
+                {[3, 5, 10, 20, 50].map(n => <option key={n} value={n}>{n}</option>)}
+              </select>
+              {/* Old's "ordering" select (models/eventlist.php's getOrderBy()) */}
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+                className="text-sm border border-gray-300 rounded px-2 py-1.5 text-gray-700 bg-white"
+              >
+                <option value="standard">Standard</option>
+                <option value="date_asc">Datum aufsteigend</option>
+                <option value="date_desc">Datum absteigend</option>
+                <option value="title_asc">Titel aufsteigend</option>
+                <option value="title_desc">Titel absteigend</option>
+              </select>
             </div>
           </div>
 
@@ -348,7 +409,7 @@ export const Events = () => {
             </div>
           ) : (
             <div className="space-y-6">
-              {filteredEvents.map(event => {
+              {paginatedEvents.map(event => {
                 const colorObj = categoryColors[event.category] || categoryColors['Sonstiges'];
                 const isPastEvent = new Date() > new Date(event.end || event.start);
 
@@ -537,6 +598,26 @@ export const Events = () => {
                     </div>
                 );
               })}
+            </div>
+          )}
+
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-4 mt-8">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 text-sm border border-gray-300 rounded disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                Zurück
+              </button>
+              <span className="text-sm text-gray-600">Seite {currentPage} von {totalPages}</span>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 text-sm border border-gray-300 rounded disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                Weiter
+              </button>
             </div>
           )}
         </div>
