@@ -353,7 +353,7 @@ export const EventDatesManager = () => {
                                     <Tooltip title="Buchungen dieses Termins ansehen">
                                         <Box
                                             component="span"
-                                            onClick={() => navigate(`/bookings?filter=${encodeURIComponent(JSON.stringify({ eventId: d.id }))}`)}
+                                            onClick={() => navigate(`/admin/bookings?filter=${encodeURIComponent(JSON.stringify({ eventId: d.id }))}`)}
                                             sx={{ cursor: 'pointer', color: 'primary.main', textDecoration: 'underline' }}
                                         >
                                             {d.bookingsCount}
@@ -367,7 +367,7 @@ export const EventDatesManager = () => {
                                 </TableCell>
                                 <TableCell align="right">
                                     <Tooltip title="Bearbeiten">
-                                        <IconButton size="small" onClick={() => navigate(`/events/${encodeURIComponent(d.id)}`)}>
+                                        <IconButton size="small" onClick={() => navigate(`/admin/events/${encodeURIComponent(d.id)}`)}>
                                             <EditIcon fontSize="small" />
                                         </IconButton>
                                     </Tooltip>

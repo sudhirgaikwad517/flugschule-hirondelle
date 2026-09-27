@@ -90,7 +90,7 @@ export const EventRowExpand = () => {
         <Box sx={{ p: 2, bgcolor: '#fafafa' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                 <Typography variant="subtitle2">Termine dieser Serie ({dates.length})</Typography>
-                <Button size="small" startIcon={<AddIcon />} onClick={() => navigate(`/events/${encodeURIComponent(record.id)}/5`)}>
+                <Button size="small" startIcon={<AddIcon />} onClick={() => navigate(`/admin/events/${encodeURIComponent(record.id)}/5`)}>
                     Termin hinzufügen
                 </Button>
             </Box>
@@ -119,7 +119,7 @@ export const EventRowExpand = () => {
                                 </TableCell>
                                 <TableCell align="right">
                                     <Tooltip title="Bearbeiten">
-                                        <IconButton size="small" onClick={() => navigate(`/events/${encodeURIComponent(d.id)}`)}>
+                                        <IconButton size="small" onClick={() => navigate(`/admin/events/${encodeURIComponent(d.id)}`)}>
                                             <EditIcon fontSize="small" />
                                         </IconButton>
                                     </Tooltip>
