@@ -681,16 +681,14 @@ const AdminActions = () => {
                             {...params}
                             label="Veranstaltung auswählen"
                             margin="normal"
-                            slotProps={{
-                                input: {
-                                    ...params.InputProps,
-                                    endAdornment: (
-                                        <>
-                                            {eventSearchLoading ? <CircularProgress size={16} /> : null}
-                                            {params.InputProps.endAdornment}
-                                        </>
-                                    ),
-                                },
+                            InputProps={{
+                                ...params.InputProps,
+                                endAdornment: (
+                                    <>
+                                        {eventSearchLoading ? <CircularProgress size={16} /> : null}
+                                        {params.InputProps?.endAdornment}
+                                    </>
+                                ),
                             }}
                         />
                     )}
@@ -711,16 +709,14 @@ const AdminActions = () => {
                             {...params}
                             label="Benutzer (leer = Gastbuchung)"
                             margin="normal"
-                            slotProps={{
-                                input: {
-                                    ...params.InputProps,
-                                    endAdornment: (
-                                        <>
-                                            {userSearchLoading ? <CircularProgress size={16} /> : null}
-                                            {params.InputProps.endAdornment}
-                                        </>
-                                    ),
-                                },
+                            InputProps={{
+                                ...params.InputProps,
+                                endAdornment: (
+                                    <>
+                                        {userSearchLoading ? <CircularProgress size={16} /> : null}
+                                        {params.InputProps?.endAdornment}
+                                    </>
+                                ),
                             }}
                         />
                     )}
