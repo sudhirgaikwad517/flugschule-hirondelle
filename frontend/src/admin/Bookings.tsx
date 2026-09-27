@@ -478,6 +478,15 @@ const AdminActions = () => {
     const [eventDialogLoading, setEventDialogLoading] = useState(false);
     const [eventDialogPage, setEventDialogPage] = useState(0);
     const [eventDialogTotal, setEventDialogTotal] = useState(0);
+    // Old's real filter_status select (views/dates/tmpl/element.php) has
+    // exactly 3 options: "" (Alle Veranstaltungen), "published"
+    // (Freigegeben), "unpublished" (Gesperrt) - "current"/"old" aren't
+    // reachable from this dropdown at all, they're dead code from the UI's
+    // perspective. "" still resolves to status=current server-side (old's
+    // own model: empty(status) falls into the same branch as never having
+    // picked anything), while published/unpublished drop the date
+    // restriction entirely and can show any event ever created.
+    const [eventDialogStatus, setEventDialogStatus] = useState<'' | 'published' | 'unpublished'>('');
     const [allUsers, setAllUsers] = useState<{ id: string; name: string; email?: string }[]>([]);
     const [userId, setUserId] = useState('');
     const [eventTickets, setEventTickets] = useState<any[]>([]);
@@ -509,12 +518,13 @@ const AdminActions = () => {
     // 20 per page matches Joomla's own default list limit.
     const EVENT_DIALOG_PAGE_SIZE = 20;
     const eventDialogTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const fetchEventDialogPage = async (query: string, page: number) => {
+    const fetchEventDialogPage = async (query: string, page: number, statusFilter: '' | 'published' | 'unpublished' = eventDialogStatus) => {
         setEventDialogLoading(true);
         try {
             const start = page * EVENT_DIALOG_PAGE_SIZE;
             const qs = query ? `q=${encodeURIComponent(query)}&` : '';
-            const res = await fetch(`/api/events?${qs}status=current&_start=${start}&_end=${start + EVENT_DIALOG_PAGE_SIZE}&_sort=startDate&_order=ASC`);
+            const statusQs = statusFilter === '' ? 'status=current&' : `published=${statusFilter === 'published'}&`;
+            const res = await fetch(`/api/events?${qs}${statusQs}_start=${start}&_end=${start + EVENT_DIALOG_PAGE_SIZE}&_sort=startDate&_order=ASC`);
             const data = await res.json();
             setEventDialogResults(Array.isArray(data) ? data.map((e: any) => ({ id: e.id, title: e.title, bookingNumber: e.bookingNumber, startDate: e.startDate, endDate: e.endDate })) : []);
             const contentRange = res.headers.get('Content-Range');
@@ -532,6 +542,11 @@ const AdminActions = () => {
     const searchEventsForDialog = (query: string) => {
         if (eventDialogTimeoutRef.current) clearTimeout(eventDialogTimeoutRef.current);
         eventDialogTimeoutRef.current = setTimeout(() => fetchEventDialogPage(query, 0), 300);
+    };
+
+    const changeEventDialogStatus = (statusFilter: '' | 'published' | 'unpublished') => {
+        setEventDialogStatus(statusFilter);
+        fetchEventDialogPage(eventDialogQuery, 0, statusFilter);
     };
 
     const openEventDialog = () => {
@@ -719,15 +734,24 @@ const AdminActions = () => {
                 <Dialog open={eventDialogOpen} onClose={() => setEventDialogOpen(false)} maxWidth="md" fullWidth>
                     <DialogTitle>Veranstaltung auswählen</DialogTitle>
                     <DialogContent>
-                        <MuiTextField
-                            fullWidth
-                            size="small"
-                            autoFocus
-                            label="Suche"
-                            margin="dense"
-                            value={eventDialogQuery}
-                            onChange={(e) => { setEventDialogQuery(e.target.value); searchEventsForDialog(e.target.value); }}
-                        />
+                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                            <MuiTextField
+                                fullWidth
+                                size="small"
+                                autoFocus
+                                label="Suche"
+                                margin="dense"
+                                value={eventDialogQuery}
+                                onChange={(e) => { setEventDialogQuery(e.target.value); searchEventsForDialog(e.target.value); }}
+                            />
+                            <FormControl size="small" margin="dense" sx={{ minWidth: 180 }}>
+                                <Select value={eventDialogStatus} onChange={(e) => changeEventDialogStatus(e.target.value as '' | 'published' | 'unpublished')}>
+                                    <MenuItem value="">Alle Veranstaltungen</MenuItem>
+                                    <MenuItem value="published">Freigegeben</MenuItem>
+                                    <MenuItem value="unpublished">Gesperrt</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </Box>
                         {eventDialogLoading ? (
                             <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}><CircularProgress size={24} /></Box>
                         ) : (
