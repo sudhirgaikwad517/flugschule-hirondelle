@@ -544,32 +544,73 @@ const BackToGalleryButton = () => (
   </Button>
 );
 
-const GalleryForm = () => (
-  <SimpleForm>
-    <BackToGalleryButton />
-    <AutocompleteInput
-      source="slug"
-      choices={PAGE_CHOICES}
-      label="Seite auswählen"
-      placeholder="Seite suchen oder neue Seite eingeben..."
-      fullWidth
-      // Lets an admin type a page name that isn't in PAGE_CHOICES yet and
-      // create it on the spot, instead of being limited to the fixed list.
-      // normalizeSlug keeps the stored slug URL-safe and consistent with
-      // what a developer will later type into usePageGallery('...') - see
-      // frontend/src/hooks/usePageGallery.ts.
-      onCreate={(filter?: string) => {
-        const slug = normalizeSlug(filter || '');
-        if (!slug) return undefined;
-        return { id: slug, name: filter };
-      }}
-      createLabel="+ Neue Seite anlegen"
-      createItemLabel='+ Neue Seite anlegen: "%{item}"'
-    />
-    <Typography variant="body2" sx={{ color: '#666', mt: -1.5, mb: 2 }}>
-      Seite nicht in der Liste? Namen eingeben und "Neue Seite anlegen" wählen. Damit die Galerie danach auch
-      wirklich auf der Seite erscheint, muss sie einmalig im Code dieser Seite eingebunden werden.
-    </Typography>
+// PAGE_CHOICES only lists the ~20 legacy hardcoded pages (Ausbildung,
+// Reisen tours, ...) - it has no connection at all to the "Seiten" CMS
+// (Page model / Pages.tsx), so a brand-new admin-created page (e.g.
+// "testsudhir") never showed up here no matter what was typed. This fetches
+// every real Page row (GET /api/pages, same admin-authenticated listing
+// Pages.tsx itself uses) and merges it in by slug/title, so any custom page
+// is selectable (or already-matched, skipping the "create new" fallback)
+// the same way a legacy page is.
+const usePageChoices = () => {
+  const [choices, setChoices] = useState<{ id: string; name: string }[]>(PAGE_CHOICES);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = localStorage.getItem('auth');
+        const res = await fetch('/api/pages?_end=500', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const pages = await res.json();
+        if (cancelled || !Array.isArray(pages)) return;
+        const existingIds = new Set(PAGE_CHOICES.map((c) => c.id));
+        const fromCms = pages
+          .filter((p: any) => p.slug && !existingIds.has(p.slug))
+          .map((p: any) => ({ id: p.slug, name: `${p.title} (Seite)` }));
+        setChoices([...PAGE_CHOICES, ...fromCms]);
+      } catch {
+        // Keep the static PAGE_CHOICES fallback if /api/pages is unreachable.
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  return choices;
+};
+
+const GalleryForm = () => {
+  const pageChoices = usePageChoices();
+
+  return (
+    <SimpleForm>
+      <BackToGalleryButton />
+      <AutocompleteInput
+        source="slug"
+        choices={pageChoices}
+        label="Seite auswählen"
+        placeholder="Seite suchen oder neue Seite eingeben..."
+        fullWidth
+        // Lets an admin type a page name that's in neither PAGE_CHOICES nor
+        // the CMS pages list yet and create it on the spot. normalizeSlug
+        // keeps the stored slug URL-safe and consistent with what a
+        // developer would type into usePageGallery('...') - see
+        // frontend/src/hooks/usePageGallery.ts.
+        onCreate={(filter?: string) => {
+          const slug = normalizeSlug(filter || '');
+          if (!slug) return undefined;
+          return { id: slug, name: filter };
+        }}
+        createLabel="+ Neue Seite anlegen"
+        createItemLabel='+ Neue Seite anlegen: "%{item}"'
+      />
+      <Typography variant="body2" sx={{ color: '#666', mt: -1.5, mb: 2 }}>
+        Seite nicht in der Liste? Namen eingeben und "Neue Seite anlegen" wählen. Für eine über Admin &gt; Seiten
+        angelegte Seite reicht das - der Galerie-Platzhalter dort ist bereits mit demselben Slug verknüpft. Für eine
+        neue, fest einprogrammierte Seite muss sie danach einmalig im Code eingebunden werden.
+      </Typography>
     <Box sx={{ p: '20px', bgcolor: '#fff3e0', borderRadius: '8px', width: '100%', mt: '10px' }}>
       <Typography variant="h6" sx={{ mt: 0, mb: 0.5 }}>Impressionen (Bildergalerie)</Typography>
       <Typography variant="body2" sx={{ color: '#666', mb: 2 }}>
@@ -577,8 +618,9 @@ const GalleryForm = () => (
       </Typography>
       <GalleryImagesInput />
     </Box>
-  </SimpleForm>
-);
+    </SimpleForm>
+  );
+};
 
 export const GalleryEdit = () => (
   <Edit>
