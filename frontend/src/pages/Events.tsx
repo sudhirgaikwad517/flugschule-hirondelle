@@ -3,17 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
 import { useEvents, categoryColors } from '../hooks/useEvents';
-import type { Category, CalendarEvent } from '../hooks/useEvents';
-import { EventBookingModal } from '../components/events/EventBookingModal';
-
+import type { Category } from '../hooks/useEvents';
 export const Events = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { events, loading } = useEvents();
-
-  // Modals state
-  const [selectedEventForBooking, setSelectedEventForBooking] = useState<CalendarEvent | null>(null);
 
   // Filters State
   const initialCategoryStr = searchParams.get('category');
@@ -521,12 +516,19 @@ export const Events = () => {
                               <span className="flex-1 sm:flex-none px-6 py-2 text-gray-400 font-medium text-sm text-center">
                                 Bereits stattgefunden
                               </span>
+                            ) : trafficLight === 'red' || trafficLight === 'cancelled' ? (
+                              // Old's real getBookingButton()/isBookable() renders
+                              // NOTHING here (not even a disabled button) once
+                              // registration is closed, the event is cancelled, or
+                              // it's full with stopbooking=1 - only the colored
+                              // status dot/text above communicates that state.
+                              null
                             ) : (
                               <button
                                 onClick={() => navigate(`/buchungskalender/${event.id}`)}
                                 className="flex-1 sm:flex-none px-6 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition"
                               >
-                                Buchen
+                                {trafficLight === 'yellow' ? 'Auf Warteliste buchen' : 'Buchen'}
                               </button>
                             )}
                           </div>
@@ -539,15 +541,6 @@ export const Events = () => {
           )}
         </div>
       </div>
-
-      {/* Booking Modal */}
-      {selectedEventForBooking && (
-        <EventBookingModal
-          isOpen={true}
-          event={selectedEventForBooking}
-          onClose={() => setSelectedEventForBooking(null)}
-        />
-      )}
     </div>
   );
 };

@@ -71,6 +71,11 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
   // sidebar never reflected this at all, always saying "Anmeldung offen"
   // even for an event already over its real, pooled capacity.
   const isFullyBooked = freiePlaetze !== null && freiePlaetze <= 0;
+  // Old's real "stopbooking=1" state - full AND no waitlist allowed at all.
+  // This wasn't checked anywhere here, so a closed-with-no-waitlist event
+  // still showed a normal, submittable "Auf Warteliste eintragen" button
+  // (matches Events.tsx's own trafficLight==='red' fix for the list page).
+  const isBookingClosed = isFullyBooked && event.onExceed === 'stop';
 
   const isWaitlistBooking = React.useMemo(() => {
     if (freiePlaetze === null) return false; // no pooled limit configured - unlimited
@@ -214,6 +219,11 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
                   <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                   <span className="font-semibold">{isPastEvent ? 'Diese Veranstaltung hat bereits stattgefunden.' : 'Die Anmeldefrist ist überschritten.'}</span>
                 </div>
+              ) : isBookingClosed ? (
+                <div className="flex items-start gap-3 text-red-700">
+                  <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                  <span className="font-semibold">Diese Veranstaltung ist ausgebucht - eine Warteliste wird nicht angeboten.</span>
+                </div>
               ) : (
                 <div className="flex flex-col gap-6">
                   {event.tickets && event.tickets.length > 0 ? (
@@ -326,7 +336,7 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
                   <tr className="border-b border-gray-100">
                     <td className="py-3 px-5 font-semibold text-gray-500 w-1/3">Status</td>
                     <td className="py-3 px-5 text-gray-700">
-                      {event.cancelled ? <span className="text-red-700 font-semibold">Storniert</span> : isPastEvent ? 'Bereits stattgefunden' : isPastDeadline ? 'Anmeldeschluss vorbei' : isFullyBooked ? <span className="text-orange-600 font-semibold">Ausgebucht (Warteliste)</span> : 'Anmeldung offen'}
+                      {event.cancelled ? <span className="text-red-700 font-semibold">Storniert</span> : isPastEvent ? 'Bereits stattgefunden' : isPastDeadline ? 'Anmeldeschluss vorbei' : isBookingClosed ? <span className="text-red-700 font-semibold">Ausgebucht</span> : isFullyBooked ? <span className="text-orange-600 font-semibold">Ausgebucht (Warteliste)</span> : 'Anmeldung offen'}
                     </td>
                   </tr>
                   {freiePlaetze !== null && (
@@ -334,7 +344,7 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
                       <td className="py-3 px-5 font-semibold text-gray-500 w-1/3">Freie Plätze</td>
                       <td className="py-3 px-5 text-gray-700">
                         {freiePlaetze}
-                        {freiePlaetze === 0 && !event.cancelled && !isPastEvent && (
+                        {freiePlaetze === 0 && !event.cancelled && !isPastEvent && !isBookingClosed && (
                           <span className="text-orange-600"> *Ihre Buchung wird auf der Warteliste durchgeführt.</span>
                         )}
                       </td>
