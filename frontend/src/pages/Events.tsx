@@ -569,7 +569,7 @@ export const Events = () => {
                             <div className={`w-3 h-3 rounded-full ${
                               trafficLight === 'cancelled' ? 'bg-sky-500'
                               : trafficLight === 'unlimited' ? 'bg-blue-500'
-                              : trafficLight === 'red' ? 'bg-red-500'
+                              : trafficLight === 'red' ? 'bg-sky-500'
                               : trafficLight === 'yellow' ? 'bg-yellow-400'
                               : 'bg-green-500'
                             }`}></div>
