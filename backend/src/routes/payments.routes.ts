@@ -94,11 +94,15 @@ router.post('/capture-paypal', async (req, res) => {
     const { client: paypalClient, isMock } = await getPaypalClient();
 
     if (isMock && orderId === 'mock_token_123') {
+      const alreadyConfirmed = booking.status === 'CONFIRMED' && booking.paid;
       const updated = await prisma.booking.update({
         where: { id: bookingId },
         data: { status: 'CONFIRMED', paid: true }
       });
-      sendBookingConfirmationEmail(updated.id).catch(console.error);
+      // A page refresh or duplicate client-side capture call for a booking
+      // that's already paid+confirmed must not resend the confirmation
+      // email (with invoice/ticket PDFs) a second time.
+      if (!alreadyConfirmed) sendBookingConfirmationEmail(updated.id).catch(console.error);
       return res.json({ success: true });
     }
 
@@ -125,12 +129,15 @@ router.post('/capture-paypal', async (req, res) => {
     // Old Matukio's matukio_bookings.payment_plugin_data - keeps the raw
     // gateway response for dispute/refund troubleshooting later, since
     // capture.result is otherwise discarded the moment this request ends.
+    const alreadyConfirmed = booking.status === 'CONFIRMED' && booking.paid;
     const updated = await prisma.booking.update({
       where: { id: bookingId },
       data: { status: 'CONFIRMED', paid: true, paymentGatewayResponse: capture.result as any }
     });
-    // Send confirmation email asynchronously
-    sendBookingConfirmationEmail(updated.id).catch(console.error);
+    // Send confirmation email asynchronously - but not again if a page
+    // refresh or duplicate client-side call re-hits this endpoint for a
+    // booking that was already paid+confirmed.
+    if (!alreadyConfirmed) sendBookingConfirmationEmail(updated.id).catch(console.error);
     res.json({ success: true });
   } catch (error) {
     console.error(error);
