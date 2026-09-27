@@ -26,7 +26,7 @@ import {
     Table, TableBody, TableCell, TableRow, Paper, Typography, Box, Grid, Card, CardContent,
     FormControl, InputLabel, Select, MenuItem, Button, TextField as MuiTextField, Divider,
     Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Tooltip, Chip,
-    Checkbox, FormControlLabel, Autocomplete, CircularProgress
+    Checkbox, FormControlLabel, CircularProgress
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -459,67 +459,80 @@ const AdminActions = () => {
     // to the customer.
     const [remarks, setRemarks] = useState('');
 
-    // Old's "General Booking Settings" card (event_id/userid selects) -
-    // lets an admin move this booking onto a different event or reassign it
-    // to a different registered customer, same as old's real edit page.
+    // Old's "General Booking Settings" card - event_id is old's real
+    // "modal_event" widget: a read-only display field + a "Veranstaltung
+    // auswählen" button that opens a searchable/paginated popup of events
+    // (administrator/components/com_matukio/views/dates/tmpl/element.php);
+    // userid is old's plain JHTML::list.users select - a flat dropdown of
+    // every registered user (309 total here - small enough to load in full,
+    // exactly like old's real behavior, unlike events at 1300+ rows which
+    // is why old needed a searchable popup for those instead of a select).
     // eventTickets/eventExtraOptions used to be derived straight from
     // record?.event - now held as state so picking a different event can
     // replace them with that event's own tickets/extras.
     const [eventId, setEventId] = useState('');
     const [eventOption, setEventOption] = useState<{ id: string; title: string; startDate: string } | null>(null);
-    const [eventOptions, setEventOptions] = useState<{ id: string; title: string; startDate: string }[]>([]);
-    const [eventSearchLoading, setEventSearchLoading] = useState(false);
-    const [userOption, setUserOption] = useState<{ id: string; name: string; email?: string } | null>(null);
-    const [userOptions, setUserOptions] = useState<{ id: string; name: string; email?: string }[]>([]);
-    const [userSearchLoading, setUserSearchLoading] = useState(false);
+    const [eventDialogOpen, setEventDialogOpen] = useState(false);
+    const [eventDialogQuery, setEventDialogQuery] = useState('');
+    const [eventDialogResults, setEventDialogResults] = useState<{ id: string; title: string; eventNumber?: string; startDate: string; endDate: string | null }[]>([]);
+    const [eventDialogLoading, setEventDialogLoading] = useState(false);
+    const [allUsers, setAllUsers] = useState<{ id: string; name: string; email?: string }[]>([]);
+    const [userId, setUserId] = useState('');
     const [eventTickets, setEventTickets] = useState<any[]>([]);
     const [eventExtraOptions, setEventExtraOptions] = useState<any[]>([]);
 
     const eventOptionLabel = (opt: { title: string; startDate: string }) =>
         `${new Date(opt.startDate).toLocaleDateString('de-DE')} - ${opt.title}`;
 
-    const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const searchEvents = (query: string) => {
-        if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-        searchTimeoutRef.current = setTimeout(async () => {
-            setEventSearchLoading(true);
+    // Loads every registered user once, exactly matching old's plain
+    // "Benutzer" select (no search-as-you-type - it's a flat list).
+    useEffect(() => {
+        (async () => {
             try {
-                const res = await fetch(`/api/events?q=${encodeURIComponent(query)}&_end=20&_sort=startDate&_order=DESC`);
+                const res = await fetch('/api/users?_end=500&_sort=name&_order=ASC', { headers: authHeaders() });
                 const data = await res.json();
-                setEventOptions(Array.isArray(data) ? data.map((e: any) => ({ id: e.id, title: e.title, startDate: e.startDate })) : []);
+                setAllUsers(Array.isArray(data) ? data.map((u: any) => ({ id: u.id, name: u.name || u.email, email: u.email })) : []);
             } catch {
-                setEventOptions([]);
-            } finally {
-                setEventSearchLoading(false);
+                setAllUsers([]);
             }
-        }, 350);
+        })();
+    }, []);
+
+    const eventDialogTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const searchEventsForDialog = (query: string) => {
+        if (eventDialogTimeoutRef.current) clearTimeout(eventDialogTimeoutRef.current);
+        eventDialogTimeoutRef.current = setTimeout(async () => {
+            setEventDialogLoading(true);
+            try {
+                const qs = query ? `q=${encodeURIComponent(query)}&` : '';
+                const res = await fetch(`/api/events?${qs}_end=50&_sort=startDate&_order=DESC`);
+                const data = await res.json();
+                setEventDialogResults(Array.isArray(data) ? data.map((e: any) => ({ id: e.id, title: e.title, eventNumber: e.eventNumber, startDate: e.startDate, endDate: e.endDate })) : []);
+            } catch {
+                setEventDialogResults([]);
+            } finally {
+                setEventDialogLoading(false);
+            }
+        }, 300);
     };
 
-    const userSearchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const searchUsers = (query: string) => {
-        if (userSearchTimeoutRef.current) clearTimeout(userSearchTimeoutRef.current);
-        userSearchTimeoutRef.current = setTimeout(async () => {
-            setUserSearchLoading(true);
-            try {
-                const res = await fetch(`/api/users?q=${encodeURIComponent(query)}&_end=20`, { headers: authHeaders() });
-                const data = await res.json();
-                setUserOptions(Array.isArray(data) ? data.map((u: any) => ({ id: u.id, name: u.name || u.email, email: u.email })) : []);
-            } catch {
-                setUserOptions([]);
-            } finally {
-                setUserSearchLoading(false);
-            }
-        }, 350);
+    const openEventDialog = () => {
+        setEventDialogOpen(true);
+        setEventDialogQuery('');
+        searchEventsForDialog('');
     };
 
-    // Admin picked a different event: that event's own tickets/extras
-    // replace the current ones, and the booked items are reset to the new
-    // event's first ticket - the old items referenced ticket rows that
-    // belong to a different event entirely and can't carry over as-is.
+    // Admin picked a different event in the popup: that event's own
+    // tickets/extras replace the current ones, and the booked items are
+    // reset to the new event's first ticket - the old items referenced
+    // ticket rows that belong to a different event entirely and can't
+    // carry over as-is. Matches old's own selectEvent() JS glue (fills the
+    // display field + hidden id, closes the modal).
     const handleEventChange = async (newValue: { id: string; title: string; startDate: string } | null) => {
         if (!newValue) return;
         setEventOption(newValue);
         setEventId(newValue.id);
+        setEventDialogOpen(false);
         try {
             const res = await fetch(`/api/events/${newValue.id}`);
             const fullEvent = await res.json();
@@ -560,7 +573,7 @@ const AdminActions = () => {
             setRemarks(record.remarks || '');
             setEventId(record.eventId);
             setEventOption(record.event ? { id: record.eventId, title: record.event.title, startDate: record.event.startDate } : null);
-            setUserOption(record.user ? { id: record.userId, name: record.user.name || record.user.email, email: record.user.email } : null);
+            setUserId(record.userId || '');
             setEventTickets(record.event?.tickets || []);
             setEventExtraOptions(record.event?.extraFeeOptions || []);
         }
@@ -631,7 +644,7 @@ const AdminActions = () => {
                     voucherCode: voucherCodeInput.trim() || null,
                     remarks,
                     eventId,
-                    userId: userOption?.id || null,
+                    userId: userId || null,
                 },
                 previousData: record
             },
@@ -665,62 +678,81 @@ const AdminActions = () => {
             <CardContent>
                 <Typography variant="h6" gutterBottom>Allgemeine Buchungseinstellungen</Typography>
 
-                <Autocomplete
-                    fullWidth
-                    size="small"
-                    disableClearable
-                    options={eventOptions}
-                    value={eventOption}
-                    getOptionLabel={(opt) => (opt ? eventOptionLabel(opt) : '')}
-                    isOptionEqualToValue={(opt, val) => opt.id === val.id}
-                    loading={eventSearchLoading}
-                    onChange={(_, newValue) => handleEventChange(newValue)}
-                    onInputChange={(_, newInputValue, reason) => { if (reason === 'input') searchEvents(newInputValue); }}
-                    renderInput={(params) => (
-                        <MuiTextField
-                            {...params}
-                            label="Veranstaltung auswählen"
-                            margin="normal"
-                            InputProps={{
-                                ...params.InputProps,
-                                endAdornment: (
-                                    <>
-                                        {eventSearchLoading ? <CircularProgress size={16} /> : null}
-                                        {params.InputProps?.endAdornment}
-                                    </>
-                                ),
-                            }}
-                        />
-                    )}
-                />
+                {/* Old's real "modal_event" widget: a disabled/read-only display
+                    field showing the current event's name + date, plus a
+                    "Veranstaltung auswählen" button that opens a searchable,
+                    paginated popup (old: administrator/components/com_matukio/
+                    views/dates/tmpl/element.php) - not an inline dropdown,
+                    since old genuinely uses a popup here for exactly this
+                    reason: 1300+ events is too many for a flat select. */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, mb: 1 }}>
+                    <MuiTextField
+                        fullWidth
+                        size="small"
+                        label="Veranstaltung"
+                        value={eventOption ? eventOptionLabel(eventOption) : 'Keine Veranstaltung ausgewählt'}
+                        slotProps={{ input: { readOnly: true } }}
+                    />
+                    <Button variant="contained" onClick={openEventDialog} sx={{ whiteSpace: 'nowrap' }}>
+                        Veranstaltung auswählen
+                    </Button>
+                </Box>
 
-                <Autocomplete
-                    fullWidth
-                    size="small"
-                    options={userOptions}
-                    value={userOption}
-                    getOptionLabel={(opt) => (opt ? `${opt.name}${opt.email ? ` (${opt.email})` : ''}` : '')}
-                    isOptionEqualToValue={(opt, val) => opt.id === val.id}
-                    loading={userSearchLoading}
-                    onChange={(_, newValue) => setUserOption(newValue)}
-                    onInputChange={(_, newInputValue, reason) => { if (reason === 'input') searchUsers(newInputValue); }}
-                    renderInput={(params) => (
+                <Dialog open={eventDialogOpen} onClose={() => setEventDialogOpen(false)} maxWidth="md" fullWidth>
+                    <DialogTitle>Veranstaltung auswählen</DialogTitle>
+                    <DialogContent>
                         <MuiTextField
-                            {...params}
-                            label="Benutzer (leer = Gastbuchung)"
-                            margin="normal"
-                            InputProps={{
-                                ...params.InputProps,
-                                endAdornment: (
-                                    <>
-                                        {userSearchLoading ? <CircularProgress size={16} /> : null}
-                                        {params.InputProps?.endAdornment}
-                                    </>
-                                ),
-                            }}
+                            fullWidth
+                            size="small"
+                            autoFocus
+                            label="Suche"
+                            margin="dense"
+                            value={eventDialogQuery}
+                            onChange={(e) => { setEventDialogQuery(e.target.value); searchEventsForDialog(e.target.value); }}
                         />
-                    )}
-                />
+                        {eventDialogLoading ? (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}><CircularProgress size={24} /></Box>
+                        ) : (
+                            <Table size="small">
+                                <TableBody>
+                                    {eventDialogResults.length === 0 && (
+                                        <TableRow><TableCell>Keine Veranstaltungen gefunden.</TableCell></TableRow>
+                                    )}
+                                    {eventDialogResults.map((ev) => (
+                                        <TableRow
+                                            key={ev.id}
+                                            hover
+                                            sx={{ cursor: 'pointer' }}
+                                            onClick={() => handleEventChange({ id: ev.id, title: ev.title, startDate: ev.startDate })}
+                                        >
+                                            <TableCell>{ev.title}</TableCell>
+                                            <TableCell>{ev.eventNumber || ''}</TableCell>
+                                            <TableCell>{new Date(ev.startDate).toLocaleDateString('de-DE')}</TableCell>
+                                            <TableCell>{ev.endDate ? new Date(ev.endDate).toLocaleDateString('de-DE') : ''}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        )}
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setEventDialogOpen(false)}>Schließen</Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* Old's real "Benutzer" field: JHTML::list.users - a plain
+                    flat select of every registered user (309 total here),
+                    not search-as-you-type, with a "none" option for a guest
+                    booking. */}
+                <FormControl fullWidth margin="normal" size="small">
+                    <InputLabel>Benutzer</InputLabel>
+                    <Select value={userId} onChange={(e) => setUserId(e.target.value)} label="Benutzer">
+                        <MenuItem value="">— Gastbuchung (kein Benutzer) —</MenuItem>
+                        {allUsers.map((u) => (
+                            <MenuItem key={u.id} value={u.id}>{u.name}{u.email ? ` (${u.email})` : ''}</MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
 
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="h6" gutterBottom>Verwaltung (Status)</Typography>
