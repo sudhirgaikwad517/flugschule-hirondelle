@@ -745,7 +745,11 @@ const AdminActions = () => {
                                 onChange={(e) => { setEventDialogQuery(e.target.value); searchEventsForDialog(e.target.value); }}
                             />
                             <FormControl size="small" margin="dense" sx={{ minWidth: 180 }}>
-                                <Select value={eventDialogStatus} onChange={(e) => changeEventDialogStatus(e.target.value as '' | 'published' | 'unpublished')}>
+                                <Select
+                                    value={eventDialogStatus}
+                                    displayEmpty
+                                    onChange={(e) => changeEventDialogStatus(e.target.value as '' | 'published' | 'unpublished')}
+                                >
                                     <MenuItem value="">Alle Veranstaltungen</MenuItem>
                                     <MenuItem value="published">Freigegeben</MenuItem>
                                     <MenuItem value="unpublished">Gesperrt</MenuItem>
