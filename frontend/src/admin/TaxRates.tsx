@@ -75,6 +75,7 @@ export const TaxRateList = () => (
             <NumberField source="value" label="Wert" />
             <BooleanField source="published" label="Veröffentlicht" />
             <EditButton />
+            <TextField source="id" label="ID" />
         </Datagrid>
     </List>
 );

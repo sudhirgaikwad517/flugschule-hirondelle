@@ -79,6 +79,7 @@ export const OrganizerList = () => (
             <TextField source="phone" label="Telefon" emptyText="-" />
             <BooleanField source="published" label="Freigegeben" />
             <EditButton />
+            <TextField source="id" label="ID" />
         </Datagrid>
     </List>
 );

@@ -82,6 +82,7 @@ export const TieredFeeList = () => (
             <DateField source="validUntil" label="Gültig bis" emptyText="-" />
             <BooleanField source="published" label="Veröffentlicht" />
             <EditButton />
+            <TextField source="id" label="ID" />
         </Datagrid>
     </List>
 );

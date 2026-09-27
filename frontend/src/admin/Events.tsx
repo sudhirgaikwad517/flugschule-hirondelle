@@ -294,6 +294,7 @@ const EventListContent = () => {
                 </ReferenceField>
                 <PublishToggleField label="Veröffentlicht" />
                 <CancelledField label="Status" />
+                <TextField source="id" label="#" sx={{ display: 'inline-block', maxWidth: 80, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title="ID" />
             </Datagrid>
         </Box>
     );

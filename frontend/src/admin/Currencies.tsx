@@ -75,6 +75,7 @@ export const CurrencyList = () => (
             <TextField source="paymentCode" label="Zahlungs-Code" />
             <BooleanField source="published" label="Freigegeben" />
             <EditButton />
+            <TextField source="id" label="Id" />
         </Datagrid>
     </List>
 );

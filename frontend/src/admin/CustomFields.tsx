@@ -82,6 +82,7 @@ export const CustomFieldList = () => (
             <NumberField source="order" label="Reihenfolge" />
             <BooleanField source="published" label="Veröffentlicht" />
             <EditButton />
+            <TextField source="id" label="Num" />
         </Datagrid>
     </List>
 );

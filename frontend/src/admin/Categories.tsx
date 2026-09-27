@@ -109,6 +109,7 @@ export const CategoryList = () => (
           <BadgeField source="trashCount" color="#607d8b" label="Papierkorb" />
           <TextField source="accessLevel" label="Zugriffsebene" />
           <EditButton />
+          <TextField source="id" label="ID" />
       </Datagrid>
   </List>
 );

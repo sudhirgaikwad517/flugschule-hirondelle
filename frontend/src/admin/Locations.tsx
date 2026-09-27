@@ -116,6 +116,7 @@ export const LocationList = () => (
             <TextField source="googleMapsUrl" label="Google Maps" emptyText="-" sx={{ display: 'inline-block', maxWidth: 200, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title="Google Maps URL" />
             <BooleanField source="published" label="Freigegeben" />
             <EditButton />
+            <TextField source="id" label="ID" sx={{ display: 'inline-block', maxWidth: 80, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title="ID" />
         </Datagrid>
     </List>
 );
