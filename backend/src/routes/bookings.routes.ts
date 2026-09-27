@@ -978,14 +978,9 @@ router.post('/public', async (req, res) => {
 
 router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    // totalPrice/eventId/userId are deliberately never settable through this
-    // generic admin edit route - totalPrice must stay tied to the actual
-    // booked items/tickets (recomputed via calculateBookingPrice at creation
-    // time), and reassigning eventId/userId here would move a booking onto
-    // a different event/customer without recomputing price, items, or
-    // capacity for either side. The admin UI itself never sends these
-    // fields; this just closes the gap for anyone hitting the endpoint
-    // directly.
+    // totalPrice is deliberately never settable through this generic admin
+    // edit route - it must stay tied to the actual booked items/tickets
+    // (recomputed via calculateBookingPrice, see updateAmount below).
     // notifyParticipant/notifyParticipantInvoice/updateAmount are old
     // Matukio's real "Benachrichtigungen und Aktualisierungen" checkboxes
     // (administrator/components/com_matukio/layouts/booking/edit.php) -
@@ -995,10 +990,38 @@ router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
       return res.status(400).json({ message: 'Ungültige Anzahl' });
     }
     const existing = await prisma.booking.findUnique({ where: { id: req.params.id as string } });
+    if (!existing) return res.status(404).json({ message: 'Buchung nicht gefunden' });
+
+    const updateData: any = { ...bookingData };
+
+    // Old's real "Veranstaltung"/"Benutzer" selects (General Booking
+    // Settings card) - reassigns which event/registered user this booking
+    // belongs to. Changing the event requires the submitted items to
+    // already reference that new event's own tickets (the frontend resets
+    // them on event change) - otherwise a booking could end up pointing at
+    // ticket rows from a completely different event.
+    if (eventId !== undefined && eventId !== existing.eventId) {
+      const newEvent = await prisma.event.findUnique({ where: { id: eventId } });
+      if (!newEvent) return res.status(400).json({ message: 'Veranstaltung nicht gefunden' });
+      const newItems = items || [];
+      if (newItems.length === 0) {
+        return res.status(400).json({ message: 'Beim Wechsel der Veranstaltung müssen die Tickets neu ausgewählt werden' });
+      }
+      const ticketIds: string[] = newItems.map((i: any) => i.ticketId);
+      const validTickets = await prisma.eventTicket.findMany({ where: { id: { in: ticketIds }, eventId } });
+      if (validTickets.length !== new Set(ticketIds).size) {
+        return res.status(400).json({ message: 'Ein oder mehrere Tickets gehören nicht zur ausgewählten Veranstaltung' });
+      }
+      updateData.eventId = eventId;
+    }
+    if (userId !== undefined) {
+      updateData.userId = userId || null;
+    }
+
     let booking = await prisma.booking.update({
       where: { id: req.params.id as string },
       data: {
-        ...bookingData,
+        ...updateData,
         items: items ? {
           deleteMany: {},
           create: items.map((i: any) => ({

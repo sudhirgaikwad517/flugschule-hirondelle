@@ -21,12 +21,12 @@ import {
     FunctionField,
     BooleanField,
 } from 'react-admin';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     Table, TableBody, TableCell, TableRow, Paper, Typography, Box, Grid, Card, CardContent,
     FormControl, InputLabel, Select, MenuItem, Button, TextField as MuiTextField, Divider,
     Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Tooltip, Chip,
-    Checkbox, FormControlLabel
+    Checkbox, FormControlLabel, Autocomplete, CircularProgress
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -459,8 +459,79 @@ const AdminActions = () => {
     // to the customer.
     const [remarks, setRemarks] = useState('');
 
-    const eventTickets: any[] = record?.event?.tickets || [];
-    const eventExtraOptions: any[] = record?.event?.extraFeeOptions || [];
+    // Old's "General Booking Settings" card (event_id/userid selects) -
+    // lets an admin move this booking onto a different event or reassign it
+    // to a different registered customer, same as old's real edit page.
+    // eventTickets/eventExtraOptions used to be derived straight from
+    // record?.event - now held as state so picking a different event can
+    // replace them with that event's own tickets/extras.
+    const [eventId, setEventId] = useState('');
+    const [eventOption, setEventOption] = useState<{ id: string; title: string; startDate: string } | null>(null);
+    const [eventOptions, setEventOptions] = useState<{ id: string; title: string; startDate: string }[]>([]);
+    const [eventSearchLoading, setEventSearchLoading] = useState(false);
+    const [userOption, setUserOption] = useState<{ id: string; name: string; email?: string } | null>(null);
+    const [userOptions, setUserOptions] = useState<{ id: string; name: string; email?: string }[]>([]);
+    const [userSearchLoading, setUserSearchLoading] = useState(false);
+    const [eventTickets, setEventTickets] = useState<any[]>([]);
+    const [eventExtraOptions, setEventExtraOptions] = useState<any[]>([]);
+
+    const eventOptionLabel = (opt: { title: string; startDate: string }) =>
+        `${new Date(opt.startDate).toLocaleDateString('de-DE')} - ${opt.title}`;
+
+    const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const searchEvents = (query: string) => {
+        if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+        searchTimeoutRef.current = setTimeout(async () => {
+            setEventSearchLoading(true);
+            try {
+                const res = await fetch(`/api/events?q=${encodeURIComponent(query)}&_end=20&_sort=startDate&_order=DESC`);
+                const data = await res.json();
+                setEventOptions(Array.isArray(data) ? data.map((e: any) => ({ id: e.id, title: e.title, startDate: e.startDate })) : []);
+            } catch {
+                setEventOptions([]);
+            } finally {
+                setEventSearchLoading(false);
+            }
+        }, 350);
+    };
+
+    const userSearchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const searchUsers = (query: string) => {
+        if (userSearchTimeoutRef.current) clearTimeout(userSearchTimeoutRef.current);
+        userSearchTimeoutRef.current = setTimeout(async () => {
+            setUserSearchLoading(true);
+            try {
+                const res = await fetch(`/api/users?q=${encodeURIComponent(query)}&_end=20`, { headers: authHeaders() });
+                const data = await res.json();
+                setUserOptions(Array.isArray(data) ? data.map((u: any) => ({ id: u.id, name: u.name || u.email, email: u.email })) : []);
+            } catch {
+                setUserOptions([]);
+            } finally {
+                setUserSearchLoading(false);
+            }
+        }, 350);
+    };
+
+    // Admin picked a different event: that event's own tickets/extras
+    // replace the current ones, and the booked items are reset to the new
+    // event's first ticket - the old items referenced ticket rows that
+    // belong to a different event entirely and can't carry over as-is.
+    const handleEventChange = async (newValue: { id: string; title: string; startDate: string } | null) => {
+        if (!newValue) return;
+        setEventOption(newValue);
+        setEventId(newValue.id);
+        try {
+            const res = await fetch(`/api/events/${newValue.id}`);
+            const fullEvent = await res.json();
+            const newTickets = fullEvent.tickets || [];
+            setEventTickets(newTickets);
+            setEventExtraOptions(fullEvent.extraFeeOptions || []);
+            setItems(newTickets.length > 0 ? [{ ticketId: newTickets[0].id, quantity: 1 }] : []);
+            setSelectedExtras(new Set());
+        } catch {
+            notify('Veranstaltungsdaten konnten nicht geladen werden', { type: 'error' });
+        }
+    };
 
     useEffect(() => {
         if (record) {
@@ -487,6 +558,11 @@ const AdminActions = () => {
             setVoucherCodeInput(record.voucherCode || '');
             setVoucherMessage(null);
             setRemarks(record.remarks || '');
+            setEventId(record.eventId);
+            setEventOption(record.event ? { id: record.eventId, title: record.event.title, startDate: record.event.startDate } : null);
+            setUserOption(record.user ? { id: record.userId, name: record.user.name || record.user.email, email: record.user.email } : null);
+            setEventTickets(record.event?.tickets || []);
+            setEventExtraOptions(record.event?.extraFeeOptions || []);
         }
     }, [record]);
 
@@ -554,6 +630,8 @@ const AdminActions = () => {
                     paymentMethod,
                     voucherCode: voucherCodeInput.trim() || null,
                     remarks,
+                    eventId,
+                    userId: userOption?.id || null,
                 },
                 previousData: record
             },
@@ -585,6 +663,70 @@ const AdminActions = () => {
     return (
         <Card elevation={1} sx={{ mt: { xs: 2, md: 0 } }}>
             <CardContent>
+                <Typography variant="h6" gutterBottom>Allgemeine Buchungseinstellungen</Typography>
+
+                <Autocomplete
+                    fullWidth
+                    size="small"
+                    disableClearable
+                    options={eventOptions}
+                    value={eventOption}
+                    getOptionLabel={(opt) => (opt ? eventOptionLabel(opt) : '')}
+                    isOptionEqualToValue={(opt, val) => opt.id === val.id}
+                    loading={eventSearchLoading}
+                    onChange={(_, newValue) => handleEventChange(newValue)}
+                    onInputChange={(_, newInputValue, reason) => { if (reason === 'input') searchEvents(newInputValue); }}
+                    renderInput={(params) => (
+                        <MuiTextField
+                            {...params}
+                            label="Veranstaltung auswählen"
+                            margin="normal"
+                            slotProps={{
+                                input: {
+                                    ...params.InputProps,
+                                    endAdornment: (
+                                        <>
+                                            {eventSearchLoading ? <CircularProgress size={16} /> : null}
+                                            {params.InputProps.endAdornment}
+                                        </>
+                                    ),
+                                },
+                            }}
+                        />
+                    )}
+                />
+
+                <Autocomplete
+                    fullWidth
+                    size="small"
+                    options={userOptions}
+                    value={userOption}
+                    getOptionLabel={(opt) => (opt ? `${opt.name}${opt.email ? ` (${opt.email})` : ''}` : '')}
+                    isOptionEqualToValue={(opt, val) => opt.id === val.id}
+                    loading={userSearchLoading}
+                    onChange={(_, newValue) => setUserOption(newValue)}
+                    onInputChange={(_, newInputValue, reason) => { if (reason === 'input') searchUsers(newInputValue); }}
+                    renderInput={(params) => (
+                        <MuiTextField
+                            {...params}
+                            label="Benutzer (leer = Gastbuchung)"
+                            margin="normal"
+                            slotProps={{
+                                input: {
+                                    ...params.InputProps,
+                                    endAdornment: (
+                                        <>
+                                            {userSearchLoading ? <CircularProgress size={16} /> : null}
+                                            {params.InputProps.endAdornment}
+                                        </>
+                                    ),
+                                },
+                            }}
+                        />
+                    )}
+                />
+
+                <Divider sx={{ my: 2 }} />
                 <Typography variant="h6" gutterBottom>Verwaltung (Status)</Typography>
                 <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
                     Hier können Sie den Status der Buchung anpassen, z.B. wenn eine Zahlung per Banküberweisung eingegangen ist.
