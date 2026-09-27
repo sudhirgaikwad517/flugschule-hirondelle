@@ -198,14 +198,15 @@ export async function sendNewEventNotificationEmail(eventId: string) {
     const config = await prisma.templatesConfig.findUnique({ where: { id: 'default' } });
     let template = config?.emails ? (config.emails as any).newEvent : null;
     if (!template) {
+      // Matches old Matukio's real mail_newevent template (id=12) - its own
+      // stored subject is genuinely English even on the live German site.
       template = {
-        subject: 'Neue Veranstaltung: {EVENT_TITLE}',
+        subject: 'New event: {EVENT_TITLE}',
         bodyHtml: `
-          <h3>Hallo {USER_NAME},</h3>
-          <p>es gibt eine neue Veranstaltung:</p>
-          <br/>
-          {EVENT_DETAILS}
-          <br/>
+          <p>Sehr geehrte/geehrter {USER_NAME},</p>
+          <p>Eine neue Veranstaltung wurde erstellt!</p>
+          <p><strong>Mehr Informationen:</strong></p>
+          <p>{EVENT_DETAILS}</p>
           <p>Mit freundlichen Grüßen,<br/>Ihr Team der Flugschule Hirondelle</p>
         `
       };
@@ -282,14 +283,16 @@ export async function sendCancellationEmail(
     let template = config?.emails ? (config.emails as any)[templateKey] : null;
 
     if (!template) {
+      // Matches old Matukio's real mail_booking_canceled (id=3) /
+      // mail_booking_canceled_admin (id=2) templates, language-key resolved.
       template = templateKey === 'userCancellation'
         ? {
-            subject: 'Stornierungsbestätigung für {EVENT_TITLE}',
-            bodyHtml: '<p>Hallo {BOOKING_NAME},</p><p>Ihre Stornierung wurde erfolgreich bearbeitet.</p><p>{EVENT_DETAILS}</p>'
+            subject: 'Stornierungsbestätigung: {EVENT_TITLE}',
+            bodyHtml: '<p>Sehr geehrte/geehrter {BOOKING_NAME},</p><p>Sie haben Ihre Buchung storniert - Ihr Platz wurde freigegeben.</p><p><strong>Buchungsdetails:</strong></p><p>{EVENT_DETAILS}</p><p>Mit freundlichen Grüßen,<br/>Ihr Team der Flugschule Hirondelle</p>'
           }
         : {
-            subject: 'Stornierung Ihrer Buchung für {EVENT_TITLE}',
-            bodyHtml: '<p>Hallo {BOOKING_NAME},</p><p>leider müssen wir Ihre Buchung stornieren.</p><p>{EVENT_DETAILS}</p>'
+            subject: 'Stornierung Ihrer Buchung: {EVENT_TITLE}',
+            bodyHtml: '<p>Sehr geehrte/geehrter {BOOKING_NAME},</p><p>Folgende Buchung wurde storniert:</p><p>{EVENT_DETAILS}</p><p>Mit freundlichen Grüßen,<br/>Ihr Team der Flugschule Hirondelle</p>'
           };
     }
 
