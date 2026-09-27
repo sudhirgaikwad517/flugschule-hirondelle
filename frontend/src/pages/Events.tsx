@@ -5,7 +5,6 @@ import { Banner } from '../components/common/Banner';
 import { useEvents, categoryColors } from '../hooks/useEvents';
 import type { Category, CalendarEvent } from '../hooks/useEvents';
 import { EventBookingModal } from '../components/events/EventBookingModal';
-import { EventDetailsView } from '../components/events/EventDetailsView';
 
 export const Events = () => {
   const { t } = useTranslation();
@@ -15,7 +14,6 @@ export const Events = () => {
 
   // Modals state
   const [selectedEventForBooking, setSelectedEventForBooking] = useState<CalendarEvent | null>(null);
-  const [selectedEventForDetails, setSelectedEventForDetails] = useState<CalendarEvent | null>(null);
 
   // Filters State
   const initialCategoryStr = searchParams.get('category');
@@ -509,16 +507,12 @@ export const Events = () => {
                           </div>
                           
                           <div className="flex gap-2 w-full sm:w-auto">
-                            {/* Old Matukio's every event card had two buttons -
-                                "Mehr Informationen" (opens the event's own detail
-                                page/modal) and "Buchen"/"Buchen auf der Warte-Liste"
-                                (opens the booking flow) - EventDetailsView/
-                                setSelectedEventForDetails already existed and were
-                                fully wired below, just never actually triggered from
-                                anywhere on this list, so this button had silently
-                                gone missing. */}
+                            {/* Old Matukio's "Mehr Informationen" links straight to
+                                the event's own booking-calendar page (its full
+                                details view), not a popup - matches "Buchen"'s own
+                                destination, just a secondary/outlined call to action. */}
                             <button
-                              onClick={() => setSelectedEventForDetails(event)}
+                              onClick={() => navigate(`/buchungskalender/${event.id}`)}
                               className="flex-1 sm:flex-none px-6 py-2 border border-blue-600 text-blue-600 font-medium rounded hover:bg-blue-50 transition"
                             >
                               Mehr Informationen
@@ -553,30 +547,6 @@ export const Events = () => {
           event={selectedEventForBooking}
           onClose={() => setSelectedEventForBooking(null)}
         />
-      )}
-
-      {/* Details Modal */}
-      {selectedEventForDetails && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="p-1 border-b flex justify-between items-center bg-gray-50 sticky top-0 z-10">
-              <button 
-                onClick={() => setSelectedEventForDetails(null)}
-                className="text-gray-500 hover:text-gray-700 p-3 ml-auto"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-            <EventDetailsView 
-              event={selectedEventForDetails} 
-              onBack={() => setSelectedEventForDetails(null)}
-              onBook={() => {
-                setSelectedEventForDetails(null);
-                setSelectedEventForBooking(selectedEventForDetails);
-              }}
-            />
-          </div>
-        </div>
       )}
     </div>
   );
