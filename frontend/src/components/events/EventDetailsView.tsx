@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { SafeHtml } from '../common/SafeHtml';
 
 interface Ticket {
   id: string;
@@ -31,23 +32,6 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
       .then(res => res.ok ? res.json() : null)
       .then(data => setParticipants(data))
       .catch(() => setParticipants(null));
-  }, [event?.id]);
-
-  // Loads X's own share-button widget script once (avoid re-loading it via
-  // an `.id` guard); on later navigations between events, the script is
-  // already present, so just ask it to re-scan for the current page's
-  // .twitter-share-button anchor instead.
-  React.useEffect(() => {
-    const scriptId = 'twitter-wjs';
-    if (!document.getElementById(scriptId)) {
-      const js = document.createElement('script');
-      js.id = scriptId;
-      js.src = 'https://platform.twitter.com/widgets.js';
-      js.async = true;
-      document.body.appendChild(js);
-    } else if ((window as any).twttr?.widgets) {
-      (window as any).twttr.widgets.load();
-    }
   }, [event?.id]);
 
   // Old Matukio's hiron_matukio_recurring.hits counter - incremented once
@@ -259,24 +243,33 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
             </div>
           </div>
 
-          {/* X (Twitter) share button - same widget markup as the old site
-              (templates/hirondelle2015/html/com_matukio/event/modern.php):
-              a plain twitter-share-button anchor rendered by X's own
-              widgets.js, which now draws it as the black "Post" button. */}
-          <div className="print:hidden">
-            <a href="https://twitter.com/share" className="twitter-share-button" data-lang="en">Tweet</a>
-          </div>
-
           {/* Event Details Box */}
           <div className="bg-gray-50 border border-gray-200 rounded-sm overflow-hidden mb-12">
             <div className="bg-luxury-slate text-white py-3 px-5 font-luxury text-xl tracking-wide">
               Veranstaltungs-Details
             </div>
             <div className="p-6">
-              <div className="prose prose-sm md:prose-base prose-luxury max-w-none text-gray-600 mb-8 whitespace-pre-wrap">
-                {event.description ? event.description.replace(/\\n/g, '\n') : 'Keine Beschreibung verfügbar.'}
+              {/* Old Matukio's real event content (paragraphs, images, real
+                  links like the DHV exam-question page or a Google Maps
+                  pin) migrated into `shortDescription`, not `description` -
+                  `description` is empty for ~95% of events. This was
+                  previously rendered as plain escaped text (event.description
+                  only, no HTML), which for the few events that DID have a
+                  description silently dropped every link/image/paragraph
+                  break in it. SafeHtml renders the real HTML safely instead,
+                  restoring links exactly as they exist in the migrated data -
+                  nothing needs to be re-imported from the old site. */}
+              {/* Old site's own event-description links render as plain
+                  medium-blue text with no underline (verified live against
+                  fs-hirondelle.de: computed color rgb(51, 153, 204) =
+                  #3399CC) - "prose-luxury"'s own link color (a muted gold,
+                  matching the rest of the site's link styling) didn't read
+                  as an obvious clickable link here, which looked like the
+                  links had gone missing even though they work. */}
+              <div className="prose prose-sm md:prose-base prose-luxury max-w-none text-gray-600 mb-8 [&_a]:text-[#3399CC] [&_a]:no-underline hover:[&_a]:underline">
+                <SafeHtml html={event.shortDescription || event.description || 'Keine Beschreibung verfügbar.'} />
               </div>
-              
+
               {(event.detailImageUrl || event.imageUrl) && (
                 <img
                   src={event.detailImageUrl || event.imageUrl}
@@ -285,11 +278,6 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
                   style={{ maxHeight: '500px' }}
                 />
               )}
-              
-              <a href={`/reisen/${event.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} className="text-luxury-gold text-sm uppercase tracking-widest font-bold hover:text-luxury-dark transition-colors inline-flex items-center gap-2">
-                Zur Reisebeschreibung
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-              </a>
             </div>
           </div>
 

@@ -53,6 +53,15 @@ export interface CalendarEvent {
   color?: string;
   calendarTextColor?: string;
   description?: string;
+  // Old Matukio's shortdesc - the actual field its own list-view template
+  // showed per event (com_matukio/views/eventlist/tmpl/modern_eventlist.php:
+  // `<span class="mat_shortdesc">...$event->shortdesc...`), distinct from
+  // the full `description` shown on the event's own detail page. 95% of
+  // migrated events only ever had a shortDescription, not a full
+  // description - the events list previously fell back straight to
+  // "Keine Beschreibung verfügbar." for almost every one of them because it
+  // was reading the wrong field.
+  shortDescription?: string;
   location?: string;
   locationId?: string;
   registrationDeadline?: string;
@@ -106,6 +115,7 @@ export const useEvents = () => {
           color: e.color,
           calendarTextColor: e.calendarTextColor,
           description: e.description,
+          shortDescription: e.shortDescription,
           location: e.location,
           locationId: e.locationId,
           registrationDeadline: e.registrationDeadline,

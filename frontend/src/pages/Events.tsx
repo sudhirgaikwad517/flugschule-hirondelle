@@ -443,7 +443,12 @@ export const Events = () => {
                         </div>
 
                         <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                          {event.description?.replace(/<[^>]*>?/gm, '') || 'Keine Beschreibung verfügbar.'}
+                          {/* Old Matukio's list view always showed shortdesc
+                              here (see modern_eventlist.php), not the full
+                              description - falls back to description only
+                              for the rare event that has one but no
+                              shortDescription. */}
+                          {(event.shortDescription || event.description)?.replace(/<[^>]*>?/gm, '') || 'Keine Beschreibung verfügbar.'}
                         </p>
                         
                         <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-500 mb-4">
@@ -468,8 +473,15 @@ export const Events = () => {
                           <div className="flex items-center gap-2">
                             {trafficLight === 'cancelled' ? (
                               <>
-                                <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                                <span className="text-sm font-medium text-red-700">Storniert</span>
+                                {/* Old Matukio's own "red" traffic-light state
+                                    (registration closed / cancelled / fully booked
+                                    with no waitlist) - kept as its own distinct
+                                    dot color from yellow/green, but using the
+                                    site's own sky-blue accent instead of an
+                                    alarm-red, which read as more "danger/error"
+                                    than intended for a normal booking-closed state. */}
+                                <div className="w-3 h-3 rounded-full bg-sky-500"></div>
+                                <span className="text-sm font-medium text-sky-700">Storniert</span>
                               </>
                             ) : trafficLight === 'unlimited' ? (
                               <>
@@ -478,7 +490,7 @@ export const Events = () => {
                               </>
                             ) : trafficLight === 'red' ? (
                               <>
-                                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                <div className="w-3 h-3 rounded-full bg-sky-500"></div>
                                 <span className="text-sm font-medium text-gray-700">
                                   {registrationClosed ? 'Anmeldeschluss erreicht' : 'Ausgebucht'}
                                 </span>
@@ -497,6 +509,20 @@ export const Events = () => {
                           </div>
                           
                           <div className="flex gap-2 w-full sm:w-auto">
+                            {/* Old Matukio's every event card had two buttons -
+                                "Mehr Informationen" (opens the event's own detail
+                                page/modal) and "Buchen"/"Buchen auf der Warte-Liste"
+                                (opens the booking flow) - EventDetailsView/
+                                setSelectedEventForDetails already existed and were
+                                fully wired below, just never actually triggered from
+                                anywhere on this list, so this button had silently
+                                gone missing. */}
+                            <button
+                              onClick={() => setSelectedEventForDetails(event)}
+                              className="flex-1 sm:flex-none px-6 py-2 border border-blue-600 text-blue-600 font-medium rounded hover:bg-blue-50 transition"
+                            >
+                              Mehr Informationen
+                            </button>
                             {isPastEvent && !event.cancelled ? (
                               <span className="flex-1 sm:flex-none px-6 py-2 text-gray-400 font-medium text-sm text-center">
                                 Bereits stattgefunden
