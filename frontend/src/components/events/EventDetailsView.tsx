@@ -78,6 +78,25 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
     return requestedQuantity > freiePlaetze;
   }, [ticketQuantities, freiePlaetze]);
 
+  // 373 of 1306 published events carry this exact duplicate: old Matukio's
+  // article body embeds its own leading <img> (migrated as-is into
+  // shortDescription/description) whose file is the SAME one the event's
+  // own imageUrl/detailImageUrl field already points to - so it rendered
+  // once as the dedicated hero image below AND again inline in the
+  // description text. Strip only the specific <img> tag(s) matching the
+  // hero image's own filename; any other, genuinely different image
+  // embedded in the description is left untouched.
+  const descriptionHtml = React.useMemo(() => {
+    const html = event.shortDescription || event.description || '';
+    const heroImg = event.detailImageUrl || event.imageUrl;
+    const heroBasename = heroImg?.split('/').pop();
+    if (!html || !heroBasename) return html;
+    return html.replace(/<img[^>]*>/gi, (tag: string) => {
+      const src = tag.match(/src=["']([^"']+)["']/i)?.[1];
+      return src && src.split('/').pop() === heroBasename ? '' : tag;
+    });
+  }, [event.shortDescription, event.description, event.detailImageUrl, event.imageUrl]);
+
   // Initialize first ticket with quantity 1 if available
   React.useEffect(() => {
     if (event.tickets && event.tickets.length > 0 && !isPastDeadline) {
@@ -271,7 +290,7 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
                   as an obvious clickable link here, which looked like the
                   links had gone missing even though they work. */}
               <div className="prose prose-sm md:prose-base prose-luxury max-w-none text-gray-600 mb-8 [&_a]:text-[#3399CC] [&_a]:no-underline hover:[&_a]:underline">
-                <SafeHtml html={event.shortDescription || event.description || 'Keine Beschreibung verfügbar.'} />
+                <SafeHtml html={descriptionHtml || 'Keine Beschreibung verfügbar.'} />
               </div>
 
               {(event.detailImageUrl || event.imageUrl) && (
