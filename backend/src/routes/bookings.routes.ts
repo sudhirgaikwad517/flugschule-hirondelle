@@ -816,37 +816,46 @@ async function createBookingAtomic(params: {
   }
 
   return prisma.$transaction(async (tx) => {
-    // Determine Status (WAITLIST if any ticket exceeds capacity). Lock
-    // tickets in a canonical order (sorted by id) rather than whatever order
-    // the client submitted them in - two concurrent bookings referencing the
-    // same two tickets in opposite orders would otherwise risk a MySQL
-    // deadlock, aborting one of them with a generic 500.
+    // Determine Status (WAITLIST if the event's pooled capacity is
+    // exceeded). Old Matukio has no per-ticket-type capacity at all -
+    // getEventBookableArray() computes ONE freieplaetze = maxpupil - gebucht
+    // for the whole event, summing nrbooked across every booking regardless
+    // of which fee/ticket type it picked. migrate_old_data.ts carried
+    // maxpupil into every one of an event's EventTicket rows as that ticket's
+    // own `capacity` (same number, once per ticket) - so an event with 3
+    // ticket types and maxpupil 26 ended up with three *independent* pools
+    // of 26 instead of one shared pool of 26, letting up to 3x the real
+    // capacity get CONFIRMED. Check the event-wide pool instead, matching
+    // old's actual behavior; EventTicket.capacity is no longer used for
+    // this decision.
     let finalStatus = 'PENDING';
     if (items && items.length > 0) {
-      const lockOrder = [...items].sort((a, b) => a.ticketId.localeCompare(b.ticketId));
-      for (const item of lockOrder) {
-        // Row-lock the ticket so a concurrent transaction for the same ticket
-        // blocks here until this one commits/rolls back.
-        await tx.$queryRaw`SELECT id FROM EventTicket WHERE id = ${item.ticketId} FOR UPDATE`;
-        const ticket = await tx.eventTicket.findUnique({
-          where: { id: item.ticketId },
+      const poolCapacity = event.maxParticipants ?? event.capacity;
+      // maxParticipants/capacity <= 0 means "unlimited" (matches Events.tsx's
+      // own traffic-light logic) - never waitlist those.
+      if (poolCapacity > 0) {
+        // Lock every ticket belonging to this event (one statement, not one
+        // per requested ticket) so a concurrent booking against a *different*
+        // ticket type on the same event can't race past this pooled check.
+        await tx.$queryRaw`SELECT et.id FROM EventTicket et WHERE et.eventId = ${eventId} FOR UPDATE`;
+        const eventTickets = await tx.eventTicket.findMany({
+          where: { eventId },
           include: { items: { include: { booking: { select: { status: true } } } } }
         });
-        if (ticket) {
-          // Same fix as events.routes.ts's bookedCount: only CONFIRMED
-          // reduces real capacity (matches old Matukio's ACTIVE-only rule) -
-          // this filter previously excluded only 'CANCELLED', a status this
-          // schema never uses, so WAITLIST/COMPLETED bookings were
-          // incorrectly counted here too, pushing brand-new bookings onto
-          // the waitlist even when real seats were still open.
-          const bookedCount = ticket.items
+        // Same fix as events.routes.ts's bookedCount: only CONFIRMED reduces
+        // real capacity (matches old Matukio's ACTIVE-only rule) - this
+        // filter previously excluded only 'CANCELLED', a status this schema
+        // never uses, so WAITLIST/COMPLETED bookings were incorrectly
+        // counted here too, pushing brand-new bookings onto the waitlist
+        // even when real seats were still open.
+        const totalBookedAcrossEvent = eventTickets.reduce((sum, t) =>
+          sum + t.items
             .filter(i => i.booking.status === 'CONFIRMED')
-            .reduce((sum, i) => sum + i.quantity, 0);
+            .reduce((s, i) => s + i.quantity, 0), 0);
+        const requestedQuantity = items.reduce((sum, i) => sum + Number(i.quantity), 0);
 
-          if (bookedCount + Number(item.quantity) > ticket.capacity) {
-            finalStatus = 'WAITLIST';
-            break; // Entire booking goes to waitlist
-          }
+        if (totalBookedAcrossEvent + requestedQuantity > poolCapacity) {
+          finalStatus = 'WAITLIST';
         }
       }
     }

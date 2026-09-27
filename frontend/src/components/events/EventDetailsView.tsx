@@ -53,30 +53,30 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
   const minPrice = paidPrices.length > 0 ? Math.min(...paidPrices) : 0;
   const maxPrice = event.tickets?.length > 0 ? Math.max(...event.tickets.map((t: Ticket) => t.price)) : 0;
   const hasMultiplePrices = event.tickets?.length > 1 && minPrice !== maxPrice;
-  // The ticket rows already show "(Ausgebucht - Warteliste)" per ticket and
-  // the book button already switches to "Auf Warteliste eintragen" once
-  // the selected quantity would exceed capacity - but the Status field in
-  // the sidebar never reflected this at all, always saying "Anmeldung
-  // offen" even for an event where every ticket is already over capacity.
-  const isFullyBooked = !!event.tickets?.length && event.tickets.every((t: Ticket) => (t.bookedCount || 0) >= (t.capacity || 0));
 
   // Old site's "Freie Plätze": event-wide capacity minus the sum of only
   // ACTIVE (our CONFIRMED, via ticket.bookedCount) bookings across every
   // ticket - matches MatukioHelperUtilsEvents::getEventBookableArray()
-  // exactly (maxpupil - gebucht, floored at 0).
+  // exactly (maxpupil - gebucht, floored at 0). Old Matukio has no
+  // per-ticket-type capacity at all: one shared pool for the whole event,
+  // not one independent pool per ticket type - a 26-seat event with 3
+  // ticket types is 26 seats total, not 26 each. maxParticipants missing/0
+  // means "unlimited" (matches Events.tsx's own traffic-light logic).
   const totalBookedActive = (event.tickets || []).reduce((sum: number, t: Ticket) => sum + (t.bookedCount || 0), 0);
   const freiePlaetze = event.maxParticipants ? Math.max(0, event.maxParticipants - totalBookedActive) : null;
 
+  // The ticket rows already show "(Ausgebucht - Warteliste)" and the book
+  // button already switches to "Auf Warteliste eintragen" once the selected
+  // quantity would exceed the pooled capacity - but the Status field in the
+  // sidebar never reflected this at all, always saying "Anmeldung offen"
+  // even for an event already over its real, pooled capacity.
+  const isFullyBooked = freiePlaetze !== null && freiePlaetze <= 0;
+
   const isWaitlistBooking = React.useMemo(() => {
-    if (!event.tickets) return false;
-    for (const ticket of event.tickets) {
-      const qty = ticketQuantities[ticket.id] || 0;
-      if (qty > 0 && ((ticket.bookedCount || 0) + qty > (ticket.capacity || 0))) {
-        return true;
-      }
-    }
-    return false;
-  }, [ticketQuantities, event.tickets]);
+    if (freiePlaetze === null) return false; // no pooled limit configured - unlimited
+    const requestedQuantity = Object.values(ticketQuantities).reduce((sum, q) => sum + (q || 0), 0);
+    return requestedQuantity > freiePlaetze;
+  }, [ticketQuantities, freiePlaetze]);
 
   // Initialize first ticket with quantity 1 if available
   React.useEffect(() => {
@@ -205,9 +205,13 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
                             <svg className="w-4 h-4 text-luxury-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
                             <div className="flex flex-col">
                               <span className="text-gray-700">{ticket.name}: € {ticket.price.toFixed(2)} pro Person</span>
+                              {/* Capacity is event-wide/pooled (see freiePlaetze above), not
+                                  per ticket type, so this only shows this ticket type's own
+                                  booking count - not a "x of y" against its own capacity,
+                                  which old Matukio never had either. */}
                               <span className="text-xs text-gray-500">
-                                {ticket.bookedCount || 0} / {ticket.capacity || 0} gebucht
-                                {((ticket.bookedCount || 0) >= (ticket.capacity || 0)) && <span className="ml-2 text-orange-500 font-semibold">(Ausgebucht - Warteliste)</span>}
+                                {ticket.bookedCount || 0} gebucht
+                                {isFullyBooked && <span className="ml-2 text-orange-500 font-semibold">(Ausgebucht - Warteliste)</span>}
                               </span>
                             </div>
                           </div>
