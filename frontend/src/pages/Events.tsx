@@ -430,19 +430,41 @@ export const Events = () => {
                 // called stopbooking, just as a named string instead of 0/1/2.
                 const registrationClosed = !!event.registrationDeadline && new Date() > new Date(event.registrationDeadline);
                 const isFull = totalCapacity > 0 && spacesLeft <= 0;
+                // Old's real isBookable() (helpers/rendering.php) never
+                // checks the event's own end time at all - only cancelled,
+                // the registration deadline (`booked > NOW()`), and
+                // full+stopbooking gate the button. Whether the event's own
+                // end date/time has passed only ever adds a cosmetic CSS
+                // tint on old's real site (mat_event_completed) - it never
+                // hides the button or shows any "already happened" text on
+                // this list page (that only happens once its own deadline
+                // has passed too, which is what registrationClosed already
+                // covers - isPastEvent was wrongly used here before).
+                const isOverbooked = isFull && event.onExceed === 'stop';
+                const isBookable = !event.cancelled && !registrationClosed && !isOverbooked;
                 const trafficLight: 'green' | 'yellow' | 'red' | 'cancelled' | 'unlimited' =
                   event.cancelled ? 'cancelled'
                   : totalCapacity <= 0 ? 'unlimited'
-                  : registrationClosed ? 'red'
-                  : isFull && event.onExceed === 'stop' ? 'red'
+                  : !isBookable ? 'red'
                   : isFull ? 'yellow' // full, but onExceed is 'waitlist' (or unset - old's own default)
                   : 'green';
-                
+                // Unfloored - old's real "Freie Plätze" line goes negative
+                // when overbooked (helpers/events.php's calculateBookedPlacesRecurring:
+                // `$result->free = $event->maxpupil - $booked;`, no floor).
+                const freiePlaetzeRaw = totalCapacity - totalBooked;
+
                 const validPrices = (event.tickets || []).map(t => t.price).filter(p => p > 0);
                 let minPrice = validPrices.length > 0 ? Math.min(...validPrices) : 0;
 
                 return (
-                  <div key={event.id} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col sm:flex-row">
+                  <div
+                    key={event.id}
+                    className="rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col sm:flex-row"
+                    // Old's real .mat_event_completed CSS class (rgba(255,60,59,.06)) -
+                    // purely cosmetic once the event's own end time has passed,
+                    // never gates the button/traffic-light (see isBookable above).
+                    style={{ backgroundColor: isPastEvent ? 'rgba(255,60,59,0.06)' : '#fff' }}
+                  >
                     {/* Image / Date block */}
                     <div className="sm:w-1/3 md:w-1/4 flex-shrink-0 relative h-48 sm:h-auto bg-gray-100">
                       {event.imageUrl ? (
@@ -491,7 +513,10 @@ export const Events = () => {
                           </div>
                           <div className="text-right">
                             <span className="block text-lg font-bold text-gray-900">
-                              {minPrice > 0 ? `${validPrices.length > 1 ? 'ab ' : ''}€ ${minPrice.toFixed(2)}` : 'Kostenlos'}
+                              {/* Old's getFeeText() appends "*" whenever the event has
+                                  several fee options (different_fees) - not a net/gross
+                                  marker, just "see detail page for other prices". */}
+                              {minPrice > 0 ? `${validPrices.length > 1 ? 'ab ' : ''}€ ${minPrice.toFixed(2)}${validPrices.length > 1 ? ' *' : ''}` : 'Kostenlos'}
                             </span>
                           </div>
                         </div>
@@ -523,45 +548,46 @@ export const Events = () => {
                         </div>
                       </div>
 
-                        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t pt-4">
-                          <div className="flex items-center gap-2">
-                            {trafficLight === 'cancelled' ? (
-                              <>
-                                {/* Old Matukio's own "red" traffic-light state
-                                    (registration closed / cancelled / fully booked
-                                    with no waitlist) - kept as its own distinct
-                                    dot color from yellow/green, but using the
-                                    site's own sky-blue accent instead of an
-                                    alarm-red, which read as more "danger/error"
-                                    than intended for a normal booking-closed state. */}
-                                <div className="w-3 h-3 rounded-full bg-sky-500"></div>
-                                <span className="text-sm font-medium text-sky-700">Storniert</span>
-                              </>
-                            ) : trafficLight === 'unlimited' ? (
-                              <>
-                                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                                <span className="text-sm font-medium text-gray-700">Unbegrenzte Plätze</span>
-                              </>
-                            ) : trafficLight === 'red' ? (
-                              <>
-                                <div className="w-3 h-3 rounded-full bg-sky-500"></div>
-                                <span className="text-sm font-medium text-gray-700">
-                                  {registrationClosed ? 'Anmeldeschluss erreicht' : 'Ausgebucht'}
-                                </span>
-                              </>
-                            ) : trafficLight === 'yellow' ? (
-                              <>
-                                <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-                                <span className="text-sm font-medium text-gray-700">Ausgebucht (Warteliste möglich)</span>
-                              </>
-                            ) : (
-                              <>
-                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                                <span className="text-sm font-medium text-gray-700">{spacesLeft} Plätze frei</span>
-                              </>
-                            )}
-                          </div>
-                          
+                        {/* Old's real "Gebucht: X | Freie Plätze: Y" line
+                            (helpers/events.php's calculateBookedPlacesRecurring -
+                            only ACTIVE bookings counted, Y can go negative when
+                            overbooked) plus its inline cancelled/waitlist/
+                            overbooked warning spans (bootstrap3.php:442-459) -
+                            shown directly, not hidden behind any click. */}
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-600 mb-2">
+                          <span className="flex items-center gap-1.5">
+                            <div className={`w-3 h-3 rounded-full ${
+                              trafficLight === 'cancelled' ? 'bg-sky-500'
+                              : trafficLight === 'unlimited' ? 'bg-blue-500'
+                              : trafficLight === 'red' ? 'bg-red-500'
+                              : trafficLight === 'yellow' ? 'bg-yellow-400'
+                              : 'bg-green-500'
+                            }`}></div>
+                          </span>
+                          {totalCapacity > 0 && (
+                            <span>Gebucht: {totalBooked} | Freie Plätze: {freiePlaetzeRaw}</span>
+                          )}
+                          {event.cancelled && (
+                            <span className="inline-flex items-center gap-1 text-red-700 font-medium">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                              Abgesagt
+                            </span>
+                          )}
+                          {!event.cancelled && trafficLight === 'yellow' && (
+                            <span className="inline-flex items-center gap-1 text-orange-600 font-medium">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                              Ihre Buchung wird auf der Warteliste durchgeführt.
+                            </span>
+                          )}
+                          {!event.cancelled && isOverbooked && (
+                            <span className="inline-flex items-center gap-1 text-red-700 font-medium">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                              Die Veranstaltung ist überbucht
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row justify-end items-center gap-2 border-t pt-4">
                           <div className="flex gap-2 w-full sm:w-auto">
                             {/* Old Matukio's "Mehr Informationen" links straight to
                                 the event's own booking-calendar page (its full
@@ -573,23 +599,17 @@ export const Events = () => {
                             >
                               Mehr Informationen
                             </button>
-                            {isPastEvent && !event.cancelled ? (
-                              <span className="flex-1 sm:flex-none px-6 py-2 text-gray-400 font-medium text-sm text-center">
-                                Bereits stattgefunden
-                              </span>
-                            ) : trafficLight === 'red' || trafficLight === 'cancelled' ? (
-                              // Old's real getBookingButton()/isBookable() renders
-                              // NOTHING here (not even a disabled button) once
-                              // registration is closed, the event is cancelled, or
-                              // it's full with stopbooking=1 - only the colored
-                              // status dot/text above communicates that state.
-                              null
-                            ) : (
+                            {/* Old's real getBookingButton() renders NOTHING here
+                                (not even a disabled button) whenever isBookable()
+                                is false - cancelled, registration closed, or full
+                                with stopbooking=1 - regardless of whether the
+                                event's own end time has already passed today. */}
+                            {isBookable && (
                               <button
                                 onClick={() => navigate(`/buchungskalender/${event.id}`)}
                                 className="flex-1 sm:flex-none px-6 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition"
                               >
-                                {trafficLight === 'yellow' ? 'Auf Warteliste buchen' : 'Buchen'}
+                                {trafficLight === 'yellow' ? 'Buchen auf der Warte-Liste' : 'Jetzt buchen'}
                               </button>
                             )}
                           </div>
