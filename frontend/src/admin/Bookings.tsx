@@ -780,7 +780,14 @@ const CustomBookingDetails = () => {
         <Box sx={{ p: 3, width: '100%' }}>
             <Typography variant="h6" gutterBottom>Buchungsdetails</Typography>
             <Grid container spacing={3}>
-                <Grid size={{ xs: 12, sm: 8 }}>
+                {/* Old's real layout (administrator/components/com_matukio/
+                    layouts/booking/edit.php): the wide left column is the
+                    editable booking/customer-detail form, the narrow right
+                    column is Information/Payment/Notifications - the
+                    opposite of how this was originally built here. `order`
+                    swaps them visually without moving this large block of
+                    read-only fields below. */}
+                <Grid size={{ xs: 12, sm: 4 }} sx={{ order: 2 }}>
                     <Paper elevation={1}>
                         <Table sx={{ tableLayout: 'fixed' }}>
                             <TableBody>
@@ -957,7 +964,7 @@ const CustomBookingDetails = () => {
                         </Table>
                     </Paper>
                 </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
+                <Grid size={{ xs: 12, sm: 8 }} sx={{ order: 1 }}>
                     <AdminActions />
                 </Grid>
             </Grid>
