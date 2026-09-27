@@ -476,6 +476,8 @@ const AdminActions = () => {
     const [eventDialogQuery, setEventDialogQuery] = useState('');
     const [eventDialogResults, setEventDialogResults] = useState<{ id: string; title: string; eventNumber?: string; startDate: string; endDate: string | null }[]>([]);
     const [eventDialogLoading, setEventDialogLoading] = useState(false);
+    const [eventDialogPage, setEventDialogPage] = useState(0);
+    const [eventDialogTotal, setEventDialogTotal] = useState(0);
     const [allUsers, setAllUsers] = useState<{ id: string; name: string; email?: string }[]>([]);
     const [userId, setUserId] = useState('');
     const [eventTickets, setEventTickets] = useState<any[]>([]);
@@ -498,28 +500,43 @@ const AdminActions = () => {
         })();
     }, []);
 
+    // Matches old's real modal list (views/dates/tmpl/element.php): no
+    // status/category pre-filter - every event, regardless of published
+    // state, is listed by default (that's what its own "All/Published/
+    // Unpublished" filter defaults to), paginated (old's own
+    // getListFooter()), narrowed only by the search box. 20 per page
+    // matches Joomla's own default list limit.
+    const EVENT_DIALOG_PAGE_SIZE = 20;
     const eventDialogTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const fetchEventDialogPage = async (query: string, page: number) => {
+        setEventDialogLoading(true);
+        try {
+            const start = page * EVENT_DIALOG_PAGE_SIZE;
+            const qs = query ? `q=${encodeURIComponent(query)}&` : '';
+            const res = await fetch(`/api/events?${qs}_start=${start}&_end=${start + EVENT_DIALOG_PAGE_SIZE}&_sort=startDate&_order=DESC`);
+            const data = await res.json();
+            setEventDialogResults(Array.isArray(data) ? data.map((e: any) => ({ id: e.id, title: e.title, eventNumber: e.eventNumber, startDate: e.startDate, endDate: e.endDate })) : []);
+            const contentRange = res.headers.get('Content-Range');
+            const total = contentRange ? Number(contentRange.split('/')[1]) : 0;
+            setEventDialogTotal(Number.isFinite(total) ? total : 0);
+            setEventDialogPage(page);
+        } catch {
+            setEventDialogResults([]);
+            setEventDialogTotal(0);
+        } finally {
+            setEventDialogLoading(false);
+        }
+    };
+
     const searchEventsForDialog = (query: string) => {
         if (eventDialogTimeoutRef.current) clearTimeout(eventDialogTimeoutRef.current);
-        eventDialogTimeoutRef.current = setTimeout(async () => {
-            setEventDialogLoading(true);
-            try {
-                const qs = query ? `q=${encodeURIComponent(query)}&` : '';
-                const res = await fetch(`/api/events?${qs}_end=50&_sort=startDate&_order=DESC`);
-                const data = await res.json();
-                setEventDialogResults(Array.isArray(data) ? data.map((e: any) => ({ id: e.id, title: e.title, eventNumber: e.eventNumber, startDate: e.startDate, endDate: e.endDate })) : []);
-            } catch {
-                setEventDialogResults([]);
-            } finally {
-                setEventDialogLoading(false);
-            }
-        }, 300);
+        eventDialogTimeoutRef.current = setTimeout(() => fetchEventDialogPage(query, 0), 300);
     };
 
     const openEventDialog = () => {
         setEventDialogOpen(true);
         setEventDialogQuery('');
-        searchEventsForDialog('');
+        fetchEventDialogPage('', 0);
     };
 
     // Admin picked a different event in the popup: that event's own
@@ -685,7 +702,7 @@ const AdminActions = () => {
                     views/dates/tmpl/element.php) - not an inline dropdown,
                     since old genuinely uses a popup here for exactly this
                     reason: 1300+ events is too many for a flat select. */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, mb: 1 }}>
+                <Box sx={{ mt: 2, mb: 1 }}>
                     <MuiTextField
                         fullWidth
                         size="small"
@@ -693,7 +710,7 @@ const AdminActions = () => {
                         value={eventOption ? eventOptionLabel(eventOption) : 'Keine Veranstaltung ausgewählt'}
                         slotProps={{ input: { readOnly: true } }}
                     />
-                    <Button variant="contained" onClick={openEventDialog} sx={{ whiteSpace: 'nowrap' }}>
+                    <Button variant="contained" onClick={openEventDialog} sx={{ mt: 1 }}>
                         Veranstaltung auswählen
                     </Button>
                 </Box>
@@ -715,8 +732,14 @@ const AdminActions = () => {
                         ) : (
                             <Table size="small">
                                 <TableBody>
+                                    <TableRow>
+                                        <TableCell sx={{ fontWeight: 'bold' }}>Veranstaltung</TableCell>
+                                        <TableCell sx={{ fontWeight: 'bold' }}>Nr.</TableCell>
+                                        <TableCell sx={{ fontWeight: 'bold' }}>Beginn</TableCell>
+                                        <TableCell sx={{ fontWeight: 'bold' }}>Ende</TableCell>
+                                    </TableRow>
                                     {eventDialogResults.length === 0 && (
-                                        <TableRow><TableCell>Keine Veranstaltungen gefunden.</TableCell></TableRow>
+                                        <TableRow><TableCell colSpan={4}>Keine Veranstaltungen gefunden.</TableCell></TableRow>
                                     )}
                                     {eventDialogResults.map((ev) => (
                                         <TableRow
@@ -733,6 +756,30 @@ const AdminActions = () => {
                                     ))}
                                 </TableBody>
                             </Table>
+                        )}
+                        {eventDialogTotal > 0 && (
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+                                <Typography variant="body2" color="textSecondary">
+                                    {eventDialogPage * EVENT_DIALOG_PAGE_SIZE + 1}
+                                    –{Math.min((eventDialogPage + 1) * EVENT_DIALOG_PAGE_SIZE, eventDialogTotal)} von {eventDialogTotal}
+                                </Typography>
+                                <Box>
+                                    <Button
+                                        size="small"
+                                        disabled={eventDialogPage === 0 || eventDialogLoading}
+                                        onClick={() => fetchEventDialogPage(eventDialogQuery, eventDialogPage - 1)}
+                                    >
+                                        Zurück
+                                    </Button>
+                                    <Button
+                                        size="small"
+                                        disabled={(eventDialogPage + 1) * EVENT_DIALOG_PAGE_SIZE >= eventDialogTotal || eventDialogLoading}
+                                        onClick={() => fetchEventDialogPage(eventDialogQuery, eventDialogPage + 1)}
+                                    >
+                                        Weiter
+                                    </Button>
+                                </Box>
+                            </Box>
                         )}
                     </DialogContent>
                     <DialogActions>
