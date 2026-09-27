@@ -79,7 +79,17 @@ const BookingFilter = (props: any) => (
         <TextInput label="Suche (Name, E-Mail, id:123, code:GUTSCHEIN10)" source="q" alwaysOn />
         <SelectInput label="Status" source="status" choices={statusChoices} alwaysOn emptyText="Alle" />
         <ReferenceInput label="Event" source="eventId" reference="events" perPage={500} sort={{ field: 'startDate', order: 'DESC' }} alwaysOn>
-            <SelectInput optionText="title" emptyText="Alle Events" />
+            {/* Old's own event filter (administrator/components/com_matukio/
+                views/bookings/view.html.php) builds each option as
+                CONCAT(title, ' ', begin) - every recurring date of e.g.
+                "Grundkurs" is otherwise an identical, indistinguishable
+                entry with no way to tell which actual date you're picking.
+                Date first (old's real per-user-report layout) since events
+                are already sorted newest-first. */}
+            <SelectInput
+                optionText={(record: any) => `${new Date(record.startDate).toLocaleDateString('de-DE')} - ${record.title}`}
+                emptyText="Alle Events"
+            />
         </ReferenceInput>
         <SelectInput label="Zeitraum" source="time" choices={timeChoices} alwaysOn emptyText="Alle Zeiten" />
     </Filter>

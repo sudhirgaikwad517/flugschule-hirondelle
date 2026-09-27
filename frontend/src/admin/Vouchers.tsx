@@ -112,12 +112,12 @@ const VoucherForm = () => (
         <NumberInput source="value" label="Wert" fullWidth required />
         <NumberInput source="limit" label="Limit (0 = Ohne)" defaultValue={0} fullWidth />
         
-        <ReferenceInput source="eventId" reference="events">
-            <SelectInput 
-                optionText="title" 
-                label="Veranstaltung" 
-                emptyText="Alle Veranstaltungen" 
-                fullWidth 
+        <ReferenceInput source="eventId" reference="events" sort={{ field: 'startDate', order: 'DESC' }}>
+            <SelectInput
+                optionText={(record: any) => `${new Date(record.startDate).toLocaleDateString('de-DE')} - ${record.title}`}
+                label="Veranstaltung"
+                emptyText="Alle Veranstaltungen"
+                fullWidth
             />
         </ReferenceInput>
         
