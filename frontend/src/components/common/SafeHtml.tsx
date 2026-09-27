@@ -22,28 +22,53 @@ export const SafeHtml = ({ html, className }: { html: string; className?: string
     ],
   });
 
-  // Some migrated CMS content (event/location/organizer descriptions) has
-  // anchor hrefs saved without a protocol. Two distinct patterns show up in
-  // the real data:
-  // 1. Old Joomla's own internal article links, e.g.
-  //    "index.php?option=com_content&view=article&id=9&Itemid=702" - these
-  //    only resolve on the OLD site's domain (still live at fs-hirondelle.de),
-  //    never on this app, which has no /index.php route.
-  // 2. A bare external domain, e.g. "service.dhv.de" instead of
-  //    "https://service.dhv.de".
-  // Left as-is, the browser treats either as a path relative to the current
-  // SPA route (/events -> /index.php or /service.dhv.de), and react-router's
-  // catch-all ":slug" route (App.tsx) swallows the click into one of the
-  // app's own fixed pages instead of the real target. Route case 1 back to
-  // the old site's domain, give case 2 an https:// prefix, and open all
-  // external links in a new tab so a legacy/broken link can never hijack SPA
-  // navigation again.
+  // Old Joomla's own internal article links (e.g. "index.php?option=
+  // com_content&view=article&id=9&Itemid=702", the "Zur Kursbeschreibung"/
+  // "Reisebeschreibung" links inside migrated event descriptions) used to
+  // get rewritten to the OLD site's domain (still live at fs-hirondelle.de)
+  // since this app has no /index.php route - but every one of these real
+  // article ids (deep-scanned across every migrated event's description)
+  // actually already has a real, equivalent page on THIS app. Route them
+  // there instead of sending visitors away to the old site. Only a
+  // genuinely never-migrated one (id=103, a one-off "Spanien-Tour bei
+  // Niviuk" with no dedicated new page) still falls back to old's domain.
+  const OLD_ARTICLE_ID_TO_PATH: Record<string, string> = {
+    '8': '/ausbildung/schnupperkurs',
+    '9': '/ausbildung/l-schein',
+    '67': '/ausbildung/a-schein',
+    '68': '/ausbildung/b-schein',
+    '69': '/ausbildung/windenschein',
+    '107': '/performance/sicherheitstraining',
+    '114': '/performance/sicherheitstraining',
+    '46': '/performance/refresher',
+    '27': '/reisen/bassano-tour',
+    '111': '/reisen/bergamo-tour',
+    '109': '/reisen/brasilien-tour',
+    '104': '/reisen/griechenland-tour',
+    '96': '/reisen/griechenland-tour',
+    '108': '/reisen/kolumbien-tour',
+    '30': '/reisen/pfalz-tour',
+    '25': '/reisen/savoye-tour',
+    '110': '/reisen/slowenien-tour',
+    '28': '/reisen/suedafrika-tour',
+    '95': '/reisen/vogesen-tour',
+    '21': '/reisen', // old's own "view=category" link (HF Vogesen 1/2), not an article id
+  };
+
+  // Some migrated CMS content also has anchor hrefs saved without a
+  // protocol at all, e.g. "service.dhv.de" instead of "https://service.dhv.de".
+  // Left as-is, the browser treats it as a path relative to the current SPA
+  // route, and react-router's catch-all ":slug" route (App.tsx) swallows the
+  // click into one of the app's own fixed pages instead of the real target.
   const withFixedLinks = (() => {
     const container = document.createElement('div');
     container.innerHTML = clean;
     container.querySelectorAll('a[href]').forEach((a) => {
       const href = a.getAttribute('href') || '';
-      if (/^index\.php\b/i.test(href)) {
+      const articleMatch = /^index\.php\?.*\bid=(\d+)/i.exec(href);
+      if (articleMatch && OLD_ARTICLE_ID_TO_PATH[articleMatch[1]]) {
+        a.setAttribute('href', OLD_ARTICLE_ID_TO_PATH[articleMatch[1]]);
+      } else if (/^index\.php\b/i.test(href)) {
         a.setAttribute('href', `https://fs-hirondelle.de/${href}`);
       } else if (href && !/^([a-z][a-z0-9+.-]*:|\/|#)/i.test(href)) {
         a.setAttribute('href', `https://${href}`);
