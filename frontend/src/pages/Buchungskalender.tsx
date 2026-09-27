@@ -455,10 +455,10 @@ export const Buchungskalender = () => {
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path></svg>
                                         ${item.event.category}
                                       </div>
-                                      ${item.event.tickets && item.event.tickets.length > 0 ? `
+                                      ${(item.event.feePerPerson ?? 0) > 0 ? `
                                       <div class='flex items-center gap-2 text-[12px] text-gray-800 font-bold'>
                                         <svg class="w-4 h-4 text-luxury-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
-                                        ab €${Math.min(...item.event.tickets.map(t => t.price))} Euro
+                                        € ${item.event.feePerPerson!.toFixed(2)}${(item.event.tickets?.length || 0) > 1 ? ' *' : ''}
                                       </div>
                                       ` : ''}
                                     </div>
