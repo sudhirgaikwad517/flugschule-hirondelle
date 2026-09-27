@@ -116,11 +116,21 @@ export const Events = () => {
     // Dates
     const now = new Date();
     const todayStr = now.toDateString();
-    
+    // Old's real default "upcoming events" filter (models/eventlist.php's
+    // buildDateQuery(), dateid defaults to 1, event_stopshowing defaults to
+    // 2/"booked") is `r.booked > NOW()` - the REGISTRATION DEADLINE, not the
+    // event's own start/end date. That's why an event whose deadline has
+    // passed disappears from old's real list entirely (confirmed: old's own
+    // live site returns zero results for a category whose only event is in
+    // exactly that state), regardless of whether it's still "today". Falls
+    // back to the event's own end date only for the (common, migrated) case
+    // where no registrationDeadline was ever set.
+    const stopShowingAt = (e: typeof events[number]) => e.registrationDeadline ? new Date(e.registrationDeadline) : e.end;
+
     if (dateFilter === 'future') {
-      result = result.filter(e => e.end >= now || e.start.toDateString() === todayStr);
+      result = result.filter(e => stopShowingAt(e) > now);
     } else if (dateFilter === 'past') {
-      result = result.filter(e => e.end < now && e.start.toDateString() !== todayStr);
+      result = result.filter(e => stopShowingAt(e) <= now);
     } else if (dateFilter === 'today') {
       result = result.filter(e => e.start.toDateString() === todayStr);
     } else if (dateFilter === 'thisMonth') {
