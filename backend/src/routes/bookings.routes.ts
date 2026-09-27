@@ -720,13 +720,17 @@ router.get('/:id/name-tag', authenticateJWT, authorizeAdmin, async (req, res) =>
 
 router.get('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    const booking = await prisma.booking.findUnique({ 
-      where: { id: req.params.id as string }, 
-      include: { 
-        user: true, 
-        event: true,
+    const booking = await prisma.booking.findUnique({
+      where: { id: req.params.id as string },
+      include: {
+        user: true,
+        // Nested tickets: the admin edit panel needs the event's full
+        // ticket-type list to offer changing which one this booking is
+        // for (old Matukio's editable "type" dropdown), not just the one
+        // already booked (that's items[].ticket, included separately below).
+        event: { include: { tickets: { orderBy: { order: 'asc' } } } },
         items: { include: { ticket: true } }
-      } 
+      }
     });
     if (!booking) return res.status(404).json({ message: 'Not found' });
     res.json(booking);
@@ -1010,19 +1014,19 @@ router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
     }
 
     if (updateAmount && existing) {
-      // Re-derive from the (possibly just-changed) items/tickets and the
-      // booking's own voucher - old's "Betrag aktualisieren" for when an
-      // admin adjusts the ticket selection and the total needs recomputing
-      // to match. Selected extras keep their originally-stored value
-      // rather than being re-resolved from event.extraFeeOptions indices,
-      // since this edit form never changes which extras were chosen.
+      // Re-derive from the (possibly just-changed) items/tickets/voucher/
+      // extras from THIS save (booking, not existing - so applying a new
+      // coupon or toggling an extra and checking "update amount" in the
+      // same save reflects the change immediately) - old's "Betrag
+      // aktualisieren" for when an admin adjusts the booking and the total
+      // needs recomputing to match.
       const priceResult = await calculateBookingPrice(
         booking.eventId,
         booking.items.map((i) => ({ ticketId: i.ticketId, quantity: i.quantity })),
-        existing.voucherCode || undefined,
+        booking.voucherCode || undefined,
         !!booking.userId
       );
-      const storedExtras = (existing.customerDetails as any)?.selectedExtras;
+      const storedExtras = (booking.customerDetails as any)?.selectedExtras;
       const extrasTotal = Array.isArray(storedExtras)
         ? storedExtras.reduce((sum: number, ex: any) => {
             const value = Number(ex.value) || 0;

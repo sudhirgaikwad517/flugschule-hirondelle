@@ -435,6 +435,22 @@ const AdminActions = () => {
     const [notifyParticipant, setNotifyParticipant] = useState(false);
     const [notifyParticipantInvoice, setNotifyParticipantInvoice] = useState(false);
     const [updateAmount, setUpdateAmount] = useState(false);
+    // Old's "Payment details" card: editable ticket-type(s)/quantity,
+    // payment method, extra fee option toggles, and a coupon "Apply" field -
+    // none of these had any edit control here at all before.
+    const [items, setItems] = useState<{ ticketId: string; quantity: number }[]>([]);
+    const [paymentMethod, setPaymentMethod] = useState('');
+    const [selectedExtras, setSelectedExtras] = useState<Set<number>>(new Set());
+    const [voucherCodeInput, setVoucherCodeInput] = useState('');
+    const [voucherMessage, setVoucherMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+    const [validatingVoucher, setValidatingVoucher] = useState(false);
+    // The customer's own free-text note (old's "Note / Coupon code" field) -
+    // distinct from adminComment above, which is admin-only and never shown
+    // to the customer.
+    const [remarks, setRemarks] = useState('');
+
+    const eventTickets: any[] = record?.event?.tickets || [];
+    const eventExtraOptions: any[] = record?.event?.extraFeeOptions || [];
 
     useEffect(() => {
         if (record) {
@@ -450,8 +466,56 @@ const AdminActions = () => {
             setNotifyParticipant(false);
             setNotifyParticipantInvoice(false);
             setUpdateAmount(false);
+            setItems((record.items || []).map((i: any) => ({ ticketId: i.ticketId, quantity: i.quantity })));
+            setPaymentMethod(record.paymentMethod || 'Bitte auswählen');
+            const options: any[] = record.event?.extraFeeOptions || [];
+            const storedExtras = Array.isArray(d.selectedExtras) ? d.selectedExtras : [];
+            const matchedIndices = options
+                .map((opt, idx) => (storedExtras.some((se: any) => se.title === opt.title) ? idx : -1))
+                .filter((idx) => idx >= 0);
+            setSelectedExtras(new Set(matchedIndices));
+            setVoucherCodeInput(record.voucherCode || '');
+            setVoucherMessage(null);
+            setRemarks(record.remarks || '');
         }
     }, [record]);
+
+    const handleApplyVoucher = async () => {
+        if (!voucherCodeInput.trim() || !record) return;
+        setValidatingVoucher(true);
+        setVoucherMessage(null);
+        try {
+            const res = await fetch('/api/vouchers/validate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: voucherCodeInput.trim(), eventId: record.eventId }),
+            });
+            const data = await res.json();
+            if (res.ok && data.valid) {
+                setVoucherMessage({ type: 'success', text: 'Gutschein gültig - wird beim Speichern übernommen. Aktivieren Sie "Betrag aktualisieren", um den Preis anzupassen.' });
+            } else {
+                setVoucherMessage({ type: 'error', text: data.message || 'Ungültiger Gutschein' });
+            }
+        } catch {
+            setVoucherMessage({ type: 'error', text: 'Fehler bei der Überprüfung des Gutscheins.' });
+        } finally {
+            setValidatingVoucher(false);
+        }
+    };
+
+    const toggleExtra = (idx: number) => {
+        setSelectedExtras((prev) => {
+            const next = new Set(prev);
+            if (next.has(idx)) next.delete(idx);
+            else next.add(idx);
+            return next;
+        });
+    };
+
+    const updateItem = (idx: number, field: 'ticketId' | 'quantity', value: any) =>
+        setItems((prev) => prev.map((it, i) => (i === idx ? { ...it, [field]: value } : it)));
+    const addItem = () => setItems((prev) => [...prev, { ticketId: eventTickets[0]?.id || '', quantity: 1 }]);
+    const removeItem = (idx: number) => setItems((prev) => prev.filter((_, i) => i !== idx));
 
     const handleSave = () => {
         if (!record) return;
@@ -459,16 +523,28 @@ const AdminActions = () => {
         for (const { key, value } of customFields) {
             if (key.trim()) customFieldsObj[key.trim()] = value;
         }
+        const selectedExtraObjects = Array.from(selectedExtras)
+            .map((idx) => eventExtraOptions[idx])
+            .filter(Boolean)
+            .map((opt) => ({ title: opt.title, value: opt.value, perPlace: opt.perPlace }));
         const customerDetails = {
             ...details,
             additionalParticipants: participants,
             customFields: customFieldsObj,
+            selectedExtras: selectedExtraObjects,
         };
         update(
             'bookings',
             {
                 id: record.id,
-                data: { status, customerDetails, adminComment, paid, checkedIn, notifyParticipant, notifyParticipantInvoice, updateAmount },
+                data: {
+                    status, customerDetails, adminComment, paid, checkedIn,
+                    notifyParticipant, notifyParticipantInvoice, updateAmount,
+                    items: items.filter((i) => i.ticketId && i.quantity > 0),
+                    paymentMethod,
+                    voucherCode: voucherCodeInput.trim() || null,
+                    remarks,
+                },
                 previousData: record
             },
             {
@@ -538,6 +614,78 @@ const AdminActions = () => {
                 <NameTagButton />
 
                 <Divider sx={{ my: 2 }} />
+                <Typography variant="subtitle2" gutterBottom>Zahlungsdetails</Typography>
+
+                {items.map((item, idx) => (
+                    <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                        <MuiTextField
+                            select size="small" label="Ticket-Typ" value={item.ticketId}
+                            onChange={(e) => updateItem(idx, 'ticketId', e.target.value)}
+                            sx={{ flex: 2 }}
+                        >
+                            {eventTickets.map((t) => (
+                                <MenuItem key={t.id} value={t.id}>{t.name} (€ {Number(t.price).toFixed(2)})</MenuItem>
+                            ))}
+                        </MuiTextField>
+                        <MuiTextField
+                            type="number" size="small" label="Anzahl" value={item.quantity}
+                            onChange={(e) => updateItem(idx, 'quantity', Math.max(1, Number(e.target.value) || 1))}
+                            sx={{ width: 90 }}
+                            slotProps={{ htmlInput: { min: 1 } }}
+                        />
+                        {items.length > 1 && (
+                            <IconButton size="small" onClick={() => removeItem(idx)}><DeleteIcon fontSize="small" /></IconButton>
+                        )}
+                    </Box>
+                ))}
+                {eventTickets.length > 0 && (
+                    <Tooltip title="Ticket-Position hinzufügen">
+                        <IconButton size="small" onClick={addItem}><AddIcon fontSize="small" /></IconButton>
+                    </Tooltip>
+                )}
+
+                <FormControl fullWidth margin="dense" size="small">
+                    <InputLabel>Zahlungsmethode</InputLabel>
+                    <Select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} label="Zahlungsmethode">
+                        <MenuItem value="Bitte auswählen">Bitte auswählen</MenuItem>
+                        <MenuItem value="PayPal">PayPal</MenuItem>
+                        <MenuItem value="Gutschein">Gutschein</MenuItem>
+                        <MenuItem value="Überweisung">Überweisung</MenuItem>
+                        <MenuItem value="Barzahlung">Barzahlung vor Ort</MenuItem>
+                    </Select>
+                </FormControl>
+
+                {eventExtraOptions.length > 0 && (
+                    <Box sx={{ mt: 1 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>Zusätzliche Optionen</Typography>
+                        {eventExtraOptions.map((opt: any, idx: number) => (
+                            <FormControlLabel
+                                key={idx}
+                                sx={{ display: 'flex' }}
+                                control={<Checkbox checked={selectedExtras.has(idx)} onChange={() => toggleExtra(idx)} />}
+                                label={`${opt.title} (€ ${Number(opt.value).toFixed(2)}${opt.perPlace ? ' pro Person' : ''})`}
+                            />
+                        ))}
+                    </Box>
+                )}
+
+                <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                    <MuiTextField
+                        size="small" label="Gutscheincode" value={voucherCodeInput}
+                        onChange={(e) => setVoucherCodeInput(e.target.value)}
+                        sx={{ flex: 1 }}
+                    />
+                    <Button variant="outlined" size="small" onClick={handleApplyVoucher} disabled={validatingVoucher || !voucherCodeInput.trim()}>
+                        {validatingVoucher ? 'Prüfen...' : 'Anwenden'}
+                    </Button>
+                </Box>
+                {voucherMessage && (
+                    <Typography variant="caption" sx={{ display: 'block', color: voucherMessage.type === 'error' ? 'error.main' : 'success.main', mt: 0.5 }}>
+                        {voucherMessage.text}
+                    </Typography>
+                )}
+
+                <Divider sx={{ my: 2 }} />
                 <Typography variant="subtitle2" gutterBottom>Kundendetails bearbeiten (Hauptbucher)</Typography>
                 <ParticipantFields value={details} onChange={setDetails} />
                 <MuiTextField fullWidth margin="dense" size="small" label="E-Mail" value={details.email || ''} onChange={setField('email')} />
@@ -546,6 +694,10 @@ const AdminActions = () => {
                 <MuiTextField fullWidth margin="dense" size="small" label="PLZ" value={details.zip || ''} onChange={setField('zip')} />
                 <MuiTextField fullWidth margin="dense" size="small" label="Stadt" value={details.city || ''} onChange={setField('city')} />
                 <MuiTextField fullWidth margin="dense" size="small" label="Land (optional)" value={details.country || ''} onChange={setField('country')} />
+                <MuiTextField
+                    fullWidth margin="dense" size="small" label="Anmerkung des Kunden" multiline minRows={2}
+                    value={remarks} onChange={(e) => setRemarks(e.target.value)}
+                />
 
                 <Divider sx={{ my: 2 }} />
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
