@@ -475,49 +475,25 @@ const OLD_STYLE_STATUS_LABEL: Record<string, string> = {
   COMPLETED: 'Gelöscht',
 };
 
-// Old's own currency formatter has a literal comment: "Work around for
-// fucked up Euro symbol" - it deliberately outputs the HTML entity instead
-// of the real character (administrator/components/com_matukio/helpers/
-// events.php's getFormatedCurrency()). Matched here for byte-for-byte
-// parity with the old CSV export's actual output, not a mistake.
-function formatEuroOldStyle(value: number): string {
-  return `&euro; ${value.toFixed(2)}`;
+// Old Matukio's own CSV export literally emitted the "&euro;" HTML entity
+// and a whole <table> of <tr><td> markup for the extras column (a bug in
+// the old system, not a deliberate format) - byte-for-byte-replicating
+// that here previously produced exactly what its name says: HTML entities
+// and raw tags sitting in plain CSV cells, which Excel has no way to
+// render, plus single-quoted fields instead of proper CSV quoting (which
+// doesn't protect an embedded newline at all, so a multi-line remark blew
+// a booking's row apart across several real spreadsheet rows). These now
+// render as plain, clean text instead - real €, no markup, one row per
+// booking - while keeping every one of old's columns and data.
+function formatEuro(value: number): string {
+  return `€ ${value.toFixed(2)}`;
 }
 
-// Old's own MAT_BOOKING_EXTRA_PAYMENT_OPTIONS token (templates.php ~line
-// 668-691): one <table> with one <tr><td colspan="4"> row per selected
-// extra, or the fixed "no options" text when none were selected.
-function renderExtraOptionsHtml(selectedExtras: any[] | undefined): string {
+function formatExtraOptionsList(selectedExtras: any[] | undefined): string {
   if (!selectedExtras || selectedExtras.length === 0) return 'Keine Optionen gebucht';
-  const rows = selectedExtras
-    .map((e) => {
-      const perPlace = e.perPlace ? ' pro Platz' : '';
-      return `<tr><td colspan="4">${e.title} (${formatEuroOldStyle(Number(e.value) || 0)}${perPlace})</td></tr>`;
-    })
-    .join('');
-  return `<table class="table table-striped" cellpadding="2" border="0" width="100%">${rows}</table>`;
-}
-
-// Old's own CSV export always semicolon-separates single-quoted fields
-// (not the RFC4180 double-quote/comma style csvEscape() uses elsewhere in
-// this file) - replicated here for exact parity with what admins already
-// know from the old system. Old itself only replaces a literal semicolon
-// inside a value with a space (to avoid breaking columns) and never
-// escapes embedded single quotes at all; doubling them here is a small,
-// invisible-to-normal-data safety improvement so a customer's apostrophe
-// in e.g. a remark can't corrupt the row structure.
-//
-// Only applied to genuine free-text values (names, addresses, remarks);
-// NOT to our own programmatically-built strings like the "&euro; 12.34"
-// currency format or the extras <table> markup, both of which contain
-// real semicolons/quotes on purpose that must survive untouched.
-function csvFieldOldStyle(value: unknown): string {
-  const str = String(value ?? '').replace(/;/g, ' ').replace(/'/g, "''");
-  return `'${str}'`;
-}
-
-function csvFieldOldStyleRaw(value: string): string {
-  return `'${value.replace(/'/g, "''")}'`;
+  return selectedExtras
+    .map((e) => `${e.title} (${formatEuro(Number(e.value) || 0)}${e.perPlace ? ' pro Platz' : ''})`)
+    .join('; ');
 }
 
 router.get('/export/csv', authenticateJWT, authorizeAdmin, async (req, res) => {
@@ -588,17 +564,21 @@ router.get('/export/csv', authenticateJWT, authorizeAdmin, async (req, res) => {
           details.zip || '',
           details.city || '',
           b.remarks || '',
-          formatEuroOldStyle(b.totalPrice),
+          formatEuro(b.totalPrice),
           details.fullName || name,
           b.paymentMethod || '',
           OLD_STYLE_STATUS_LABEL[b.status] || b.status,
-          renderExtraOptionsHtml(details.selectedExtras),
+          formatExtraOptionsList(details.selectedExtras),
           'P', // old's own payment_status column - verified always 'P' across every historical booking, never varies
         ];
       });
-      const RAW_COLUMN_INDICES = new Set([13, 17]); // Gebühren (Brutto), Zusätzliche Optionen - our own built HTML/currency, not user text
+      // Proper RFC4180 quoting (same csvEscape() used by the custom-template
+      // branch above) - not old's single-quote scheme, which never protected
+      // an embedded newline at all: a multi-line remark split its booking's
+      // row across several real spreadsheet rows instead of staying in one
+      // cell.
       csv = [header, ...rows]
-        .map((r) => r.map((v, i) => (RAW_COLUMN_INDICES.has(i) ? csvFieldOldStyleRaw(String(v)) : csvFieldOldStyle(v))).join(';'))
+        .map((r) => r.map(csvEscape).join(';'))
         .join('\r\n');
     }
 
@@ -613,8 +593,11 @@ router.get('/export/csv', authenticateJWT, authorizeAdmin, async (req, res) => {
     // Windows-regional "list separator" (comma on an English-locale
     // machine) instead of the semicolon this file actually uses, dumping
     // every column into cell A. The BOM must still come first so Excel
-    // also opens the UTF-8 umlauts/euro-sign correctly.
-    res.send('﻿sep=;\r\n' + csv);
+    // also opens the UTF-8 umlauts/euro-sign correctly - built as an
+    // explicit Buffer (not a literal source-file character before "sep=")
+    // so it can't ever be silently lost/corrupted by a future save in a
+    // different encoding.
+    res.end(Buffer.from('﻿sep=;\r\n' + csv, 'utf8'));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });
