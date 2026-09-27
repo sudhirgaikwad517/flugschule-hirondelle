@@ -171,6 +171,13 @@ model EventTicket {
   price       Float
   description String?       @db.Text
   capacity    Int           @default(20)
+  // Old Matukio's booking-form dropdown always lists "Normal" (the base
+  // fee) first, then each different_fees_override entry in the order the
+  // admin originally entered them (feetype.php builds its <option> list in
+  // exactly that sequence). The id column here is a random UUID, so without
+  // its own explicit sort column, ticket display order was whatever MySQL
+  // happened to return - effectively random, not matching old at all.
+  order       Int           @default(0)
   items       BookingItem[]
   event       Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
 }

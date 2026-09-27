@@ -331,11 +331,14 @@ async function migrateEventsAndBookings(
     }
 
     const ticketByType = new Map<string, string>();
-    for (const tier of tierPlan) {
+    for (const [tierIndex, tier] of tierPlan.entries()) {
       let ticket = await prisma.eventTicket.findFirst({ where: { eventId: newEventId, name: tier.name } });
       if (!ticket) {
+        // tierPlan is always [Normal/base, ...overrides in Matukio's own
+        // array order] - preserve that as the ticket's display order so the
+        // migrated event's booking form lists them the same way old did.
         ticket = await prisma.eventTicket.create({
-          data: { eventId: newEventId, name: tier.name, price: tier.price, capacity: event?.capacity || 20 }
+          data: { eventId: newEventId, name: tier.name, price: tier.price, capacity: event?.capacity || 20, order: tierIndex }
         });
       }
       ticketByType.set(tier.typeIndex, ticket.id);

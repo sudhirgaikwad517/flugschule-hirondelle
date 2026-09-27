@@ -12,11 +12,12 @@ const router = Router();
 function buildTicketsCreate(tickets: any[] | undefined) {
   if (!tickets) return undefined;
   return {
-    create: tickets.map((t: any) => ({
+    create: tickets.map((t: any, index: number) => ({
       name: t.name,
       price: Number(t.price),
       description: t.description,
-      capacity: Number(t.capacity) || 0
+      capacity: Number(t.capacity) || 0,
+      order: index
     }))
   };
 }
@@ -59,15 +60,16 @@ router.get('/', async (req, res) => {
     const [events, total] = await Promise.all([
       prisma.event.findMany({
         where: whereClause,
-        include: { 
+        include: {
           categoryRef: true,
           tickets: {
+            orderBy: { order: 'asc' },
             include: {
               items: {
                 include: { booking: { select: { status: true } } }
               }
             }
-          } 
+          }
         },
         skip,
         take,
@@ -169,12 +171,13 @@ router.get('/:id', async (req, res) => {
       where: { id: req.params.id as string },
       include: {
         tickets: {
+          orderBy: { order: 'asc' },
           include: {
             items: {
               include: { booking: { select: { status: true } } }
             }
           }
-        } 
+        }
       }
     });
     if (!event) return res.status(404).json({ message: 'Not found' });
@@ -217,15 +220,16 @@ router.post('/', authenticateJWT, authorizeAdmin, async (req, res) => {
       data: {
         ...data,
         tickets: tickets ? {
-          create: tickets.map((t: any) => ({
+          create: tickets.map((t: any, index: number) => ({
             name: t.name,
             price: Number(t.price),
             description: t.description,
-            capacity: Number(t.capacity) || 0
+            capacity: Number(t.capacity) || 0,
+            order: index
           }))
         } : undefined
       },
-      include: { tickets: true }
+      include: { tickets: { orderBy: { order: 'asc' } } }
     });
     // old: sendmail_newevent_group - notifies registered customers about a
     // genuinely new event (not every recurring-date generated from an
@@ -289,12 +293,15 @@ router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
         const existingTickets = await tx.eventTicket.findMany({ where: { eventId } });
         const incomingIds = new Set(tickets.filter((t: any) => t.id).map((t: any) => t.id));
 
-        for (const t of tickets) {
+        for (const [index, t] of tickets.entries()) {
           const ticketData = {
             name: t.name,
             price: Number(t.price),
             description: t.description,
-            capacity: Number(t.capacity) || 0
+            capacity: Number(t.capacity) || 0,
+            // Position in the submitted array (matches display order in the
+            // admin edit form) becomes the new display order everywhere else.
+            order: index
           };
           if (t.id && existingTickets.some(e => e.id === t.id)) {
             await tx.eventTicket.update({ where: { id: t.id }, data: ticketData });
@@ -316,7 +323,7 @@ router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
       return tx.event.update({
         where: { id: eventId },
         data,
-        include: { tickets: true }
+        include: { tickets: { orderBy: { order: 'asc' } } }
       });
     });
     res.json(event);
@@ -472,7 +479,7 @@ router.post('/:id/add-date', authenticateJWT, authorizeAdmin, async (req, res) =
   try {
     const reference = await prisma.event.findUnique({ where: { id: req.params.id as string } });
     if (!reference) return res.status(404).json({ message: 'Not found' });
-    const referenceTickets = await prisma.eventTicket.findMany({ where: { eventId: reference.id } });
+    const referenceTickets = await prisma.eventTicket.findMany({ where: { eventId: reference.id }, orderBy: { order: 'asc' } });
 
     const { startDate, endDate, registrationDeadline, titleOverride, capacityOverride, locationOverride, bookingNumber } = req.body;
     if (!startDate) return res.status(400).json({ message: 'startDate ist erforderlich' });
@@ -512,7 +519,7 @@ router.post('/:id/add-date', authenticateJWT, authorizeAdmin, async (req, res) =
         seriesId,
         cancelled: false,
         tickets: {
-          create: referenceTickets.map(t => ({ name: t.name, price: t.price, description: t.description, capacity: t.capacity }))
+          create: referenceTickets.map(t => ({ name: t.name, price: t.price, description: t.description, capacity: t.capacity, order: t.order }))
         }
       }
     });
@@ -548,7 +555,7 @@ router.post('/:id/add-recurring-dates', authenticateJWT, authorizeAdmin, async (
       return res.json({ dates: dateStrings });
     }
 
-    const referenceTickets = await prisma.eventTicket.findMany({ where: { eventId: reference.id } });
+    const referenceTickets = await prisma.eventTicket.findMany({ where: { eventId: reference.id }, orderBy: { order: 'asc' } });
 
     const seriesId = reference.seriesId || crypto.randomUUID();
     if (!reference.seriesId) {
@@ -586,7 +593,7 @@ router.post('/:id/add-recurring-dates', authenticateJWT, authorizeAdmin, async (
           seriesId,
           cancelled: false,
           tickets: {
-            create: referenceTickets.map(t => ({ name: t.name, price: t.price, description: t.description, capacity: t.capacity }))
+            create: referenceTickets.map(t => ({ name: t.name, price: t.price, description: t.description, capacity: t.capacity, order: t.order }))
           }
         }
       });
@@ -606,7 +613,7 @@ router.post('/:id/duplicate', authenticateJWT, authorizeAdmin, async (req, res) 
   try {
     const reference = await prisma.event.findUnique({ where: { id: req.params.id as string } });
     if (!reference) return res.status(404).json({ message: 'Not found' });
-    const referenceTickets = await prisma.eventTicket.findMany({ where: { eventId: reference.id } });
+    const referenceTickets = await prisma.eventTicket.findMany({ where: { eventId: reference.id }, orderBy: { order: 'asc' } });
 
     const {
       id, createdAt, updatedAt, alias, startDate, endDate, registrationDeadline,
@@ -628,7 +635,7 @@ router.post('/:id/duplicate', authenticateJWT, authorizeAdmin, async (req, res) 
         bookingNumber: null,
         published: false,
         tickets: {
-          create: referenceTickets.map(t => ({ name: t.name, price: t.price, description: t.description, capacity: t.capacity }))
+          create: referenceTickets.map(t => ({ name: t.name, price: t.price, description: t.description, capacity: t.capacity, order: t.order }))
         }
       }
     });
