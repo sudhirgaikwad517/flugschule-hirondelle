@@ -286,8 +286,17 @@ router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
 router.post('/bulk/activate', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
     const { ids } = req.body as { ids: string[] };
+    // Only email bookings that weren't already CONFIRMED - this used to
+    // email every selected id unconditionally, so an admin bulk-selecting a
+    // mix (or re-running the action, or just including an already-confirmed
+    // row by mistake) silently resent a full "Buchungsbestätigung" (with
+    // invoice/ticket PDF attachments) to customers who'd already gotten one,
+    // weeks or months after their real booking - with no action on the
+    // admin's side that looked like "sending an email" to explain why.
+    const before = await prisma.booking.findMany({ where: { id: { in: ids } }, select: { id: true, status: true } });
     await prisma.booking.updateMany({ where: { id: { in: ids } }, data: { status: 'CONFIRMED' } });
-    for (const id of ids) sendBookingConfirmationEmail(id).catch(console.error);
+    const newlyActivatedIds = before.filter((b) => b.status !== 'CONFIRMED').map((b) => b.id);
+    for (const id of newlyActivatedIds) sendBookingConfirmationEmail(id).catch(console.error);
     res.json({ message: `${ids.length} Buchung(en) aktiviert.` });
   } catch (error) {
     console.error(error);
@@ -298,8 +307,10 @@ router.post('/bulk/activate', authenticateJWT, authorizeAdmin, async (req, res) 
 router.post('/bulk/pending', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
     const { ids } = req.body as { ids: string[] };
+    // Previously also called sendBookingConfirmationEmail here, resending a
+    // "your booking is confirmed" email while the action being performed was
+    // the opposite - setting the booking BACK to pending/not-yet-confirmed.
     await prisma.booking.updateMany({ where: { id: { in: ids } }, data: { status: 'PENDING' } });
-    for (const id of ids) sendBookingConfirmationEmail(id).catch(console.error);
     res.json({ message: `${ids.length} Buchung(en) auf ausstehend gesetzt.` });
   } catch (error) {
     console.error(error);
