@@ -9,31 +9,93 @@ export function buildBookingPlaceholders(booking: any): Record<string, string> {
   const seats = (booking.items || []).reduce((s: number, i: any) => s + i.quantity, 0);
   const [firstName, ...rest] = name.split(' ');
 
+  const netto = booking.priceNet != null ? Number(booking.priceNet) : Number(booking.totalPrice ?? 0);
+  const tax = booking.priceTax != null ? Number(booking.priceTax) : 0;
+  const brutto = Number(booking.totalPrice ?? 0);
+  const eventAllDetailsText = booking.event
+    ? `${booking.event.title}\n${new Date(booking.event.startDate).toLocaleString('de-DE')}${booking.event.endDate ? ' - ' + new Date(booking.event.endDate).toLocaleString('de-DE') : ''}`
+    : '';
+
+  const selectedExtras = Array.isArray(details.selectedExtras) ? details.selectedExtras : [];
+  const extraOptionsText = selectedExtras.length === 0
+    ? 'Keine Optionen gebucht'
+    : selectedExtras.map((e: any) => `${e.title} (${Number(e.value || 0).toFixed(2)} €${e.perPlace ? ' pro Platz' : ''})`).join('; ');
+
+  const csvBookingDetails = (booking.items || [])
+    .map((i: any) => `${i.quantity}x ${i.ticket?.name || ''}`)
+    .join(', ');
+
   return {
     MAT_BOOKING_NAME: name,
     MAT_BOOKING_EMAIL: email || '',
     MAT_BOOKING_STATUS: booking.status,
+    // Old's real payment_status column (always 'P' - see the CSV export
+    // fix's own comment on this exact same historical constant).
+    MAT_BOOKING_PAYMENT_STATUS: 'P',
     MAT_BOOKING_FIRSTNAME: details.firstName || firstName || '',
     MAT_BOOKING_LASTNAME: details.lastName || rest.join(' ') || '',
+    MAT_BOOKING_TITLE: details.salutation && details.salutation !== 'Bitte wählen' ? details.salutation : '',
     MAT_BOOKING_COUNTRY: details.country || '',
     MAT_BOOKING_STREET: details.street || '',
     MAT_BOOKING_ZIP: details.zip || '',
     MAT_BOOKING_CITY: details.city || '',
+    MAT_BOOKING_PHONE: details.phone || '',
+    MAT_BOOKING_MOBILE: details.phone || '',
+    MAT_BOOKING_COMPANY: details.company || '',
+    MAT_BOOKING_COMMENT: booking.remarks || '',
     MAT_BOOKING_ID: booking.id,
     MAT_BOOKING_NUMBER: booking.id.replace(/-/g, '').slice(0, 10).toUpperCase(),
     MAT_BOOKING_NRBOOKED: String(seats),
+    MAT_BOOKING_BOOKEDNR: String(seats),
     MAT_BOOKING_PAYMENT_METHOD: booking.paymentMethod || '',
-    MAT_BOOKING_PAYMENT_BRUTTO: (booking.totalPrice ?? 0).toFixed(2),
+    MAT_BOOKING_PAYMENT_NETTO: netto.toFixed(2),
+    MAT_BOOKING_PAYMENT_TAX: tax.toFixed(2),
+    MAT_BOOKING_PAYMENT_BRUTTO: brutto.toFixed(2),
+    MAT_BOOKING_GROSS: brutto.toFixed(2),
+    MAT_BOOKING_EXTRA_PAYMENT_OPTIONS: extraOptionsText,
+    MAT_CSV_BOOKING_DETAILS: csvBookingDetails,
+    // Old's invoice number/date were never their own separate stored fields
+    // (no invoice_number/invoice_date column existed) - the booking's own
+    // id/creation date served as both, matching old's real invoicing.
+    MAT_INVOICE_NUMBER: booking.id.replace(/-/g, '').slice(0, 10).toUpperCase(),
+    MAT_INVOICE_DATE: new Date(booking.createdAt || Date.now()).toLocaleDateString('de-DE'),
+    MAT_USER_NAME: booking.user?.name || name,
     MAT_EVENT_NUMBER: booking.event?.eventNumber || '',
     MAT_EVENT_TITLE: booking.event?.title || '',
     MAT_EVENT_BEGIN: booking.event ? new Date(booking.event.startDate).toLocaleString('de-DE') : '',
     MAT_EVENT_END: booking.event?.endDate ? new Date(booking.event.endDate).toLocaleString('de-DE') : '',
+    MAT_EVENT_FEES: booking.event?.feePerPerson != null ? Number(booking.event.feePerPerson).toFixed(2) : '',
     MAT_EVENT_ALL_DETAILS_HTML: booking.event
       ? `<strong>${booking.event.title}</strong><br/>${new Date(booking.event.startDate).toLocaleString('de-DE')}${booking.event.endDate ? ' - ' + new Date(booking.event.endDate).toLocaleString('de-DE') : ''}`
       : '',
+    MAT_EVENT_ALL_DETAILS_TEXT: eventAllDetailsText,
     MAT_DATE: new Date().toLocaleDateString('de-DE'),
     MAT_SIGNATURE: 'Flugschule Hirondelle',
+    // A blank line for physical/pen signing on a printed signature list -
+    // never real data, matching old's own use (a signature can't be
+    // pre-filled).
+    MAT_SIGN: '',
+    // MAT_NR (a per-row running number) and MAT_BOOKING_QRCODE_ID/
+    // MAT_BOOKING_CHECKIN_QRCODE (real QR code images) aren't resolvable
+    // from a single booking's own data in isolation - the former needs the
+    // caller's own loop index, the latter needs real QR generation. Left
+    // unresolved here on purpose; not silently guessed at.
   };
+}
+
+// Old's XML export nests one <PERSON> block per additional participant
+// (MAT_XML_BOOKING_OTHER_PERSON_DATA) - separate from the main placeholder
+// map since it isn't a flat string substitution.
+export function buildXmlOtherPersonData(booking: any): string {
+  const details = (booking.customerDetails as any) || {};
+  const participants = Array.isArray(details.additionalParticipants) ? details.additionalParticipants : [];
+  if (participants.length === 0) return '';
+  return participants
+    .map((p: any) => {
+      const [firstName, ...rest] = String(p.fullName || '').split(' ');
+      return `<PERSON><FIRSTNAME>${firstName || ''}</FIRSTNAME><LASTNAME>${rest.join(' ')}</LASTNAME></PERSON>`;
+    })
+    .join('\n');
 }
 
 export function renderMatTokens(template: string, placeholders: Record<string, string>): string {

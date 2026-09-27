@@ -32,31 +32,48 @@ router.get('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
         }
       };
 
+      // Word-for-word old Matukio content (hiron_matukio_templates ids
+      // 4-10/13/15), with old's own ##LANG_KEY## placeholders resolved to
+      // their real German text (com_matukio.ini) exactly as old's own
+      // JText::_() would render them - not paraphrased/simplified. id=14's
+      // subject key (COM_MATUKIO_EMAIL_SUBJECT_CERTIFICATE) only exists in
+      // the EN-GB language file even on the real German site - "Your
+      // certificate for" is old's genuine, verified live text, not a
+      // mistake to silently "fix" into German.
       config = await prisma.templatesConfig.create({
         data: {
           id,
           emails: defaultEmails,
           listViews: {
-            signatureList: '##COM_MATUKIO_SIGNATURE_LIST##\n\n##COM_MATUKIO_NR##: MAT_EVENT_NUMBER\n##COM_MATUKIO_EVENT##: MAT_EVENT_TITLE\n##COM_MATUKIO_BEGIN##: MAT_EVENT_BEGIN\n##COM_MATUKIO_END##: MAT_EVENT_END\n##COM_MATUKIO_FEES##: MAT_EVENT_FEES\n\nMAT_NR MAT_BOOKING_NUMBER MAT_BOOKING_FIRSTNAME MAT_BOOKING_LASTNAME MAT_SIGN',
-            participantList: '##COM_MATUKIO_PARTICIPANTS_LIST##\n\n##COM_MATUKIO_NR##: MAT_EVENT_NUMBER\n##COM_MATUKIO_FIELDS_TITLE##: MAT_EVENT_TITLE\n##COM_MATUKIO_BEGIN##: MAT_EVENT_BEGIN\n##COM_MATUKIO_END##: MAT_EVENT_END\n##COM_MATUKIO_FEES##: MAT_EVENT_FEES\n\n##COM_MATUKIO_NAME##: MAT_BOOKING_NAME\n##COM_MATUKIO_EMAIL##: MAT_BOOKING_EMAIL\n##COM_MATUKIO_BOOKING_NUMBER##: MAT_BOOKING_NUMBER\n##COM_MATUKIO_STATUS##: MAT_BOOKING_STATUS'
+            signatureList: 'Unterschriftsliste\n\nNr.: MAT_EVENT_NUMBER\nVeranstaltung: MAT_EVENT_TITLE\nBeginn: MAT_EVENT_BEGIN\nEnde: MAT_EVENT_END\nGebühren: MAT_EVENT_FEES\n\nMAT_NR MAT_BOOKING_NUMBER MAT_BOOKING_FIRSTNAME MAT_BOOKING_LASTNAME MAT_SIGN',
+            participantList: 'Teilnehmerliste\n\nNr.: MAT_EVENT_NUMBER\nAnrede: MAT_EVENT_TITLE\nBeginn: MAT_EVENT_BEGIN\nEnde: MAT_EVENT_END\nGebühren: MAT_EVENT_FEES\n\nName: MAT_BOOKING_NAME\nE-Mail: MAT_BOOKING_EMAIL\nBuchungsnummer: MAT_BOOKING_NUMBER\nStatus: MAT_BOOKING_STATUS\nGebuchte Plätze: MAT_BOOKING_BOOKEDNR\nGebühren: MAT_BOOKING_FEES_STATUS\nMAT_BOOKING_QRCODE_ID'
           },
           invoices: {
             pdfTemplate: '<table width="100%"><tr><td>Your Company<br>Your Company Address<br>Your Tax Number</td><td align="right">Your Logo</td></tr></table><br><br><table width="100%"><tr><td><b>Customer Information</b><br>MAT_BOOKING_NAME<br>MAT_BOOKING_STREET<br>MAT_BOOKING_ZIP MAT_BOOKING_CITY<br>MAT_BOOKING_COUNTRY</td><td><b>Invoice Information</b><br>Invoice Number: MAT_INVOICE_NUMBER<br>Invoice Date: MAT_INVOICE_DATE<br>Booking Number: MAT_BOOKING_NUMBER<br>Payment method: MAT_BOOKING_PAYMENT_METHOD</td></tr></table><br><br><table width="100%" border="1"><tr><th>#</th><th>Event</th><th>Net total</th></tr><tr><td>MAT_BOOKING_NRBOOKED</td><td>MAT_EVENT_TITLE</td><td>MAT_BOOKING_PAYMENT_NETTO</td></tr></table><br><div align="right">Net total: MAT_BOOKING_PAYMENT_NETTO<br>Tax total: MAT_BOOKING_PAYMENT_TAX<br><b>Total: MAT_BOOKING_PAYMENT_BRUTTO</b></div><br><br><b>Invoice Note</b><br>Your notes',
-            emailSubject: 'Ihre Rechnung für {EVENT_TITLE} - {BOOKING_NUMBER}',
-            emailBody: 'Hallo {BOOKING_NAME},\n\nanbei erhalten Sie Ihre Rechnung zur gebuchten Veranstaltung.\n\nMit freundlichen Grüßen\nIhre Flugschule Hirondelle'
+            emailSubject: 'Ihre Rechnung MAT_BOOKING_NUMBER',
+            emailBody: '<div id="mat-invoice-mail"><p><span style="line-height: 1.3em;">Sehr geehrte / geehrter MAT_BOOKING_NAME,<br /><br /></span>im Anhang finden Sie die Rechnung zu Ihrer Buchung.</p><p>MAT_SIGNATURE</p></div>'
           },
           certificates: {
-            pdfTemplate: '##COM_MATUKIO_CERTIFICATE## for\n\nMAT_BOOKING_NAME\n\n##COM_MATUKIO_CERTIFICATE_ATTENDED##\n\nMAT_EVENT_TITLE\n\n##COM_MATUKIO_DATE##: MAT_DATE',
-            emailSubject: '##COM_MATUKIO_EMAIL_SUBJECT_CERTIFICATE## MAT_EVENT_TITLE',
-            emailBody: '##COM_MATUKIO_EMAIL_GREETING## MAT_BOOKING_NAME,\n\n##COM_MATUKIO_YOU_HAVE_BEEN_CERTIFICATED##\n\n##COM_MATUKIO_YOU_HAVE_BEEN_CERTIFICATED## MAT_EVENT_ALL_DETAILS_HTML MAT_SIGNATURE'
+            pdfTemplate: '<h2>Zertifikat erteilen for</h2><h3>MAT_BOOKING_NAME</h3><h4>hat erfolgreich an der Veranstaltung teilgenommen</h4><h4>MAT_EVENT_TITLE</h4><h4>Datum: MAT_DATE</h4>',
+            // Old's own value for id=7 (subject column) - never configured
+            // on the real site (stored as the literal 'E' unset-marker).
+            backgroundImage: '',
+            emailSubject: 'Your certificate for MAT_EVENT_TITLE MAT_EVENT_SEMNUM',
+            emailBody: 'Sehr geehrte / geehrter MAT_BOOKING_NAME,<br /><br />Sie wurden für die unten stehende Veranstaltung zertifiziert. <br /><br />Sie wurden für die unten stehende Veranstaltung zertifiziert. MAT_EVENT_ALL_DETAILS_HTML MAT_SIGNATURE'
           },
           tickets: {
             ticketTemplate: 'MAT_EVENT_TITLE - MAT_EVENT_BEGIN\nMAT_BOOKING_NRBOOKED\nMAT_BOOKING_NUMBER\nMAT_BOOKING_CHECKIN_QRCODE\nMAT_BOOKING_PAYMENT_BRUTTO',
-            nametagTemplate: 'MAT_BOOKING_FIRSTNAME MAT_BOOKING_LASTNAME\nMAT_BOOKING_COUNTRY\n\nMAT_EVENT_TITLE MAT_BOOKING_ID',
-            backgroundImage: 'images/powered_by.png'
+            // Old's own value for id=10 (subject column) - never configured
+            // on the real site either (also the literal 'E' unset-marker).
+            backgroundImage: '',
+            nametagTemplate: 'MAT_BOOKING_FIRSTNAME MAT_BOOKING_LASTNAME\nMAT_BOOKING_COUNTRY\n\nMAT_EVENT_TITLE &nbsp; MAT_BOOKING_ID',
+            // Old keeps a SEPARATE background image per PDF type - id=10
+            // (ticket) was never configured, id=15 (badge/Namensschild) was
+            // genuinely set to Matukio's own shipped default branding image.
+            nametagBackgroundImage: 'images/powered_by.png'
           },
           csvXml: {
-            csvTemplate: "'MAT_BOOKING_NUMBER';'MAT_EVENT_TITLE';'MAT_CSV_BOOKING_DETAILS';'MAT_BOOKING_PAYMENT_BRUTTO';'MAT_BOOKING_NAME';'MAT_BOOKING_PAYMENT_METHOD';'MAT_BOOKING_STATUS';'MAT_BOOKING_EXTRA_PAYMENT_OPTIONS';'MAT_BOOKING_PAYMENT_STATUS'",
+            csvTemplate: "'MAT_BOOKING_NUMBER';'MAT_EVENT_TITLE';'MAT_CSV_BOOKING_DETAILS';'MAT_BOOKING_PAYMENT_BRUTTO';'MAT_BOOKING_NAME';'MAT_BOOKING_PAYMENT_METHOD';'MAT_BOOKING_STATUS';'MAT_BOOKING_EXTRA_PAYMENT_OPTIONS';'MAT_BOOKING_PAYMENT_STATUS';'",
             xmlTemplate: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<!-- Generated by Matukio -->\n<BOOKING>\n<BOOKING_NUMBER>MAT_BOOKING_NUMBER</BOOKING_NUMBER>\n<EVENT>MAT_EVENT_TITLE</EVENT>\n<EVENT_NUMBER>MAT_EVENT_NUMBER</EVENT_NUMBER>\n<TITLE>MAT_BOOKING_TITLE</TITLE>\n<FIRSTNAME>MAT_BOOKING_FIRSTNAME</FIRSTNAME>\n<LASTNAME>MAT_BOOKING_LASTNAME</LASTNAME>\n<COMPANY>MAT_BOOKING_COMPANY</COMPANY>\n<STREET>MAT_BOOKING_STREET</STREET>\n<ZIPCODE>MAT_BOOKING_ZIP</ZIPCODE>\n<CITY>MAT_BOOKING_CITY</CITY>\n<COUNTRY>MAT_BOOKING_COUNTRY</COUNTRY>\n<PHONE>MAT_BOOKING_PHONE</PHONE>\n<MOBILE>MAT_BOOKING_MOBILE</MOBILE>\n<EMAIL>MAT_BOOKING_EMAIL</EMAIL>\n<COMMENT>MAT_BOOKING_COMMENT</COMMENT>\n<PLACES>MAT_BOOKING_BOOKEDNR</PLACES>\n<AMOUNT>MAT_BOOKING_GROSS</AMOUNT>\n<PERSONS>\nMAT_XML_BOOKING_OTHER_PERSON_DATA\n</PERSONS>\n</BOOKING>'
           }
         }

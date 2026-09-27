@@ -309,17 +309,23 @@ export const TemplatesBuilder = () => {
                                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Zertifikat Template</Typography>
                                     </Box>
                                     <Box sx={{ p: 3 }}>
-                                        <TextInput 
-                                            source="certificates.pdfTemplate" 
-                                            label="HTML / Platzhalter" 
-                                            multiline 
-                                            fullWidth 
-                                            minRows={10} 
-                                            sx={{ fontFamily: 'monospace' }} 
+                                        <TextInput
+                                            source="certificates.pdfTemplate"
+                                            label="HTML / Platzhalter"
+                                            multiline
+                                            fullWidth
+                                            minRows={10}
+                                            sx={{ fontFamily: 'monospace' }}
+                                        />
+                                        <TextInput
+                                            source="certificates.backgroundImage"
+                                            label="Zertifikat Hintergrundbild (Pfad)"
+                                            fullWidth
+                                            sx={{ mt: 2 }}
                                         />
                                     </Box>
                                 </Paper>
-                                
+
                                 <Paper variant="outlined" sx={{ mb: 4, overflow: 'hidden' }}>
                                     <Box sx={{ bgcolor: '#1e293b', color: 'white', p: 1.5 }}>
                                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Certificate email template</Typography>
@@ -391,13 +397,19 @@ export const TemplatesBuilder = () => {
                                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Namensschild Template</Typography>
                                     </Box>
                                     <Box sx={{ p: 3 }}>
-                                        <TextInput 
-                                            source="tickets.nametagTemplate" 
-                                            label="HTML / Platzhalter" 
-                                            multiline 
-                                            fullWidth 
-                                            minRows={6} 
-                                            sx={{ fontFamily: 'monospace' }} 
+                                        <TextInput
+                                            source="tickets.nametagTemplate"
+                                            label="HTML / Platzhalter"
+                                            multiline
+                                            fullWidth
+                                            minRows={6}
+                                            sx={{ fontFamily: 'monospace' }}
+                                        />
+                                        <TextInput
+                                            source="tickets.nametagBackgroundImage"
+                                            label="Namensschild Hintergrundbild (Pfad)"
+                                            fullWidth
+                                            sx={{ mt: 2 }}
                                         />
                                     </Box>
                                 </Paper>
