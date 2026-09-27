@@ -474,7 +474,7 @@ const AdminActions = () => {
     const [eventOption, setEventOption] = useState<{ id: string; title: string; startDate: string } | null>(null);
     const [eventDialogOpen, setEventDialogOpen] = useState(false);
     const [eventDialogQuery, setEventDialogQuery] = useState('');
-    const [eventDialogResults, setEventDialogResults] = useState<{ id: string; title: string; eventNumber?: string; startDate: string; endDate: string | null }[]>([]);
+    const [eventDialogResults, setEventDialogResults] = useState<{ id: string; title: string; bookingNumber?: string; startDate: string; endDate: string | null }[]>([]);
     const [eventDialogLoading, setEventDialogLoading] = useState(false);
     const [eventDialogPage, setEventDialogPage] = useState(0);
     const [eventDialogTotal, setEventDialogTotal] = useState(0);
@@ -516,7 +516,7 @@ const AdminActions = () => {
             const qs = query ? `q=${encodeURIComponent(query)}&` : '';
             const res = await fetch(`/api/events?${qs}status=current&_start=${start}&_end=${start + EVENT_DIALOG_PAGE_SIZE}&_sort=startDate&_order=ASC`);
             const data = await res.json();
-            setEventDialogResults(Array.isArray(data) ? data.map((e: any) => ({ id: e.id, title: e.title, eventNumber: e.eventNumber, startDate: e.startDate, endDate: e.endDate })) : []);
+            setEventDialogResults(Array.isArray(data) ? data.map((e: any) => ({ id: e.id, title: e.title, bookingNumber: e.bookingNumber, startDate: e.startDate, endDate: e.endDate })) : []);
             const contentRange = res.headers.get('Content-Range');
             const total = contentRange ? Number(contentRange.split('/')[1]) : 0;
             setEventDialogTotal(Number.isFinite(total) ? total : 0);
@@ -750,7 +750,7 @@ const AdminActions = () => {
                                             onClick={() => handleEventChange({ id: ev.id, title: ev.title, startDate: ev.startDate })}
                                         >
                                             <TableCell>{ev.title}</TableCell>
-                                            <TableCell>{ev.eventNumber || ''}</TableCell>
+                                            <TableCell>{ev.bookingNumber || ''}</TableCell>
                                             <TableCell>{new Date(ev.startDate).toLocaleDateString('de-DE')}</TableCell>
                                             <TableCell>{ev.endDate ? new Date(ev.endDate).toLocaleDateString('de-DE') : ''}</TableCell>
                                         </TableRow>
