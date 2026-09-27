@@ -73,7 +73,6 @@ export const TaxRateList = () => (
         <Datagrid rowClick="edit" bulkActionButtons={<TaxRateBulkActionButtons />}>
             <TextField source="title" label="Titel" />
             <NumberField source="value" label="Wert" />
-            <TextField source="id" label="ID" />
             <BooleanField source="published" label="Veröffentlicht" />
             <EditButton />
         </Datagrid>

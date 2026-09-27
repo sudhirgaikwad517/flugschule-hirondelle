@@ -93,7 +93,6 @@ export const VoucherList = () => (
     <List filters={<VoucherFilter />}>
         <Datagrid rowClick="edit" bulkActionButtons={<VoucherBulkActionButtons />}>
             <TextField source="code" label="Gutscheincode" />
-            <TextField source="id" label="ID" />
             <NumberField source="value" label="Wert" />
             <BooleanField source="isPercentage" label="Wert in Prozent" />
             <NumberField source="limit" label="Limit" />

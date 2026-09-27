@@ -75,7 +75,6 @@ export const TieredFeeList = () => (
     <List>
         <Datagrid rowClick="edit" bulkActionButtons={<TieredFeeBulkActionButtons />}>
             <TextField source="title" label="Titel" />
-            <TextField source="id" label="ID" />
             <NumberField source="value" label="Wert" />
             <BooleanField source="isPercentage" label="Wert in Prozent" />
             <BooleanField source="isDiscount" label="Rabatt" />

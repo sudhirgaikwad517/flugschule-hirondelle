@@ -70,7 +70,6 @@ const CurrencyBulkActionButtons = () => {
 export const CurrencyList = () => (
     <List>
         <Datagrid rowClick="edit" bulkActionButtons={<CurrencyBulkActionButtons />}>
-            <TextField source="id" label="Id" />
             <TextField source="description" label="Beschreibung" />
             <TextField source="symbol" label="Symbol" />
             <TextField source="paymentCode" label="Zahlungs-Code" />

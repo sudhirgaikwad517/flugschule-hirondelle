@@ -73,7 +73,6 @@ const OrganizerBulkActionButtons = () => {
 export const OrganizerList = () => (
     <List>
         <Datagrid rowClick="edit" bulkActionButtons={<OrganizerBulkActionButtons />}>
-            <TextField source="id" label="ID" />
             <TextField source="user.id" label="Benutzer-Id" emptyText="-" />
             <TextField source="name" label="Name" />
             <EmailField source="email" label="E-Mail" emptyText="-" />

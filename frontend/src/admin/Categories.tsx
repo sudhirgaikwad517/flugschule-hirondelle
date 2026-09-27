@@ -101,7 +101,6 @@ const CategoryListActions = () => (
 export const CategoryList = () => (
   <List filters={categoryFilters} actions={<CategoryListActions />} exporter={false} title="Kategorien" perPage={20}>
       <Datagrid rowClick="edit">
-          <TextField source="id" label="ID" />
           <StatusIconField source="status" label="Status" />
           <TitleField source="title" label="Titel" />
           <BadgeField source="publishedCount" color="#4caf50" label="Veröffentlicht" />

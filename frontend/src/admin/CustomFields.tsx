@@ -75,7 +75,6 @@ const CustomFieldBulkActionButtons = () => {
 export const CustomFieldList = () => (
     <List>
         <Datagrid rowClick="edit" bulkActionButtons={<CustomFieldBulkActionButtons />}>
-            <TextField source="id" label="Num" />
             <TextField source="title" label="Title" />
             <TextField source="slug" label="Slug" />
             <TextField source="fieldType" label="Field type" />

@@ -284,7 +284,6 @@ const EventListContent = () => {
                 bulkActionsToolbar={false}
                 expand={<EventRowExpand />}
             >
-                <TextField source="id" label="#" sx={{ display: 'inline-block', maxWidth: 80, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title="ID" />
                 <DateField source="startDate" label="Dates" showTime />
                 <TextField source="title" label="Titel" />
                 <ReferenceField source="categoryId" reference="categories" label="Kategorie">

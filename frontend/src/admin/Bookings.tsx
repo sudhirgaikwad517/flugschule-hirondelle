@@ -340,7 +340,6 @@ export const BookingList = () => (
                     popping up over BookingListActions and sliding back
                     behind the table. Both are needed together. */}
                 <Datagrid rowClick="show" bulkActionButtons={<></>} bulkActionsToolbar={false}>
-                    <TextField source="shortId" label="ID" sortBy="id" sx={{ display: 'inline-block', maxWidth: 80, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title="ID" />
                     <TextField source="customerName" label="Name" sortable={false} sx={{ whiteSpace: 'nowrap' }} />
                     <TextField source="customerEmail" label="E-Mail" sortable={false} sx={{ display: 'inline-block', maxWidth: 150, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title="E-Mail" />
                     <FunctionField label="Event" render={(r: any) => r.event?.title || '—'} sortable={false} sx={{ display: 'inline-block', maxWidth: 150, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} />

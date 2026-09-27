@@ -109,7 +109,6 @@ const LocationFilter = (props: any) => (
 export const LocationList = () => (
     <List filters={<LocationFilter />}>
         <Datagrid rowClick="edit" bulkActionButtons={<LocationBulkActionButtons />}>
-            <TextField source="id" label="ID" sx={{ display: 'inline-block', maxWidth: 80, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title="ID" />
             <TextField source="title" label="Titel des Veranstaltungsort" />
             <TextField source="name" label="Veranstaltungsort" />
             <TextField source="email" label="E-Mail" emptyText="-" sx={{ whiteSpace: 'nowrap' }} />
