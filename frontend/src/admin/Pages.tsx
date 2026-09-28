@@ -36,7 +36,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import DynamicFormIcon from '@mui/icons-material/DynamicForm';
-import MailOutlineIcon from '@mui/icons-material/MailOutline';
+import MailOutlineIcon from '@mui/icons-material/Email';
 
 // "Seiten" - the CMS feature that lets an admin create an entirely new page
 // from scratch (title, URL slug, description, header image, content) that
