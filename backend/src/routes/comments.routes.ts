@@ -69,6 +69,14 @@ router.get('/public', async (req, res) => {
       return res.status(400).json({ message: 'eventId oder pageSlug erforderlich' });
     }
 
+    // Old's real "Einstellungen" tab has a real sort ("Neueste zuerst" vs
+    // "Älteste zuerst") and a real per-page limit - both were being saved by
+    // the admin UI but silently ignored here (always newest-first, always
+    // unlimited) until this fix.
+    const settings = await getCommentSettings();
+    const sortDirection = settings.sortOrder === 'oldest' ? 'asc' : 'desc';
+    const perPage = settings.commentsPerPage && settings.commentsPerPage > 0 ? settings.commentsPerPage : undefined;
+
     const comments = await prisma.comment.findMany({
       where: whereClause,
       include: {
@@ -79,7 +87,8 @@ router.get('/public', async (req, res) => {
           orderBy: { createdAt: 'asc' }
         }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: sortDirection },
+      take: perPage
     });
 
     const formatComment = (c: any) => ({

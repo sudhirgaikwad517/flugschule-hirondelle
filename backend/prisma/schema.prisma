@@ -399,13 +399,19 @@ model Comment {
 // feature" precedent as Visforms' Spamschutz tab).
 model CommentSettings {
   id               String   @id
-  autoPublish      Boolean  @default(false)
-  notifyModerators Boolean  @default(true)
+  // Matches old's real live hiron_comment_setting row (auto_publish="1",
+  // notify_moderators="0") - a deep DB audit found the defaults here had
+  // been flipped from old's actual configured values.
+  autoPublish      Boolean  @default(true)
+  notifyModerators Boolean  @default(false)
   moderatorEmail   String?
   notifyOnReply    Boolean  @default(true)
   maxLength        Int      @default(30000)
-  sortOrder        String   @default("newest") // 'newest' | 'oldest'
-  commentsPerPage  Int      @default(20)
+  // Old's real live values: sort="0" (oldest-first) and comments_per_page="0"
+  // (unlimited) - previously defaulted to newest-first/20 here, AND never
+  // actually applied anywhere (see comments.routes.ts's /public route fix).
+  sortOrder        String   @default("oldest") // 'newest' | 'oldest'
+  commentsPerPage  Int      @default(0) // 0 = unlimited, matches old
   showGravatar     Boolean  @default(true)
   updatedAt        DateTime @updatedAt
 }
@@ -628,7 +634,11 @@ model NewsletterConfig {
   queueMaxRetries   Int @default(2)   // max retry attempts for a failed send
 
   // Abonnement (Subscription)
-  requireConfirmation Boolean @default(false) // double opt-in
+  // Matches old's real live hiron_acym_configuration value
+  // (require_confirmation="1") - a deep DB audit found this had been left
+  // off by default here, silently skipping the double-opt-in confirmation
+  // email old's real production site actually sent to every new subscriber.
+  requireConfirmation Boolean @default(true) // double opt-in
   unsubscribeTitle    String?
   unsubscribeColor    String  @default("#00a4ff")
 
