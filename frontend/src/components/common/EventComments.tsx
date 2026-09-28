@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MessageSquare, CheckCircle, Send, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { MessageSquare, CheckCircle, Send, ThumbsUp, ThumbsDown, CornerDownRight } from 'lucide-react';
 
 interface CommentType {
   id: string;
@@ -33,6 +33,15 @@ export const EventComments = ({ eventId, pageSlug }: { eventId?: string, pageSlu
   const [email, setEmail] = useState('');
   const [statusMsg, setStatusMsg] = useState('');
   const [voted, setVotedState] = useState<Record<string, 'up' | 'down'>>({});
+  // Public "Antworten" - the API's `parentId` support already existed
+  // (used by the admin's own reply feature), just no UI let a real visitor
+  // reply to another visitor's comment, only submit fresh top-level ones.
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyName, setReplyName] = useState('');
+  const [replyEmail, setReplyEmail] = useState('');
+  const [replyContent, setReplyContent] = useState('');
+  const [replySending, setReplySending] = useState(false);
+  const [replyStatusMsg, setReplyStatusMsg] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setVotedState(getVoted());
@@ -106,6 +115,39 @@ export const EventComments = ({ eventId, pageSlug }: { eventId?: string, pageSlu
     }
   };
 
+  const openReply = (commentId: string) => {
+    setReplyingTo(replyingTo === commentId ? null : commentId);
+    setReplyContent('');
+  };
+
+  const handleReplySubmit = async (e: React.FormEvent, parentId: string) => {
+    e.preventDefault();
+    if (!replyContent.trim()) return;
+    setReplySending(true);
+    try {
+      const res = await fetch('/api/comments/public', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventId, pageSlug, parentId,
+          content: replyContent, name: replyName, email: replyEmail || undefined,
+        }),
+      });
+      const data = await res.json();
+      setReplyStatusMsg((prev) => ({ ...prev, [parentId]: data.message }));
+      if (res.ok) {
+        setReplyContent('');
+        setReplyName('');
+        setReplyEmail('');
+        setReplyingTo(null);
+      }
+    } catch {
+      setReplyStatusMsg((prev) => ({ ...prev, [parentId]: 'Fehler beim Senden der Antwort' }));
+    } finally {
+      setReplySending(false);
+    }
+  };
+
   const CommentItem = ({ comment, isReply = false }: { comment: CommentType, isReply?: boolean }) => (
     <div className={`flex gap-4 ${isReply ? 'ml-12 mt-4' : 'mt-6 border-b border-gray-100 pb-6'}`}>
       <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -138,7 +180,63 @@ export const EventComments = ({ eventId, pageSlug }: { eventId?: string, pageSlu
           >
             <ThumbsDown size={14} /> {comment.votesDown || 0}
           </button>
+          {!isReply && (
+            <button
+              type="button"
+              onClick={() => openReply(comment.id)}
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-luxury-gold transition-colors"
+            >
+              <CornerDownRight size={14} /> Antworten
+            </button>
+          )}
         </div>
+
+        {/* Inline reply composer - a real visitor answering another
+            visitor's comment, same public /api/comments/public endpoint
+            the top-level form uses (parentId), goes through the same
+            moderation setting rather than being auto-approved. */}
+        {replyingTo === comment.id && (
+          <form onSubmit={(e) => handleReplySubmit(e, comment.id)} className="mt-3 bg-[#FAF9F7] p-4 rounded-sm space-y-2">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="text"
+                value={replyName}
+                onChange={(e) => setReplyName(e.target.value)}
+                placeholder="Dein Name (optional)"
+                className="flex-1 bg-white border border-gray-200 text-black p-2 outline-none focus:border-luxury-gold transition-colors text-sm"
+              />
+              <input
+                type="email"
+                value={replyEmail}
+                onChange={(e) => setReplyEmail(e.target.value)}
+                placeholder="Deine E-Mail (optional)"
+                className="flex-1 bg-white border border-gray-200 text-black p-2 outline-none focus:border-luxury-gold transition-colors text-sm"
+              />
+            </div>
+            <textarea
+              value={replyContent}
+              onChange={(e) => setReplyContent(e.target.value)}
+              placeholder="Deine Antwort..."
+              required
+              className="w-full bg-white border border-gray-200 text-black p-2 outline-none focus:border-luxury-gold transition-colors text-sm min-h-[70px]"
+            />
+            <div className="flex items-center gap-3">
+              <button
+                type="submit"
+                disabled={replySending || !replyContent.trim()}
+                className="bg-luxury-gold text-white px-4 py-2 text-xs font-bold uppercase tracking-widest hover:bg-black transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                <Send size={14} /> Antwort senden
+              </button>
+              <button type="button" onClick={() => setReplyingTo(null)} className="text-xs text-gray-500 hover:text-gray-700">
+                Abbrechen
+              </button>
+            </div>
+            {replyStatusMsg[comment.id] && (
+              <p className="text-xs text-green-600 flex items-center gap-1 font-bold"><CheckCircle size={14} /> {replyStatusMsg[comment.id]}</p>
+            )}
+          </form>
+        )}
 
         {/* Render Replies */}
         {comment.replies && comment.replies.length > 0 && (
