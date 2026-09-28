@@ -97,11 +97,13 @@ router.get('/:id/public', async (req, res) => {
 // here), not stored columns.
 router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    const { _sort, _order, _start, _end, q } = req.query;
+    const { _sort, _order, _start, _end, q, published, accessLevel, language } = req.query;
 
-    const whereClause: any = q
-      ? { OR: [{ title: { contains: String(q) } }, { id: { contains: String(q) } }] }
-      : {};
+    const whereClause: any = {};
+    if (q) whereClause.OR = [{ title: { contains: String(q) } }, { id: { contains: String(q) } }];
+    if (published !== undefined) whereClause.published = published === 'true';
+    if (accessLevel) whereClause.accessLevel = String(accessLevel);
+    if (language) whereClause.language = String(language);
 
     const skip = _start ? Number(_start) : 0;
     const take = _end ? Number(_end) - skip : 20;
