@@ -10,8 +10,6 @@ import {
   BooleanInput,
   SelectInput,
   CheckboxGroupInput,
-  Filter,
-  TopToolbar,
   ExportButton,
   downloadCSV,
   useListContext,
@@ -20,6 +18,7 @@ import {
   useRefresh,
   useUnselectAll,
   useUpdateMany,
+  useGetList,
   useInput,
   useRedirect,
   Edit,
@@ -28,11 +27,23 @@ import {
   SaveButton,
 } from 'react-admin';
 import jsonExport from 'jsonexport/dist';
-import { Link as RouterLink, useParams } from 'react-router-dom';
-import { Button, Typography, Box, Menu, MenuItem } from '@mui/material';
+import { Link as RouterLink, useParams, useNavigate } from 'react-router-dom';
+import {
+  Button,
+  Typography,
+  Box,
+  Menu,
+  MenuItem,
+  TextField as MuiTextField,
+  Select,
+  FormControl,
+  InputLabel,
+  Collapse,
+} from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
 import TuneIcon from '@mui/icons-material/Tune';
+import SearchIcon from '@mui/icons-material/Search';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -50,7 +61,7 @@ const STRUCTURAL_TYPES = new Set(['submit', 'reset', 'fieldsep', 'image']);
 // Veröffentlicht | Geändert(ismfd) | Erstellt von | one column PER FORM
 // FIELD (VisdatasModel's own `showFieldInDataView` excludes fieldsep/
 // image/submit/reset/pagebreak, matching STRUCTURAL_TYPES above) |
-// IP-Adresse | Datum(created) | Geändert am. A "Status ändern" bulk
+// IP-Adresse | Datum(created) | Geändert am. A real "Aktionen" bulk
 // dropdown (Veröffentlichen/Verstecken/Löschen - "Freigeben"=checkin and a
 // generic "Bearbeiten" bulk action assume a Joomla checkout/locking system
 // this app doesn't have, so they're left out, same as everywhere else this
@@ -120,25 +131,9 @@ const buildCsvExporter = (fields: FieldDef[], settings: any) => (records: any[])
   );
 };
 
-const ServiceOrderFilter = (props: any) => (
-  <Filter {...props}>
-    {/* Old's real search box (top of the "Data records" screen) searches
-        across the submitted values themselves - matched here the same
-        way, against every field's stored value. */}
-    <TextInput label="Suche" source="q" alwaysOn />
-    <SelectInput
-      label="Status"
-      source="published"
-      alwaysOn
-      emptyText="- Status wählen -"
-      choices={[{ id: 'true', name: 'Veröffentlicht' }, { id: 'false', name: 'Nicht veröffentlicht' }]}
-    />
-  </Filter>
-);
-
-// Old's real always-available "Status ändern" bulk dropdown - not gated
-// behind row selection the way react-admin's own bulk-toolbar convention
-// is, same approach as Formulare.tsx/FormFieldsEditor.tsx's Aktionen menus.
+// Old's real always-available "Aktionen" bulk dropdown - not gated behind
+// row selection the way react-admin's own bulk-toolbar convention is, same
+// approach as Formulare.tsx/FormFieldsEditor.tsx's Aktionen menus.
 const ActionsMenu = () => {
   const { selectedIds } = useListContext();
   const notify = useNotify();
@@ -186,7 +181,7 @@ const ActionsMenu = () => {
   return (
     <>
       <Button size="small" variant="outlined" endIcon={<TuneIcon fontSize="small" />} onClick={(e) => setAnchorEl(e.currentTarget)}>
-        Status ändern
+        Aktionen
       </Button>
       <Menu anchorEl={anchorEl} open={!!anchorEl} onClose={() => setAnchorEl(null)}>
         <MenuItem onClick={() => setPublished(true)}><CheckCircleIcon fontSize="small" sx={{ mr: 1 }} /> Veröffentlichen</MenuItem>
@@ -197,16 +192,108 @@ const ActionsMenu = () => {
   );
 };
 
-const ListActions = ({ formId }: { formId: string }) => {
-  const { total } = useListContext();
+// Old's real "Service-Auftrag ▾" dropdown on this exact toolbar - switches
+// which form's data this same view shows, without going back to Formulare.
+const FormSwitcher = ({ formId }: { formId: string }) => {
+  const navigate = useNavigate();
+  const { data: forms } = useGetList('formconfigs', { pagination: { page: 1, perPage: 100 }, sort: { field: 'title', order: 'ASC' } });
   return (
-    <TopToolbar>
-      <Button component={RouterLink} to={`/admin/forms/${formId}/edit`} startIcon={<ArrowBackIcon />} size="small">
-        Zurück zum Formular
-      </Button>
-      <ActionsMenu />
-      <ExportButton disabled={!total} />
-    </TopToolbar>
+    <FormControl size="small" sx={{ minWidth: 160 }}>
+      <Select value={formId} onChange={(e) => navigate(`/admin/forms/${e.target.value}/data`)}>
+        {(forms || []).map((f: any) => <MenuItem key={f.id} value={f.id}>{f.title}</MenuItem>)}
+      </Select>
+    </FormControl>
+  );
+};
+
+const SORT_CHOICES = [
+  { field: 'id', order: 'ASC', label: 'ID - auf' },
+  { field: 'id', order: 'DESC', label: 'ID - ab' },
+  { field: 'createdAt', order: 'DESC', label: 'Datum - ab' },
+  { field: 'createdAt', order: 'ASC', label: 'Datum - auf' },
+  { field: 'updatedAt', order: 'DESC', label: 'Geändert am - ab' },
+  { field: 'updatedAt', order: 'ASC', label: 'Geändert am - auf' },
+];
+
+// Old's real two-row toolbar (Aktionen/Export/Zurück zum Formular, then
+// Formulardaten-nav/Formular-switcher/Suche/Filter-Optionen/Zurücksetzen/
+// Sortierung), same fully-custom-header approach as Formulare.tsx/
+// FormFieldsEditor.tsx instead of react-admin's own <Filter>/<TopToolbar>
+// conventions, for exact chrome parity.
+const ServiceOrderHeader = ({ formId }: { formId: string }) => {
+  const { filterValues, setFilters, sort, setSort, total } = useListContext();
+  const [search, setSearch] = useState(filterValues.q || '');
+  const [filterOptionsOpen, setFilterOptionsOpen] = useState(false);
+
+  const applySearch = (value: string) => {
+    setSearch(value);
+    setFilters({ ...filterValues, q: value || undefined }, []);
+  };
+
+  const currentSortKey = `${sort.field}-${sort.order}`;
+
+  return (
+    <Box sx={{ p: 2 }}>
+      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap', mb: 1.5 }}>
+        <ActionsMenu />
+        <ExportButton disabled={!total} />
+        <Button component={RouterLink} to={`/admin/forms/${formId}/edit`} startIcon={<ArrowBackIcon fontSize="small" />} size="small">
+          Zurück zum Formular
+        </Button>
+      </Box>
+      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+        <FormSwitcher formId={formId} />
+        <MuiTextField
+          size="small"
+          placeholder="Suche"
+          value={search}
+          onChange={(e) => applySearch(e.target.value)}
+          slotProps={{ input: { startAdornment: <SearchIcon fontSize="small" sx={{ color: '#999', mr: 0.5 }} /> } }}
+          sx={{ flexGrow: 1, minWidth: 160, maxWidth: 260 }}
+        />
+        <Button
+          size="small"
+          variant={filterOptionsOpen ? 'contained' : 'outlined'}
+          startIcon={<TuneIcon fontSize="small" />}
+          onClick={() => setFilterOptionsOpen((v) => !v)}
+        >
+          Filter-Optionen
+        </Button>
+        <Button size="small" onClick={() => { applySearch(''); setFilters({}, []); }}>
+          Zurücksetzen
+        </Button>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <Select
+            value={currentSortKey}
+            onChange={(e) => {
+              const choice = SORT_CHOICES.find((c) => `${c.field}-${c.order}` === e.target.value);
+              if (choice) setSort({ field: choice.field, order: choice.order as 'ASC' | 'DESC' });
+            }}
+          >
+            {SORT_CHOICES.map((c) => <MenuItem key={`${c.field}-${c.order}`} value={`${c.field}-${c.order}`}>{c.label}</MenuItem>)}
+          </Select>
+        </FormControl>
+      </Box>
+      <Collapse in={filterOptionsOpen}>
+        <Box sx={{ pt: 1.5 }}>
+          <FormControl size="small" sx={{ minWidth: 200 }}>
+            <InputLabel>Status wählen</InputLabel>
+            <Select
+              label="Status wählen"
+              value={filterValues.published === undefined ? '' : String(filterValues.published)}
+              onChange={(e) => {
+                const v = e.target.value;
+                setFilters({ ...filterValues, published: v === '' ? undefined : v === 'true' }, []);
+              }}
+            >
+              <MenuItem value="">- Status wählen -</MenuItem>
+              <MenuItem value="true">Veröffentlicht</MenuItem>
+              <MenuItem value="false">Nicht veröffentlicht</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+      </Collapse>
+    </Box>
   );
 };
 
@@ -234,12 +321,12 @@ export const ServiceOrderList = () => {
     <List
       resource="serviceorders"
       filter={{ formId }}
-      filters={<ServiceOrderFilter />}
-      actions={<ListActions formId={formId} />}
+      actions={false}
       exporter={buildCsvExporter(fields, settings)}
       sort={{ field: 'createdAt', order: 'DESC' }}
       perPage={25}
     >
+      <ServiceOrderHeader formId={formId} />
       <Datagrid rowClick="edit" bulkActionButtons={<></>}>
         <TextField source="id" label="ID" />
         <PublishedIcon />
