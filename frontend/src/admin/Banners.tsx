@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -9,6 +9,7 @@ import {
   TextField as MuiTextField,
   Switch,
   Tooltip,
+  Autocomplete,
 } from '@mui/material';
 import UploadIcon from '@mui/icons-material/Upload';
 import CloseIcon from '@mui/icons-material/Close';
@@ -16,6 +17,7 @@ import ImageIcon from '@mui/icons-material/Image';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useNotify } from 'react-admin';
+import { FIXED_PAGE_KINDS } from '../data/fixedPageKinds';
 
 // Werbebanner, rebuilt as a custom two-group manager instead of a flat
 // react-admin CRUD list of 71 individual rows (one per image) - the site
@@ -62,12 +64,22 @@ const fetchBannersForPosition = async (position: string): Promise<AdBannerRow[]>
   return res.json();
 };
 
+interface PageOption {
+  kind: string;
+  title: string;
+}
+
+const authHeadersForPages = () => ({ Authorization: `Bearer ${localStorage.getItem('auth')}` });
+
 // Landing screen at /admin/banners - one card per real banner slot, each
 // showing its own live thumbnail + image count so this reads like a
 // preview instead of a bare menu.
 export const BannerGroupsOverview = () => {
   const navigate = useNavigate();
+  const notify = useNotify();
   const [counts, setCounts] = useState<Record<string, { count: number; thumb: string | null }>>({});
+  const [pageOptions, setPageOptions] = useState<PageOption[]>(FIXED_PAGE_KINDS);
+  const [selectedPage, setSelectedPage] = useState<PageOption | null>(null);
 
   useEffect(() => {
     BANNER_GROUPS.forEach((group) => {
@@ -80,6 +92,29 @@ export const BannerGroupsOverview = () => {
     });
   }, []);
 
+  // Every real page can have its own dedicated banner slot - the 47
+  // hardcoded pages (kind) plus any admin-created "Seite" (its own slug,
+  // see Pages.tsx/DynamicPage.tsx) - not just the 2 shared slots above.
+  // Falls back to a page not being configurable if this fetch fails; the
+  // 47 fixed ones are always available regardless.
+  useEffect(() => {
+    fetch('/api/pages?_start=0&_end=200', { headers: authHeadersForPages() })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        const seiten: PageOption[] = Array.isArray(data)
+          ? data.map((p: any) => ({ kind: p.slug, title: p.title }))
+          : [];
+        setPageOptions([...FIXED_PAGE_KINDS, ...seiten]);
+      })
+      .catch(() => notify('Seiten konnten nicht geladen werden', { type: 'warning' }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const openSelectedPage = () => {
+    if (!selectedPage) return;
+    navigate(`/admin/banners/manage/${encodeURIComponent(selectedPage.kind)}?title=${encodeURIComponent(selectedPage.title)}`);
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" sx={{ mb: 0.5 }}>Werbebanner</Typography>
@@ -87,7 +122,7 @@ export const BannerGroupsOverview = () => {
         Die Startseite und alle übrigen Seiten haben jeweils eine eigene Bilder-Slideshow - hier auswählen, um
         Bilder hinzuzufügen, zu entfernen, auszublenden oder neu anzuordnen.
       </Typography>
-      <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+      <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', mb: 4 }}>
         {BANNER_GROUPS.map((group) => {
           const info = counts[group.id];
           return (
@@ -124,6 +159,26 @@ export const BannerGroupsOverview = () => {
             </Box>
           );
         })}
+      </Box>
+
+      <Typography variant="h6" sx={{ mb: 0.5 }}>Bestimmte Seite auswählen</Typography>
+      <Typography variant="body2" sx={{ color: '#666', mb: 2 }}>
+        Jede einzelne Seite kann zusätzlich ihr eigenes Banner bekommen - so lange dafür keine eigenen Bilder
+        hinzugefügt wurden, wird weiterhin das Banner von "Andere Seiten" angezeigt.
+      </Typography>
+      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+        <Autocomplete
+          options={pageOptions}
+          getOptionLabel={(o) => o.title}
+          isOptionEqualToValue={(a, b) => a.kind === b.kind}
+          value={selectedPage}
+          onChange={(_, value) => setSelectedPage(value)}
+          sx={{ minWidth: 320 }}
+          renderInput={(params) => <MuiTextField {...params} label="Seite" size="small" />}
+        />
+        <Button variant="contained" size="small" disabled={!selectedPage} onClick={openSelectedPage}>
+          Verwalten
+        </Button>
       </Box>
     </Box>
   );
@@ -241,6 +296,7 @@ const BannerTile = ({
 // The manager itself, at /admin/banners/manage/:position.
 export const BannerGroupManager = () => {
   const { position } = useParams<{ position: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const notify = useNotify();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -251,6 +307,11 @@ export const BannerGroupManager = () => {
 
   const group = BANNER_GROUPS.find((g) => g.id === position);
   const isHomeGroup = position === 'home';
+  // For a "bestimmte Seite" (not one of the 2 shared groups above): the
+  // overview's picker passes the page's real title via ?title=, since
+  // `position` itself is just its raw slug/kind - a much friendlier label
+  // than showing the admin their own URL slug.
+  const pageTitle = searchParams.get('title');
 
   const load = () => {
     if (!position) return;
@@ -363,10 +424,10 @@ export const BannerGroupManager = () => {
         <IconButton onClick={() => navigate('/admin/banners')} title="Zurück zur Übersicht">
           <ArrowBackIcon />
         </IconButton>
-        <Typography variant="h5">{group?.label || position}</Typography>
+        <Typography variant="h5">{group?.label || pageTitle || position}</Typography>
       </Box>
       <Typography variant="body2" sx={{ color: '#666', mb: 3, ml: 6 }}>
-        {group?.description}
+        {group?.description || 'Eigenes Banner nur für diese Seite - solange hier keine Bilder hinzugefügt werden, zeigt diese Seite weiterhin das Banner von "Andere Seiten".'}
       </Typography>
 
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>

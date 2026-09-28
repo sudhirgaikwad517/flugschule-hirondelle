@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Banner } from '../components/common/Banner';
+import { Banner, BannerPositionContext } from '../components/common/Banner';
 
 interface PageSettings {
   slug: string | null;
@@ -42,16 +42,20 @@ export const FixedPageGate = ({
     return () => { cancelled = true; };
   }, [kind]);
 
-  if (settings === undefined || settings === null) return <>{children}</>;
+  if (settings === undefined || settings === null) {
+    return <BannerPositionContext.Provider value={kind}>{children}</BannerPositionContext.Provider>;
+  }
 
   if (settings.status === 'draft') {
     return (
-      <div className="w-full bg-white pb-20">
-        <Banner />
-        <div className="container mx-auto px-4 py-20 text-center text-gray-500">
-          Diese Seite existiert nicht.
+      <BannerPositionContext.Provider value={kind}>
+        <div className="w-full bg-white pb-20">
+          <Banner />
+          <div className="container mx-auto px-4 py-20 text-center text-gray-500">
+            Diese Seite existiert nicht.
+          </div>
         </div>
-      </div>
+      </BannerPositionContext.Provider>
     );
   }
 
@@ -59,5 +63,5 @@ export const FixedPageGate = ({
     return <Navigate to={`/${settings.slug}`} replace />;
   }
 
-  return <>{children}</>;
+  return <BannerPositionContext.Provider value={kind}>{children}</BannerPositionContext.Provider>;
 };

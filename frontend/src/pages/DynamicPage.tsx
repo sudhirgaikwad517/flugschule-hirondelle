@@ -78,7 +78,12 @@ export const DynamicPage = ({ slug: fixedSlug }: { slug?: string } = {}) => {
   // a visually distinct "generic CMS page" bolted on top.
   return (
     <div className="w-full bg-white pb-20">
-      <Banner />
+      {/* Own dedicated Werbebanner slot (Admin > Werbebanner > "Bestimmte
+          Seite auswählen") keyed by this page's own slug - falls back to
+          the shared "Andere Seiten" slot automatically (see Banner.tsx)
+          until an admin actually configures one for this exact page, so a
+          brand-new Seite looks right from the moment it's created. */}
+      <Banner position={slug} />
       <div className="container mx-auto px-4 py-8 max-w-[1200px]">
         {loading ? (
           <p className="text-gray-500 text-center">Lädt...</p>

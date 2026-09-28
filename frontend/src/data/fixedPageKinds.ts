@@ -1,0 +1,56 @@
+// Just the {kind, title} pairs of the 47 hardcoded fixed pages, for anything
+// (like Banners.tsx's "bestimmte Seite auswählen" picker) that needs to
+// offer every real page as a choice without pulling in Pages.tsx's own
+// heavier FIXED_PAGES array (which also carries admin-editor routes/delete
+// endpoints that aren't relevant here). Kept in sync with Pages.tsx's
+// FIXED_PAGES list by hand - both are static, rarely-changed data, so a
+// light duplication here is safer than reshaping the proven, already-
+// working FIXED_PAGES array just to share this subset.
+export const FIXED_PAGE_KINDS: { kind: string; title: string }[] = [
+  { kind: 'ausbildung', title: 'Ausbildung' },
+  { kind: 'performance', title: 'Performance' },
+  { kind: 'reisen', title: 'Reisen' },
+  { kind: 'service', title: 'Service' },
+  { kind: 'infos', title: 'Infos / Kontakt' },
+  { kind: 'team', title: 'Team' },
+  { kind: 'gelaende', title: 'Fluggelände' },
+  { kind: 'wetter', title: 'Wetter' },
+  { kind: 'medien', title: 'Medien' },
+  { kind: 'gruppenevents', title: 'Gruppenevents' },
+  { kind: 'gutscheine', title: 'Gutscheine' },
+  { kind: 'versicherungen', title: 'Versicherungen' },
+  { kind: 'schnupperkurs', title: 'Schnupperkurs' },
+  { kind: 'l-schein', title: 'L-Schein' },
+  { kind: 'a-schein', title: 'A-Schein' },
+  { kind: 'b-schein', title: 'B-Schein' },
+  { kind: 'windenschein', title: 'Windenschein' },
+  { kind: 'tandemschein', title: 'Tandemschein' },
+  { kind: 'ausbildungskonzept', title: 'Ausbildungskonzept' },
+  { kind: 'sicherheitstraining', title: 'Sicherheitstraining' },
+  { kind: 'rettungsgeraetetraining', title: 'Rettungsgerätetraining' },
+  { kind: 'groundhandling', title: 'Groundhandling' },
+  { kind: 'brasilien-tour', title: 'Brasilien-Tour' },
+  { kind: 'kolumbien-tour', title: 'Kolumbien-Tour' },
+  { kind: 'suedafrika-tour', title: 'Südafrika-Tour' },
+  { kind: 'bassano-tour', title: 'Bassano-Tour' },
+  { kind: 'griechenland-tour', title: 'Griechenland-Tour' },
+  { kind: 'slowenien-tour', title: 'Slowenien-Tour' },
+  { kind: 'bergamo-tour', title: 'Bergamo-Tour' },
+  { kind: 'savoye-tour', title: 'Savoyer Alpentour' },
+  { kind: 'vogesen-tour', title: 'Vogesen-Tour' },
+  { kind: 'pfalz-tour', title: 'Pfalz-Tour' },
+  { kind: '2-jahres-check', title: '2-Jahres-Check' },
+  { kind: 'rettungspacken', title: 'Rettungsgeräte-Packservice' },
+  { kind: 'trimmtuning', title: 'Trimmtuning' },
+  { kind: 'reparatur', title: 'Reparatur-Service' },
+  { kind: 'billings', title: 'Billings' },
+  { kind: 'erlau', title: 'Erlau' },
+  { kind: 'gadern', title: 'Gadern' },
+  { kind: 'lindenfels', title: 'Lindenfels' },
+  { kind: 'nonrod-nordost', title: 'Nonrod Nordost' },
+  { kind: 'nonrod', title: 'Nonroder Höhe' },
+  { kind: 'stauf', title: 'Stauf' },
+  { kind: 'winterkasten', title: 'Winterkasten' },
+  { kind: 'bad-kreuznach', title: 'Bad Kreuznach' },
+  { kind: 'herrenteich', title: 'Herrenteich' },
+];

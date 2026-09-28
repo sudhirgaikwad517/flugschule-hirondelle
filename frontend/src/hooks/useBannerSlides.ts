@@ -12,11 +12,46 @@ interface AdBannerResponse {
   linkUrl?: string | null;
 }
 
+// Fetches one position's rows and resolves to a validated BannerSlide[],
+// or null if that position has no usable rows at all (empty, or every
+// image URL 404s) - lets the caller below try a fallback position next.
+async function fetchValidatedSlides(
+  position: string,
+  withCaptions: boolean,
+  cancelledRef: { current: boolean }
+): Promise<BannerSlide[] | null> {
+  const res = await fetch(`/api/banners/public?position=${position}`);
+  if (!res.ok) return null;
+  const rows: AdBannerResponse[] = await res.json();
+  if (cancelledRef.current || !Array.isArray(rows) || rows.length === 0) return null;
+  const candidates: BannerSlide[] = rows.map((row) => ({
+    image: row.imageUrl,
+    text: withCaptions && row.title ? row.title : undefined,
+    linkUrl: row.linkUrl || undefined,
+  }));
+  const valid = await Promise.all(
+    candidates.map(
+      (slide) =>
+        new Promise<BannerSlide | null>((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve(slide);
+          img.onerror = () => resolve(null);
+          img.src = slide.image;
+        })
+    )
+  );
+  if (cancelledRef.current) return null;
+  const usable = valid.filter((s): s is BannerSlide => s !== null);
+  return usable.length > 0 ? usable : null;
+}
+
 /**
- * Loads the admin-managed banner slideshow for a position ("home" or
- * "subpage", see Admin > Werbebanner / Banner.tsx), falling back to
- * `fallbackSlides` (the site's original curated set) whenever no admin
- * rows exist for that position or none of their image URLs actually load.
+ * Loads the admin-managed banner slideshow for a position (any string -
+ * "home", "subpage", a fixed page's own `kind`, or a Seiten page's slug;
+ * see Admin > Werbebanner / Banner.tsx), falling back to `fallbackSlides`
+ * (the site's original curated set) whenever no admin rows exist for that
+ * position (or its optional `fallbackPosition`, tried next) or none of
+ * their image URLs actually load.
  *
  * Every candidate URL is preloaded via a real Image() first, same as
  * usePageGallery/useValidatedImageList - Banner.tsx previously fetched this
@@ -30,50 +65,34 @@ interface AdBannerResponse {
  * otherwise the old numeric slide index still points into the new array at
  * the wrong photo, or past the end of it. See Banner.tsx's `slides` effect.
  * `text` is only ever populated when `withCaptions` is true (the "home"
- * variant) - subpage banners never show a caption box, no matter what's
- * typed into their "Titel" field in the admin, matching the old site.
+ * position) - every other position never shows a caption box, no matter
+ * what's typed into its "Titel" field in the admin, matching the old site.
  */
 export function useBannerSlides(
-  position: 'home' | 'subpage',
+  position: string,
   fallbackSlides: BannerSlide[],
-  withCaptions: boolean
+  withCaptions: boolean,
+  fallbackPosition?: string
 ): BannerSlide[] {
   const [resolved, setResolved] = useState<BannerSlide[]>(fallbackSlides);
 
   useEffect(() => {
-    let cancelled = false;
-    fetch(`/api/banners/public?position=${position}`)
-      .then((res) => (res.ok ? res.json() : []))
-      .then(async (rows: AdBannerResponse[]) => {
-        if (cancelled || !Array.isArray(rows) || rows.length === 0) return;
-        const candidates: BannerSlide[] = rows.map((row) => ({
-          image: row.imageUrl,
-          text: withCaptions && row.title ? row.title : undefined,
-          linkUrl: row.linkUrl || undefined,
-        }));
-        const valid = await Promise.all(
-          candidates.map(
-            (slide) =>
-              new Promise<BannerSlide | null>((resolve) => {
-                const img = new Image();
-                img.onload = () => resolve(slide);
-                img.onerror = () => resolve(null);
-                img.src = slide.image;
-              })
-          )
-        );
-        if (cancelled) return;
-        const usable = valid.filter((s): s is BannerSlide => s !== null);
-        if (usable.length > 0) setResolved(usable);
-      })
-      .catch(() => {
+    const cancelledRef = { current: false };
+    (async () => {
+      try {
+        let usable = await fetchValidatedSlides(position, withCaptions, cancelledRef);
+        if (!usable && fallbackPosition && fallbackPosition !== position) {
+          usable = await fetchValidatedSlides(fallbackPosition, withCaptions, cancelledRef);
+        }
+        if (!cancelledRef.current && usable) setResolved(usable);
+      } catch {
         // Network/API error - silently keep fallbackSlides.
-      });
+      }
+    })();
     return () => {
-      cancelled = true;
+      cancelledRef.current = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [position, withCaptions]);
+  }, [position, withCaptions, fallbackPosition]);
 
   return resolved;
 }

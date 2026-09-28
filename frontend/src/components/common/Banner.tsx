@@ -1,7 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useBannerSlides } from '../../hooks/useBannerSlides';
+
+// Set by FixedPageGate.tsx (the shared wrapper around all 47 fixed pages'
+// routes) to that page's own `kind`, so a per-page banner slot (Admin >
+// Werbebanner > "Bestimmte Seite auswählen") can be looked up without every
+// one of those 47 page components passing a `position` prop to its own
+// bare `<Banner />` call. `null` outside a FixedPageGate (DynamicPage.tsx
+// passes its own `position` prop directly instead, since it isn't one).
+export const BannerPositionContext = createContext<string | null>(null);
 
 interface BannerSlide {
   image: string;
@@ -108,12 +116,33 @@ function randomTransformOrigin(): string {
 interface BannerProps {
   // Old site only shows the home page's slideshow with caption text
   // overlaid ("top" module); every other page uses a separate, caption-
-  // free slideshow ("topseite" module). Defaulting to 'subpage' means the
-  // ~50 other pages that just render <Banner /> need no changes.
+  // free slideshow ("topseite" module) STYLE (logo size/position, overlap,
+  // caption support). Defaulting to 'subpage' means the ~50 other pages
+  // that just render <Banner /> need no changes. Purely visual - separate
+  // from `position` below, which is about CONTENT (which images play).
   variant?: 'home' | 'subpage';
+  // Which Werbebanner slot's images/captions to show - a genuinely new,
+  // per-page capability (old's real site only ever had the 2 slots above;
+  // every page here can now additionally get its own dedicated slot,
+  // Admin > Werbebanner > "Bestimmte Seite auswählen"). Explicit prop
+  // (DynamicPage.tsx passes its own page's slug) takes priority; falls
+  // back to BannerPositionContext (set by FixedPageGate.tsx for the 47
+  // fixed pages) so none of them need to pass this themselves, then to
+  // `variant` itself for anything rendering <Banner /> completely bare.
+  position?: string;
 }
 
-export const Banner = ({ variant = 'subpage' }: BannerProps) => {
+export const Banner = ({ variant = 'subpage', position }: BannerProps) => {
+  const contextPosition = useContext(BannerPositionContext);
+  const contentPosition = position || contextPosition || variant;
+  // A page with no own banner configured yet (i.e. every page, until an
+  // admin explicitly adds images under its own slot) falls back to the
+  // shared "subpage" slot - exactly today's behavior - before finally
+  // falling back to the hardcoded curated set below. "home" never needs
+  // that middle tier: it already IS the top tier.
+  const sharedFallbackPosition = contentPosition !== 'home' && contentPosition !== 'subpage' ? 'subpage' : undefined;
+  const isHome = contentPosition === 'home';
+
   // Admin-manageable again (Admin > Werbebanner), reconnected via
   // useBannerSlides - which is what actually fixes the previous "some
   // images play, then it snaps back to the first image" bug: every
@@ -121,10 +150,11 @@ export const Banner = ({ variant = 'subpage' }: BannerProps) => {
   // and the `slides` effect below resets activeSlides whenever this
   // array's identity changes, so a mid-animation swap can never leave a
   // stale index pointing at the wrong photo. Falls back to the site's own
-  // curated set (below) whenever the admin hasn't configured this
-  // position yet, or none of its image URLs actually load.
+  // curated set (below) whenever neither this page's own position nor the
+  // shared "subpage" one has been configured, or none of their image URLs
+  // actually load.
   const fallback = variant === 'home' ? HOME_SLIDES : SUBPAGE_SLIDES;
-  const slides = useBannerSlides(variant === 'home' ? 'home' : 'subpage', fallback, variant === 'home');
+  const slides = useBannerSlides(contentPosition, fallback, isHome, sharedFallbackPosition);
 
   // Camera.js keeps exactly two slides "active" at any moment - the newest
   // (fading/zooming in) and the one before it (already fully zoomed in,
