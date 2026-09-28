@@ -35,14 +35,14 @@ export async function sendBookingConfirmationEmail(bookingId: string) {
     // itself, off by default on the real site (and here) since it has no
     // meaningful default recipient until an admin sets one.
     if (settings.sendmailOwner && settings.ownerNotificationEmail) {
-      await sendOwnerNotificationEmail(booking, settings.ownerNotificationEmail).catch(console.error);
+      await sendOwnerNotificationEmail(booking, settings.ownerNotificationEmail, settings.emailBcc).catch(console.error);
     }
   } catch (error) {
     console.error('Error in sendBookingConfirmationEmail:', error);
   }
 }
 
-async function sendCustomerConfirmationEmail(booking: any, settings: { sendmailInvoice: boolean; sendmailTicket: boolean }) {
+async function sendCustomerConfirmationEmail(booking: any, settings: { sendmailInvoice: boolean; sendmailTicket: boolean; emailBcc?: string | null }) {
   try {
     const bookingId = booking.id;
     // Generate PDFs - only the ones the admin has actually enabled sending.
@@ -144,6 +144,7 @@ async function sendCustomerConfirmationEmail(booking: any, settings: { sendmailI
     const info = await transporter.sendMail({
       from: mailConfig?.fromEmail ? `"${mailConfig.fromName || 'Flugschule Hirondelle'}" <${mailConfig.fromEmail}>` : '"Flugschule Hirondelle" <info@fs-hirondelle.de>',
       to: customerEmail,
+      bcc: settings.emailBcc || undefined,
       subject: subject,
       html: bodyHtml,
       attachments
@@ -162,12 +163,13 @@ async function sendCustomerConfirmationEmail(booking: any, settings: { sendmailI
 // old: sendmail_owner - a plain internal-facing copy of a new booking, no
 // PDF attachments or old's own MAT_* template needed for this since it's
 // just an operational alert, not customer-facing correspondence.
-async function sendOwnerNotificationEmail(booking: any, ownerEmail: string) {
+async function sendOwnerNotificationEmail(booking: any, ownerEmail: string, emailBcc?: string | null) {
   const { name: customerName, email: customerEmail } = resolveBookingCustomer(booking);
   const { transporter, config: mailConfig } = await getNewsletterTransporter();
   await transporter.sendMail({
     from: mailConfig?.fromEmail ? `"${mailConfig.fromName || 'Flugschule Hirondelle'}" <${mailConfig.fromEmail}>` : '"Flugschule Hirondelle" <info@fs-hirondelle.de>',
     to: ownerEmail,
+    bcc: emailBcc || undefined,
     subject: `Neue Buchung: ${booking.event.title}`,
     html: `
       <p>Neue Buchung eingegangen:</p>
@@ -239,6 +241,7 @@ export async function sendNewEventNotificationEmail(eventId: string) {
       await transporter.sendMail({
         from: mailConfig?.fromEmail ? `"${mailConfig.fromName || 'Flugschule Hirondelle'}" <${mailConfig.fromEmail}>` : '"Flugschule Hirondelle" <info@fs-hirondelle.de>',
         to: recipient.email,
+        bcc: settings.emailBcc || undefined,
         subject,
         html: bodyHtml,
       }).catch(console.error);
@@ -326,6 +329,7 @@ export async function sendCancellationEmail(
     const info = await transporter.sendMail({
       from: mailConfig?.fromEmail ? `"${mailConfig.fromName || 'Flugschule Hirondelle'}" <${mailConfig.fromEmail}>` : '"Flugschule Hirondelle" <info@fs-hirondelle.de>',
       to: customerEmail,
+      bcc: settings.emailBcc || undefined,
       subject,
       html: bodyHtml
     });

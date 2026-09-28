@@ -41,6 +41,7 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [agbAccepted, setAgbAccepted] = useState(false);
+  const [newsletterOptIn, setNewsletterOptIn] = useState(false);
   const [bookingId, setBookingId] = useState('');
   const [bookingStatus, setBookingStatus] = useState('PENDING');
   
@@ -313,7 +314,8 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
           city: formData.city,
           additionalParticipants: participants,
           customFields: dynamicFormData,
-          selectedExtras: selectedExtraOptions.map(i => event.extraFeeOptions?.[i]).filter(Boolean)
+          selectedExtras: selectedExtraOptions.map(i => event.extraFeeOptions?.[i]).filter(Boolean),
+          newsletterOptIn
         },
         paymentMethod: formData.paymentMethod,
         remarks: formData.remarks
@@ -797,9 +799,26 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
                   </div>
                 </div>
 
+                {/* Newsletter opt-in Toggle */}
+                <div className="flex items-center gap-4 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setNewsletterOptIn(!newsletterOptIn)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${newsletterOptIn ? 'bg-[#5bc0de]' : 'bg-gray-200'}`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${newsletterOptIn ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                  <span
+                    className="text-sm font-semibold text-gray-600 cursor-pointer"
+                    onClick={() => setNewsletterOptIn(!newsletterOptIn)}
+                  >
+                    Ich möchte den Newsletter der Flugschule Hirondelle erhalten.
+                  </span>
+                </div>
+
                 {/* AGB Toggle */}
                 <div className="flex items-center gap-4 mt-6">
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setAgbAccepted(!agbAccepted)}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${agbAccepted ? 'bg-[#5bc0de]' : 'bg-gray-200'}`}

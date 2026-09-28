@@ -160,6 +160,14 @@ export const SettingsConfigPage = () => {
                         sx={{ mt: 2 }}
                         disabled={!form.sendmailOwner}
                     />
+                    <TextField
+                        label="E-Mail BCC (bei jeder ausgehenden E-Mail)"
+                        fullWidth
+                        value={form.emailBcc || ''}
+                        onChange={(e) => set('emailBcc')(e.target.value)}
+                        helperText="Alte Matukio-Einstellung: sendmail_operator. Erhält eine BCC-Kopie jeder Buchungsbestätigung, Kopie-an-Flugschule, Neue-Veranstaltung- und Stornierungs-E-Mail."
+                        sx={{ mt: 2 }}
+                    />
 
                     <Divider sx={{ my: 3 }} />
 

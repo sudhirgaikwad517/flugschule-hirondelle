@@ -12,6 +12,7 @@ import { buildBookingPlaceholders, renderMatTokens, parseCsvTemplateTokens, frie
 import { escapeHtml } from '../utils/htmlEscape';
 import { csvEscape } from '../utils/csvEscape';
 import { publicLookupRateLimit } from '../middlewares/rateLimit.middleware';
+import { subscribeToNewsletter } from './newsletters.routes';
 
 const router = Router();
 
@@ -763,6 +764,15 @@ class BookingRequestError extends Error {
 // Also: only an explicit allowlist of fields is ever written - no `...req.body`
 // spread - so a caller can never set paid/certificated/checkedIn/adminComment/
 // rating on their own booking.
+// Old Matukio's matukioccnewsletter plugin: if the booking form's newsletter
+// checkbox was ticked, subscribe the customer via the real (double-opt-in-
+// respecting) subscribe flow - never silently, and never if they left the
+// checkbox unchecked (see EventBookingModal.tsx's optional toggle).
+async function subscribeFromBookingCheckbox(customerDetails: any) {
+  if (!customerDetails?.newsletterOptIn || !customerDetails?.email) return;
+  await subscribeToNewsletter(customerDetails.email, customerDetails.fullName, 'GENERAL');
+}
+
 async function createBookingAtomic(params: {
   eventId: string;
   items: { ticketId: string; quantity: number }[] | undefined;
@@ -931,6 +941,7 @@ router.post('/', async (req: any, res) => {
 
     // Send confirmation email asynchronously
     sendBookingConfirmationEmail(booking.id).catch(console.error);
+    subscribeFromBookingCheckbox(customerDetails).catch(console.error);
 
     res.status(201).json(booking);
   } catch (error) {
@@ -965,6 +976,7 @@ router.post('/public', async (req, res) => {
 
     // Send confirmation email asynchronously
     sendBookingConfirmationEmail(booking.id).catch(console.error);
+    subscribeFromBookingCheckbox(customerDetails).catch(console.error);
 
     res.status(201).json(booking);
   } catch (error) {

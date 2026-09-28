@@ -59,6 +59,71 @@ async function sendAutoresponderEmail(
   }
 }
 
+// Shared subscribe logic (respects the admin's double opt-in setting and
+// fires the list's welcome autoresponder) - used by the public /subscribe
+// route below, and also called directly (no HTTP round-trip) from
+// bookings.routes.ts when a customer ticks a booking form's newsletter
+// checkbox. Mirrors old Matukio's matukioccnewsletter plugin, which
+// subscribed via ccNewsletter's own addSubscriber() on successful booking
+// rather than silently/without going through the real subscribe flow.
+export async function subscribeToNewsletter(email: string, name: string | null | undefined, listType: string = 'GENERAL') {
+  const cleanName = typeof name === 'string' && name.trim() ? name.trim() : null;
+
+  const config = await prisma.newsletterConfig.findUnique({ where: { id: 'default' } });
+  const requireConfirmation = config?.requireConfirmation || false;
+  const confirmToken = requireConfirmation ? crypto.randomBytes(24).toString('hex') : null;
+
+  const existing = await prisma.newsletter.findUnique({
+    where: {
+      email_listType: {
+        email: email.toLowerCase(),
+        listType
+      }
+    }
+  });
+
+  if (existing) {
+    if (!existing.isActive) {
+      await prisma.newsletter.update({
+        where: { id: existing.id },
+        data: {
+          isActive: true,
+          subscribedAt: new Date(),
+          isConfirmed: !requireConfirmation,
+          confirmToken,
+          ...(cleanName ? { name: cleanName } : {})
+        }
+      });
+      if (requireConfirmation && confirmToken) {
+        await sendConfirmationEmail(email.toLowerCase(), confirmToken, config);
+        return { message: 'Bitte bestätigen Sie Ihre E-Mail-Adresse - wir haben Ihnen einen Link geschickt.' };
+      }
+      await sendAutoresponderEmail(listType, 'welcome', email.toLowerCase(), config);
+      return { message: 'Successfully resubscribed' };
+    }
+    return { message: 'Email is already subscribed to this list', alreadySubscribed: true };
+  }
+
+  await prisma.newsletter.create({
+    data: {
+      email: email.toLowerCase(),
+      name: cleanName,
+      listType,
+      isActive: true,
+      isConfirmed: !requireConfirmation,
+      confirmToken
+    }
+  });
+
+  if (requireConfirmation && confirmToken) {
+    await sendConfirmationEmail(email.toLowerCase(), confirmToken, config);
+    return { message: 'Bitte bestätigen Sie Ihre E-Mail-Adresse - wir haben Ihnen einen Link geschickt.' };
+  }
+
+  await sendAutoresponderEmail(listType, 'welcome', email.toLowerCase(), config);
+  return { message: 'Successfully subscribed' };
+}
+
 // Public subscribe endpoint
 router.post('/subscribe', async (req, res) => {
   try {
@@ -67,62 +132,9 @@ router.post('/subscribe', async (req, res) => {
     if (!email || typeof email !== 'string') {
       return res.status(400).json({ message: 'Valid email is required' });
     }
-    const cleanName = typeof name === 'string' && name.trim() ? name.trim() : null;
 
-    const config = await prisma.newsletterConfig.findUnique({ where: { id: 'default' } });
-    const requireConfirmation = config?.requireConfirmation || false;
-    const confirmToken = requireConfirmation ? crypto.randomBytes(24).toString('hex') : null;
-
-    const existing = await prisma.newsletter.findUnique({
-      where: {
-        email_listType: {
-          email: email.toLowerCase(),
-          listType
-        }
-      }
-    });
-
-    if (existing) {
-      if (!existing.isActive) {
-        // Reactivate
-        await prisma.newsletter.update({
-          where: { id: existing.id },
-          data: {
-            isActive: true,
-            subscribedAt: new Date(),
-            isConfirmed: !requireConfirmation,
-            confirmToken,
-            ...(cleanName ? { name: cleanName } : {})
-          }
-        });
-        if (requireConfirmation && confirmToken) {
-          await sendConfirmationEmail(email.toLowerCase(), confirmToken, config);
-          return res.json({ message: 'Bitte bestätigen Sie Ihre E-Mail-Adresse - wir haben Ihnen einen Link geschickt.' });
-        }
-        await sendAutoresponderEmail(listType, 'welcome', email.toLowerCase(), config);
-        return res.json({ message: 'Successfully resubscribed' });
-      }
-      return res.status(400).json({ message: 'Email is already subscribed to this list' });
-    }
-
-    await prisma.newsletter.create({
-      data: {
-        email: email.toLowerCase(),
-        name: cleanName,
-        listType,
-        isActive: true,
-        isConfirmed: !requireConfirmation,
-        confirmToken
-      }
-    });
-
-    if (requireConfirmation && confirmToken) {
-      await sendConfirmationEmail(email.toLowerCase(), confirmToken, config);
-      return res.status(201).json({ message: 'Bitte bestätigen Sie Ihre E-Mail-Adresse - wir haben Ihnen einen Link geschickt.' });
-    }
-
-    await sendAutoresponderEmail(listType, 'welcome', email.toLowerCase(), config);
-    res.status(201).json({ message: 'Successfully subscribed' });
+    const result = await subscribeToNewsletter(email, name, listType);
+    res.status(result.alreadySubscribed ? 400 : 201).json(result);
   } catch (error) {
     console.error('Newsletter subscribe error:', error);
     res.status(500).json({ message: 'Internal server error' });
