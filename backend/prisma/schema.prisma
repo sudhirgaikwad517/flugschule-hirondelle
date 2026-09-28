@@ -986,29 +986,26 @@ model FixedPageSettings {
   updatedAt DateTime @updatedAt
 }
 
+// Matches Joomla Visforms' real model: a form's fields are fully
+// admin-configurable (add/remove/reorder/retype any field, not just the
+// ones the code happened to ship with), and each submission stores
+// whatever the form asked for at the time - hence the flexible `data`
+// blob here instead of one fixed column per field. Confirmed zero real
+// submissions existed on either environment before this change, so no
+// migration of old fixed-column data was needed.
+model FormConfig {
+  id        String   @id // e.g. "service-auftrag" - one row per real form, matches old's own single live Visforms form
+  title     String
+  fields    Json     // FormFieldDef[] - see backend/src/routes/formconfigs.routes.ts
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model ServiceOrder {
-  id                String   @id @default(uuid())
-  name              String
-  strasse           String
-  plz               String
-  ort               String
-  handy             String
-  email             String
-
-  gleitschirm_check Boolean  @default(false)
-  gs_hersteller     String?
-  gs_typ            String?
-  gs_farbe          String?
-  gs_anmerkung      String?  @db.Text
-
-  rettung_packen    Boolean  @default(false)
-  ret_hersteller    String?
-  ret_alter         String?
-
-  sonstiges         String?  @db.Text
-  abgabe            String?  @db.Text
-
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id        String   @id @default(uuid())
+  formId    String   @default("service-auftrag")
+  data      Json     // { [fieldId]: value } - shape follows FormConfig.fields at submission time
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 

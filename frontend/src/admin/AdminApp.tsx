@@ -32,6 +32,7 @@ import { TieredFeeList, TieredFeeEdit, TieredFeeCreate } from './TieredFees';
 import { TaxRateList, TaxRateEdit, TaxRateCreate } from './TaxRates';
 import { CurrencyList, CurrencyEdit, CurrencyCreate } from './Currencies';
 import { BookingFormBuilder } from './BookingFormBuilder';
+import { ServiceAuftragFormBuilder } from './FormBuilder';
 import { NewsList, NewsEdit, NewsCreate } from './News';
 import { DownloadCategoryList, DownloadCategoryEdit, DownloadCategoryCreate, DownloadFileList, DownloadFileEdit, DownloadFileCreate } from './Downloads';
 import { WebLinkCategoryList, WebLinkCategoryEdit, WebLinkCategoryCreate, WebLinkList, WebLinkEdit, WebLinkCreate } from './WebLinks';
@@ -207,6 +208,7 @@ export const AdminApp = () => {
         <Resource name="categories" options={{ label: 'Kategorien' }} list={CategoryList} edit={CategoryEdit} create={CategoryCreate} />
         <Resource name="bookings" options={{ label: 'Buchungen' }} list={BookingList} show={BookingShow} />
         <Resource name="bookingFormConfig" intent="registration" />
+        <Resource name="formconfigs" intent="registration" />
         <CustomRoutes>
             <Route path="/events-dashboard" element={<Authenticated><EventsDashboard /></Authenticated>} />
             <Route path="/event-statistics" element={<Authenticated><EventStatistics /></Authenticated>} />
@@ -282,6 +284,7 @@ export const AdminApp = () => {
               }
             />
             <Route path="/booking-form-config" element={<Authenticated><BookingFormBuilder /></Authenticated>} />
+            <Route path="/service-auftrag-form" element={<Authenticated><ServiceAuftragFormBuilder /></Authenticated>} />
             <Route path="/templates" element={<Authenticated><TemplatesBuilder /></Authenticated>} />
             <Route path="/import" element={<Authenticated><Import /></Authenticated>} />
             <Route path="/ecwid-config" element={<Authenticated><EcwidConfigPage /></Authenticated>} />

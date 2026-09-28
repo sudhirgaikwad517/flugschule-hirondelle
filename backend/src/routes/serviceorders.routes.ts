@@ -4,33 +4,32 @@ import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware'
 
 const router = Router();
 
-// Public route to submit a service order form
+// Public route to submit a service order form. Fully dynamic now (see
+// FormConfig/formconfigs.routes.ts) - whatever fields the admin has
+// configured for this form get submitted here as-is, not just the fixed
+// set the form originally shipped with.
 router.post('/public', async (req, res) => {
   try {
-    const data = req.body;
-    
-    // Convert string "on" to boolean for checkboxes
-    const gleitschirm_check = data.gleitschirm_check === 'on' || data.gleitschirm_check === true;
-    const rettung_packen = data.rettung_packen === 'on' || data.rettung_packen === true;
+    const { formId, data } = req.body;
+    if (!data || typeof data !== 'object') {
+      return res.status(400).json({ message: 'Ungültige Formulardaten' });
+    }
+
+    // Checkbox inputs submit "on"/undefined via a plain HTML form; normalize
+    // to real booleans wherever the form config marked a field as a checkbox.
+    const formConfig = await prisma.formConfig.findUnique({ where: { id: formId || 'service-auftrag' } });
+    const checkboxFieldIds = new Set(
+      ((formConfig?.fields as any[]) || []).filter((f) => f.type === 'checkbox').map((f) => f.id)
+    );
+    const normalized: Record<string, any> = {};
+    for (const [key, value] of Object.entries(data)) {
+      normalized[key] = checkboxFieldIds.has(key) ? (value === 'on' || value === true) : value;
+    }
 
     const newOrder = await prisma.serviceOrder.create({
       data: {
-        name: data.name,
-        strasse: data.strasse,
-        plz: data.plz,
-        ort: data.ort,
-        handy: data.handy,
-        email: data.email,
-        gleitschirm_check,
-        gs_hersteller: data.gs_hersteller || null,
-        gs_typ: data.gs_typ || null,
-        gs_farbe: data.gs_farbe || null,
-        gs_anmerkung: data.gs_anmerkung || null,
-        rettung_packen,
-        ret_hersteller: data.ret_hersteller || null,
-        ret_alter: data.ret_alter || null,
-        sonstiges: data.sonstiges || null,
-        abgabe: data.abgabe || null,
+        formId: formId || 'service-auftrag',
+        data: normalized,
       },
     });
     res.status(201).json(newOrder);
@@ -46,14 +45,17 @@ router.post('/public', async (req, res) => {
 router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
     const { _sort, _order, _start, _end } = req.query;
-    
+
     const queryOptions: any = {};
-    if (_sort && _order) {
-      queryOptions.orderBy = {
-        [_sort as string]: (_order as string).toLowerCase(),
-      };
+    // "data.*" fields can't be sorted at the DB level (they're inside a
+    // JSON blob) - fall back to createdAt, which is what every other admin
+    // list here already defaults to anyway.
+    if (_sort && _order && !String(_sort).startsWith('data.')) {
+      queryOptions.orderBy = { [_sort as string]: (_order as string).toLowerCase() };
+    } else {
+      queryOptions.orderBy = { createdAt: 'desc' };
     }
-    
+
     let skip = 0;
     let take = 20;
     if (_start && _end) {
@@ -62,7 +64,7 @@ router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
       queryOptions.skip = skip;
       queryOptions.take = take;
     }
-    
+
     const [orders, total] = await Promise.all([
       prisma.serviceOrder.findMany(queryOptions),
       prisma.serviceOrder.count(),
@@ -92,9 +94,10 @@ router.get('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
 // PUT update
 router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
+    const { data } = req.body;
     const updated = await prisma.serviceOrder.update({
       where: { id: (req.params.id as string) },
-      data: req.body,
+      data: { data },
     });
     res.json(updated);
   } catch (error) {

@@ -31,6 +31,7 @@ import LinkIcon from '@mui/icons-material/Link';
 import ViewCarouselIcon from '@mui/icons-material/ViewCarousel';
 import PermMediaIcon from '@mui/icons-material/PermMedia';
 import AssignmentIcon from '@mui/icons-material/Assignment';
+import DynamicFormIcon from '@mui/icons-material/DynamicForm';
 import PaymentIcon from '@mui/icons-material/Payment';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ExtensionIcon from '@mui/icons-material/Extension'; // NEW - "Komponenten" section icon
@@ -86,6 +87,7 @@ const BOTTOM_ITEMS: Item[] = [
     { label: 'Werbebanner', to: '/admin/banners', icon: <ViewCarouselIcon fontSize="small" /> },
     { label: 'Seitenmedien (Sicherheitstraining)', to: '/admin/pagemedia', icon: <PermMediaIcon fontSize="small" /> },
     { label: 'Service Aufträge', to: '/admin/serviceorders', icon: <AssignmentIcon fontSize="small" /> },
+    { label: 'Formular-Editor (Service-Auftrag)', to: '/admin/service-auftrag-form', icon: <DynamicFormIcon fontSize="small" /> },
     { label: 'Cookie-Hinweis', to: '/admin/cookie-consent', icon: <CookieIcon fontSize="small" /> },
 ];
 
