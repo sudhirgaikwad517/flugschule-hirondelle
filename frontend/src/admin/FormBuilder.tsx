@@ -28,6 +28,14 @@ import TableChartIcon from '@mui/icons-material/TableChart';
 import CloseIcon from '@mui/icons-material/Close';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutlineOutlined';
 import { IntroTextEditor } from './IntroTextEditor';
+import {
+    ErgebnisTab,
+    EmailOptionenTab,
+    SpamschutzTab,
+    ErweitertTab,
+    FrontendDatenanzeigeTab,
+    BerechtigungenTab,
+} from './FormBuilderTabs';
 
 // Old's real "Formular bearbeiten" page (administrator/components/
 // com_visforms/src/View/Visform/HtmlView.php +
@@ -91,6 +99,7 @@ export const ServiceAuftragFormBuilder = () => {
     const [accessLevel, setAccessLevel] = useState('Öffentlich');
     const [language, setLanguage] = useState('Alle');
     const [introText, setIntroText] = useState('');
+    const [settings, setSettings] = useState<any>(null);
 
     useEffect(() => {
         if (data) {
@@ -99,13 +108,14 @@ export const ServiceAuftragFormBuilder = () => {
             setAccessLevel(data.accessLevel || 'Öffentlich');
             setLanguage(data.language || 'Alle');
             setIntroText(data.introText || '');
+            setSettings(data.settings || null);
         }
     }, [data]);
 
-    if (isLoading) return <CircularProgress sx={{ m: 4 }} />;
+    if (isLoading || !settings) return <CircularProgress sx={{ m: 4 }} />;
     if (error) return <div>Fehler beim Laden der Formular-Konfiguration</div>;
 
-    const currentPayload = () => ({ title, published, accessLevel, language, introText });
+    const currentPayload = () => ({ title, published, accessLevel, language, introText, settings });
 
     const doSave = () =>
         new Promise<void>((resolve, reject) => {
@@ -166,7 +176,7 @@ export const ServiceAuftragFormBuilder = () => {
             const putRes = await fetch(`/api/formconfigs/${created.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', ...authHeaders() },
-                body: JSON.stringify({ fields: data?.fields || [], introText, accessLevel, language, published }),
+                body: JSON.stringify({ fields: data?.fields || [], introText, accessLevel, language, published, settings }),
             });
             if (!putRes.ok) throw new Error('Fehler beim Kopieren der Felder');
 
@@ -287,12 +297,18 @@ export const ServiceAuftragFormBuilder = () => {
                             />
                         </Grid>
                     </Grid>
+                ) : tab === 1 ? (
+                    <ErgebnisTab value={settings.ergebnis} onChange={(v) => setSettings({ ...settings, ergebnis: v })} showHelp={showHelp} />
+                ) : tab === 2 ? (
+                    <EmailOptionenTab value={settings.email} onChange={(v) => setSettings({ ...settings, email: v })} showHelp={showHelp} />
+                ) : tab === 3 ? (
+                    <SpamschutzTab value={settings.spam} onChange={(v) => setSettings({ ...settings, spam: v })} showHelp={showHelp} />
+                ) : tab === 4 ? (
+                    <ErweitertTab value={settings.advanced} onChange={(v) => setSettings({ ...settings, advanced: v })} showHelp={showHelp} />
+                ) : tab === 5 ? (
+                    <FrontendDatenanzeigeTab value={settings.frontend} onChange={(v) => setSettings({ ...settings, frontend: v })} showHelp={showHelp} />
                 ) : (
-                    <Box sx={{ py: 6, textAlign: 'center', color: '#888' }}>
-                        <Typography variant="body2">
-                            Diese Einstellungen ({TAB_LABELS[tab]}) sind in dieser Version noch nicht verfügbar.
-                        </Typography>
-                    </Box>
+                    <BerechtigungenTab />
                 )}
             </CardContent>
         </Card>

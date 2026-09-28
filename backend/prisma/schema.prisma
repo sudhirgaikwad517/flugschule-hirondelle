@@ -1001,6 +1001,12 @@ model FormConfig {
   // rich HTML shown above the field list on the public form page, not
   // just a plain description.
   introText   String?  @db.Text
+  // Old's real Ergebnis/E-Mail Optionen/Spamschutz/Erweitert/Datenanzeige-im-
+  // Frontend tab settings (visform.xml, deep-verified against fs-hirondelle.de's
+  // real admin) - one flexible JSON blob per form (FormSettings shape in
+  // formconfigs.routes.ts) rather than dozens of columns, matching how
+  // `fields` above is already stored.
+  settings    Json?
   // Matches old Visforms' real "Formulare" list columns (administrator/
   // components/com_visforms/src/View/Visforms/HtmlView.php +
   // tmpl/visforms/default.php) - published/access/language/hits/author are
@@ -1018,6 +1024,14 @@ model ServiceOrder {
   id        String   @id @default(uuid())
   formId    String   @default("service-auftrag")
   data      Json     // { [fieldId]: value } - shape follows FormConfig.fields at submission time
+  // Matches old's real "Datenanzeige im Frontend" tab (frontend-details
+  // fieldset) - submitter identity for the "meine Einträge"/own-records-only
+  // view, the submitter's IP for the real (non-gated) "Display IP" column
+  // toggle, and a per-record publish flag for the real (non-gated)
+  // "autopublish" toggle.
+  userId    String?
+  ip        String?
+  published Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

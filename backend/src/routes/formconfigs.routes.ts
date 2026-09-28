@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../utils/prisma';
 import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware';
+import { DEFAULT_FORM_SETTINGS, resolveFormSettings } from '../utils/formSettings';
 
 // Generic form-field configuration (matches Joomla Visforms' real
 // capability: an admin can add/remove/reorder/retype ANY field on a form,
@@ -69,15 +70,29 @@ const SERVICE_AUFTRAG_DEFAULT_FIELDS: FormFieldDef[] = [
 // "Einleitungstext" rich text field.
 const SERVICE_AUFTRAG_DEFAULT_INTRO = `<p>Bitte ausgefüllten Auftrag ausdrucken und zusammen mit der Ausrüstung in unserer Flugschule in Weinheim oder alternativ in Landau vorbeibringen.</p><p><strong>69469 Weinheim, Untergasse 27:</strong> bitte wegen Öffnungszeiten Newsletter beachten</p><p><strong>76829 Landau, Am Birnbach 6:</strong> Termin bitte telefonisch (+49 (0)6201 8452097) oder per E-Mail (info@fs-hirondelle.de) vereinbaren</p>`;
 
-const DEFAULTS: Record<string, { title: string; fields: FormFieldDef[]; introText: string }> = {
-  'service-auftrag': { title: 'Service-Auftrag', fields: SERVICE_AUFTRAG_DEFAULT_FIELDS, introText: SERVICE_AUFTRAG_DEFAULT_INTRO },
+// Matches old's real DB row for this exact form (deep-verified earlier this
+// project: saveresult=1) - every other tab defaults to DEFAULT_FORM_SETTINGS.
+const SERVICE_AUFTRAG_DEFAULT_SETTINGS = {
+  ...DEFAULT_FORM_SETTINGS,
+  ergebnis: { ...DEFAULT_FORM_SETTINGS.ergebnis, saveResult: true },
+};
+
+const DEFAULTS: Record<string, { title: string; fields: FormFieldDef[]; introText: string; settings: typeof DEFAULT_FORM_SETTINGS }> = {
+  'service-auftrag': {
+    title: 'Service-Auftrag',
+    fields: SERVICE_AUFTRAG_DEFAULT_FIELDS,
+    introText: SERVICE_AUFTRAG_DEFAULT_INTRO,
+    settings: SERVICE_AUFTRAG_DEFAULT_SETTINGS,
+  },
 };
 
 async function getOrCreate(id: string) {
   let config = await prisma.formConfig.findUnique({ where: { id } });
   if (!config) {
-    const seed = DEFAULTS[id] || { title: id, fields: [], introText: '' };
-    config = await prisma.formConfig.create({ data: { id, title: seed.title, fields: seed.fields as any, introText: seed.introText } });
+    const seed = DEFAULTS[id] || { title: id, fields: [], introText: '', settings: DEFAULT_FORM_SETTINGS };
+    config = await prisma.formConfig.create({
+      data: { id, title: seed.title, fields: seed.fields as any, introText: seed.introText, settings: seed.settings as any },
+    });
   }
   return config;
 }
@@ -85,12 +100,26 @@ async function getOrCreate(id: string) {
 // Public: the form itself fetches its own field config to render. Also
 // increments "hits" - matches old Visforms' real behavior exactly
 // (site-side VisformsModel::addHits(), run on every public form-page view).
+// Only the subset of `settings` the public page actually needs to RENDER
+// (spam honeypot toggle, layout/processing-message cosmetics) is exposed -
+// email addresses, spam-check API keys and IP allow/blacklists stay
+// admin-only, even though none of this form's defaults are actually secret.
 router.get('/:id/public', async (req, res) => {
   try {
     const config = await getOrCreate(req.params.id as string);
     if (!config.published) return res.status(404).json({ message: 'Formular nicht gefunden' });
     prisma.formConfig.update({ where: { id: config.id }, data: { hits: { increment: 1 } } }).catch(() => {});
-    res.json(config);
+    const settings = resolveFormSettings(config.settings);
+    res.json({
+      ...config,
+      settings: undefined,
+      publicSettings: {
+        honeypotEnabled: settings.spam.honeypot,
+        ...settings.advanced.layout,
+        poweredBy: settings.advanced.poweredBy,
+        allowFrontendDataView: settings.frontend.allowFrontendDataView,
+      },
+    });
   } catch (error) {
     console.error('Error fetching form config:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -173,7 +202,7 @@ router.post('/', authenticateJWT, authorizeAdmin, async (req: any, res) => {
 router.get('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
     const config = await getOrCreate(req.params.id as string);
-    res.json(config);
+    res.json({ ...config, settings: resolveFormSettings(config.settings) });
   } catch (error) {
     console.error('Error fetching form config:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -182,7 +211,7 @@ router.get('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
 
 router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    const { title, fields, published, accessLevel, language, introText } = req.body;
+    const { title, fields, published, accessLevel, language, introText, settings } = req.body;
     const data: any = {};
     if (title !== undefined) data.title = title;
     if (fields !== undefined) data.fields = fields;
@@ -190,13 +219,14 @@ router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
     if (accessLevel !== undefined) data.accessLevel = accessLevel;
     if (language !== undefined) data.language = language;
     if (introText !== undefined) data.introText = introText;
+    if (settings !== undefined) data.settings = settings;
 
     const config = await prisma.formConfig.upsert({
       where: { id: req.params.id as string },
       update: data,
-      create: { id: req.params.id as string, title, fields: fields || [] },
+      create: { id: req.params.id as string, title: title || req.params.id as string, fields: fields || [], settings },
     });
-    res.json(config);
+    res.json({ ...config, settings: resolveFormSettings(config.settings) });
   } catch (error) {
     console.error('Error updating form config:', error);
     res.status(500).json({ message: 'Internal server error' });

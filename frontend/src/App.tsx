@@ -43,6 +43,7 @@ import { Rettungspacken } from './pages/Rettungspacken';
 import { Trimmtuning } from './pages/Trimmtuning';
 import { ReparaturService } from './pages/ReparaturService';
 import { ServiceAuftrag } from './pages/ServiceAuftrag';
+import { MeineEintraege, MeineEintraegeDetail } from './pages/MeineEintraege';
 import { Team } from './pages/Team';
 import { Gelaende } from './pages/Gelaende';
 import { GelaendeDetail } from './pages/GelaendeDetail';
@@ -128,6 +129,8 @@ function App() {
           <Route path="service/trimmtuning" element={<FixedPageGate kind="trimmtuning" defaultSlug="trimmtuning"><Trimmtuning /></FixedPageGate>} />
           <Route path="service/reparatur" element={<FixedPageGate kind="reparatur" defaultSlug="reparatur"><ReparaturService /></FixedPageGate>} />
           <Route path="service/service-auftrag" element={<ServiceAuftrag />} />
+          <Route path="service/service-auftrag/meine-eintraege" element={<MeineEintraege />} />
+          <Route path="service/service-auftrag/meine-eintraege/:orderId" element={<MeineEintraegeDetail />} />
           <Route path="infos" element={<FixedPageGate kind="infos" defaultSlug="infos"><Infos /></FixedPageGate>} />
           <Route path="infos/team" element={<FixedPageGate kind="team" defaultSlug="team"><Team /></FixedPageGate>} />
           <Route path="infos/gelaende" element={<FixedPageGate kind="gelaende" defaultSlug="gelaende"><Gelaende /></FixedPageGate>} />

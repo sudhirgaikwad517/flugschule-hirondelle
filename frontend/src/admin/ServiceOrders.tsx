@@ -12,11 +12,13 @@ import {
   Filter,
   TopToolbar,
   ExportButton,
+  downloadCSV,
   useListContext,
   useRecordContext,
   Edit,
   SimpleForm,
 } from 'react-admin';
+import jsonExport from 'jsonexport/dist';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { Button, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -52,6 +54,46 @@ const useFormFields = (formId = 'service-auftrag') => {
   return fields;
 };
 
+const useFormSettings = (formId: string) => {
+  const [settings, setSettings] = useState<any>(null);
+  useEffect(() => {
+    const token = localStorage.getItem('auth');
+    fetch(`/api/formconfigs/${formId}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => res.json())
+      .then((data) => setSettings(data.settings || null))
+      .catch(() => setSettings(null));
+  }, [formId]);
+  return settings;
+};
+
+// Old's real "Erweitert > CSV-Export" tab (visform-csvexport fieldset) -
+// separator/headline/extra-column toggles actually applied here, instead of
+// react-admin's plain default exporter (always comma, always every raw
+// field verbatim).
+const buildCsvExporter = (fields: FieldDef[], settings: any) => (records: any[]) => {
+  const csv = settings?.advanced?.csv || {};
+  const rows = records.map((r) => {
+    const row: Record<string, any> = {};
+    if (csv.includeId) row['ID'] = r.id;
+    fields.forEach((f) => {
+      const value = r.data?.[f.id];
+      row[f.label] = f.type === 'checkbox' ? (value ? 'Ja' : 'Nein') : (value ?? '');
+    });
+    if (csv.includeCreated) row['Erstellt am'] = r.createdAt;
+    if (csv.includeModifiedAt) row['Geändert am'] = r.updatedAt;
+    if (csv.includeIp) row['IP-Adresse'] = r.ip || '';
+    return row;
+  });
+  jsonExport(
+    rows,
+    { rowDelimiter: csv.separator || ';', includeHeaders: csv.includeHeadline !== false },
+    (err: any, csvString: string) => {
+      if (err) { console.error(err); return; }
+      downloadCSV(csvString, 'service-auftrag-daten');
+    }
+  );
+};
+
 const ServiceOrderFilter = (props: any) => (
   <Filter {...props}>
     {/* Old's real search box (top of the "Data records" screen) searches
@@ -84,6 +126,7 @@ export const ServiceOrderList = () => {
   const { formId: paramId } = useParams();
   const formId = paramId || 'service-auftrag';
   const fields = useFormFields(formId);
+  const settings = useFormSettings(formId);
 
   // Datagrid children must exist at render time - wait for the dynamic
   // field list before rendering any columns at all, same as the old
@@ -96,6 +139,7 @@ export const ServiceOrderList = () => {
       filter={{ formId }}
       filters={<ServiceOrderFilter />}
       actions={<ListActions formId={formId} />}
+      exporter={buildCsvExporter(fields, settings)}
       sort={{ field: 'createdAt', order: 'DESC' }}
       perPage={25}
     >
