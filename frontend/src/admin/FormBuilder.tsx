@@ -26,7 +26,7 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import CloseIcon from '@mui/icons-material/Close';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutlineOutlined';
 import { IntroTextEditor } from './IntroTextEditor';
 
 // Old's real "Formular bearbeiten" page (administrator/components/
