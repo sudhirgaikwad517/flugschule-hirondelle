@@ -1,5 +1,8 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import { prisma } from '../utils/prisma';
 import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware';
 import { JWT_SECRET } from '../utils/config';
@@ -7,6 +10,45 @@ import { resolveFormSettings, replaceTokens } from '../utils/formSettings';
 import { sendFormEmails } from '../services/formMailer.service';
 
 const router = Router();
+
+// Old's real "file"/"image" field types (visfield.xml's typefield dropdown) -
+// public upload since submitting this form has never required a login. The
+// admin's own Erweitert > Datei-Upload "erlaubte Dateiendungen" text field
+// stays display-only (see FormBuilderTabs.tsx's Spamschutz-style disclaimer
+// pattern) rather than driving this allowlist directly - letting a free-text
+// admin field control which extensions the server accepts would turn a
+// cosmetic setting into a real upload-filter bypass.
+const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'service-orders');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+const ALLOWED_UPLOAD_EXTENSIONS = new Set([
+  '.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.csv', '.txt',
+]);
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, uploadDir),
+    filename: (req, file, cb) => cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`),
+  }),
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (!ALLOWED_UPLOAD_EXTENSIONS.has(ext)) {
+      return cb(new Error(`Dateityp ${ext || '(unbekannt)'} ist nicht erlaubt`));
+    }
+    cb(null, true);
+  },
+});
+
+router.post('/upload', (req, res, next) => {
+  upload.single('file')(req, res, (err: any) => {
+    if (err) return res.status(400).json({ message: err.message || 'Upload fehlgeschlagen' });
+    next();
+  });
+}, (req, res) => {
+  if (!req.file) return res.status(400).json({ message: 'Keine Datei hochgeladen' });
+  res.status(201).json({ url: `/uploads/service-orders/${req.file.filename}`, name: req.file.originalname });
+});
 
 // A submitter MAY be a logged-in customer (see Profil.tsx's own
 // localStorage 'token') but submitting this form has never required it -

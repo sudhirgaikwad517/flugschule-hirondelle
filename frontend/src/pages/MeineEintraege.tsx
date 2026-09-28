@@ -15,10 +15,18 @@ import { Eye, Download, ArrowLeft } from 'lucide-react';
 type DisplayMode = '0' | '1' | '2' | '3'; // None / Both / List only / Detail only
 const showInList = (m: DisplayMode) => m === '1' || m === '2';
 const showInDetail = (m: DisplayMode) => m === '1' || m === '3';
+const STRUCTURAL_TYPES = new Set(['submit', 'reset', 'fieldsep']);
 
 const FORM_ID = 'service-auftrag';
 
-interface FieldDef { id: string; label: string; type: string; order: number }
+interface FieldDef { id: string; label: string; type: string; order: number; frontDisplay?: DisplayMode }
+
+const formatValue = (field: FieldDef, raw: any): string => {
+  if (field.type === 'checkbox') return raw ? 'Ja' : 'Nein';
+  if (field.type === 'multicheckbox') return Array.isArray(raw) ? raw.join(', ') : String(raw ?? '-');
+  if (field.type === 'file' || field.type === 'image') return raw ? String(raw) : '-';
+  return String(raw ?? '-');
+};
 interface FrontendSettings {
   allowFrontendDataView: boolean;
   displayIp: DisplayMode;
@@ -76,6 +84,9 @@ export const MeineEintraege = () => {
   }, [token, navigate]);
 
   const DetailIcon = settings?.detailLinkIcon === 'download' ? Download : Eye;
+  // Old's real per-field "Frontend-Anzeige" toggle (visfields list) drives
+  // this, not a hardcoded slice of the field list.
+  const listFields = fields.filter((f) => !STRUCTURAL_TYPES.has(f.type) && showInList(f.frontDisplay || '0'));
 
   return (
     <div className="w-full bg-white font-luxurysans pb-20">
@@ -105,7 +116,7 @@ export const MeineEintraege = () => {
                 <thead className="bg-gray-50 text-gray-600 uppercase text-xs tracking-wide">
                   <tr>
                     {settings && showInList(settings.displayId) && <th className="px-5 py-3">ID</th>}
-                    {fields.filter((f) => f.type !== 'textarea').slice(0, 4).map((f) => (
+                    {listFields.map((f) => (
                       <th key={f.id} className="px-5 py-3">{f.label}</th>
                     ))}
                     {settings && showInList(settings.displayCreated) && <th className="px-5 py-3">Erstellt am</th>}
@@ -117,10 +128,8 @@ export const MeineEintraege = () => {
                   {orders.map((o) => (
                     <tr key={o.id} className="border-t border-gray-100 hover:bg-gray-50/60 transition-colors">
                       {settings && showInList(settings.displayId) && <td className="px-5 py-3 text-gray-500">{o.id.slice(0, 8)}</td>}
-                      {fields.filter((f) => f.type !== 'textarea').slice(0, 4).map((f) => (
-                        <td key={f.id} className="px-5 py-3 text-gray-700">
-                          {f.type === 'checkbox' ? (o.data?.[f.id] ? 'Ja' : 'Nein') : String(o.data?.[f.id] ?? '')}
-                        </td>
+                      {listFields.map((f) => (
+                        <td key={f.id} className="px-5 py-3 text-gray-700">{formatValue(f, o.data?.[f.id])}</td>
                       ))}
                       {settings && showInList(settings.displayCreated) && (
                         <td className="px-5 py-3 text-gray-500">
@@ -199,11 +208,13 @@ export const MeineEintraegeDetail = () => {
               <h1 className="font-luxury text-3xl md:text-4xl text-luxury-dark uppercase mb-6">{formTitle}</h1>
               <div className="w-24 h-px bg-luxury-gold mb-8"></div>
               <div className="bg-white rounded-xl border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] divide-y divide-gray-100">
-                {fields.map((f) => (
+                {fields.filter((f) => !STRUCTURAL_TYPES.has(f.type) && showInDetail(f.frontDisplay || '0')).map((f) => (
                   <div key={f.id} className="flex flex-col sm:flex-row gap-1 sm:gap-8 px-6 py-4">
                     <div className="sm:w-1/3 text-sm text-gray-500">{f.label}</div>
                     <div className="sm:w-2/3 text-gray-800">
-                      {f.type === 'checkbox' ? (order.data?.[f.id] ? 'Ja' : 'Nein') : String(order.data?.[f.id] ?? '-')}
+                      {(f.type === 'file' || f.type === 'image') && order.data?.[f.id] ? (
+                        <a href={order.data[f.id]} target="_blank" rel="noopener noreferrer" className="text-[#53a8c7] underline">Datei ansehen</a>
+                      ) : formatValue(f, order.data?.[f.id])}
                     </div>
                   </div>
                 ))}

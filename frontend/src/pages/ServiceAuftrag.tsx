@@ -3,7 +3,13 @@ import { Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
 import { SafeHtml } from '../components/common/SafeHtml';
 
-type FieldType = 'text' | 'email' | 'tel' | 'textarea' | 'checkbox' | 'radio' | 'select';
+// Old's real 18-type catalog (visfield.xml's typefield dropdown, deep-
+// verified against the live Formularfelder list) - submit/reset/fieldsep
+// are genuine rows here too, not hardcoded chrome (see formconfigs.routes.ts).
+type FieldType =
+  | 'text' | 'password' | 'email' | 'date' | 'number' | 'url' | 'tel' | 'hidden'
+  | 'textarea' | 'checkbox' | 'multicheckbox' | 'radio' | 'select'
+  | 'file' | 'image' | 'submit' | 'reset' | 'fieldsep';
 
 interface FormFieldDef {
   id: string;
@@ -13,6 +19,10 @@ interface FormFieldDef {
   placeholder?: string;
   options?: string[];
   order: number;
+  published?: boolean;
+  defaultValue?: string;
+  min?: number;
+  max?: number;
 }
 
 interface PublicSettings {
@@ -56,8 +66,18 @@ export const ServiceAuftrag = () => {
   const [loading, setLoading] = useState(true);
   const [values, setValues] = useState<Record<string, any>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingFields, setUploadingFields] = useState<Record<string, boolean>>({});
   const [result, setResult] = useState<{ textResult: string } | null>(null);
   const firstFieldRef = useRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null>(null);
+
+  // Structural rows carry no submitted value of their own - excluded from
+  // the initial-values seed, the visible field loop and validation.
+  const initialValueFor = (f: FormFieldDef) => {
+    if (f.type === 'checkbox') return false;
+    if (f.type === 'multicheckbox') return [] as string[];
+    if (f.type === 'hidden') return f.defaultValue || '';
+    return '';
+  };
 
   useEffect(() => {
     fetch(`/api/formconfigs/${FORM_ID}/public`)
@@ -68,7 +88,10 @@ export const ServiceAuftrag = () => {
         setIntroText(data.introText || '');
         setPublicSettings({ ...DEFAULT_PUBLIC_SETTINGS, ...(data.publicSettings || {}) });
         const initial: Record<string, any> = {};
-        sorted.forEach((f) => { initial[f.id] = f.type === 'checkbox' ? false : ''; });
+        sorted.forEach((f) => {
+          if (f.type === 'submit' || f.type === 'reset' || f.type === 'fieldsep') return;
+          initial[f.id] = initialValueFor(f);
+        });
         setValues(initial);
       })
       .catch(() => setFields([]))
@@ -83,9 +106,35 @@ export const ServiceAuftrag = () => {
 
   const resetForm = () => {
     const reset: Record<string, any> = {};
-    fields.forEach((f) => { reset[f.id] = f.type === 'checkbox' ? false : ''; });
+    fields.forEach((f) => {
+      if (f.type === 'submit' || f.type === 'reset' || f.type === 'fieldsep') return;
+      reset[f.id] = initialValueFor(f);
+    });
     setValues(reset);
   };
+
+  const handleFileUpload = async (fieldId: string, file: File) => {
+    setUploadingFields((prev) => ({ ...prev, [fieldId]: true }));
+    try {
+      const body = new FormData();
+      body.append('file', file);
+      const res = await fetch('/api/serviceorders/upload', { method: 'POST', body });
+      const json = await res.json();
+      if (res.ok) setValue(fieldId, json.url);
+      else alert(json.message || 'Upload fehlgeschlagen');
+    } catch {
+      alert('Netzwerkfehler beim Hochladen');
+    } finally {
+      setUploadingFields((prev) => ({ ...prev, [fieldId]: false }));
+    }
+  };
+
+  // Old's real site-side rendering (deep-verified): submit/reset always
+  // render together in a fixed footer, never inline at their stored
+  // `ordering` position - only their order relative to EACH OTHER matters.
+  const inlineFields = fields.filter((f) => f.type !== 'submit' && f.type !== 'reset');
+  const submitField = fields.find((f) => f.type === 'submit');
+  const resetField = fields.find((f) => f.type === 'reset');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -182,6 +231,73 @@ export const ServiceAuftrag = () => {
       );
     }
 
+    if (field.type === 'multicheckbox') {
+      const selected: string[] = Array.isArray(values[field.id]) ? values[field.id] : [];
+      const toggle = (opt: string) => {
+        setValue(field.id, selected.includes(opt) ? selected.filter((o) => o !== opt) : [...selected, opt]);
+      };
+      return (
+        <div key={field.id} className="flex flex-col md:flex-row md:items-start gap-2 md:gap-8 pt-4">
+          <label className="md:w-1/3 text-sm text-gray-700 font-medium pt-1">
+            {field.label} {requiredAsterisk(field.required)}
+          </label>
+          <div className="md:w-2/3 space-y-4">
+            {(field.options || []).map((opt) => (
+              <label key={opt} className="flex items-start gap-4 cursor-pointer group">
+                <div className="relative flex items-center justify-center w-5 h-5 mt-0.5">
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(opt)}
+                    onChange={() => toggle(opt)}
+                    className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded cursor-pointer checked:bg-[#53a8c7] checked:border-[#53a8c7] transition-all"
+                  />
+                  <svg className="absolute w-3 h-3 text-white pointer-events-none opacity-0 peer-checked:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <span className="text-[15px] text-gray-700 group-hover:text-gray-900 transition-colors">{opt}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    if (field.type === 'file' || field.type === 'image') {
+      const currentUrl = values[field.id];
+      const isUploading = !!uploadingFields[field.id];
+      return (
+        <div key={field.id} className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8 group">
+          {commonLabel}
+          <div className="md:w-2/3">
+            <input
+              type="file"
+              accept={field.type === 'image' ? 'image/*' : undefined}
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(field.id, f); }}
+              className="block w-full text-sm text-gray-600 file:mr-4 file:py-2.5 file:px-5 file:rounded-md file:border-0 file:bg-[#53a8c7] file:text-white file:text-sm file:font-semibold file:cursor-pointer hover:file:bg-[#4396b5]"
+            />
+            {isUploading && <p className="text-xs text-gray-500 mt-2">Wird hochgeladen...</p>}
+            {!isUploading && currentUrl && (
+              field.type === 'image'
+                ? <img src={currentUrl} alt={field.label} className="mt-3 h-20 rounded-md border border-gray-200 object-cover" />
+                : <a href={currentUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-[#53a8c7] underline mt-2 inline-block">Hochgeladene Datei ansehen</a>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    if (field.type === 'fieldsep') {
+      return (
+        <div key={field.id} className="pt-2">
+          {field.label && <h3 className="text-sm font-semibold text-luxury-dark uppercase tracking-wide mb-3">{field.label}</h3>}
+          <hr className="border-gray-200" />
+        </div>
+      );
+    }
+
+    if (field.type === 'hidden') {
+      return <input key={field.id} type="hidden" value={values[field.id] || ''} readOnly />;
+    }
+
     if (field.type === 'select') {
       return (
         <div key={field.id} className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8 group">
@@ -225,7 +341,8 @@ export const ServiceAuftrag = () => {
       );
     }
 
-    // text / email / tel
+    // text / password / email / date / number / url / tel - all a plain
+    // <input type={field.type}>, HTML already knows what to do with each.
     return (
       <div key={field.id} className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8 group">
         {commonLabel}
@@ -238,6 +355,8 @@ export const ServiceAuftrag = () => {
             onChange={(e) => setValue(field.id, e.target.value)}
             required={field.required}
             placeholder={field.placeholder}
+            min={field.type === 'number' || field.type === 'date' ? field.min : undefined}
+            max={field.type === 'number' || field.type === 'date' ? field.max : undefined}
             className="w-full bg-white border border-gray-300 px-5 py-3 text-[15px] focus:outline-none focus:border-[#53a8c7] focus:ring-2 focus:ring-[#53a8c7]/20 transition-all rounded-md placeholder:text-gray-400"
           />
         </div>
@@ -315,7 +434,7 @@ export const ServiceAuftrag = () => {
                 {publicSettings.requiredPosition === 'top' && requiredLegend}
 
                 <div className="space-y-6">
-                  {fields.map((f, i) => renderField(f, i))}
+                  {inlineFields.map((f, i) => renderField(f, i))}
                 </div>
 
                 {publicSettings.requiredPosition === 'bottom' && (
@@ -335,14 +454,14 @@ export const ServiceAuftrag = () => {
                     disabled={submitting}
                     className="w-full sm:w-auto px-10 py-3.5 bg-white border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 font-semibold rounded-md transition-all shadow-sm text-sm uppercase tracking-wide disabled:opacity-50"
                   >
-                    Zurücksetzen
+                    {resetField?.label || 'Zurücksetzen'}
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
                     className="w-full sm:w-auto px-10 py-3.5 bg-[#53a8c7] hover:bg-[#4396b5] text-white font-semibold rounded-md transition-all shadow-md hover:shadow-lg text-sm uppercase tracking-wide disabled:opacity-60"
                   >
-                    {submitting ? 'Wird gesendet...' : 'Auftrag absenden'}
+                    {submitting ? 'Wird gesendet...' : (submitField?.label || 'Auftrag absenden')}
                   </button>
                 </div>
 

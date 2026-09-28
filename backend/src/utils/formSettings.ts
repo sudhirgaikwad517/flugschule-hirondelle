@@ -1,3 +1,5 @@
+import { isDataField } from './formFields';
+
 // FormConfig.settings shape - one flexible JSON blob per form, matching old
 // Visforms' real "Formular bearbeiten" tabs (Ergebnis/E-Mail Optionen/
 // Spamschutz/Erweitert/Datenanzeige im Frontend), deep-verified field-by-
@@ -252,10 +254,10 @@ export function buildDataBlockHtml(
 ): string {
   if (!opts.includeData) return '';
   const rows = fields
-    .filter((f) => f.type !== 'spacer')
+    .filter((f) => isDataField(f.type as any))
     .map((f) => {
       const raw = data[f.id];
-      const value = f.type === 'checkbox' ? (raw ? 'Ja' : 'Nein') : (raw ?? '');
+      const value = f.type === 'checkbox' ? (raw ? 'Ja' : 'Nein') : Array.isArray(raw) ? raw.join(', ') : (raw ?? '');
       if (value === '' || value === undefined || value === null) return '';
       return `<tr><td style="padding:4px 10px 4px 0;color:#666;vertical-align:top;"><strong>${f.label}</strong></td><td style="padding:4px 0;vertical-align:top;">${String(value).replace(/\n/g, '<br/>')}</td></tr>`;
     })

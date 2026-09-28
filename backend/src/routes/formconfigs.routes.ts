@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../utils/prisma';
 import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware';
 import { DEFAULT_FORM_SETTINGS, resolveFormSettings } from '../utils/formSettings';
+import type { FormFieldDef } from '../utils/formFields';
 
 // Generic form-field configuration (matches Joomla Visforms' real
 // capability: an admin can add/remove/reorder/retype ANY field on a form,
@@ -23,40 +24,43 @@ const normalizeSlug = (value: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-type FieldType = 'text' | 'email' | 'tel' | 'textarea' | 'checkbox' | 'radio' | 'select';
-
-interface FormFieldDef {
-  id: string;
-  type: FieldType;
-  label: string;
-  required: boolean;
-  placeholder?: string;
-  options?: string[];
-  order: number;
-}
-
 // Word-for-word the real fields the Service-Auftrag form has always had
 // (ServiceAuftrag.tsx before this became configurable) - the starting
 // point every fresh "default" row seeds from, so nothing changes visually
-// on first load of the new dynamic form/builder.
+// on first load of the new dynamic form/builder. frontDisplay/published
+// values for name/strasse/plz/ort/handy/email/fieldsep5/zuruecksetzen/
+// auftrag_absenden are copied exactly from old's real, live Formularfelder
+// list (view=visfields&fid=2) - the rest weren't visible in that scroll
+// position, so they follow the same pattern as the nearest visible
+// same-purpose fields (contact fields shown, service-detail fields hidden).
 const SERVICE_AUFTRAG_DEFAULT_FIELDS: FormFieldDef[] = [
-  { id: 'name', type: 'text', label: 'Name', required: true, order: 0 },
-  { id: 'strasse', type: 'text', label: 'Straße', required: true, order: 1 },
-  { id: 'plz', type: 'text', label: 'PLZ', required: true, order: 2 },
-  { id: 'ort', type: 'text', label: 'Ort', required: true, order: 3 },
-  { id: 'handy', type: 'tel', label: 'Handynr.', required: true, order: 4 },
-  { id: 'email', type: 'email', label: 'E-Mail', required: true, order: 5 },
-  { id: 'gleitschirm_check', type: 'checkbox', label: 'Gleitschirm-Check', required: false, order: 6 },
-  { id: 'gs_hersteller', type: 'text', label: 'Hersteller des Gleitschirms', required: false, order: 7 },
-  { id: 'gs_typ', type: 'text', label: 'Typ / Name des Gleitschirms', required: false, order: 8 },
-  { id: 'gs_farbe', type: 'text', label: 'Farbe des Gleitschirms', required: false, order: 9 },
-  { id: 'gs_anmerkung', type: 'textarea', label: 'Anmerkung / Hinweise', required: false, placeholder: 'z. B. Leine defekt, bitte austauschen / Loch im Obersegel etc.', order: 10 },
-  { id: 'rettung_packen', type: 'checkbox', label: 'Rettung packen', required: false, order: 11 },
-  { id: 'ret_hersteller', type: 'text', label: 'Hersteller / Typ der Rettung', required: false, placeholder: 'Wir packen alle Standardretter vom Typ Rund- bzw. Kreuzkappen. Retter, die nicht bei uns gekauft wurden bitte ggf. vorab abklären.', order: 12 },
-  { id: 'ret_alter', type: 'text', label: 'Alter der Rettung', required: false, placeholder: 'ca. in Jahren', order: 13 },
-  { id: 'sonstiges', type: 'text', label: 'Sonstiges', required: false, order: 14 },
+  { id: 'name', type: 'text', label: 'Name', required: true, order: 0, published: true, frontDisplay: '1' },
+  { id: 'strasse', type: 'text', label: 'Straße', required: true, order: 1, published: true, frontDisplay: '1' },
+  { id: 'plz', type: 'text', label: 'PLZ', required: true, order: 2, published: true, frontDisplay: '1' },
+  { id: 'ort', type: 'text', label: 'Ort', required: true, order: 3, published: true, frontDisplay: '1' },
+  { id: 'handy', type: 'tel', label: 'Handynr.', required: true, order: 4, published: true, frontDisplay: '1' },
+  { id: 'email', type: 'email', label: 'E-Mail', required: true, order: 5, published: true, frontDisplay: '1' },
+  // Old's real inline section break right after the contact fields (type=fieldsep,
+  // renders as a visual divider at this exact position - deep-verified: unlike
+  // submit/reset below, a fieldsep really does render inline, not in a footer).
+  { id: 'fieldsep5', type: 'fieldsep', label: '', required: false, order: 6, published: true, frontDisplay: '1' },
+  // Old's real reset/submit rows - deep-verified (site-side render code) that
+  // these are ALWAYS pulled into a fixed footer regardless of where they sit
+  // in the field order, so their position here only matters relative to each
+  // other (reset before submit), not relative to the fields around them.
+  { id: 'zuruecksetzen', type: 'reset', label: 'Zurücksetzen', required: false, order: 7, published: true, frontDisplay: '0' },
+  { id: 'auftrag_absenden', type: 'submit', label: 'Auftrag absenden', required: false, order: 8, published: true, frontDisplay: '0' },
+  { id: 'gleitschirm_check', type: 'checkbox', label: 'Gleitschirm-Check', required: false, order: 9, published: true, frontDisplay: '0' },
+  { id: 'gs_hersteller', type: 'text', label: 'Hersteller des Gleitschirms', required: false, order: 10, published: true, frontDisplay: '0' },
+  { id: 'gs_typ', type: 'text', label: 'Typ / Name des Gleitschirms', required: false, order: 11, published: true, frontDisplay: '0' },
+  { id: 'gs_farbe', type: 'text', label: 'Farbe des Gleitschirms', required: false, order: 12, published: true, frontDisplay: '0' },
+  { id: 'gs_anmerkung', type: 'textarea', label: 'Anmerkung / Hinweise', required: false, placeholder: 'z. B. Leine defekt, bitte austauschen / Loch im Obersegel etc.', order: 13, published: true, frontDisplay: '0' },
+  { id: 'rettung_packen', type: 'checkbox', label: 'Rettung packen', required: false, order: 14, published: true, frontDisplay: '0' },
+  { id: 'ret_hersteller', type: 'text', label: 'Hersteller / Typ der Rettung', required: false, placeholder: 'Wir packen alle Standardretter vom Typ Rund- bzw. Kreuzkappen. Retter, die nicht bei uns gekauft wurden bitte ggf. vorab abklären.', order: 15, published: true, frontDisplay: '0' },
+  { id: 'ret_alter', type: 'text', label: 'Alter der Rettung', required: false, placeholder: 'ca. in Jahren', order: 16, published: true, frontDisplay: '0' },
+  { id: 'sonstiges', type: 'text', label: 'Sonstiges', required: false, order: 17, published: true, frontDisplay: '0' },
   {
-    id: 'abgabe', type: 'radio', label: 'Abgabe in', required: false, order: 15,
+    id: 'abgabe', type: 'radio', label: 'Abgabe in', required: false, order: 18, published: true, frontDisplay: '0',
     options: [
       'Weinheim > zwecks Termin Newsletter beachten',
       'Landau > jederzeit möglich - Termin bitte telefonisch anfragen',
@@ -86,6 +90,17 @@ const DEFAULTS: Record<string, { title: string; fields: FormFieldDef[]; introTex
   },
 };
 
+// Fills in defaults for fields saved before `published`/`frontDisplay`
+// existed, the same non-destructive "resolve at read time" approach as
+// resolveFormSettings - never rewrites the stored row.
+function resolveFields(fields: any): FormFieldDef[] {
+  return ((fields || []) as FormFieldDef[]).map((f) => ({
+    ...f,
+    published: f.published ?? true,
+    frontDisplay: f.frontDisplay ?? '0',
+  }));
+}
+
 async function getOrCreate(id: string) {
   let config = await prisma.formConfig.findUnique({ where: { id } });
   if (!config) {
@@ -110,8 +125,12 @@ router.get('/:id/public', async (req, res) => {
     if (!config.published) return res.status(404).json({ message: 'Formular nicht gefunden' });
     prisma.formConfig.update({ where: { id: config.id }, data: { hits: { increment: 1 } } }).catch(() => {});
     const settings = resolveFormSettings(config.settings);
+    // Only fields the admin left published render on the public form -
+    // matches old's real per-field publish toggle exactly.
+    const publicFields = resolveFields(config.fields).filter((f) => f.published !== false);
     res.json({
       ...config,
+      fields: publicFields,
       settings: undefined,
       publicSettings: {
         honeypotEnabled: settings.spam.honeypot,
@@ -202,7 +221,7 @@ router.post('/', authenticateJWT, authorizeAdmin, async (req: any, res) => {
 router.get('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
     const config = await getOrCreate(req.params.id as string);
-    res.json({ ...config, settings: resolveFormSettings(config.settings) });
+    res.json({ ...config, fields: resolveFields(config.fields), settings: resolveFormSettings(config.settings) });
   } catch (error) {
     console.error('Error fetching form config:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -226,7 +245,7 @@ router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
       update: data,
       create: { id: req.params.id as string, title: title || req.params.id as string, fields: fields || [], settings },
     });
-    res.json({ ...config, settings: resolveFormSettings(config.settings) });
+    res.json({ ...config, fields: resolveFields(config.fields), settings: resolveFormSettings(config.settings) });
   } catch (error) {
     console.error('Error updating form config:', error);
     res.status(500).json({ message: 'Internal server error' });

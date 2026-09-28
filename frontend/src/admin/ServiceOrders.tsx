@@ -4,11 +4,13 @@ import {
   Datagrid,
   TextField,
   BooleanField,
+  FunctionField,
   DateField,
   DeleteButton,
   TextInput,
   BooleanInput,
   SelectInput,
+  CheckboxGroupInput,
   Filter,
   TopToolbar,
   ExportButton,
@@ -22,6 +24,10 @@ import jsonExport from 'jsonexport/dist';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { Button, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+
+// Structural rows (submit/reset/fieldsep - see FormFieldsEditor.tsx) carry
+// no submitted value at all - never real data columns/inputs/CSV columns.
+const STRUCTURAL_TYPES = new Set(['submit', 'reset', 'fieldsep']);
 
 // Matches Joomla Visforms' real "Data records for form ..." screen
 // (com_visforms&view=visdatas) - one column PER FORM FIELD (not a
@@ -75,9 +81,11 @@ const buildCsvExporter = (fields: FieldDef[], settings: any) => (records: any[])
   const rows = records.map((r) => {
     const row: Record<string, any> = {};
     if (csv.includeId) row['ID'] = r.id;
-    fields.forEach((f) => {
+    fields.filter((f) => !STRUCTURAL_TYPES.has(f.type)).forEach((f) => {
       const value = r.data?.[f.id];
-      row[f.label] = f.type === 'checkbox' ? (value ? 'Ja' : 'Nein') : (value ?? '');
+      row[f.label] = f.type === 'checkbox'
+        ? (value ? 'Ja' : 'Nein')
+        : Array.isArray(value) ? value.join(', ') : (value ?? '');
     });
     if (csv.includeCreated) row['Erstellt am'] = r.createdAt;
     if (csv.includeModifiedAt) row['Geändert am'] = r.updatedAt;
@@ -147,9 +155,19 @@ export const ServiceOrderList = () => {
         <TextField source="id" label="ID" />
         <DateField source="createdAt" label="Erstellt am" showTime />
         <DateField source="updatedAt" label="Geändert am" showTime />
-        {fields.map((f) =>
+        {fields.filter((f) => !STRUCTURAL_TYPES.has(f.type)).map((f) =>
           f.type === 'checkbox' ? (
             <BooleanField key={f.id} source={`data.${f.id}`} label={f.label} />
+          ) : f.type === 'multicheckbox' ? (
+            <FunctionField key={f.id} label={f.label} render={(r: any) => (Array.isArray(r.data?.[f.id]) ? r.data[f.id].join(', ') : '')} />
+          ) : f.type === 'file' || f.type === 'image' ? (
+            <FunctionField
+              key={f.id}
+              label={f.label}
+              render={(r: any) => r.data?.[f.id]
+                ? <a href={r.data[f.id]} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>Datei</a>
+                : ''}
+            />
           ) : (
             <TextField key={f.id} source={`data.${f.id}`} label={f.label} />
           )
@@ -179,7 +197,7 @@ const ServiceOrderEditForm = () => {
       <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
         Vom Kunden übermittelte Daten - hier korrigierbar, falls z.B. ein Tippfehler gemeldet wird.
       </Typography>
-      {fields.map((f) => {
+      {fields.filter((f) => !STRUCTURAL_TYPES.has(f.type)).map((f) => {
         const source = `data.${f.id}`;
         if (f.type === 'checkbox') {
           return <BooleanInput key={f.id} source={source} label={f.label} />;
@@ -195,11 +213,33 @@ const ServiceOrderEditForm = () => {
             />
           );
         }
+        if (f.type === 'multicheckbox') {
+          return (
+            <CheckboxGroupInput
+              key={f.id}
+              source={source}
+              label={f.label}
+              choices={((f as any).options || []).map((opt: string) => ({ id: opt, name: opt }))}
+            />
+          );
+        }
+        if (f.type === 'file' || f.type === 'image') {
+          return (
+            <TextInput
+              key={f.id}
+              source={source}
+              label={f.label}
+              fullWidth
+              helperText="Hochgeladene Datei-URL - wird hier nur angezeigt, kein erneuter Upload über den Admin-Bereich"
+            />
+          );
+        }
         return (
           <TextInput
             key={f.id}
             source={source}
             label={f.label}
+            type={f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : 'text'}
             multiline={f.type === 'textarea'}
             fullWidth
           />
