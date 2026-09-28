@@ -45,7 +45,7 @@ router.get('/public/:id', async (req, res) => {
 // newsletter system.
 router.post('/:id/contact', async (req, res) => {
   try {
-    const { name, email, message } = req.body;
+    const { name, email, message, eventTitle } = req.body;
     if (!name || !email || !message) {
       return res.status(400).json({ message: 'Name, E-Mail und Nachricht sind erforderlich' });
     }
@@ -55,14 +55,23 @@ router.post('/:id/contact', async (req, res) => {
       return res.status(404).json({ message: 'Veranstalter oder E-Mail-Adresse nicht gefunden' });
     }
 
+    // Old Matukio's contactorganizer controller: when the contact form is
+    // opened from an event page (uid=1) rather than the organizer's own
+    // profile, the subject names the event ("<semnum>: <title>") instead of
+    // a generic "Kontaktanfrage" line, so the organizer sees at a glance
+    // which event the question is about.
+    const subject = eventTitle
+      ? `Frage zu: ${eventTitle}`
+      : `Kontaktanfrage von ${name} über die Webseite`;
+
     const { transporter, config } = await getNewsletterTransporter();
     await transporter.sendMail({
       from: config?.fromEmail || 'no-reply@fs-hirondelle.de',
       to: organizer.email,
       replyTo: email,
-      subject: `Kontaktanfrage von ${name} über die Webseite`,
-      text: `Name: ${name}\nE-Mail: ${email}\n\nNachricht:\n${message}`,
-      html: `<p><strong>Name:</strong> ${escapeHtml(name)}</p><p><strong>E-Mail:</strong> ${escapeHtml(email)}</p><p><strong>Nachricht:</strong></p><p>${escapeHtml(message).replace(/\n/g, '<br>')}</p>`
+      subject,
+      text: `Name: ${name}\nE-Mail: ${email}${eventTitle ? `\nVeranstaltung: ${eventTitle}` : ''}\n\nNachricht:\n${message}`,
+      html: `<p><strong>Name:</strong> ${escapeHtml(name)}</p><p><strong>E-Mail:</strong> ${escapeHtml(email)}</p>${eventTitle ? `<p><strong>Veranstaltung:</strong> ${escapeHtml(eventTitle)}</p>` : ''}<p><strong>Nachricht:</strong></p><p>${escapeHtml(message).replace(/\n/g, '<br>')}</p>`
     });
 
     res.json({ message: 'Nachricht erfolgreich gesendet' });

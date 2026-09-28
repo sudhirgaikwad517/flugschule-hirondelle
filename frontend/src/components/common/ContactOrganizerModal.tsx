@@ -3,10 +3,11 @@ import { useState } from 'react';
 interface Props {
   organizerId: string;
   organizerName: string;
+  eventTitle?: string;
   onClose: () => void;
 }
 
-export const ContactOrganizerModal = ({ organizerId, organizerName, onClose }: Props) => {
+export const ContactOrganizerModal = ({ organizerId, organizerName, eventTitle, onClose }: Props) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -21,7 +22,7 @@ export const ContactOrganizerModal = ({ organizerId, organizerName, onClose }: P
       const res = await fetch(`/api/organizers/${organizerId}/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, message })
+        body: JSON.stringify({ name, email, message, eventTitle })
       });
       const data = await res.json();
       if (res.ok) {
@@ -41,7 +42,9 @@ export const ContactOrganizerModal = ({ organizerId, organizerName, onClose }: P
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div className="bg-white rounded-sm shadow-xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="font-luxury text-2xl text-luxury-dark">Kontakt zu {organizerName}</h3>
+          <h3 className="font-luxury text-2xl text-luxury-dark">
+            {eventTitle ? `Frage zu: ${eventTitle}` : `Kontakt zu ${organizerName}`}
+          </h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-2xl leading-none">&times;</button>
         </div>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
