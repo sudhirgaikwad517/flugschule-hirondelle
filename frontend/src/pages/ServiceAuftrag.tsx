@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Banner } from '../components/common/Banner';
+import { SafeHtml } from '../components/common/SafeHtml';
 
 type FieldType = 'text' | 'email' | 'tel' | 'textarea' | 'checkbox' | 'radio' | 'select';
 
@@ -21,6 +22,7 @@ const FORM_ID = 'service-auftrag';
 // field there actually changes what customers see here.
 export const ServiceAuftrag = () => {
   const [fields, setFields] = useState<FormFieldDef[]>([]);
+  const [introText, setIntroText] = useState('');
   const [loading, setLoading] = useState(true);
   const [values, setValues] = useState<Record<string, any>>({});
 
@@ -30,6 +32,7 @@ export const ServiceAuftrag = () => {
       .then((data) => {
         const sorted = [...(data.fields || [])].sort((a: FormFieldDef, b: FormFieldDef) => a.order - b.order);
         setFields(sorted);
+        setIntroText(data.introText || '');
         const initial: Record<string, any> = {};
         sorted.forEach((f) => { initial[f.id] = f.type === 'checkbox' ? false : ''; });
         setValues(initial);
@@ -194,19 +197,10 @@ export const ServiceAuftrag = () => {
             </h1>
             <div className="w-24 h-px bg-luxury-gold mb-8"></div>
 
-            <div className="text-gray-600 font-light space-y-6 leading-relaxed text-[15px]">
-              <p>
-                Bitte ausgefüllten Auftrag ausdrucken und zusammen mit der Ausrüstung in unserer Flugschule in Weinheim oder alternativ in Landau vorbeibringen.
-              </p>
-              <p>
-                <strong className="block text-luxury-dark font-medium mb-1">69469 Weinheim, Untergasse 27:</strong>
-                bitte wegen Öffnungszeiten Newsletter beachten
-              </p>
-              <p>
-                <strong className="block text-luxury-dark font-medium mb-1">76829 Landau, Am Birnbach 6:</strong>
-                Termin bitte telefonisch (+49 (0)6201 8452097) oder per E-Mail (info@fs-hirondelle.de) vereinbaren
-              </p>
-            </div>
+            <SafeHtml
+              html={introText}
+              className="text-gray-600 font-light space-y-4 leading-relaxed text-[15px] [&_strong]:text-luxury-dark [&_strong]:font-medium [&_h1]:font-luxury [&_h1]:text-2xl [&_h2]:font-luxury [&_h2]:text-xl"
+            />
           </div>
 
           <div className="w-full">

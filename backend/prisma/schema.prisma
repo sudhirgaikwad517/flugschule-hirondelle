@@ -997,6 +997,10 @@ model FormConfig {
   id          String   @id // e.g. "service-auftrag" - doubles as the form's URL slug (/service/:id)
   title       String
   fields      Json     // FormFieldDef[] - see backend/src/routes/formconfigs.routes.ts
+  // Old's real "Einleitungstext" (Formular bearbeiten > Allgemein tab) -
+  // rich HTML shown above the field list on the public form page, not
+  // just a plain description.
+  introText   String?  @db.Text
   // Matches old Visforms' real "Formulare" list columns (administrator/
   // components/com_visforms/src/View/Visforms/HtmlView.php +
   // tmpl/visforms/default.php) - published/access/language/hits/author are

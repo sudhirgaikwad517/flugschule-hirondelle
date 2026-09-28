@@ -63,15 +63,21 @@ const SERVICE_AUFTRAG_DEFAULT_FIELDS: FormFieldDef[] = [
   },
 ];
 
-const DEFAULTS: Record<string, { title: string; fields: FormFieldDef[] }> = {
-  'service-auftrag': { title: 'Service-Auftrag', fields: SERVICE_AUFTRAG_DEFAULT_FIELDS },
+// Word-for-word the real intro paragraphs the public Service-Auftrag page has
+// always shown (ServiceAuftrag.tsx before this became editable) - seeded so
+// nothing changes visually until an admin actually edits it via the new
+// "Einleitungstext" rich text field.
+const SERVICE_AUFTRAG_DEFAULT_INTRO = `<p>Bitte ausgefüllten Auftrag ausdrucken und zusammen mit der Ausrüstung in unserer Flugschule in Weinheim oder alternativ in Landau vorbeibringen.</p><p><strong>69469 Weinheim, Untergasse 27:</strong> bitte wegen Öffnungszeiten Newsletter beachten</p><p><strong>76829 Landau, Am Birnbach 6:</strong> Termin bitte telefonisch (+49 (0)6201 8452097) oder per E-Mail (info@fs-hirondelle.de) vereinbaren</p>`;
+
+const DEFAULTS: Record<string, { title: string; fields: FormFieldDef[]; introText: string }> = {
+  'service-auftrag': { title: 'Service-Auftrag', fields: SERVICE_AUFTRAG_DEFAULT_FIELDS, introText: SERVICE_AUFTRAG_DEFAULT_INTRO },
 };
 
 async function getOrCreate(id: string) {
   let config = await prisma.formConfig.findUnique({ where: { id } });
   if (!config) {
-    const seed = DEFAULTS[id] || { title: id, fields: [] };
-    config = await prisma.formConfig.create({ data: { id, title: seed.title, fields: seed.fields as any } });
+    const seed = DEFAULTS[id] || { title: id, fields: [], introText: '' };
+    config = await prisma.formConfig.create({ data: { id, title: seed.title, fields: seed.fields as any, introText: seed.introText } });
   }
   return config;
 }
@@ -176,13 +182,14 @@ router.get('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
 
 router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    const { title, fields, published, accessLevel, language } = req.body;
+    const { title, fields, published, accessLevel, language, introText } = req.body;
     const data: any = {};
     if (title !== undefined) data.title = title;
     if (fields !== undefined) data.fields = fields;
     if (published !== undefined) data.published = published;
     if (accessLevel !== undefined) data.accessLevel = accessLevel;
     if (language !== undefined) data.language = language;
+    if (introText !== undefined) data.introText = introText;
 
     const config = await prisma.formConfig.upsert({
       where: { id: req.params.id as string },

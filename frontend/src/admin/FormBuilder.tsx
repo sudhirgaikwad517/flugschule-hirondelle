@@ -1,40 +1,75 @@
-import {
-    Form,
-    TextInput,
-    BooleanInput,
-    SelectInput,
-    ArrayInput,
-    SimpleFormIterator,
-    ResourceContextProvider,
-    useGetOne,
-    useUpdate,
-    useNotify,
-    useRefresh,
-} from 'react-admin';
+import { useEffect, useState } from 'react';
+import { useGetOne, useUpdate, useNotify } from 'react-admin';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Typography, Card, CardContent, CircularProgress, Box, Button } from '@mui/material';
+import {
+    Typography,
+    Card,
+    CardContent,
+    CircularProgress,
+    Box,
+    Button,
+    ButtonGroup,
+    IconButton,
+    Menu,
+    MenuItem,
+    Tabs,
+    Tab,
+    TextField as MuiTextField,
+    Select,
+    FormControl,
+    InputLabel,
+    Grid,
+    Divider,
+} from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import ListAltIcon from '@mui/icons-material/ListAlt';
 import TableChartIcon from '@mui/icons-material/TableChart';
+import CloseIcon from '@mui/icons-material/Close';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { IntroTextEditor } from './IntroTextEditor';
 
-// Matches Joomla Visforms' real "visform edit" capability - unlike
-// BookingFormBuilder.tsx (which can only relabel/reorder/toggle-required a
-// FIXED set of fields the code already knows about), this can add a
-// genuinely NEW field from scratch (any type, own id/label/options) because
-// submissions are stored as a flexible JSON blob (ServiceOrder.data) keyed
-// by whatever field ids exist in this config at submission time, not fixed
-// DB columns. Same <Form record={...} onSubmit={...}> pattern proven
-// working in TemplatesBuilder.tsx/BookingFormBuilder.tsx.
-
-const FIELD_TYPE_CHOICES = [
-    { id: 'text', name: 'Text' },
-    { id: 'email', name: 'E-Mail' },
-    { id: 'tel', name: 'Telefon' },
-    { id: 'textarea', name: 'Mehrzeiliger Text' },
-    { id: 'checkbox', name: 'Checkbox' },
-    { id: 'radio', name: 'Radio-Auswahl' },
-    { id: 'select', name: 'Dropdown-Auswahl' },
+// Old's real "Formular bearbeiten" page (administrator/components/
+// com_visforms/src/View/Visform/HtmlView.php +
+// src/View/ItemViewBase.php::display()), deep-verified against
+// fs-hirondelle.de/administrator/index.php?option=com_visforms&
+// view=visform&layout=edit&id=2:
+//
+// Toolbar, exactly as ItemViewBase::display() builds it for an existing,
+// non-checked-out record: apply()="Speichern" | a save-group dropdown
+// button whose items are save()="Speichern & Schließen" (default/main
+// action), save2new()="Speichern & Neu", save2copy()="Speichern als
+// Kopie" (Visform's HtmlView sets canSaveToCopy=true) | its own
+// setToolbar() custom buttons "Felder"/"Daten" | cancel()="Schließen" |
+// toolbar->inlinehelp()="Inline-Hilfe umschalten".
+//
+// Title/Name fields, then a tab strip (Allgemein/Ergebnis/E-Mail
+// Optionen/Spamschutz/Erweitert/Datenanzeige im Frontend/
+// Formularberechtigungen - tmpl/visform/*.php partials). Per the user's own
+// explicit "one by one" pacing, only Allgemein is implemented for real;
+// the rest are stubbed until asked for. Allgemein's real two-column layout:
+// left "Allgemeine Einstellungen" (ID/Status/Zugriffsebene/Sprache/
+// Erstellt/Erstellt Von) + right "Einleitungstext" (a rich WYSIWYG editor -
+// old's real content there is genuinely an <h1> heading + paragraphs, see
+// IntroTextEditor.tsx).
+const TAB_LABELS = [
+    'Allgemein',
+    'Ergebnis',
+    'E-Mail Optionen',
+    'Spamschutz',
+    'Erweitert',
+    'Datenanzeige im Frontend',
+    'Formularberechtigungen',
 ];
+
+const formatDate = (iso?: string) => {
+    if (!iso) return '-';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '-';
+    return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
+};
+
+const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem('auth')}` });
 
 export const ServiceAuftragFormBuilder = () => {
     // Falls back to "service-auftrag" so the older static /admin/service-auftrag-form
@@ -42,92 +77,223 @@ export const ServiceAuftragFormBuilder = () => {
     const { formId: paramId } = useParams();
     const formId = paramId || 'service-auftrag';
     const navigate = useNavigate();
-    const { data, isLoading, error } = useGetOne('formconfigs', { id: formId });
+    const { data, isLoading, error, refetch } = useGetOne('formconfigs', { id: formId });
     const notify = useNotify();
-    const refresh = useRefresh();
     const [update, { isLoading: isSaving }] = useUpdate();
+
+    const [tab, setTab] = useState(0);
+    const [showHelp, setShowHelp] = useState(false);
+    const [saveMenuAnchor, setSaveMenuAnchor] = useState<HTMLElement | null>(null);
+    const [busy, setBusy] = useState(false);
+
+    const [title, setTitle] = useState('');
+    const [published, setPublished] = useState(true);
+    const [accessLevel, setAccessLevel] = useState('Öffentlich');
+    const [language, setLanguage] = useState('Alle');
+    const [introText, setIntroText] = useState('');
+
+    useEffect(() => {
+        if (data) {
+            setTitle(data.title || '');
+            setPublished(!!data.published);
+            setAccessLevel(data.accessLevel || 'Öffentlich');
+            setLanguage(data.language || 'Alle');
+            setIntroText(data.introText || '');
+        }
+    }, [data]);
 
     if (isLoading) return <CircularProgress sx={{ m: 4 }} />;
     if (error) return <div>Fehler beim Laden der Formular-Konfiguration</div>;
 
-    // options is stored as a real string[] in the DB but edited here as one
-    // comma-separated line - much simpler than a nested array-of-scalars
-    // input, and only relevant for radio/select field types anyway.
-    const recordForForm = {
-        ...data,
-        fields: ((data?.fields as any[]) || []).map((f: any) => ({ ...f, optionsText: (f.options || []).join(', ') })),
+    const currentPayload = () => ({ title, published, accessLevel, language, introText });
+
+    const doSave = () =>
+        new Promise<void>((resolve, reject) => {
+            update(
+                'formconfigs',
+                { id: formId, data: currentPayload(), previousData: data },
+                {
+                    onSuccess: () => resolve(),
+                    onError: (err: any) => reject(err),
+                }
+            );
+        });
+
+    const handleApply = async () => {
+        try {
+            await doSave();
+            notify('Formular gespeichert', { type: 'success' });
+            refetch();
+        } catch (err: any) {
+            notify(`Fehler beim Speichern: ${err.message}`, { type: 'error' });
+        }
     };
 
-    const save = (formData: any) => {
-        const fields = ((formData.fields as any[]) || []).map((f: any, index: number) => {
-            const { optionsText, ...rest } = f;
-            return {
-                ...rest,
-                order: index,
-                options: ['radio', 'select'].includes(f.type)
-                    ? String(optionsText || '').split(',').map((s: string) => s.trim()).filter(Boolean)
-                    : undefined,
-            };
-        });
-        update(
-            'formconfigs',
-            { id: formId, data: { title: formData.title, fields }, previousData: data },
-            {
-                onSuccess: () => {
-                    notify('Formular gespeichert', { type: 'success' });
-                    refresh();
-                },
-                onError: (error: any) => notify(`Fehler beim Speichern: ${error.message}`, { type: 'error' }),
-            }
-        );
+    const handleSaveAndClose = async () => {
+        try {
+            await doSave();
+            notify('Formular gespeichert', { type: 'success' });
+            navigate('/admin/formconfigs');
+        } catch (err: any) {
+            notify(`Fehler beim Speichern: ${err.message}`, { type: 'error' });
+        }
+    };
+
+    const handleSaveAndNew = async () => {
+        setSaveMenuAnchor(null);
+        try {
+            await doSave();
+            notify('Formular gespeichert', { type: 'success' });
+            navigate('/admin/formconfigs?new=1');
+        } catch (err: any) {
+            notify(`Fehler beim Speichern: ${err.message}`, { type: 'error' });
+        }
+    };
+
+    const handleSaveAsCopy = async () => {
+        setSaveMenuAnchor(null);
+        setBusy(true);
+        try {
+            await doSave();
+            const createRes = await fetch('/api/formconfigs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...authHeaders() },
+                body: JSON.stringify({ title: `${title} (Kopie)` }),
+            });
+            const created = await createRes.json();
+            if (!createRes.ok) throw new Error(created.message || 'Fehler beim Kopieren');
+
+            const putRes = await fetch(`/api/formconfigs/${created.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', ...authHeaders() },
+                body: JSON.stringify({ fields: data?.fields || [], introText, accessLevel, language, published }),
+            });
+            if (!putRes.ok) throw new Error('Fehler beim Kopieren der Felder');
+
+            notify('Als Kopie gespeichert', { type: 'success' });
+            navigate(`/admin/forms/${created.id}/edit`);
+        } catch (err: any) {
+            notify(`Fehler: ${err.message}`, { type: 'error' });
+        } finally {
+            setBusy(false);
+        }
     };
 
     return (
-        <Card sx={{ mt: 2, mb: 4, maxWidth: '1000px', mx: 'auto' }}>
+        <Card sx={{ mt: 2, mb: 4, maxWidth: '1100px', mx: 'auto' }}>
             <CardContent>
-                <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                    <Button size="small" startIcon={<ArrowBackIcon />} onClick={() => navigate('/admin/formconfigs')}>
-                        Zurück zur Übersicht
+                {/* Toolbar - see the comment block above for exact old-source verification. */}
+                <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <Button variant="contained" size="small" startIcon={<SaveIcon />} onClick={handleApply} disabled={isSaving || busy}>
+                        Speichern
                     </Button>
-                    <Button size="small" startIcon={<TableChartIcon />} onClick={() => navigate(`/admin/forms/${formId}/data`)}>
-                        Daten anzeigen
+                    <ButtonGroup variant="contained" color="success" size="small">
+                        <Button onClick={handleSaveAndClose} disabled={isSaving || busy}>Speichern & Schließen</Button>
+                        <Button size="small" onClick={(e) => setSaveMenuAnchor(e.currentTarget)}>
+                            <ArrowDropDownIcon fontSize="small" />
+                        </Button>
+                    </ButtonGroup>
+                    <Menu anchorEl={saveMenuAnchor} open={!!saveMenuAnchor} onClose={() => setSaveMenuAnchor(null)}>
+                        <MenuItem onClick={handleSaveAndNew}>Speichern & Neu</MenuItem>
+                        <MenuItem onClick={handleSaveAsCopy}>Speichern als Kopie</MenuItem>
+                    </Menu>
+                    <Button size="small" variant="outlined" startIcon={<ListAltIcon />} onClick={() => navigate(`/admin/forms/${formId}/fields`)}>
+                        Felder
                     </Button>
+                    <Button size="small" variant="outlined" startIcon={<TableChartIcon />} onClick={() => navigate(`/admin/forms/${formId}/data`)}>
+                        Daten
+                    </Button>
+                    <Button size="small" startIcon={<CloseIcon />} onClick={() => navigate('/admin/formconfigs')}>
+                        Schließen
+                    </Button>
+                    <Box sx={{ flex: 1 }} />
+                    <IconButton size="small" onClick={() => setShowHelp((v) => !v)} color={showHelp ? 'primary' : 'default'} title="Inline-Hilfe umschalten">
+                        <HelpOutlineIcon fontSize="small" />
+                    </IconButton>
                 </Box>
+
                 <Typography variant="h5" gutterBottom>
-                    Formular-Editor: {data?.title || 'Service-Auftrag'}
-                </Typography>
-                <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                    Felder hinzufügen, entfernen, umbenennen, neu anordnen oder den Feldtyp ändern - Änderungen
-                    wirken sich direkt auf das echte Formular unter /service/{formId} aus.
+                    Formular bearbeiten
                 </Typography>
 
-                <ResourceContextProvider value="formconfigs">
-                    <Form record={recordForForm} onSubmit={save}>
-                        <TextInput source="title" label="Formular-Titel" fullWidth />
+                <Grid container spacing={2} sx={{ mb: 2 }}>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <MuiTextField
+                            label="Titel"
+                            required
+                            fullWidth
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            helperText={showHelp ? 'Der Titel des Formulars, wie er im Administrator-Bereich angezeigt wird.' : undefined}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <MuiTextField
+                            label="Name (Alias)"
+                            fullWidth
+                            value={formId}
+                            disabled
+                            helperText={
+                                showHelp
+                                    ? 'Der technische Name/Alias - bestimmt die öffentliche URL (/service/' + formId + ') und ist mit bereits gespeicherten Daten verknüpft, daher hier nicht änderbar.'
+                                    : 'Bestimmt die URL /service/' + formId
+                            }
+                        />
+                    </Grid>
+                </Grid>
 
-                        <ArrayInput source="fields" label="Formularfelder (Reihenfolge = Anzeigereihenfolge)">
-                            <SimpleFormIterator getItemLabel={(index) => `Feld ${index + 1}`}>
-                                <TextInput source="id" label="Feld-ID (technisch, z.B. name, email)" required />
-                                <TextInput source="label" label="Beschriftung" required fullWidth />
-                                <SelectInput source="type" label="Feldtyp" choices={FIELD_TYPE_CHOICES} required defaultValue="text" />
-                                <BooleanInput source="required" label="Pflichtfeld?" />
-                                <TextInput source="placeholder" label="Platzhaltertext (optional)" fullWidth />
-                                <TextInput
-                                    source="optionsText"
-                                    label="Optionen (nur für Radio/Dropdown, kommagetrennt)"
-                                    fullWidth
-                                    helperText='z.B. "Weinheim, Landau"'
-                                />
-                            </SimpleFormIterator>
-                        </ArrayInput>
+                <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable" scrollButtons="auto" sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+                    {TAB_LABELS.map((label) => <Tab key={label} label={label} />)}
+                </Tabs>
 
-                        <Box sx={{ mt: 3 }}>
-                            <Button type="submit" variant="contained" color="success" startIcon={<SaveIcon />} disabled={isSaving}>
-                                Speichern
-                            </Button>
-                        </Box>
-                    </Form>
-                </ResourceContextProvider>
+                {tab === 0 ? (
+                    <Grid container spacing={4}>
+                        <Grid size={{ xs: 12, md: 5 }}>
+                            <Typography variant="subtitle1" gutterBottom>Allgemeine Einstellungen</Typography>
+                            <Divider sx={{ mb: 2 }} />
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                <MuiTextField label="ID" value={formId} disabled fullWidth />
+                                <FormControl fullWidth>
+                                    <InputLabel>Status</InputLabel>
+                                    <Select label="Status" value={published ? 'published' : 'unpublished'} onChange={(e) => setPublished(e.target.value === 'published')}>
+                                        <MenuItem value="published">Veröffentlicht</MenuItem>
+                                        <MenuItem value="unpublished">Nicht veröffentlicht</MenuItem>
+                                    </Select>
+                                </FormControl>
+                                <FormControl fullWidth>
+                                    <InputLabel>Zugriffsebene</InputLabel>
+                                    <Select label="Zugriffsebene" value={accessLevel} onChange={(e) => setAccessLevel(e.target.value)}>
+                                        <MenuItem value="Öffentlich">Öffentlich</MenuItem>
+                                    </Select>
+                                </FormControl>
+                                <FormControl fullWidth>
+                                    <InputLabel>Sprache</InputLabel>
+                                    <Select label="Sprache" value={language} onChange={(e) => setLanguage(e.target.value)}>
+                                        <MenuItem value="Alle">Alle</MenuItem>
+                                    </Select>
+                                </FormControl>
+                                <MuiTextField label="Erstellt" value={formatDate(data?.createdAt)} disabled fullWidth />
+                                <MuiTextField label="Erstellt Von" value={data?.createdBy || '-'} disabled fullWidth />
+                            </Box>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 7 }}>
+                            <Typography variant="subtitle1" gutterBottom>Einleitungstext</Typography>
+                            <Divider sx={{ mb: 2 }} />
+                            <IntroTextEditor
+                                label=""
+                                value={introText}
+                                onChange={setIntroText}
+                                helperText={showHelp ? 'Wird oberhalb der Formularfelder auf der öffentlichen Seite angezeigt.' : undefined}
+                            />
+                        </Grid>
+                    </Grid>
+                ) : (
+                    <Box sx={{ py: 6, textAlign: 'center', color: '#888' }}>
+                        <Typography variant="body2">
+                            Diese Einstellungen ({TAB_LABELS[tab]}) sind in dieser Version noch nicht verfügbar.
+                        </Typography>
+                    </Box>
+                )}
             </CardContent>
         </Card>
     );

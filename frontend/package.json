@@ -19,6 +19,7 @@
     "@mui/icons-material": "^9.3.1",
     "@mui/material": "^9.3.1",
     "@tiptap/extension-link": "^3.30.3",
+    "@tiptap/extension-underline": "^3.30.3",
     "@tiptap/react": "^3.30.3",
     "@tiptap/starter-kit": "^3.30.3",
     "dompurify": "^3.4.15",

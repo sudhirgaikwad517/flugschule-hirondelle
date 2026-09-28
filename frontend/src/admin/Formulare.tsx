@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   List,
   Datagrid,
@@ -12,7 +12,7 @@ import {
   useUpdateMany,
   useUnselectAll,
 } from 'react-admin';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Button,
   Dialog,
@@ -52,6 +52,23 @@ const NewFormButton = () => {
   const notify = useNotify();
   const refresh = useRefresh();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Old's real "Speichern & Neu" (save2new) on the Formular-edit toolbar
+  // lands the admin back on a blank "new form" prompt - FormBuilder.tsx
+  // navigates here with ?new=1 after saving to reproduce that, since the
+  // actual "new form" dialog lives on this list page.
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      setOpen(true);
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('new');
+        return next;
+      }, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleCreate = async () => {
     if (!title.trim()) return;
@@ -344,7 +361,7 @@ export const FormulareList = () => (
       <FunctionField
         label="Felder"
         render={(record: any) => (
-          <a href={`/admin/forms/${record.id}/edit`} onClick={(e) => e.stopPropagation()}>{record.fieldsCount}</a>
+          <a href={`/admin/forms/${record.id}/fields`} onClick={(e) => e.stopPropagation()}>{record.fieldsCount}</a>
         )}
       />
       <TextField source="createdBy" label="Autor" />
