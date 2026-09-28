@@ -69,7 +69,7 @@ const FIELD_TYPE_CHOICES: { id: string; name: string }[] = [
     { id: 'radio', name: 'Radio-Auswahl' },
     { id: 'select', name: 'Dropdown-Auswahl' },
     { id: 'file', name: 'Datei-Upload' },
-    { id: 'image', name: 'Bild-Upload' },
+    { id: 'image', name: 'Bild-Button (Absenden)' },
     { id: 'submit', name: 'Absenden-Button' },
     { id: 'reset', name: 'Zurücksetzen-Button' },
     { id: 'fieldsep', name: 'Trennlinie / Abschnitt' },
@@ -83,7 +83,11 @@ const FRONT_DISPLAY_CHOICES = [
     { value: '3', label: 'Nur Detail' },
 ];
 
-const STRUCTURAL_TYPES = new Set(['submit', 'reset', 'fieldsep']);
+// `image` is a real <input type="image"> IMAGE SUBMIT BUTTON (deep-verified
+// against ImageFieldBusiness.php's doc comment) - a decorative alternate
+// submit button, NOT a photo/file upload field. It carries no value, same
+// as submit/reset/fieldsep.
+const STRUCTURAL_TYPES = new Set(['submit', 'reset', 'fieldsep', 'image']);
 const CHOICE_TYPES = new Set(['radio', 'select', 'multicheckbox']);
 const TEXTLIKE_TYPES = new Set(['text', 'password', 'email', 'url', 'tel', 'textarea']);
 const NUMLIKE_TYPES = new Set(['number', 'date']);
@@ -152,7 +156,7 @@ const FieldEditDialog = ({
                     </Grid>
                     <Grid size={12}>
                         <MuiTextField
-                            label={draft.type === 'fieldsep' ? 'Überschrift (optional)' : draft.type === 'submit' || draft.type === 'reset' ? 'Button-Text' : 'Beschriftung'}
+                            label={draft.type === 'fieldsep' ? 'Überschrift (optional)' : draft.type === 'submit' || draft.type === 'reset' || draft.type === 'image' ? 'Button-Text' : 'Beschriftung'}
                             fullWidth
                             value={draft.label}
                             onChange={(e) => set({ label: e.target.value })}

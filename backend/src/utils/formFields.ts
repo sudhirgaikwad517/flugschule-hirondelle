@@ -1,13 +1,22 @@
 // Old's real field-type catalog (administrator/components/com_visforms/
 // forms/visfield.xml's `typefield` dropdown, deep-verified against the real
 // live Formularfelder list at fs-hirondelle.de/...&view=visfields&fid=2) -
-// 18 real types, INCLUDING submit/reset/fieldsep as genuine rows in
+// 18 real types, INCLUDING submit/reset/fieldsep/image as genuine rows in
 // #__visfields (structural fields with no data of their own), not
 // hardcoded chrome. Per the same site-side-code verification: fieldsep
 // renders inline at its own list position (a real mid-form section break);
 // submit/reset are always pulled into a fixed footer regardless of their
 // stored `ordering` (only their order relative to EACH OTHER matters -
 // reset before submit).
+//
+// CORRECTION (deep-verified against components/com_visforms/src/Lib/
+// Business/ImageFieldBusiness.php's own doc comment: "Visforms field image
+// (submit button) business class"): old's real `type="image"` is an
+// `<input type="image">`-style IMAGE SUBMIT BUTTON - a decorative
+// alternate submit button, NOT a photo/file upload field. Its real
+// getFields()/validateRequired() are no-ops, exactly like submit/reset/
+// fieldsep. A real photo/file upload uses `type="file"` instead, which
+// keeps its actual upload behavior here unchanged.
 export type FieldType =
   | 'text' | 'password' | 'email' | 'date' | 'number' | 'url' | 'tel' | 'hidden'
   | 'textarea' | 'checkbox' | 'multicheckbox' | 'radio' | 'select'
@@ -35,7 +44,7 @@ export interface FormFieldDef {
 
 // Fields with no submitted value of their own - excluded from validation,
 // email data-blocks, CSV export columns and the frontend data view.
-export const STRUCTURAL_TYPES: FieldType[] = ['submit', 'reset', 'fieldsep'];
+export const STRUCTURAL_TYPES: FieldType[] = ['submit', 'reset', 'fieldsep', 'image'];
 
 export const isDataField = (type: FieldType) => !STRUCTURAL_TYPES.includes(type);
 
@@ -54,7 +63,7 @@ export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   radio: 'Radio-Auswahl',
   select: 'Dropdown-Auswahl',
   file: 'Datei-Upload',
-  image: 'Bild-Upload',
+  image: 'Bild-Button (Absenden)',
   submit: 'Absenden-Button',
   reset: 'Zurücksetzen-Button',
   fieldsep: 'Trennlinie / Abschnitt',

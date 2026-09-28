@@ -15,7 +15,9 @@ import { Eye, Download, ArrowLeft } from 'lucide-react';
 type DisplayMode = '0' | '1' | '2' | '3'; // None / Both / List only / Detail only
 const showInList = (m: DisplayMode) => m === '1' || m === '2';
 const showInDetail = (m: DisplayMode) => m === '1' || m === '3';
-const STRUCTURAL_TYPES = new Set(['submit', 'reset', 'fieldsep']);
+// `image` is a real <input type="image"> submit button (deep-verified),
+// not a photo/file upload field - carries no data, same as submit/reset/fieldsep.
+const STRUCTURAL_TYPES = new Set(['submit', 'reset', 'fieldsep', 'image']);
 
 const FORM_ID = 'service-auftrag';
 
@@ -24,7 +26,7 @@ interface FieldDef { id: string; label: string; type: string; order: number; fro
 const formatValue = (field: FieldDef, raw: any): string => {
   if (field.type === 'checkbox') return raw ? 'Ja' : 'Nein';
   if (field.type === 'multicheckbox') return Array.isArray(raw) ? raw.join(', ') : String(raw ?? '-');
-  if (field.type === 'file' || field.type === 'image') return raw ? String(raw) : '-';
+  if (field.type === 'file') return raw ? String(raw) : '-';
   return String(raw ?? '-');
 };
 interface FrontendSettings {
@@ -212,7 +214,7 @@ export const MeineEintraegeDetail = () => {
                   <div key={f.id} className="flex flex-col sm:flex-row gap-1 sm:gap-8 px-6 py-4">
                     <div className="sm:w-1/3 text-sm text-gray-500">{f.label}</div>
                     <div className="sm:w-2/3 text-gray-800">
-                      {(f.type === 'file' || f.type === 'image') && order.data?.[f.id] ? (
+                      {f.type === 'file' && order.data?.[f.id] ? (
                         <a href={order.data[f.id]} target="_blank" rel="noopener noreferrer" className="text-[#53a8c7] underline">Datei ansehen</a>
                       ) : formatValue(f, order.data?.[f.id])}
                     </div>

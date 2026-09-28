@@ -188,7 +188,7 @@ router.get('/my-submissions/:formId/:orderId', authenticateJWT, async (req: any,
 // GET list
 router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    const { _sort, _order, _start, _end, q, formId } = req.query;
+    const { _sort, _order, _start, _end, q, formId, published } = req.query;
 
     // "data.*" fields live inside a JSON blob (whatever field ids a form
     // config happened to have at submission time), so search/sort/paginate
@@ -196,9 +196,10 @@ router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
     // "Data records" search box (searches every submitted value) and
     // sortable columns, at a scale (a contact-style form's submissions)
     // where this is perfectly fine.
-    let orders = await prisma.serviceOrder.findMany({
-      where: formId ? { formId: String(formId) } : undefined,
-    });
+    const whereClause: any = {};
+    if (formId) whereClause.formId = String(formId);
+    if (published !== undefined) whereClause.published = published === 'true';
+    let orders = await prisma.serviceOrder.findMany({ where: whereClause });
 
     if (q) {
       const needle = String(q).toLowerCase();
@@ -257,10 +258,16 @@ router.get('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
 // PUT update
 router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    const { data } = req.body;
+    const { data, published } = req.body;
+    const update: any = {};
+    if (data !== undefined) update.data = data;
+    // Old's real "Status ändern" bulk dropdown (Veröffentlichen/Verstecken)
+    // on the visdatas list - ties into the same `published` flag the
+    // frontend "Datenanzeige im Frontend" view already respects.
+    if (published !== undefined) update.published = published;
     const updated = await prisma.serviceOrder.update({
       where: { id: (req.params.id as string) },
-      data: { data },
+      data: update,
     });
     res.json(updated);
   } catch (error) {

@@ -6,6 +6,10 @@ import { SafeHtml } from '../components/common/SafeHtml';
 // Old's real 18-type catalog (visfield.xml's typefield dropdown, deep-
 // verified against the live Formularfelder list) - submit/reset/fieldsep
 // are genuine rows here too, not hardcoded chrome (see formconfigs.routes.ts).
+// `image` is a real <input type="image"> IMAGE SUBMIT BUTTON (deep-verified
+// against ImageFieldBusiness.php's own doc comment), NOT a photo/file
+// upload - it carries no value, same as submit/reset, and is rendered
+// alongside submit in the footer below. Real photo/file uploads use `file`.
 type FieldType =
   | 'text' | 'password' | 'email' | 'date' | 'number' | 'url' | 'tel' | 'hidden'
   | 'textarea' | 'checkbox' | 'multicheckbox' | 'radio' | 'select'
@@ -54,6 +58,10 @@ const DEFAULT_PUBLIC_SETTINGS: PublicSettings = {
 };
 
 const FORM_ID = 'service-auftrag';
+// No submitted value of their own - never seeded into `values`, never part
+// of the visible field loop (submit/reset/image are pulled into the footer;
+// fieldsep still renders inline at its own position, handled separately).
+const NO_VALUE_TYPES = new Set<FieldType>(['submit', 'reset', 'fieldsep', 'image']);
 
 // Fully dynamic - renders whatever fields the admin has configured for this
 // form (Admin > Formular-Editor), not a fixed set of hardcoded inputs.
@@ -89,7 +97,7 @@ export const ServiceAuftrag = () => {
         setPublicSettings({ ...DEFAULT_PUBLIC_SETTINGS, ...(data.publicSettings || {}) });
         const initial: Record<string, any> = {};
         sorted.forEach((f) => {
-          if (f.type === 'submit' || f.type === 'reset' || f.type === 'fieldsep') return;
+          if (NO_VALUE_TYPES.has(f.type)) return;
           initial[f.id] = initialValueFor(f);
         });
         setValues(initial);
@@ -107,7 +115,7 @@ export const ServiceAuftrag = () => {
   const resetForm = () => {
     const reset: Record<string, any> = {};
     fields.forEach((f) => {
-      if (f.type === 'submit' || f.type === 'reset' || f.type === 'fieldsep') return;
+      if (NO_VALUE_TYPES.has(f.type)) return;
       reset[f.id] = initialValueFor(f);
     });
     setValues(reset);
@@ -129,11 +137,11 @@ export const ServiceAuftrag = () => {
     }
   };
 
-  // Old's real site-side rendering (deep-verified): submit/reset always
-  // render together in a fixed footer, never inline at their stored
+  // Old's real site-side rendering (deep-verified): submit/reset/image
+  // always render together in a fixed footer, never inline at their stored
   // `ordering` position - only their order relative to EACH OTHER matters.
-  const inlineFields = fields.filter((f) => f.type !== 'submit' && f.type !== 'reset');
-  const submitField = fields.find((f) => f.type === 'submit');
+  const inlineFields = fields.filter((f) => f.type !== 'submit' && f.type !== 'reset' && f.type !== 'image');
+  const submitField = fields.find((f) => f.type === 'submit' || f.type === 'image');
   const resetField = fields.find((f) => f.type === 'reset');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -261,7 +269,7 @@ export const ServiceAuftrag = () => {
       );
     }
 
-    if (field.type === 'file' || field.type === 'image') {
+    if (field.type === 'file') {
       const currentUrl = values[field.id];
       const isUploading = !!uploadingFields[field.id];
       return (
@@ -270,15 +278,12 @@ export const ServiceAuftrag = () => {
           <div className="md:w-2/3">
             <input
               type="file"
-              accept={field.type === 'image' ? 'image/*' : undefined}
               onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(field.id, f); }}
               className="block w-full text-sm text-gray-600 file:mr-4 file:py-2.5 file:px-5 file:rounded-md file:border-0 file:bg-[#53a8c7] file:text-white file:text-sm file:font-semibold file:cursor-pointer hover:file:bg-[#4396b5]"
             />
             {isUploading && <p className="text-xs text-gray-500 mt-2">Wird hochgeladen...</p>}
             {!isUploading && currentUrl && (
-              field.type === 'image'
-                ? <img src={currentUrl} alt={field.label} className="mt-3 h-20 rounded-md border border-gray-200 object-cover" />
-                : <a href={currentUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-[#53a8c7] underline mt-2 inline-block">Hochgeladene Datei ansehen</a>
+              <a href={currentUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-[#53a8c7] underline mt-2 inline-block">Hochgeladene Datei ansehen</a>
             )}
           </div>
         </div>
