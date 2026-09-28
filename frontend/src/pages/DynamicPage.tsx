@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
 import { SafeHtml } from '../components/common/SafeHtml';
 import { PageGalleryBlock } from '../components/common/PageGalleryBlock';
+import { PageFormBlock } from '../components/common/PageFormBlock';
 
 interface PageData {
   title: string;
@@ -11,30 +12,35 @@ interface PageData {
   body?: string | null; // HTML exported from the Unlayer editor - see Admin > Seiten (Pages.tsx)
 }
 
-type BodySegment = { type: 'html'; value: string } | { type: 'gallery'; slug: string };
+type BodySegment =
+  | { type: 'html'; value: string }
+  | { type: 'gallery'; slug: string }
+  | { type: 'form'; formId: string };
 
-// A "Galerie einfügen" block (see Pages.tsx) is saved as a plain placeholder
-// div carrying the page's slug as a data attribute - Unlayer itself can
-// only ever produce static markup, never a live React component. Splitting
-// the raw html string around that placeholder (instead of trying to mount a
-// portal into a DOM node that SafeHtml owns via dangerouslySetInnerHTML)
-// avoids fighting React's own reconciliation: on every re-render, SafeHtml
-// re-runs DOMPurify and React re-applies the sanitized string to that node,
-// silently reverting any DOM mutation made to it from outside - a portal
-// mounted there gets its manually-cleared placeholder text put right back.
-// Rendering each gallery as its own sibling React element, alongside
-// ordinary SafeHtml-rendered chunks for everything in between, sidesteps
-// that entirely.
-const GALLERY_PLACEHOLDER_RE = /<div class="page-gallery-block" data-gallery-slug="([^"]+)"[^>]*>.*?<\/div>/gs;
+// A "Galerie einfügen"/"Formular einfügen" block (see Pages.tsx) is saved as
+// a plain placeholder div carrying the gallery slug/form id as a data
+// attribute - Unlayer itself can only ever produce static markup, never a
+// live React component. Splitting the raw html string around that
+// placeholder (instead of trying to mount a portal into a DOM node that
+// SafeHtml owns via dangerouslySetInnerHTML) avoids fighting React's own
+// reconciliation: on every re-render, SafeHtml re-runs DOMPurify and React
+// re-applies the sanitized string to that node, silently reverting any DOM
+// mutation made to it from outside - a portal mounted there gets its
+// manually-cleared placeholder text put right back. Rendering each
+// gallery/form as its own sibling React element, alongside ordinary
+// SafeHtml-rendered chunks for everything in between, sidesteps that
+// entirely.
+const PLACEHOLDER_RE =
+  /<div class="page-gallery-block" data-gallery-slug="([^"]+)"[^>]*>.*?<\/div>|<div class="page-form-block" data-form-id="([^"]+)"[^>]*>.*?<\/div>/gs;
 
-const splitBodyOnGalleryPlaceholders = (html: string): BodySegment[] => {
+const splitBodyOnPlaceholders = (html: string): BodySegment[] => {
   const segments: BodySegment[] = [];
   let lastIndex = 0;
-  for (const match of html.matchAll(GALLERY_PLACEHOLDER_RE)) {
-    const [full, slug] = match;
+  for (const match of html.matchAll(PLACEHOLDER_RE)) {
+    const [full, gallerySlug, formId] = match;
     const index = match.index ?? 0;
     if (index > lastIndex) segments.push({ type: 'html', value: html.slice(lastIndex, index) });
-    segments.push({ type: 'gallery', slug });
+    segments.push(gallerySlug ? { type: 'gallery', slug: gallerySlug } : { type: 'form', formId: formId! });
     lastIndex = index + full.length;
   }
   if (lastIndex < html.length) segments.push({ type: 'html', value: html.slice(lastIndex) });
@@ -63,7 +69,7 @@ export const DynamicPage = ({ slug: fixedSlug }: { slug?: string } = {}) => {
       .finally(() => setLoading(false));
   }, [slug]);
 
-  const bodySegments = useMemo(() => splitBodyOnGalleryPlaceholders(page?.body || ''), [page?.body]);
+  const bodySegments = useMemo(() => splitBodyOnPlaceholders(page?.body || ''), [page?.body]);
 
   // Title/container styling deliberately mirrors Service.tsx (and the
   // site's other hardcoded pages) exactly - same max-width, same centered
@@ -91,6 +97,8 @@ export const DynamicPage = ({ slug: fixedSlug }: { slug?: string } = {}) => {
               {bodySegments.map((seg, i) =>
                 seg.type === 'gallery' ? (
                   <PageGalleryBlock key={i} slug={seg.slug} />
+                ) : seg.type === 'form' ? (
+                  <PageFormBlock key={i} formId={seg.formId} />
                 ) : (
                   <SafeHtml key={i} html={seg.value} />
                 )

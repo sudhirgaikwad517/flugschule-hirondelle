@@ -6,6 +6,10 @@ import {
   Box,
   Button,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   IconButton,
   InputAdornment,
   MenuItem,
@@ -31,6 +35,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
+import DynamicFormIcon from '@mui/icons-material/DynamicForm';
 
 // "Seiten" - the CMS feature that lets an admin create an entirely new page
 // from scratch (title, URL slug, description, header image, content) that
@@ -358,6 +363,10 @@ export const PagesManager = () => {
   const [navLabel, setNavLabel] = useState('');
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [formPickerOpen, setFormPickerOpen] = useState(false);
+  const [availableForms, setAvailableForms] = useState<{ id: string; title: string }[]>([]);
+  const [formsLoading, setFormsLoading] = useState(false);
+  const [selectedFormId, setSelectedFormId] = useState('');
 
   const fetchPages = () => {
     setLoading(true);
@@ -498,6 +507,49 @@ export const PagesManager = () => {
       });
       editor.loadDesign(design);
     });
+  };
+
+  // "Formular einfügen" - same real placeholder-div bridge as Galerie above
+  // (see DynamicPage.tsx's PLACEHOLDER_RE/PageFormBlock), just keyed by
+  // form id instead of the page's own slug since a page can embed ANY
+  // existing form (Admin > Formulare), not just one tied to itself.
+  const openFormPicker = () => {
+    setSelectedFormId('');
+    setFormPickerOpen(true);
+    setFormsLoading(true);
+    fetch('/api/formconfigs?_start=0&_end=100', { headers: authHeaders() })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setAvailableForms(Array.isArray(data) ? data.map((f: any) => ({ id: f.id, title: f.title })) : []))
+      .catch(() => notify('Fehler beim Laden der Formulare', { type: 'error' }))
+      .finally(() => setFormsLoading(false));
+  };
+
+  const insertForm = () => {
+    if (!selectedFormId) return;
+    const editor = emailEditorRef.current?.editor;
+    if (!editor) return;
+    const chosen = availableForms.find((f) => f.id === selectedFormId);
+    const placeholderHtml =
+      `<div class="page-form-block" data-form-id="${selectedFormId}" ` +
+      `style="border:2px dashed #0ea5e9;padding:24px;text-align:center;color:#0ea5e9;font-family:sans-serif;font-size:14px;">` +
+      `📝 Formular-Platzhalter ("${chosen?.title || selectedFormId}")</div>`;
+
+    editor.exportHtml((data: any) => {
+      const design = data.design;
+      design.body.rows.push({
+        cells: [1],
+        columns: [{
+          contents: [{
+            type: 'text',
+            values: { text: placeholderHtml, padding: '0px' }
+          }],
+          values: {}
+        }],
+        values: {}
+      });
+      editor.loadDesign(design);
+    });
+    setFormPickerOpen(false);
   };
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -724,6 +776,9 @@ export const PagesManager = () => {
           <Button variant="outlined" startIcon={<PhotoLibraryIcon />} onClick={insertGallery}>
             Galerie einfügen
           </Button>
+          <Button variant="outlined" startIcon={<DynamicFormIcon />} onClick={openFormPicker}>
+            Formular einfügen
+          </Button>
           <Box sx={{ flexGrow: 1 }} />
           <Button variant="contained" color="success" startIcon={<SaveIcon />} onClick={handleSave} disabled={saving}>
             Speichern
@@ -737,6 +792,36 @@ export const PagesManager = () => {
             options={{ locale: 'de-DE', displayMode: 'web' }}
           />
         </Box>
+
+        <Dialog open={formPickerOpen} onClose={() => setFormPickerOpen(false)} maxWidth="xs" fullWidth>
+          <DialogTitle>Formular einfügen</DialogTitle>
+          <DialogContent>
+            {formsLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}><CircularProgress size={28} /></Box>
+            ) : availableForms.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">
+                Keine Formulare vorhanden. Unter Admin &gt; Formulare kann eines angelegt werden.
+              </Typography>
+            ) : (
+              <TextField
+                select
+                fullWidth
+                label="Formular"
+                value={selectedFormId}
+                onChange={(e) => setSelectedFormId(e.target.value)}
+                margin="dense"
+              >
+                {availableForms.map((f) => (
+                  <MenuItem key={f.id} value={f.id}>{f.title}</MenuItem>
+                ))}
+              </TextField>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setFormPickerOpen(false)}>Abbrechen</Button>
+            <Button variant="contained" onClick={insertForm} disabled={!selectedFormId}>Einfügen</Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     );
   }
