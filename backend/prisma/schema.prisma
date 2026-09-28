@@ -994,11 +994,20 @@ model FixedPageSettings {
 // submissions existed on either environment before this change, so no
 // migration of old fixed-column data was needed.
 model FormConfig {
-  id        String   @id // e.g. "service-auftrag" - one row per real form, matches old's own single live Visforms form
-  title     String
-  fields    Json     // FormFieldDef[] - see backend/src/routes/formconfigs.routes.ts
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id // e.g. "service-auftrag" - doubles as the form's URL slug (/service/:id)
+  title       String
+  fields      Json     // FormFieldDef[] - see backend/src/routes/formconfigs.routes.ts
+  // Matches old Visforms' real "Formulare" list columns (administrator/
+  // components/com_visforms/src/View/Visforms/HtmlView.php +
+  // tmpl/visforms/default.php) - published/access/language/hits/author are
+  // real columns on its own #__visforms table, not derived.
+  published   Boolean  @default(true)
+  accessLevel String   @default("Öffentlich") // old's real Joomla view-level system (#__viewlevels) - simplified to a plain label here, no ACL groups
+  language    String   @default("Alle") // old's real Joomla multi-language association - this site has none, always "Alle" (All)
+  hits        Int      @default(0) // incremented on every public form-page view, matches old's real behavior exactly
+  createdBy   String?  // resolved admin display name at creation time, matches old's real "Autor" column
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model ServiceOrder {

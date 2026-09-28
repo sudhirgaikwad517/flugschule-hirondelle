@@ -86,8 +86,7 @@ const BOTTOM_ITEMS: Item[] = [
     { label: 'Links', to: '/admin/links', icon: <LinkIcon fontSize="small" /> },
     { label: 'Werbebanner', to: '/admin/banners', icon: <ViewCarouselIcon fontSize="small" /> },
     { label: 'Seitenmedien (Sicherheitstraining)', to: '/admin/pagemedia', icon: <PermMediaIcon fontSize="small" /> },
-    { label: 'Service Aufträge', to: '/admin/serviceorders', icon: <AssignmentIcon fontSize="small" /> },
-    { label: 'Formular-Editor (Service-Auftrag)', to: '/admin/service-auftrag-form', icon: <DynamicFormIcon fontSize="small" /> },
+    { label: 'Formulare', to: '/admin/formconfigs', icon: <DynamicFormIcon fontSize="small" /> },
     { label: 'Cookie-Hinweis', to: '/admin/cookie-consent', icon: <CookieIcon fontSize="small" /> },
 ];
 

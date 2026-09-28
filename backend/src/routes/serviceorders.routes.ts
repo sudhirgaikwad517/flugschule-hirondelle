@@ -44,7 +44,7 @@ router.post('/public', async (req, res) => {
 // GET list
 router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    const { _sort, _order, _start, _end, q } = req.query;
+    const { _sort, _order, _start, _end, q, formId } = req.query;
 
     // "data.*" fields live inside a JSON blob (whatever field ids a form
     // config happened to have at submission time), so search/sort/paginate
@@ -52,7 +52,9 @@ router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
     // "Data records" search box (searches every submitted value) and
     // sortable columns, at a scale (a contact-style form's submissions)
     // where this is perfectly fine.
-    let orders = await prisma.serviceOrder.findMany();
+    let orders = await prisma.serviceOrder.findMany({
+      where: formId ? { formId: String(formId) } : undefined,
+    });
 
     if (q) {
       const needle = String(q).toLowerCase();

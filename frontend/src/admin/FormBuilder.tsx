@@ -11,8 +11,11 @@ import {
     useNotify,
     useRefresh,
 } from 'react-admin';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Typography, Card, CardContent, CircularProgress, Box, Button } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import TableChartIcon from '@mui/icons-material/TableChart';
 
 // Matches Joomla Visforms' real "visform edit" capability - unlike
 // BookingFormBuilder.tsx (which can only relabel/reorder/toggle-required a
@@ -34,7 +37,12 @@ const FIELD_TYPE_CHOICES = [
 ];
 
 export const ServiceAuftragFormBuilder = () => {
-    const { data, isLoading, error } = useGetOne('formconfigs', { id: 'service-auftrag' });
+    // Falls back to "service-auftrag" so the older static /admin/service-auftrag-form
+    // route (no :formId param) still works exactly as before.
+    const { formId: paramId } = useParams();
+    const formId = paramId || 'service-auftrag';
+    const navigate = useNavigate();
+    const { data, isLoading, error } = useGetOne('formconfigs', { id: formId });
     const notify = useNotify();
     const refresh = useRefresh();
     const [update, { isLoading: isSaving }] = useUpdate();
@@ -63,7 +71,7 @@ export const ServiceAuftragFormBuilder = () => {
         });
         update(
             'formconfigs',
-            { id: 'service-auftrag', data: { title: formData.title, fields }, previousData: data },
+            { id: formId, data: { title: formData.title, fields }, previousData: data },
             {
                 onSuccess: () => {
                     notify('Formular gespeichert', { type: 'success' });
@@ -77,12 +85,20 @@ export const ServiceAuftragFormBuilder = () => {
     return (
         <Card sx={{ mt: 2, mb: 4, maxWidth: '1000px', mx: 'auto' }}>
             <CardContent>
+                <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                    <Button size="small" startIcon={<ArrowBackIcon />} onClick={() => navigate('/admin/formconfigs')}>
+                        Zurück zur Übersicht
+                    </Button>
+                    <Button size="small" startIcon={<TableChartIcon />} onClick={() => navigate(`/admin/forms/${formId}/data`)}>
+                        Daten anzeigen
+                    </Button>
+                </Box>
                 <Typography variant="h5" gutterBottom>
                     Formular-Editor: {data?.title || 'Service-Auftrag'}
                 </Typography>
                 <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
                     Felder hinzufügen, entfernen, umbenennen, neu anordnen oder den Feldtyp ändern - Änderungen
-                    wirken sich direkt auf das echte Formular unter /service/service-auftrag aus.
+                    wirken sich direkt auf das echte Formular unter /service/{formId} aus.
                 </Typography>
 
                 <ResourceContextProvider value="formconfigs">

@@ -10,6 +10,18 @@ import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware'
 
 const router = Router();
 
+router.use((req, res, next) => {
+  res.header('Access-Control-Expose-Headers', 'Content-Range');
+  next();
+});
+
+const normalizeSlug = (value: string) =>
+  String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
 type FieldType = 'text' | 'email' | 'tel' | 'textarea' | 'checkbox' | 'radio' | 'select';
 
 interface FormFieldDef {
@@ -64,13 +76,88 @@ async function getOrCreate(id: string) {
   return config;
 }
 
-// Public: the form itself fetches its own field config to render.
+// Public: the form itself fetches its own field config to render. Also
+// increments "hits" - matches old Visforms' real behavior exactly
+// (site-side VisformsModel::addHits(), run on every public form-page view).
 router.get('/:id/public', async (req, res) => {
   try {
     const config = await getOrCreate(req.params.id as string);
+    if (!config.published) return res.status(404).json({ message: 'Formular nicht gefunden' });
+    prisma.formConfig.update({ where: { id: config.id }, data: { hits: { increment: 1 } } }).catch(() => {});
     res.json(config);
   } catch (error) {
     console.error('Error fetching form config:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Admin: list all forms - matches old Visforms' real "Formulare" list
+// (administrator/components/com_visforms/views/visforms) - "Felder"/"Daten"
+// are live-computed counts (a correlated subquery there, the same idea
+// here), not stored columns.
+router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
+  try {
+    const { _sort, _order, _start, _end, q } = req.query;
+
+    const whereClause: any = q
+      ? { OR: [{ title: { contains: String(q) } }, { id: { contains: String(q) } }] }
+      : {};
+
+    const skip = _start ? Number(_start) : 0;
+    const take = _end ? Number(_end) - skip : 20;
+    const orderBy: any = _sort ? { [String(_sort)]: _order === 'ASC' ? 'asc' : 'desc' } : { createdAt: 'desc' };
+
+    const [configs, total] = await Promise.all([
+      prisma.formConfig.findMany({ where: whereClause, skip, take, orderBy }),
+      prisma.formConfig.count({ where: whereClause }),
+    ]);
+
+    const withCounts = await Promise.all(
+      configs.map(async (c) => ({
+        ...c,
+        fieldsCount: Array.isArray(c.fields) ? (c.fields as any[]).length : 0,
+        dataCount: await prisma.serviceOrder.count({ where: { formId: c.id } }),
+      }))
+    );
+
+    res.set('Content-Range', `formconfigs ${skip}-${skip + withCounts.length}/${total}`);
+    res.json(withCounts);
+  } catch (error) {
+    console.error('Error listing form configs:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Admin: create a brand-new form - matches old's real "+ Neu" button.
+router.post('/', authenticateJWT, authorizeAdmin, async (req: any, res) => {
+  try {
+    const { title } = req.body;
+    if (!title || !String(title).trim()) {
+      return res.status(400).json({ message: 'Titel ist erforderlich' });
+    }
+    const baseSlug = normalizeSlug(title);
+    if (!baseSlug) return res.status(400).json({ message: 'Ungültiger Titel' });
+
+    let id = baseSlug;
+    let suffix = 2;
+    while (await prisma.formConfig.findUnique({ where: { id } })) {
+      id = `${baseSlug}-${suffix}`;
+      suffix += 1;
+    }
+
+    const author = await prisma.user.findUnique({ where: { id: req.user.id }, select: { name: true, email: true } });
+
+    const config = await prisma.formConfig.create({
+      data: {
+        id,
+        title: String(title).trim(),
+        fields: [],
+        createdBy: author?.name || author?.email || null,
+      },
+    });
+    res.status(201).json({ ...config, fieldsCount: 0, dataCount: 0 });
+  } catch (error) {
+    console.error('Error creating form config:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
@@ -87,15 +174,33 @@ router.get('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
 
 router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    const { title, fields } = req.body;
+    const { title, fields, published, accessLevel, language } = req.body;
+    const data: any = {};
+    if (title !== undefined) data.title = title;
+    if (fields !== undefined) data.fields = fields;
+    if (published !== undefined) data.published = published;
+    if (accessLevel !== undefined) data.accessLevel = accessLevel;
+    if (language !== undefined) data.language = language;
+
     const config = await prisma.formConfig.upsert({
       where: { id: req.params.id as string },
-      update: { title, fields },
-      create: { id: req.params.id as string, title, fields },
+      update: data,
+      create: { id: req.params.id as string, title, fields: fields || [] },
     });
     res.json(config);
   } catch (error) {
     console.error('Error updating form config:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Admin: delete a form - matches old's real "Aktionen > Löschen".
+router.delete('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
+  try {
+    await prisma.formConfig.delete({ where: { id: req.params.id as string } });
+    res.json({ message: 'Formular gelöscht' });
+  } catch (error) {
+    console.error('Error deleting form config:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

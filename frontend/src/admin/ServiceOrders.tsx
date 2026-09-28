@@ -13,10 +13,11 @@ import {
   TopToolbar,
   ExportButton,
   useListContext,
+  useRecordContext,
   Edit,
   SimpleForm,
 } from 'react-admin';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useParams } from 'react-router-dom';
 import { Button, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
@@ -60,13 +61,13 @@ const ServiceOrderFilter = (props: any) => (
   </Filter>
 );
 
-const ListActions = () => {
+const ListActions = ({ formId }: { formId: string }) => {
   const { total } = useListContext();
   return (
     <TopToolbar>
       <Button
         component={RouterLink}
-        to="/admin/service-auftrag-form"
+        to={`/admin/forms/${formId}/edit`}
         startIcon={<ArrowBackIcon />}
         size="small"
       >
@@ -78,7 +79,11 @@ const ListActions = () => {
 };
 
 export const ServiceOrderList = () => {
-  const fields = useFormFields();
+  // Falls back to "service-auftrag" so the older static /admin/serviceorders
+  // resource route (no :formId param) still works exactly as before.
+  const { formId: paramId } = useParams();
+  const formId = paramId || 'service-auftrag';
+  const fields = useFormFields(formId);
 
   // Datagrid children must exist at render time - wait for the dynamic
   // field list before rendering any columns at all, same as the old
@@ -87,8 +92,10 @@ export const ServiceOrderList = () => {
 
   return (
     <List
+      resource="serviceorders"
+      filter={{ formId }}
       filters={<ServiceOrderFilter />}
-      actions={<ListActions />}
+      actions={<ListActions formId={formId} />}
       sort={{ field: 'createdAt', order: 'DESC' }}
       perPage={25}
     >
@@ -114,8 +121,14 @@ export const ServiceOrderList = () => {
 // submitted) - not a read-only Show. Same dynamic field-config approach,
 // rendering the right Input type per field.
 const ServiceOrderEditForm = () => {
-  const fields = useFormFields();
-  if (fields === null) return null;
+  // react-admin's rowClick="edit" always navigates to this resource's own
+  // canonical route (/admin/serviceorders/:id), not a path relative to
+  // whichever custom /admin/forms/:formId/data list it was reached from -
+  // so the record's OWN stored formId (not a route param) is what
+  // determines which form's field config applies to it.
+  const record = useRecordContext();
+  const fields = useFormFields(record?.formId || 'service-auftrag');
+  if (!record || fields === null) return null;
 
   return (
     <SimpleForm>

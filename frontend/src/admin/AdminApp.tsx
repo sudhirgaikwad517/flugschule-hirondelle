@@ -90,6 +90,7 @@ import { BadKreuznachContentEditor } from './BadKreuznachContentEditor'; // NEW 
 import { HerrenteichContentEditor } from './HerrenteichContentEditor'; // NEW - /infos/gelaende/herrenteich
 import { Trash } from './Trash'; // NEW - WordPress-style Papierkorb for Pages.tsx deletes
 import { ServiceOrderList, ServiceOrderEdit } from './ServiceOrders';
+import { FormulareList } from './Formulare';
 import { TemplatesBuilder } from './TemplatesBuilder';
 import { CustomLayout } from './CustomLayout';
 import { EventsDashboard } from './EventsDashboard';
@@ -208,7 +209,7 @@ export const AdminApp = () => {
         <Resource name="categories" options={{ label: 'Kategorien' }} list={CategoryList} edit={CategoryEdit} create={CategoryCreate} />
         <Resource name="bookings" options={{ label: 'Buchungen' }} list={BookingList} show={BookingShow} />
         <Resource name="bookingFormConfig" intent="registration" />
-        <Resource name="formconfigs" intent="registration" />
+        <Resource name="formconfigs" options={{ label: 'Formulare' }} list={FormulareList} />
         <CustomRoutes>
             <Route path="/events-dashboard" element={<Authenticated><EventsDashboard /></Authenticated>} />
             <Route path="/event-statistics" element={<Authenticated><EventStatistics /></Authenticated>} />
@@ -285,6 +286,8 @@ export const AdminApp = () => {
             />
             <Route path="/booking-form-config" element={<Authenticated><BookingFormBuilder /></Authenticated>} />
             <Route path="/service-auftrag-form" element={<Authenticated><ServiceAuftragFormBuilder /></Authenticated>} />
+            <Route path="/forms/:formId/edit" element={<Authenticated><ServiceAuftragFormBuilder /></Authenticated>} />
+            <Route path="/forms/:formId/data" element={<Authenticated><ServiceOrderList /></Authenticated>} />
             <Route path="/templates" element={<Authenticated><TemplatesBuilder /></Authenticated>} />
             <Route path="/import" element={<Authenticated><Import /></Authenticated>} />
             <Route path="/ecwid-config" element={<Authenticated><EcwidConfigPage /></Authenticated>} />
