@@ -1,16 +1,20 @@
 import type { ReactNode } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Users, 
+import {
+  LayoutDashboard,
+  Users,
   List,
-  LayoutTemplate, 
-  Mail, 
+  LayoutTemplate,
+  Mail,
   AlignLeft,
   BarChart2,
   Settings,
   ArrowLeft,
-  ListChecks
+  ListChecks,
+  Filter,
+  Zap,
+  MailWarning,
+  FileEdit
 } from 'lucide-react';
 
 interface AcyLayoutProps {
@@ -22,10 +26,14 @@ const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/admin/acymailing/dashboard' },
   { id: 'subscribers', label: 'Abonnenten', icon: Users, path: '/admin/acymailing/subscribers' },
   { id: 'lists', label: 'Listen', icon: List, path: '/admin/acymailing/lists' },
+  { id: 'segments', label: 'Segmente', icon: Filter, path: '/admin/acymailing/segments' },
   { id: 'fields', label: 'Felder', icon: ListChecks, path: '/admin/acymailing/fields' },
+  { id: 'forms', label: 'Formulare', icon: FileEdit, path: '/admin/acymailing/forms' },
   { id: 'templates', label: 'Vorlagen', icon: LayoutTemplate, path: '/admin/acymailing/templates' },
   { id: 'emails', label: 'E-Mails', icon: Mail, path: '/admin/acymailing/emails' },
+  { id: 'automations', label: 'Automatisierungen', icon: Zap, path: '/admin/acymailing/automations' },
   { id: 'queue', label: 'Warteschlange', icon: AlignLeft, path: '/admin/acymailing/queue' },
+  { id: 'bounces', label: 'Bounces', icon: MailWarning, path: '/admin/acymailing/bounces' },
   { id: 'statistics', label: 'Statistiken', icon: BarChart2, path: '/admin/acymailing/statistics' },
   { id: 'configuration', label: 'Konfiguration', icon: Settings, path: '/admin/acymailing/configuration' },
 ];

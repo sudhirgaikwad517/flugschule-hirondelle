@@ -4,6 +4,7 @@ import { Banner } from '../components/common/Banner';
 import { SafeHtml } from '../components/common/SafeHtml';
 import { PageGalleryBlock } from '../components/common/PageGalleryBlock';
 import { PageFormBlock } from '../components/common/PageFormBlock';
+import { NewsletterFormBlock } from '../components/common/NewsletterFormBlock';
 
 interface PageData {
   title: string;
@@ -15,7 +16,8 @@ interface PageData {
 type BodySegment =
   | { type: 'html'; value: string }
   | { type: 'gallery'; slug: string }
-  | { type: 'form'; formId: string };
+  | { type: 'form'; formId: string }
+  | { type: 'newsletterForm'; formId: string };
 
 // A "Galerie einfügen"/"Formular einfügen" block (see Pages.tsx) is saved as
 // a plain placeholder div carrying the gallery slug/form id as a data
@@ -31,16 +33,20 @@ type BodySegment =
 // SafeHtml-rendered chunks for everything in between, sidesteps that
 // entirely.
 const PLACEHOLDER_RE =
-  /<div class="page-gallery-block" data-gallery-slug="([^"]+)"[^>]*>.*?<\/div>|<div class="page-form-block" data-form-id="([^"]+)"[^>]*>.*?<\/div>/gs;
+  /<div class="page-gallery-block" data-gallery-slug="([^"]+)"[^>]*>.*?<\/div>|<div class="page-form-block" data-form-id="([^"]+)"[^>]*>.*?<\/div>|<div class="page-newsletter-form-block" data-newsletter-form-id="([^"]+)"[^>]*>.*?<\/div>/gs;
 
 const splitBodyOnPlaceholders = (html: string): BodySegment[] => {
   const segments: BodySegment[] = [];
   let lastIndex = 0;
   for (const match of html.matchAll(PLACEHOLDER_RE)) {
-    const [full, gallerySlug, formId] = match;
+    const [full, gallerySlug, formId, newsletterFormId] = match;
     const index = match.index ?? 0;
     if (index > lastIndex) segments.push({ type: 'html', value: html.slice(lastIndex, index) });
-    segments.push(gallerySlug ? { type: 'gallery', slug: gallerySlug } : { type: 'form', formId: formId! });
+    segments.push(
+      gallerySlug ? { type: 'gallery', slug: gallerySlug }
+        : formId ? { type: 'form', formId }
+        : { type: 'newsletterForm', formId: newsletterFormId! }
+    );
     lastIndex = index + full.length;
   }
   if (lastIndex < html.length) segments.push({ type: 'html', value: html.slice(lastIndex) });
@@ -104,6 +110,8 @@ export const DynamicPage = ({ slug: fixedSlug }: { slug?: string } = {}) => {
                   <PageGalleryBlock key={i} slug={seg.slug} />
                 ) : seg.type === 'form' ? (
                   <PageFormBlock key={i} formId={seg.formId} />
+                ) : seg.type === 'newsletterForm' ? (
+                  <NewsletterFormBlock key={i} formId={seg.formId} />
                 ) : (
                   <SafeHtml key={i} html={seg.value} />
                 )

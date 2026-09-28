@@ -11,6 +11,7 @@ interface Config {
   hasSmtpPass?: boolean;
   fromEmail: string;
   fromName: string;
+  mailerProvider?: string;
   queueBatchSize: number;
   queuePauseSeconds: number;
   queueMaxRetries: number;
@@ -21,6 +22,24 @@ interface Config {
   gdprDeleteEnabled: boolean;
   socialLinks: Record<string, string>;
 }
+
+// Multi-provider mailer support (old's real Mailgun/ElasticEmail/qmail/...
+// "dynamics") - every real transactional provider also exposes a genuine
+// SMTP relay endpoint, so this app's one generic SMTP transporter already
+// reaches all of them (see newsletterTransporter.ts). This preset list is
+// purely a UI convenience that prefills the right host/port for a chosen
+// provider; "custom" leaves the fields exactly as typed.
+const MAILER_PRESETS: { id: string; label: string; host: string; port: string }[] = [
+  { id: 'custom', label: 'Eigener SMTP-Server', host: '', port: '' },
+  { id: 'ionos', label: 'IONOS', host: 'smtp.ionos.de', port: '587' },
+  { id: 'strato', label: 'Strato', host: 'smtp.strato.de', port: '465' },
+  { id: 'gmail', label: 'Gmail / Google Workspace', host: 'smtp.gmail.com', port: '587' },
+  { id: 'mailgun', label: 'Mailgun', host: 'smtp.mailgun.org', port: '587' },
+  { id: 'sendgrid', label: 'SendGrid', host: 'smtp.sendgrid.net', port: '587' },
+  { id: 'brevo', label: 'Brevo (Sendinblue)', host: 'smtp-relay.brevo.com', port: '587' },
+  { id: 'ses_eu', label: 'Amazon SES (eu-central-1)', host: 'email-smtp.eu-central-1.amazonaws.com', port: '587' },
+  { id: 'ses_us', label: 'Amazon SES (us-east-1)', host: 'email-smtp.us-east-1.amazonaws.com', port: '587' },
+];
 
 // old: hiron_acym_configuration's social_icons (facebook/instagram/twitter/
 // linkedin/pinterest/vimeo/wordpress/youtube/x/telegram) - old's values were
@@ -55,7 +74,8 @@ const DEFAULT_CONFIG: Config = {
   unsubscribeColor: '#00a4ff',
   gdprExportEnabled: true,
   gdprDeleteEnabled: true,
-  socialLinks: { facebook: 'https://www.facebook.com/fshirondelle' }
+  socialLinks: { facebook: 'https://www.facebook.com/fshirondelle' },
+  mailerProvider: 'custom'
 };
 
 export const AcyConfiguration = () => {
@@ -123,6 +143,15 @@ export const AcyConfiguration = () => {
     setConfig(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : type === 'number' ? Number(value) : value
+    }));
+  };
+
+  const handleMailerPresetChange = (presetId: string) => {
+    const preset = MAILER_PRESETS.find((p) => p.id === presetId);
+    setConfig((prev) => ({
+      ...prev,
+      mailerProvider: presetId,
+      ...(preset && preset.id !== 'custom' ? { smtpHost: preset.host, smtpPort: preset.port } : {})
     }));
   };
 
@@ -238,6 +267,19 @@ export const AcyConfiguration = () => {
 
             <div className="space-y-4 pt-4 border-t border-slate-100">
               <h4 className="font-medium text-slate-700">SMTP Server</h4>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Anbieter</label>
+                <select
+                  value={config.mailerProvider || 'custom'}
+                  onChange={(e) => handleMailerPresetChange(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded focus:ring-[#0ea5e9] focus:border-[#0ea5e9]"
+                >
+                  {MAILER_PRESETS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+                </select>
+                <p className="text-xs text-slate-500 mt-1">
+                  Füllt Server und Port automatisch aus - jeder dieser Anbieter (und jeder andere echte Mailversand-Dienst) bietet einen SMTP-Zugang, über den hier tatsächlich versendet wird.
+                </p>
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Server (Host)</label>

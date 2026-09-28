@@ -10,11 +10,11 @@ router.use((req, res, next) => {
   next();
 });
 
-// Never send the SMTP password back to the client - only whether one is set,
-// same convention as PaymentConfigPage's PayPal secret handling.
-function maskSmtpPass<T extends { smtpPass?: string | null }>(config: T) {
-  const { smtpPass, ...rest } = config;
-  return { ...rest, hasSmtpPass: !!smtpPass };
+// Never send the SMTP/IMAP passwords back to the client - only whether one
+// is set, same convention as PaymentConfigPage's PayPal secret handling.
+function maskSmtpPass<T extends { smtpPass?: string | null; bounceImapPass?: string | null }>(config: T) {
+  const { smtpPass, bounceImapPass, ...rest } = config;
+  return { ...rest, hasSmtpPass: !!smtpPass, hasBounceImapPass: !!bounceImapPass };
 }
 
 // Get config
@@ -76,7 +76,9 @@ router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
       smtpHost, smtpPort, smtpUser, smtpPass, fromEmail, fromName,
       queueBatchSize, queuePauseSeconds, queueMaxRetries,
       requireConfirmation, unsubscribeTitle, unsubscribeColor,
-      gdprExportEnabled, gdprDeleteEnabled, socialLinks
+      gdprExportEnabled, gdprDeleteEnabled, socialLinks,
+      mailerProvider,
+      bounceCheckEnabled, bounceImapHost, bounceImapPort, bounceImapUser, bounceImapPass, bounceImapTls
     } = req.body;
     // Trim to guard against accidental leading/trailing spaces from copy-paste,
     // which silently break SMTP host/credential lookups (e.g. DNS resolution).
@@ -95,13 +97,21 @@ router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
       unsubscribeColor: trim(unsubscribeColor),
       gdprExportEnabled,
       gdprDeleteEnabled,
-      socialLinks: socialLinks !== undefined ? (typeof socialLinks === 'string' ? socialLinks : JSON.stringify(socialLinks)) : undefined
+      socialLinks: socialLinks !== undefined ? (typeof socialLinks === 'string' ? socialLinks : JSON.stringify(socialLinks)) : undefined,
+      mailerProvider: trim(mailerProvider),
+      bounceCheckEnabled,
+      bounceImapHost: trim(bounceImapHost),
+      bounceImapPort: trim(bounceImapPort),
+      bounceImapUser: trim(bounceImapUser),
+      bounceImapTls,
     };
     // Blank/omitted password means "keep the existing one" - the client never
     // receives the real value back to resend, so only overwrite when a new
     // non-empty value was actually typed.
     const trimmedPass = trim(smtpPass);
     if (trimmedPass) fields.smtpPass = trimmedPass;
+    const trimmedImapPass = trim(bounceImapPass);
+    if (trimmedImapPass) fields.bounceImapPass = trimmedImapPass;
 
     const config = await prisma.newsletterConfig.upsert({
       where: { id: (req.params.id as string) },

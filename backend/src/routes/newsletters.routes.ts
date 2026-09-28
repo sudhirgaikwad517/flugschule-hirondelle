@@ -4,6 +4,7 @@ import { prisma } from '../utils/prisma';
 import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware';
 import { getNewsletterTransporter } from '../utils/newsletterTransporter';
 import { verifyUnsubscribeToken } from '../utils/unsubscribeToken';
+import { triggerAutomationsForSubscribe } from '../services/newsletterAutomation.service';
 
 const router = Router();
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
@@ -99,6 +100,7 @@ export async function subscribeToNewsletter(email: string, name: string | null |
         return { message: 'Bitte bestätigen Sie Ihre E-Mail-Adresse - wir haben Ihnen einen Link geschickt.' };
       }
       await sendAutoresponderEmail(listType, 'welcome', email.toLowerCase(), config);
+      await triggerAutomationsForSubscribe(email.toLowerCase(), listType);
       return { message: 'Successfully resubscribed' };
     }
     return { message: 'Email is already subscribed to this list', alreadySubscribed: true };
@@ -121,6 +123,7 @@ export async function subscribeToNewsletter(email: string, name: string | null |
   }
 
   await sendAutoresponderEmail(listType, 'welcome', email.toLowerCase(), config);
+  await triggerAutomationsForSubscribe(email.toLowerCase(), listType);
   return { message: 'Successfully subscribed' };
 }
 
@@ -161,6 +164,7 @@ router.post('/public/confirm', async (req, res) => {
 
     const config = await prisma.newsletterConfig.findUnique({ where: { id: 'default' } });
     await sendAutoresponderEmail(subscriber.listType, 'welcome', subscriber.email, config);
+    await triggerAutomationsForSubscribe(subscriber.email, subscriber.listType);
 
     res.json({ message: 'E-Mail-Adresse erfolgreich bestätigt' });
   } catch (error) {

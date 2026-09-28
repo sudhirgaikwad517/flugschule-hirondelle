@@ -36,6 +36,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import DynamicFormIcon from '@mui/icons-material/DynamicForm';
+import MailOutlineIcon from '@mui/icons-material/MailOutline';
 
 // "Seiten" - the CMS feature that lets an admin create an entirely new page
 // from scratch (title, URL slug, description, header image, content) that
@@ -367,6 +368,10 @@ export const PagesManager = () => {
   const [availableForms, setAvailableForms] = useState<{ id: string; title: string }[]>([]);
   const [formsLoading, setFormsLoading] = useState(false);
   const [selectedFormId, setSelectedFormId] = useState('');
+  const [newsletterFormPickerOpen, setNewsletterFormPickerOpen] = useState(false);
+  const [availableNewsletterForms, setAvailableNewsletterForms] = useState<{ id: string; name: string }[]>([]);
+  const [newsletterFormsLoading, setNewsletterFormsLoading] = useState(false);
+  const [selectedNewsletterFormId, setSelectedNewsletterFormId] = useState('');
 
   const fetchPages = () => {
     setLoading(true);
@@ -550,6 +555,48 @@ export const PagesManager = () => {
       editor.loadDesign(design);
     });
     setFormPickerOpen(false);
+  };
+
+  // "Newsletter-Formular einfügen" - same placeholder-div bridge again, this
+  // time for an AcyMailing subscription form (Admin > AcyMailing > Formulare)
+  // instead of a Visforms form.
+  const openNewsletterFormPicker = () => {
+    setSelectedNewsletterFormId('');
+    setNewsletterFormPickerOpen(true);
+    setNewsletterFormsLoading(true);
+    fetch('/api/newsletterforms?_start=0&_end=100', { headers: authHeaders() })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setAvailableNewsletterForms(Array.isArray(data) ? data.map((f: any) => ({ id: f.id, name: f.name })) : []))
+      .catch(() => notify('Fehler beim Laden der Newsletter-Formulare', { type: 'error' }))
+      .finally(() => setNewsletterFormsLoading(false));
+  };
+
+  const insertNewsletterForm = () => {
+    if (!selectedNewsletterFormId) return;
+    const editor = emailEditorRef.current?.editor;
+    if (!editor) return;
+    const chosen = availableNewsletterForms.find((f) => f.id === selectedNewsletterFormId);
+    const placeholderHtml =
+      `<div class="page-newsletter-form-block" data-newsletter-form-id="${selectedNewsletterFormId}" ` +
+      `style="border:2px dashed #0ea5e9;padding:24px;text-align:center;color:#0ea5e9;font-family:sans-serif;font-size:14px;">` +
+      `📧 Newsletter-Formular-Platzhalter ("${chosen?.name || selectedNewsletterFormId}")</div>`;
+
+    editor.exportHtml((data: any) => {
+      const design = data.design;
+      design.body.rows.push({
+        cells: [1],
+        columns: [{
+          contents: [{
+            type: 'text',
+            values: { text: placeholderHtml, padding: '0px' }
+          }],
+          values: {}
+        }],
+        values: {}
+      });
+      editor.loadDesign(design);
+    });
+    setNewsletterFormPickerOpen(false);
   };
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -779,6 +826,9 @@ export const PagesManager = () => {
           <Button variant="outlined" startIcon={<DynamicFormIcon />} onClick={openFormPicker}>
             Formular einfügen
           </Button>
+          <Button variant="outlined" startIcon={<MailOutlineIcon />} onClick={openNewsletterFormPicker}>
+            Newsletter-Formular einfügen
+          </Button>
           <Box sx={{ flexGrow: 1 }} />
           <Button variant="contained" color="success" startIcon={<SaveIcon />} onClick={handleSave} disabled={saving}>
             Speichern
@@ -820,6 +870,36 @@ export const PagesManager = () => {
           <DialogActions>
             <Button onClick={() => setFormPickerOpen(false)}>Abbrechen</Button>
             <Button variant="contained" onClick={insertForm} disabled={!selectedFormId}>Einfügen</Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog open={newsletterFormPickerOpen} onClose={() => setNewsletterFormPickerOpen(false)} maxWidth="xs" fullWidth>
+          <DialogTitle>Newsletter-Formular einfügen</DialogTitle>
+          <DialogContent>
+            {newsletterFormsLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}><CircularProgress size={28} /></Box>
+            ) : availableNewsletterForms.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">
+                Keine Newsletter-Formulare vorhanden. Unter AcyMailing &gt; Formulare kann eines angelegt werden.
+              </Typography>
+            ) : (
+              <TextField
+                select
+                fullWidth
+                label="Newsletter-Formular"
+                value={selectedNewsletterFormId}
+                onChange={(e) => setSelectedNewsletterFormId(e.target.value)}
+                margin="dense"
+              >
+                {availableNewsletterForms.map((f) => (
+                  <MenuItem key={f.id} value={f.id}>{f.name}</MenuItem>
+                ))}
+              </TextField>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setNewsletterFormPickerOpen(false)}>Abbrechen</Button>
+            <Button variant="contained" onClick={insertNewsletterForm} disabled={!selectedNewsletterFormId}>Einfügen</Button>
           </DialogActions>
         </Dialog>
       </Box>

@@ -295,6 +295,15 @@ model Newsletter {
   // vocabulary needing referential integrity.
   tags String?
 
+  // Old AcyMailing's real IMAP-mailbox-polling bounce handling (task: real
+  // bounce handling) - a hard-bounced address is suppressed from future
+  // sends (see getTargetSubscribers/resolveSegmentRecipients, both already
+  // filter on isActive) without deleting the row, so the admin can still see
+  // why a subscriber stopped receiving mail.
+  bounced      Boolean   @default(false)
+  bounceReason String?   @db.Text
+  bouncedAt    DateTime?
+
   @@unique([email, listType])
 }
 
@@ -633,6 +642,93 @@ model NewsletterConfig {
   // wordpress/x/telegram), each value the real profile URL or "" if the
   // business has no account on that platform.
   socialLinks String? @db.Text
+
+  // Multi-provider mailer support - old's real dynamics/ folder ships
+  // separate Mailgun/ElasticEmail/sendmail/qmail/phpmail "mailers" as
+  // alternatives to plain SMTP. Every one of those (and every other real
+  // transactional provider - SendGrid, Amazon SES, Brevo, IONOS, Gmail, ...)
+  // also exposes a genuine SMTP relay endpoint, so this app's existing
+  // generic SMTP transporter (newsletterTransporter.ts) already reaches all
+  // of them - this field is purely a UI preset label (see NewsletterConfigPage's
+  // provider dropdown) that prefills the right host/port for a chosen
+  // provider; it never changes how a mail actually gets sent.
+  mailerProvider String @default("custom")
+
+  // Bounce-Verwaltung - old AcyMailing's real IMAP-mailbox-polling bounce
+  // handling (MailboxHelper.php): a dedicated inbox that receives bounce
+  // notifications is polled periodically; hard-bounce addresses get
+  // suppressed (see Newsletter.bounced). Credentials are for a real mailbox
+  // the admin's mail provider gives them for exactly this purpose (often the
+  // same address campaigns' Return-Path already points bounces to).
+  bounceCheckEnabled Boolean   @default(false)
+  bounceImapHost     String?
+  bounceImapPort     String?   @default("993")
+  bounceImapUser     String?
+  bounceImapPass     String?
+  bounceImapTls      Boolean   @default(true)
+  lastBounceCheckAt  DateTime?
+}
+
+// Dynamic subscriber filters (old AcyMailing's real Segments) - conditions
+// are evaluated in resolveSegmentRecipients() rather than turned into a raw
+// SQL WHERE, since some conditions (campaign open/click behavior) need a
+// join against NewsletterTrackingEvent that's simplest expressed in code at
+// this subscriber-list scale (a few thousand rows, not millions).
+model NewsletterSegment {
+  id         String   @id @default(uuid())
+  name       String
+  matchType  String   @default("all") // 'all' (AND) | 'any' (OR)
+  conditions String   @db.Text // JSON array of {field, operator, value, fieldId?}
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// Trigger-based autoresponder sequences (old AcyMailing's real
+// Automations/Scenarios) - a subscribe event starts a NewsletterAutomationRun
+// per matching active automation; newsletterAutomation.job.ts's cron tick
+// sends whichever run's current step is due and advances/completes it.
+model NewsletterAutomation {
+  id              String                    @id @default(uuid())
+  name            String
+  active          Boolean                   @default(true)
+  triggerListCode String? // null = fires on subscribe to ANY list
+  steps           String                    @db.Text // JSON array of {delayDays, subject, body}
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+  runs            NewsletterAutomationRun[]
+}
+
+model NewsletterAutomationRun {
+  id              String               @id @default(uuid())
+  automationId    String
+  subscriberEmail String
+  currentStep     Int                  @default(0)
+  nextSendAt      DateTime
+  completedAt     DateTime?
+  createdAt       DateTime             @default(now())
+  automation      NewsletterAutomation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+
+  @@index([nextSendAt, completedAt])
+}
+
+// Subscription form builder (old AcyMailing's real Forms) - an admin-designed
+// signup form (which lists it feeds, which custom fields it asks for, its
+// styling/messages) embeddable into any admin-built Seite via the same
+// placeholder-block bridge already used for Formular/Galerie einfügen (see
+// DynamicPage.tsx's PLACEHOLDER_RE and NewsletterFormBlock.tsx).
+model NewsletterForm {
+  id               String   @id @default(uuid())
+  name             String
+  listCodes        String // comma-separated NewsletterList codes this form subscribes into
+  fieldIds         String? // comma-separated NewsletterFieldDefinition ids to render
+  showNameField    Boolean  @default(true)
+  submitButtonText String   @default("Anmelden")
+  successMessage   String   @default("Vielen Dank für Ihre Anmeldung!")
+  backgroundColor  String?  @default("#ffffff")
+  buttonColor      String?  @default("#0ea5e9")
+  textColor        String?  @default("#334155")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model Organizer {

@@ -283,9 +283,18 @@ export const AcyEditEmail = () => {
   const [availableSearch, setAvailableSearch] = useState('');
   const [selectedSearch, setSelectedSearch] = useState('');
   const [recipientCount, setRecipientCount] = useState(0);
-  const [addSegmentStep, setAddSegmentStep] = useState(false);
 
-  const selectedCodes = formData.targetList ? formData.targetList.split(',').filter(Boolean) : [];
+  // Old AcyMailing's real Segments feature: instead of picking lists
+  // directly, target a dynamic, admin-defined filter (see NewsletterSegments
+  // admin page). targetList holds the sentinel "SEGMENT:<id>" while this
+  // mode is active - resolved server-side in getTargetSubscribers().
+  interface SegmentOption { id: string; name: string }
+  const [availableSegments, setAvailableSegments] = useState<SegmentOption[]>([]);
+  const isSegmentMode = formData.targetList.startsWith('SEGMENT:');
+  const [addSegmentStep, setAddSegmentStep] = useState(isSegmentMode);
+  const selectedSegmentId = isSegmentMode ? formData.targetList.slice('SEGMENT:'.length) : '';
+
+  const selectedCodes = (!isSegmentMode && formData.targetList) ? formData.targetList.split(',').filter(Boolean) : [];
 
   useEffect(() => {
     const fetchLists = async () => {
@@ -297,10 +306,34 @@ export const AcyEditEmail = () => {
         if (res.ok) setAvailableLists(await res.json());
       } catch (e) {}
     };
+    const fetchSegments = async () => {
+      try {
+        const token = localStorage.getItem('auth');
+        const res = await fetch('/api/newslettersegments?_end=500', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) setAvailableSegments(await res.json());
+      } catch (e) {}
+    };
     fetchLists();
+    fetchSegments();
   }, []);
 
   useEffect(() => {
+    if (isSegmentMode) {
+      if (!selectedSegmentId) { setRecipientCount(0); return; }
+      const fetchSegmentCount = async () => {
+        try {
+          const token = localStorage.getItem('auth');
+          const res = await fetch(`/api/newslettersegments/${selectedSegmentId}/preview-count`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) setRecipientCount((await res.json()).count);
+        } catch (e) {}
+      };
+      fetchSegmentCount();
+      return;
+    }
     if (selectedCodes.length === 0) {
       setRecipientCount(0);
       return;
@@ -316,6 +349,14 @@ export const AcyEditEmail = () => {
     };
     fetchCount();
   }, [formData.targetList]);
+
+  // Switching the "Segmentierungsschritt" radio clears whatever targeting
+  // mode was active, so the two pickers below never leave stale state (e.g.
+  // list codes still selected from before switching into segment mode).
+  const chooseSegmentMode = (useSegment: boolean) => {
+    setAddSegmentStep(useSegment);
+    handleChange('targetList', '');
+  };
 
   const addToSelectedLists = (code: string) => {
     if (!selectedCodes.includes(code)) handleChange('targetList', [...selectedCodes, code].join(','));
@@ -874,6 +915,29 @@ export const AcyEditEmail = () => {
           {/* STEP: Recipient */}
           {activeStep === 'recipient' && (
             <div className="max-w-4xl mx-auto space-y-6">
+              {addSegmentStep ? (
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-100">
+                  <h4 className="font-medium text-slate-800 mb-3">Segment auswählen</h4>
+                  <p className="text-sm text-slate-500 mb-4">
+                    Der Newsletter wird an alle Abonnenten gesendet, die die Bedingungen des ausgewählten Segments aktuell erfüllen (dynamisch - wird bei jedem Versand neu ausgewertet).
+                  </p>
+                  <select
+                    value={selectedSegmentId}
+                    onChange={(e) => handleChange('targetList', e.target.value ? `SEGMENT:${e.target.value}` : '')}
+                    className="w-full px-4 py-2 border border-slate-300 rounded focus:ring-[#0ea5e9] focus:border-[#0ea5e9]"
+                  >
+                    <option value="">Bitte wählen...</option>
+                    {availableSegments.map((s) => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                  {availableSegments.length === 0 && (
+                    <p className="text-sm text-amber-600 mt-3">
+                      Noch keine Segmente angelegt. Unter AcyMailing &gt; Segmente können Sie eines erstellen.
+                    </p>
+                  )}
+                </div>
+              ) : (
               <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-100">
                 <div className="grid grid-cols-2 gap-6">
                   {/* Available lists */}
@@ -964,6 +1028,7 @@ export const AcyEditEmail = () => {
                   </div>
                 </div>
               </div>
+              )}
 
               <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-100 flex items-center justify-between flex-wrap gap-4">
                 <p className="text-slate-700">
@@ -972,10 +1037,10 @@ export const AcyEditEmail = () => {
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-slate-600">Einen Segmentierungsschritt zum Sendevorgang hinzufügen</span>
                   <label className="flex items-center gap-1 text-sm cursor-pointer">
-                    <input type="radio" checked={addSegmentStep} onChange={() => setAddSegmentStep(true)} /> Ja
+                    <input type="radio" checked={addSegmentStep} onChange={() => chooseSegmentMode(true)} /> Ja
                   </label>
                   <label className="flex items-center gap-1 text-sm cursor-pointer">
-                    <input type="radio" checked={!addSegmentStep} onChange={() => setAddSegmentStep(false)} /> Nein
+                    <input type="radio" checked={!addSegmentStep} onChange={() => chooseSegmentMode(false)} /> Nein
                   </label>
                 </div>
               </div>

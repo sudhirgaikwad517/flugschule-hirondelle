@@ -4,13 +4,22 @@ import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware'
 import nodemailer from 'nodemailer';
 import { renderCampaignHtml } from '../utils/newsletterTags';
 import { getNewsletterTransporter } from '../utils/newsletterTransporter';
+import { resolveSegmentRecipients } from '../services/newsletterSegments.service';
 
 const router = Router();
 
 // targetList holds one or more comma-separated NewsletterList codes (e.g. "GENERAL,TANDEM"),
 // matching AcyMailing's multi-list recipient picker. Subscribers are deduped by email so
 // someone on two selected lists only receives the campaign once.
+//
+// A single special value "SEGMENT:<id>" (never combined with real list
+// codes, same sentinel-style convention as "ALL") targets a dynamic
+// NewsletterSegment instead - old AcyMailing's real Segments feature.
 async function getTargetSubscribers(targetList: string) {
+  if (targetList?.startsWith('SEGMENT:')) {
+    return resolveSegmentRecipients(targetList.slice('SEGMENT:'.length));
+  }
+
   const codes = (targetList || '').split(',').map(c => c.trim()).filter(Boolean);
   const where: any = { isActive: true };
   if (codes.length > 0 && !codes.includes('ALL')) {

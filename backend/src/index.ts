@@ -23,6 +23,10 @@ import newsletterCampaignsRoutes from './routes/newsletterCampaigns.routes';
 import newsletterTemplatesRoutes from './routes/newsletterTemplates.routes';
 import newsletterQueueRoutes from './routes/newsletterQueue.routes';
 import newsletterConfigRoutes from './routes/newsletterConfig.routes';
+import newsletterSegmentsRoutes from './routes/newsletterSegments.routes';
+import newsletterAutomationsRoutes from './routes/newsletterAutomations.routes';
+import newsletterBouncesRoutes from './routes/newsletterBounces.routes';
+import newsletterFormsRoutes from './routes/newsletterForms.routes';
 import commentsRoutes from './routes/comments.routes';
 import commentSettingsRoutes from './routes/commentSettings.routes';
 import commentEmailQueueRoutes from './routes/commentEmailQueue.routes';
@@ -124,6 +128,10 @@ app.use('/api/newslettercampaigns', newsletterCampaignsRoutes);
 app.use('/api/newslettertemplates', newsletterTemplatesRoutes);
 app.use('/api/newsletterqueue', newsletterQueueRoutes);
 app.use('/api/newsletterconfig', newsletterConfigRoutes);
+app.use('/api/newslettersegments', newsletterSegmentsRoutes);
+app.use('/api/newsletterautomations', newsletterAutomationsRoutes);
+app.use('/api/newsletterbounces', newsletterBouncesRoutes);
+app.use('/api/newsletterforms', newsletterFormsRoutes);
 app.use('/api/track', trackRoutes);
 app.use('/api/comments', commentsRoutes);
 app.use('/api/commentsettings', commentSettingsRoutes);
@@ -184,6 +192,8 @@ if (process.env.NODE_ENV === 'production') {
 
 import { startCronJobs } from './jobs/reminders.job';
 import { startNewsletterCron } from './jobs/newsletter.job';
+import { startNewsletterAutomationCron } from './jobs/newsletterAutomation.job';
+import { startBounceCheckCron } from './jobs/bounceCheck.job';
 
 // Start server - cron jobs are only registered once this process has
 // actually won the port (see the listen callback below). Starting them
@@ -196,6 +206,8 @@ const httpServer = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   startCronJobs();
   startNewsletterCron();
+  startNewsletterAutomationCron();
+  startBounceCheckCron();
 });
 httpServer.on('error', (err) => {
   console.error('LISTEN ERROR:', err);

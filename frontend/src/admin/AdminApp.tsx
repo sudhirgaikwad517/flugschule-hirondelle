@@ -21,6 +21,10 @@ import { AcyEmails } from './AcyMailing/Emails';
 import { AcyChooseCampaignType } from './AcyMailing/ChooseCampaignType';
 import { AcyChooseTemplate } from './AcyMailing/ChooseTemplate';
 import { AcyEditEmail } from './AcyMailing/EditEmail';
+import { AcySegments } from './AcyMailing/Segments';
+import { AcyAutomations } from './AcyMailing/Automations';
+import { AcyBounces } from './AcyMailing/Bounces';
+import { AcyForms } from './AcyMailing/Forms';
 import { CommentList, CommentEdit } from './Comments';
 import { CommentEmailQueueList } from './CommentEmailQueue';
 import { CommentSettingsPage } from './CommentSettingsPage';
@@ -319,6 +323,10 @@ export const AdminApp = () => {
             <Route path="/acymailing/emails/edit/:id" element={<Authenticated><AcyEditEmail /></Authenticated>} />
             <Route path="/acymailing/queue" element={<Authenticated><AcyQueue /></Authenticated>} />
             <Route path="/acymailing/configuration" element={<Authenticated><AcyConfiguration /></Authenticated>} />
+            <Route path="/acymailing/segments" element={<Authenticated><AcySegments /></Authenticated>} />
+            <Route path="/acymailing/automations" element={<Authenticated><AcyAutomations /></Authenticated>} />
+            <Route path="/acymailing/bounces" element={<Authenticated><AcyBounces /></Authenticated>} />
+            <Route path="/acymailing/forms" element={<Authenticated><AcyForms /></Authenticated>} />
         </CustomRoutes>
         <Resource name="comments" options={{ label: 'Kommentare' }} list={CommentList} edit={CommentEdit} />
         <Resource name="commentemailqueue" options={{ label: 'E-Mail-Warteschlange' }} list={CommentEmailQueueList} />
