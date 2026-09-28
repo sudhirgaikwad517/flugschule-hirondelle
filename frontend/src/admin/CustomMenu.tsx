@@ -32,6 +32,9 @@ import ViewCarouselIcon from '@mui/icons-material/ViewCarousel';
 import PermMediaIcon from '@mui/icons-material/PermMedia';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import DynamicFormIcon from '@mui/icons-material/DynamicForm';
+import EditNoteIcon from '@mui/icons-material/EditNote';
+import ViewListIcon from '@mui/icons-material/ViewList';
+import TableChartIcon from '@mui/icons-material/TableChart';
 import PaymentIcon from '@mui/icons-material/Payment';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ExtensionIcon from '@mui/icons-material/Extension'; // NEW - "Komponenten" section icon
@@ -86,8 +89,24 @@ const BOTTOM_ITEMS: Item[] = [
     { label: 'Links', to: '/admin/links', icon: <LinkIcon fontSize="small" /> },
     { label: 'Werbebanner', to: '/admin/banners', icon: <ViewCarouselIcon fontSize="small" /> },
     { label: 'Seitenmedien (Sicherheitstraining)', to: '/admin/pagemedia', icon: <PermMediaIcon fontSize="small" /> },
-    { label: 'Formulare', to: '/admin/formconfigs', icon: <DynamicFormIcon fontSize="small" /> },
     { label: 'Cookie-Hinweis', to: '/admin/cookie-consent', icon: <CookieIcon fontSize="small" /> },
+];
+
+// Old's real Visforms sidebar (Dashboard/Forms/Form Factory/Inspector/Form
+// fields/Form data - the very first screenshot of this section) is itself a
+// submenu under one parent item, not flat links - matched here with the
+// same CollapsibleGroup already used for "Flugschule Events"/"Komponenten".
+// Dashboard/Form Factory/Inspector have no equivalent built here (Form
+// Factory/Inspector are themselves AEF-subscription features on the real
+// site), so only the pages that actually exist are listed. Formularfelder/
+// Formulardaten need a specific form, so they shortcut to the one real form
+// this site has (service-auftrag) - same fallback every one of these routes
+// already has when reached without a :formId param.
+const FORM_ITEMS: Item[] = [
+    { label: 'Formulare (Übersicht)', to: '/admin/formconfigs', icon: <ViewListIcon fontSize="small" /> },
+    { label: 'Formular bearbeiten', to: '/admin/forms/service-auftrag/edit', icon: <EditNoteIcon fontSize="small" /> },
+    { label: 'Formularfelder', to: '/admin/forms/service-auftrag/fields', icon: <DynamicFormIcon fontSize="small" /> },
+    { label: 'Formulardaten', to: '/admin/forms/service-auftrag/data', icon: <TableChartIcon fontSize="small" /> },
 ];
 
 // A Joomla-"Components"-style group for site-wide content tools that aren't
@@ -195,6 +214,7 @@ export const CustomMenu = () => {
     const location = useLocation();
     const [openEvents, setOpenEvents] = useState(true);
     const [openComponents, setOpenComponents] = useState(true); // NEW - "Komponenten" group, defaults open like Events
+    const [openForms, setOpenForms] = useState(true); // "Formulare" group - see FORM_ITEMS
 
     const isActivePath = (to: string) => {
         if (to === '/admin') return location.pathname === '/admin' || location.pathname === '/admin/';
@@ -232,6 +252,17 @@ export const CustomMenu = () => {
                 items={COMPONENT_ITEMS}
                 open={openComponents}
                 onToggle={() => setOpenComponents(!openComponents)}
+                isActivePath={isActivePath}
+            />
+
+            <Box sx={{ borderTop: `1px solid ${SIDEBAR_BORDER}`, my: 1, mx: 2 }} />
+
+            <CollapsibleGroup
+                label="Formulare"
+                icon={<DynamicFormIcon fontSize="small" />}
+                items={FORM_ITEMS}
+                open={openForms}
+                onToggle={() => setOpenForms(!openForms)}
                 isActivePath={isActivePath}
             />
 
