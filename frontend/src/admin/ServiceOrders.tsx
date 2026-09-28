@@ -2,21 +2,34 @@ import { useEffect, useState } from 'react';
 import {
   List,
   Datagrid,
+  TextField,
+  BooleanField,
   DateField,
-  FunctionField,
-  ShowButton,
   DeleteButton,
-  Show,
-  useRecordContext,
+  TextInput,
+  BooleanInput,
+  SelectInput,
+  Filter,
+  TopToolbar,
+  ExportButton,
+  useListContext,
+  Edit,
+  SimpleForm,
 } from 'react-admin';
-import { Box, Typography, CircularProgress } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
+import { Button, Typography } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
+// Matches Joomla Visforms' real "Data records for form ..." screen
+// (com_visforms&view=visdatas) - one column PER FORM FIELD (not a
+// click-through summary), same sortable-header/search/filter/export/
+// pagination toolbar react-admin's own <List>/<Datagrid> already provide.
 // Submissions are stored as a flexible JSON blob (ServiceOrder.data, keyed
-// by whatever field ids existed in the form config at submission time - see
-// FormBuilder.tsx/formconfigs.routes.ts) rather than fixed DB columns, so
-// this fetches the CURRENT form config to know each field's real label and
-// display order, same as Joomla Visforms' own "visdatas" view resolves
-// each submission's raw column values against the form's field definitions.
+// by whatever field ids existed in the form config at submission time -
+// see FormBuilder.tsx/formconfigs.routes.ts), so the column set is fetched
+// from the CURRENT form config rather than hardcoded, same reasoning as
+// the old ServiceOrderShow.
+
 interface FieldDef {
   id: string;
   label: string;
@@ -38,82 +51,109 @@ const useFormFields = (formId = 'service-auftrag') => {
   return fields;
 };
 
-// A short, readable one-line summary for the list's Datagrid - the first
-// couple of non-checkbox fields' values (typically name + email), not
-// every field (matching Visforms' own "visdatas" list, which shows a few
-// key columns, full data only in the per-row detail view).
-const SummaryField = ({ fields }: { fields: FieldDef[] | null }) => {
-  const record = useRecordContext();
-  if (!record || !fields) return null;
-  const summaryFields = fields.filter((f) => f.type !== 'checkbox').slice(0, 2);
+const ServiceOrderFilter = (props: any) => (
+  <Filter {...props}>
+    {/* Old's real search box (top of the "Data records" screen) searches
+        across the submitted values themselves - matched here the same
+        way, against every field's stored value. */}
+    <TextInput label="Suche" source="q" alwaysOn />
+  </Filter>
+);
+
+const ListActions = () => {
+  const { total } = useListContext();
   return (
-    <span>
-      {summaryFields.map((f) => record.data?.[f.id]).filter(Boolean).join(' · ') || '—'}
-    </span>
+    <TopToolbar>
+      <Button
+        component={RouterLink}
+        to="/admin/service-auftrag-form"
+        startIcon={<ArrowBackIcon />}
+        size="small"
+      >
+        Zurück zum Formular
+      </Button>
+      <ExportButton disabled={!total} />
+    </TopToolbar>
   );
 };
 
 export const ServiceOrderList = () => {
   const fields = useFormFields();
+
+  // Datagrid children must exist at render time - wait for the dynamic
+  // field list before rendering any columns at all, same as the old
+  // per-row Show view already did.
+  if (fields === null) return null;
+
   return (
-    <List sort={{ field: 'createdAt', order: 'DESC' }}>
-      <Datagrid rowClick="show">
-        <DateField source="createdAt" label="Eingegangen am" showTime />
-        <FunctionField label="Zusammenfassung" render={() => <SummaryField fields={fields} />} />
-        <ShowButton />
+    <List
+      filters={<ServiceOrderFilter />}
+      actions={<ListActions />}
+      sort={{ field: 'createdAt', order: 'DESC' }}
+      perPage={25}
+    >
+      <Datagrid rowClick="edit" bulkActionButtons={false}>
+        <TextField source="id" label="ID" />
+        <DateField source="createdAt" label="Erstellt am" showTime />
+        <DateField source="updatedAt" label="Geändert am" showTime />
+        {fields.map((f) =>
+          f.type === 'checkbox' ? (
+            <BooleanField key={f.id} source={`data.${f.id}`} label={f.label} />
+          ) : (
+            <TextField key={f.id} source={`data.${f.id}`} label={f.label} />
+          )
+        )}
         <DeleteButton />
       </Datagrid>
     </List>
   );
 };
 
-const FieldValueRow = ({ field, value }: { field: FieldDef; value: any }) => {
-  let display: string;
-  if (field.type === 'checkbox') {
-    display = value ? 'Ja' : 'Nein';
-  } else if (value === undefined || value === null || value === '') {
-    display = '—';
-  } else {
-    display = String(value);
-  }
-  return (
-    <Box sx={{ mb: 1.5 }}>
-      <Typography variant="caption" color="textSecondary" sx={{ display: 'block' }}>{field.label}</Typography>
-      <Typography variant="body2">{display}</Typography>
-    </Box>
-  );
-};
-
-const ServiceOrderShowContent = () => {
-  const record = useRecordContext();
+// Old's real click-through from the "Data records" screen opens the
+// submission in an editable form (an admin can correct what a customer
+// submitted) - not a read-only Show. Same dynamic field-config approach,
+// rendering the right Input type per field.
+const ServiceOrderEditForm = () => {
   const fields = useFormFields();
-
-  if (!record || !fields) return <CircularProgress sx={{ m: 4 }} />;
-
-  const data = record.data || {};
-  const knownIds = new Set(fields.map((f) => f.id));
-  // Any data key that no longer matches a configured field (e.g. it was
-  // removed from the form after this submission came in) is still shown,
-  // labeled with its raw id, rather than silently dropped.
-  const orphanedKeys = Object.keys(data).filter((k) => !knownIds.has(k));
+  if (fields === null) return null;
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Typography variant="caption" color="textSecondary" sx={{ display: 'block', mb: 2 }}>
-        Eingegangen am {new Date(record.createdAt).toLocaleString('de-DE')}
+    <SimpleForm>
+      <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
+        Vom Kunden übermittelte Daten - hier korrigierbar, falls z.B. ein Tippfehler gemeldet wird.
       </Typography>
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 3 }}>
-        {fields.map((f) => <FieldValueRow key={f.id} field={f} value={data[f.id]} />)}
-        {orphanedKeys.map((k) => (
-          <FieldValueRow key={k} field={{ id: k, label: k, type: 'text', order: 0 }} value={data[k]} />
-        ))}
-      </Box>
-    </Box>
+      {fields.map((f) => {
+        const source = `data.${f.id}`;
+        if (f.type === 'checkbox') {
+          return <BooleanInput key={f.id} source={source} label={f.label} />;
+        }
+        if (f.type === 'radio' || f.type === 'select') {
+          return (
+            <SelectInput
+              key={f.id}
+              source={source}
+              label={f.label}
+              choices={((f as any).options || []).map((opt: string) => ({ id: opt, name: opt }))}
+              fullWidth
+            />
+          );
+        }
+        return (
+          <TextInput
+            key={f.id}
+            source={source}
+            label={f.label}
+            multiline={f.type === 'textarea'}
+            fullWidth
+          />
+        );
+      })}
+    </SimpleForm>
   );
 };
 
-export const ServiceOrderShow = () => (
-  <Show>
-    <ServiceOrderShowContent />
-  </Show>
+export const ServiceOrderEdit = () => (
+  <Edit>
+    <ServiceOrderEditForm />
+  </Edit>
 );

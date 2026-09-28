@@ -89,7 +89,7 @@ import { WinterkastenContentEditor } from './WinterkastenContentEditor'; // NEW 
 import { BadKreuznachContentEditor } from './BadKreuznachContentEditor'; // NEW - /infos/gelaende/bad-kreuznach
 import { HerrenteichContentEditor } from './HerrenteichContentEditor'; // NEW - /infos/gelaende/herrenteich
 import { Trash } from './Trash'; // NEW - WordPress-style Papierkorb for Pages.tsx deletes
-import { ServiceOrderList, ServiceOrderShow } from './ServiceOrders';
+import { ServiceOrderList, ServiceOrderEdit } from './ServiceOrders';
 import { TemplatesBuilder } from './TemplatesBuilder';
 import { CustomLayout } from './CustomLayout';
 import { EventsDashboard } from './EventsDashboard';
@@ -321,7 +321,7 @@ export const AdminApp = () => {
         <Resource name="banners" options={{ label: 'Werbebanner' }} list={BannerGroupsOverview} />
         {/* NEW - standalone Galerie feature, separate resource/table from pagemedia above */}
         <Resource name="pagegallery" options={{ label: 'Galerie' }} list={GalleryList} edit={GalleryEdit} create={GalleryCreate} />
-        <Resource name="serviceorders" options={{ label: 'Service Aufträge' }} list={ServiceOrderList} show={ServiceOrderShow} />
+        <Resource name="serviceorders" options={{ label: 'Service Aufträge' }} list={ServiceOrderList} edit={ServiceOrderEdit} />
         <Resource name="legalPages" options={{ label: 'Rechtliche Seiten' }} list={LegalPageList} edit={LegalPageEdit} />
     </Admin>
     );

@@ -44,31 +44,48 @@ router.post('/public', async (req, res) => {
 // GET list
 router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    const { _sort, _order, _start, _end } = req.query;
+    const { _sort, _order, _start, _end, q } = req.query;
 
-    const queryOptions: any = {};
-    // "data.*" fields can't be sorted at the DB level (they're inside a
-    // JSON blob) - fall back to createdAt, which is what every other admin
-    // list here already defaults to anyway.
-    if (_sort && _order && !String(_sort).startsWith('data.')) {
-      queryOptions.orderBy = { [_sort as string]: (_order as string).toLowerCase() };
+    // "data.*" fields live inside a JSON blob (whatever field ids a form
+    // config happened to have at submission time), so search/sort/paginate
+    // in memory here rather than at the DB level - matches old's real
+    // "Data records" search box (searches every submitted value) and
+    // sortable columns, at a scale (a contact-style form's submissions)
+    // where this is perfectly fine.
+    let orders = await prisma.serviceOrder.findMany();
+
+    if (q) {
+      const needle = String(q).toLowerCase();
+      orders = orders.filter((o) =>
+        Object.values((o.data as any) || {}).some((v) => String(v ?? '').toLowerCase().includes(needle))
+      );
+    }
+
+    const total = orders.length;
+
+    if (_sort) {
+      const sortField = String(_sort);
+      const dir = String(_order).toUpperCase() === 'ASC' ? 1 : -1;
+      const getValue = (o: any) =>
+        sortField.startsWith('data.') ? (o.data as any)?.[sortField.slice(5)] : o[sortField];
+      orders = [...orders].sort((a, b) => {
+        const av = getValue(a);
+        const bv = getValue(b);
+        if (av === bv) return 0;
+        if (av === undefined || av === null) return 1;
+        if (bv === undefined || bv === null) return -1;
+        return av > bv ? dir : -dir;
+      });
     } else {
-      queryOptions.orderBy = { createdAt: 'desc' };
+      orders = [...orders].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     }
 
     let skip = 0;
-    let take = 20;
     if (_start && _end) {
       skip = parseInt(_start as string);
-      take = parseInt(_end as string) - skip;
-      queryOptions.skip = skip;
-      queryOptions.take = take;
+      const take = parseInt(_end as string) - skip;
+      orders = orders.slice(skip, skip + take);
     }
-
-    const [orders, total] = await Promise.all([
-      prisma.serviceOrder.findMany(queryOptions),
-      prisma.serviceOrder.count(),
-    ]);
 
     res.set('Content-Range', `serviceorders ${skip}-${skip + orders.length}/${total}`);
     res.set('Access-Control-Expose-Headers', 'Content-Range');
