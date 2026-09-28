@@ -358,17 +358,65 @@ model Comment {
   eventId       String?
   userId        String?
   name          String?
-  email         String?   @unique
+  // BUG FIX: this was `@unique`, which - since a UNIQUE index treats every
+  // non-null value as globally distinct - meant the SAME real person could
+  // never leave a second comment anywhere on the entire site with the same
+  // email address (the second insert would throw and 500). Never triggered
+  // via the real public comment form only because that form never actually
+  // collected an email at all until now - see EventComments.tsx.
+  email         String?
   content       String    @db.Text
   isApproved    Boolean   @default(false)
   parentId      String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   pageSlug      String?
+  // Old's real CComment columns (view=comments) this app never had at all.
+  ip            String?
+  votesUp       Int       @default(0)
+  votesDown     Int       @default(0)
   Event         Event?    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   Comment       Comment?  @relation("CommentToComment", fields: [parentId], references: [id])
   other_Comment Comment[] @relation("CommentToComment")
   user          User?     @relation(fields: [userId], references: [id])
+}
+
+// Old's real CComment "Einstellungen" (view=settings) - deep-verified
+// against settings.xml. Threading/sort/comments-per-page/BBCode/pictures/
+// per-category-enable/Akismet/reCAPTCHA are either already handled
+// elsewhere in this app's own way (real threading via parentId already
+// exists) or are settings-only here (no BBCode editor / captcha
+// infrastructure exists yet, same "store the toggle, don't fake the
+// feature" precedent as Visforms' Spamschutz tab).
+model CommentSettings {
+  id               String   @id
+  autoPublish      Boolean  @default(false)
+  notifyModerators Boolean  @default(true)
+  moderatorEmail   String?
+  notifyOnReply    Boolean  @default(true)
+  maxLength        Int      @default(30000)
+  sortOrder        String   @default("newest") // 'newest' | 'oldest'
+  commentsPerPage  Int      @default(20)
+  showGravatar     Boolean  @default(true)
+  updatedAt        DateTime @updatedAt
+}
+
+// Old's real "E-Mail-Warteschlange" (view=emailqueues) - a visible log of
+// every notification email a comment triggered (new-comment-to-moderators,
+// reply-to-original-commenter), not just a fire-and-forget send, matching
+// old's real Von/Gesendet-von/Gesendet-an/Betreff/Inhalt/Typ/Status columns.
+model CommentEmailQueue {
+  id        String   @id @default(uuid())
+  commentId String?
+  fromEmail String?
+  fromName  String?
+  toEmail   String
+  subject   String
+  body      String   @db.Text
+  type      String // 'moderator_notification' | 'reply_notification'
+  status    String   @default("pending") // 'sent' | 'failed'
+  error     String?  @db.Text
+  createdAt DateTime @default(now())
 }
 
 model Currency {

@@ -1,19 +1,31 @@
 import { Router } from 'express';
 import { prisma } from '../utils/prisma';
 import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware';
+import { getCommentSettings } from './commentSettings.routes';
+import { notifyModeratorsOfNewComment, notifyReplyToCommenter } from '../services/commentMailer.service';
 
 const router = Router();
 
-// GET all comments (for Admin)
+// GET all comments (for Admin) - old's real view=comments search box
+// (searches comment text) + Status dropdown filter, deep-verified.
 router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    const { _sort, _order, _start, _end, eventId } = req.query;
+    const { _sort, _order, _start, _end, eventId, q, isApproved } = req.query;
     const skip = _start ? Number(_start) : 0;
     const take = _end ? Number(_end) - skip : 100;
     const orderBy: any = _sort ? { [_sort as string]: _order ? (_order as string).toLowerCase() : 'desc' } : { createdAt: 'desc' };
-    
+
     const where: any = {};
     if (eventId) where.eventId = eventId;
+    if (isApproved !== undefined) where.isApproved = isApproved === 'true';
+    if (q) {
+      const needle = String(q);
+      where.OR = [
+        { content: { contains: needle } },
+        { name: { contains: needle } },
+        { email: { contains: needle } },
+      ];
+    }
 
     const [comments, total] = await Promise.all([
       prisma.comment.findMany({
@@ -100,34 +112,73 @@ router.get('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
   }
 });
 
-// POST new comment (Public / Logged in User)
+// POST new comment (Public / Logged in User) - old's real `auto_publish`
+// setting (view=settings) honored here instead of the previous hardcoded
+// "always needs moderation"; a top-level comment notifies moderators
+// (`notify_moderators`), a reply notifies the original commenter.
 router.post('/public', async (req, res) => {
   try {
     const { eventId, pageSlug, content, name, email, parentId } = req.body;
-    
+
     // In a real scenario, we'd extract userId from a soft auth check
     // For now, we allow guest comments
-    
+
     if ((!eventId && !pageSlug) || !content) {
       return res.status(400).json({ message: 'Event ID/Page Slug und Inhalt sind erforderlich' });
     }
+
+    const settings = await getCommentSettings();
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || null;
 
     const comment = await prisma.comment.create({
       data: {
         eventId: eventId || undefined,
         pageSlug: pageSlug || undefined,
-        content,
+        content: String(content).slice(0, settings.maxLength),
         name: name || undefined,
         email: email || undefined,
         parentId: parentId || undefined,
-        isApproved: false // Requires admin moderation
+        ip,
+        isApproved: settings.autoPublish,
       }
     });
 
-    res.status(201).json({ message: 'Kommentar erfolgreich gesendet und wartet auf Freigabe', comment });
+    if (parentId) {
+      const parentComment = await prisma.comment.findUnique({ where: { id: parentId } });
+      if (parentComment) notifyReplyToCommenter(parentComment, content).catch(() => {});
+    } else {
+      notifyModeratorsOfNewComment(comment).catch(() => {});
+    }
+
+    res.status(201).json({
+      message: settings.autoPublish
+        ? 'Kommentar erfolgreich veröffentlicht'
+        : 'Kommentar erfolgreich gesendet und wartet auf Freigabe',
+      comment,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Fehler beim Erstellen des Kommentars' });
+  }
+});
+
+// Old's real voting (Ja/Nein/Gesamt columns) - a plain aggregate counter,
+// same scope as old's own (no per-voter identity tracking server-side; the
+// public widget guards one-vote-per-browser via localStorage).
+router.post('/:id/vote', async (req, res) => {
+  try {
+    const { direction } = req.body;
+    if (direction !== 'up' && direction !== 'down') {
+      return res.status(400).json({ message: 'direction muss "up" oder "down" sein' });
+    }
+    const comment = await prisma.comment.update({
+      where: { id: req.params.id as string },
+      data: direction === 'up' ? { votesUp: { increment: 1 } } : { votesDown: { increment: 1 } },
+      select: { votesUp: true, votesDown: true },
+    });
+    res.json(comment);
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -140,13 +191,20 @@ router.post('/:id/reply', authenticateJWT, authorizeAdmin, async (req, res) => {
 
     const reply = await prisma.comment.create({
       data: {
+        // BUG FIX: `pageSlug` was never copied from the parent, so a reply
+        // to a page-based comment (no eventId) ended up with neither
+        // eventId nor pageSlug set - invisible on every page, since
+        // GET /public requires one or the other.
         eventId: parentComment.eventId,
+        pageSlug: parentComment.pageSlug,
         content,
         userId: (req as any).user.id, // Admin's user ID
         parentId: parentComment.id,
         isApproved: true
       }
     });
+
+    notifyReplyToCommenter(parentComment, content).catch(() => {});
 
     res.status(201).json(reply);
   } catch (error) {

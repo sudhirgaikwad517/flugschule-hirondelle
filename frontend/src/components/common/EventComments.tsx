@@ -1,19 +1,42 @@
 import React, { useState, useEffect } from 'react';
-import { MessageSquare, CheckCircle, Send } from 'lucide-react';
+import { MessageSquare, CheckCircle, Send, ThumbsUp, ThumbsDown } from 'lucide-react';
 
 interface CommentType {
   id: string;
   content: string;
   authorName: string;
   createdAt: string;
+  votesUp?: number;
+  votesDown?: number;
   replies: CommentType[];
 }
+
+// One-vote-per-browser guard - old's real voting has no per-voter identity
+// tracking server-side either (a plain aggregate counter), so this matches
+// that same scope rather than building real account-based vote dedup.
+const VOTED_KEY = 'hirondelle_voted_comments';
+const getVoted = (): Record<string, 'up' | 'down'> => {
+  try { return JSON.parse(localStorage.getItem(VOTED_KEY) || '{}'); } catch { return {}; }
+};
+const setVoted = (id: string, direction: 'up' | 'down') => {
+  try {
+    const all = getVoted();
+    all[id] = direction;
+    localStorage.setItem(VOTED_KEY, JSON.stringify(all));
+  } catch { /* ignore */ }
+};
 
 export const EventComments = ({ eventId, pageSlug }: { eventId?: string, pageSlug?: string }) => {
   const [comments, setComments] = useState<CommentType[]>([]);
   const [newComment, setNewComment] = useState('');
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [statusMsg, setStatusMsg] = useState('');
+  const [voted, setVotedState] = useState<Record<string, 'up' | 'down'>>({});
+
+  useEffect(() => {
+    setVotedState(getVoted());
+  }, []);
 
   const fetchComments = async () => {
     try {
@@ -37,6 +60,30 @@ export const EventComments = ({ eventId, pageSlug }: { eventId?: string, pageSlu
     }
   }, [eventId, pageSlug]);
 
+  const handleVote = async (commentId: string, direction: 'up' | 'down') => {
+    if (voted[commentId]) return; // already voted from this browser
+    try {
+      const res = await fetch(`/api/comments/${commentId}/vote`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ direction }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setVoted(commentId, direction);
+        setVotedState(getVoted());
+        setComments((prev) => updateVotesRecursive(prev, commentId, updated));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const updateVotesRecursive = (items: CommentType[], id: string, votes: { votesUp: number; votesDown: number }): CommentType[] =>
+    items.map((c) => c.id === id
+      ? { ...c, votesUp: votes.votesUp, votesDown: votes.votesDown }
+      : { ...c, replies: updateVotesRecursive(c.replies, id, votes) });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment) return;
@@ -45,13 +92,14 @@ export const EventComments = ({ eventId, pageSlug }: { eventId?: string, pageSlu
       const res = await fetch('/api/comments/public', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId, pageSlug, content: newComment, name })
+        body: JSON.stringify({ eventId, pageSlug, content: newComment, name, email: email || undefined })
       });
       const data = await res.json();
       setStatusMsg(data.message);
       if (res.ok) {
         setNewComment('');
         setName('');
+        setEmail('');
       }
     } catch (err) {
       setStatusMsg('Fehler beim Senden des Kommentars');
@@ -71,7 +119,27 @@ export const EventComments = ({ eventId, pageSlug }: { eventId?: string, pageSlu
           </span>
         </div>
         <p className="text-sm text-gray-600 font-light leading-relaxed whitespace-pre-wrap">{comment.content}</p>
-        
+
+        {/* Old's real per-comment voting (Ja/Nein/Gesamt columns) */}
+        <div className="flex items-center gap-3 mt-2">
+          <button
+            type="button"
+            onClick={() => handleVote(comment.id, 'up')}
+            disabled={!!voted[comment.id]}
+            className={`flex items-center gap-1 text-xs transition-colors ${voted[comment.id] === 'up' ? 'text-luxury-gold' : 'text-gray-400 hover:text-luxury-gold'} disabled:cursor-default`}
+          >
+            <ThumbsUp size={14} /> {comment.votesUp || 0}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleVote(comment.id, 'down')}
+            disabled={!!voted[comment.id]}
+            className={`flex items-center gap-1 text-xs transition-colors ${voted[comment.id] === 'down' ? 'text-gray-600' : 'text-gray-400 hover:text-gray-600'} disabled:cursor-default`}
+          >
+            <ThumbsDown size={14} /> {comment.votesDown || 0}
+          </button>
+        </div>
+
         {/* Render Replies */}
         {comment.replies && comment.replies.length > 0 && (
           <div className="mt-2">
@@ -97,12 +165,22 @@ export const EventComments = ({ eventId, pageSlug }: { eventId?: string, pageSlu
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-gray-700 mb-1">Dein Name (Optional)</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full bg-white border border-gray-200 text-black p-3 outline-none focus:border-luxury-gold transition-colors text-sm"
               placeholder="Name eingeben..."
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-700 mb-1">Deine E-Mail (Optional, für Antwort-Benachrichtigung)</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-white border border-gray-200 text-black p-3 outline-none focus:border-luxury-gold transition-colors text-sm"
+              placeholder="E-Mail eingeben..."
             />
           </div>
           <div>

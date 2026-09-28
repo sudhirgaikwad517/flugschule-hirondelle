@@ -22,6 +22,8 @@ import { AcyChooseCampaignType } from './AcyMailing/ChooseCampaignType';
 import { AcyChooseTemplate } from './AcyMailing/ChooseTemplate';
 import { AcyEditEmail } from './AcyMailing/EditEmail';
 import { CommentList, CommentEdit } from './Comments';
+import { CommentEmailQueueList } from './CommentEmailQueue';
+import { CommentSettingsPage } from './CommentSettingsPage';
 import { BookingList, BookingShow } from './Bookings';
 import { CategoryList, CategoryEdit, CategoryCreate } from './Categories';
 import { OrganizerList, OrganizerEdit, OrganizerCreate } from './Organizers';
@@ -297,6 +299,7 @@ export const AdminApp = () => {
             <Route path="/cookie-consent" element={<Authenticated><CookieConsentConfigPage /></Authenticated>} />
             <Route path="/payment-config" element={<Authenticated><PaymentConfigPage /></Authenticated>} />
             <Route path="/settings-config" element={<Authenticated><SettingsConfigPage /></Authenticated>} />
+            <Route path="/comment-settings" element={<Authenticated><CommentSettingsPage /></Authenticated>} />
             {/* Redirect old newsletter routes */}
             <Route path="/newsletters/*" element={<Navigate to="/acymailing/dashboard" replace />} />
             <Route path="/newslettercampaigns/*" element={<Navigate to="/acymailing/dashboard" replace />} />
@@ -318,6 +321,7 @@ export const AdminApp = () => {
             <Route path="/acymailing/configuration" element={<Authenticated><AcyConfiguration /></Authenticated>} />
         </CustomRoutes>
         <Resource name="comments" options={{ label: 'Kommentare' }} list={CommentList} edit={CommentEdit} />
+        <Resource name="commentemailqueue" options={{ label: 'E-Mail-Warteschlange' }} list={CommentEmailQueueList} />
         <Resource name="news" options={{ label: 'Neuigkeiten / Blog' }} list={NewsList} edit={NewsEdit} create={NewsCreate} />
         <Resource name="downloadcategories" options={{ label: 'Download Kategorien' }} list={DownloadCategoryList} edit={DownloadCategoryEdit} create={DownloadCategoryCreate} />
         <Resource name="files" options={{ label: 'Downloads' }} list={DownloadFileList} edit={DownloadFileEdit} create={DownloadFileCreate} />

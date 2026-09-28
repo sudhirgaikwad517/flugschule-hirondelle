@@ -109,6 +109,14 @@ const FORM_ITEMS: Item[] = [
     { label: 'Formulardaten', to: '/admin/forms/service-auftrag/data', icon: <TableChartIcon fontSize="small" /> },
 ];
 
+// Old's real CComment sidebar (Comments/Email queues/Settings - view=
+// comments/emailqueues/settings) is itself a submenu too, same pattern.
+const COMMENT_ITEMS: Item[] = [
+    { label: 'Kommentare', to: '/admin/comments', icon: <CommentIcon fontSize="small" /> },
+    { label: 'E-Mail-Warteschlange', to: '/admin/commentemailqueue', icon: <EmailIcon fontSize="small" /> },
+    { label: 'Einstellungen', to: '/admin/comment-settings', icon: <SettingsIcon fontSize="small" /> },
+];
+
 // A Joomla-"Components"-style group for site-wide content tools that aren't
 // tied to Flugschule Events. "Menü" (Admin > Menü, MenuManager.tsx) manages
 // the header's top-level nav items and their sub-items, right before
@@ -120,7 +128,6 @@ const COMPONENT_ITEMS: Item[] = [
     { label: 'Galerie', to: '/admin/pagegallery', icon: <ViewCarouselIcon fontSize="small" /> },
     { label: 'Seiten', to: '/admin/pages', icon: <WebIcon fontSize="small" /> },
     { label: 'AcyMailing (Newsletter)', to: '/admin/acymailing/dashboard', icon: <EmailIcon fontSize="small" /> },
-    { label: 'Kommentare', to: '/admin/comments', icon: <CommentIcon fontSize="small" /> },
     { label: 'Downloads', to: '/admin/files', icon: <DownloadIcon fontSize="small" /> },
     { label: 'Rechtliche Seiten', to: '/admin/legalPages', icon: <ArticleIcon fontSize="small" /> },
     { label: 'Ecwid Settings', to: '/admin/ecwid-config', icon: <StorefrontIcon fontSize="small" /> },
@@ -215,6 +222,7 @@ export const CustomMenu = () => {
     const [openEvents, setOpenEvents] = useState(true);
     const [openComponents, setOpenComponents] = useState(true); // NEW - "Komponenten" group, defaults open like Events
     const [openForms, setOpenForms] = useState(true); // "Formulare" group - see FORM_ITEMS
+    const [openComments, setOpenComments] = useState(true); // "Kommentare" group - see COMMENT_ITEMS
 
     const isActivePath = (to: string) => {
         if (to === '/admin') return location.pathname === '/admin' || location.pathname === '/admin/';
@@ -263,6 +271,17 @@ export const CustomMenu = () => {
                 items={FORM_ITEMS}
                 open={openForms}
                 onToggle={() => setOpenForms(!openForms)}
+                isActivePath={isActivePath}
+            />
+
+            <Box sx={{ borderTop: `1px solid ${SIDEBAR_BORDER}`, my: 1, mx: 2 }} />
+
+            <CollapsibleGroup
+                label="Kommentare"
+                icon={<CommentIcon fontSize="small" />}
+                items={COMMENT_ITEMS}
+                open={openComments}
+                onToggle={() => setOpenComments(!openComments)}
                 isActivePath={isActivePath}
             />
 
