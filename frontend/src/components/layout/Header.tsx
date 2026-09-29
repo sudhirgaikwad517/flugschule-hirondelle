@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Menu, X, ChevronDown, ChevronRight } from 'lucide-react';
 
 // Shape returned by GET /api/menu/public (MenuItem + published MenuSubItem[]).
@@ -108,6 +108,19 @@ export const Header = () => {
   };
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // The desktop nav's real width depends on admin-managed content (Admin >
+  // Menü item count/label length, whether any Seiten exist, logged-in vs.
+  // guest) - a fixed Tailwind breakpoint (e.g. `xl:`) either switches to the
+  // mobile hamburger too early on a wide-enough window, or too late once an
+  // admin adds a longer label, letting the desktop row visibly overflow/
+  // overlap instead. This measures the nav's own real, tightly-packed
+  // natural width against the space actually available and switches to the
+  // mobile toggle at exactly the point it would otherwise break - see the
+  // measurement clone in the render below.
+  const navContainerRef = useRef<HTMLElement>(null);
+  const navMeasureRef = useRef<HTMLDivElement>(null);
+  const [navFits, setNavFits] = useState(true);
   const [expandedMobileMenu, setExpandedMobileMenu] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -174,6 +187,33 @@ export const Header = () => {
     };
   }, []);
 
+  // Real-overflow detection for the desktop nav (see navFits' own comment
+  // above) - re-checked on window resize, on real layout changes to the nav
+  // itself (ResizeObserver, e.g. a webfont finishing load and reflowing
+  // text), and whenever the nav's actual content changes.
+  useEffect(() => {
+    const checkFit = () => {
+      const measure = navMeasureRef.current;
+      const container = navContainerRef.current;
+      if (!measure || !container) return;
+      setNavFits(measure.scrollWidth <= container.clientWidth);
+    };
+
+    checkFit();
+    window.addEventListener('resize', checkFit);
+
+    let ro: ResizeObserver | null = null;
+    if (navMeasureRef.current && typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(checkFit);
+      ro.observe(navMeasureRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', checkFit);
+      ro?.disconnect();
+    };
+  }, [menuItems, dynamicPages, user, pathname]);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -197,97 +237,143 @@ export const Header = () => {
         className={`transition-colors duration-300 h-[40px] flex items-center`}
       >
         <div className="container mx-auto max-w-[1200px] px-4 md:px-8">
-          <nav className="flex items-center justify-end">
+          <nav ref={navContainerRef} className="relative flex items-center justify-end w-full">
 
-            {/* Old site's nav sits inside the same centered max-w-[1200px]
-                container as the logo and page content below it, with items
-                spread from that container's left edge to its right edge
-                (not bunched at one side) - so HOME lines up with the logo
-                and content edge, matching the old site exactly. */}
-            <div className="hidden xl:flex items-center justify-between w-full">
-
-              <Link to="/" className={getNavClass('/')}>
+            {/* Hidden measurement clone - rendered at its own natural,
+                tightly-packed width (never wrapped, never spread out via
+                justify-between) purely so navFits can detect the real
+                minimum width this content needs. Must stay in exact sync
+                with the visible nav below. */}
+            <div
+              ref={navMeasureRef}
+              aria-hidden="true"
+              className="absolute invisible flex items-center pointer-events-none"
+              style={{ width: 'max-content', top: 0, left: 0, whiteSpace: 'nowrap' }}
+            >
+              <Link to="/" className={getNavClass('/')} tabIndex={-1}>
                 <span className="flex items-center justify-center">
                   H
-                  {/* Old site's actual icotitleslide.png (white ring +
-                      swallow silhouette, cropped tight to its own content -
-                      the source file ships with ~20% transparent padding on
-                      every side, which was quietly shrinking the visible
-                      ring back down near text-size even at a bigger
-                      container) standing in for the "O", sized clearly
-                      larger than the surrounding letters and sitting close
-                      to them, matching the live site. */}
                   <span className="w-7 h-7 flex items-center justify-center shrink-0">
-                    <img src="/icotitleslide.png" alt="O" className="w-full h-full object-contain" />
+                    <img src="/icotitleslide.png" alt="" className="w-full h-full object-contain" />
                   </span>
                   ME
                 </span>
               </Link>
-
-              {/* Admin-managed nav (Admin > Menü) - Ausbildung, Performance,
-                  Reisen, Buchungskalender, Tandem, Service, Infos and any
-                  future items/order come from here now (see NavDropdown
-                  above). The Reisen entry used to be a full-width mega menu
-                  with tour thumbnails; that's a per-item design the generic
-                  admin-managed dropdown doesn't reproduce, so it now renders
-                  as a plain dropdown list like the others. */}
               {menuItems.map((item) => (
                 <NavDropdown key={item.id} item={item} getNavClass={getNavClass} />
               ))}
-
-              {/* Seiten Dropdown - admin-created pages (Admin > Seiten), only rendered when at least one exists */}
               {dynamicPages.length > 0 && (
-                <div className="relative group h-[40px] flex items-center">
-                  <span className={getNavClass('__seiten__')}>
-                    SEITEN <ChevronDown className="w-3 h-3" />
-                  </span>
-                  <div className="absolute top-[40px] right-0 w-64 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl">
-                    <ul className="flex flex-col">
-                      {dynamicPages.map((page) => (
-                        <li key={page.slug}>
-                          <Link to={`/${page.slug}`} className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">
-                            {page.navLabel || page.title}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+                <span className={getNavClass('__seiten__')}>
+                  SEITEN <ChevronDown className="w-3 h-3" />
+                </span>
               )}
-
-              <Link to="/shop" className={getNavClass('/shop')}>
+              <Link to="/shop" className={getNavClass('/shop')} tabIndex={-1}>
                 SHOP
               </Link>
-
               {user ? (
-                <div className="relative group h-[40px] flex items-center ml-2">
-                  <span className="cursor-pointer border border-[#394553] text-[#394553] text-[11px] uppercase tracking-[0.15em] font-semibold px-4 py-2 hover:bg-[#394553] hover:text-white transition-all rounded-sm flex items-center gap-1">
-                    {user.name ? user.name.split(' ')[0] : 'KONTO'} <ChevronDown className="w-3 h-3" />
-                  </span>
-                  <div className="absolute top-[40px] right-0 w-48 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl">
-                    <ul className="flex flex-col">
-                      <li><Link to="/profil" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Mein Profil</Link></li>
-                      <li><button onClick={handleLogout} className="block w-full text-left px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Logout</button></li>
-                    </ul>
-                  </div>
-                </div>
+                <span className="cursor-pointer border border-[#394553] text-[#394553] text-[11px] uppercase tracking-[0.15em] font-semibold px-4 py-2 rounded-sm flex items-center gap-1 ml-2">
+                  {user.name ? user.name.split(' ')[0] : 'KONTO'} <ChevronDown className="w-3 h-3" />
+                </span>
               ) : (
-                <Link to="/anmeldung" className={getNavClass('/anmeldung')}>
+                <Link to="/anmeldung" className={getNavClass('/anmeldung')} tabIndex={-1}>
                   KONTO
                 </Link>
               )}
-
             </div>
 
-            {/* Mobile Menu Toggle */}
-            <div className="xl:hidden flex items-center justify-end">
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="text-white p-2"
-              >
-                {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
-            </div>
+            {navFits ? (
+              /* Old site's nav sits inside the same centered max-w-[1200px]
+                  container as the logo and page content below it, with items
+                  spread from that container's left edge to its right edge
+                  (not bunched at one side) - so HOME lines up with the logo
+                  and content edge, matching the old site exactly. */
+              <div className="flex items-center justify-between w-full">
+
+                <Link to="/" className={getNavClass('/')}>
+                  <span className="flex items-center justify-center">
+                    H
+                    {/* Old site's actual icotitleslide.png (white ring +
+                        swallow silhouette, cropped tight to its own content -
+                        the source file ships with ~20% transparent padding on
+                        every side, which was quietly shrinking the visible
+                        ring back down near text-size even at a bigger
+                        container) standing in for the "O", sized clearly
+                        larger than the surrounding letters and sitting close
+                        to them, matching the live site. */}
+                    <span className="w-7 h-7 flex items-center justify-center shrink-0">
+                      <img src="/icotitleslide.png" alt="O" className="w-full h-full object-contain" />
+                    </span>
+                    ME
+                  </span>
+                </Link>
+
+                {/* Admin-managed nav (Admin > Menü) - Ausbildung, Performance,
+                    Reisen, Buchungskalender, Tandem, Service, Infos and any
+                    future items/order come from here now (see NavDropdown
+                    above). The Reisen entry used to be a full-width mega menu
+                    with tour thumbnails; that's a per-item design the generic
+                    admin-managed dropdown doesn't reproduce, so it now renders
+                    as a plain dropdown list like the others. */}
+                {menuItems.map((item) => (
+                  <NavDropdown key={item.id} item={item} getNavClass={getNavClass} />
+                ))}
+
+                {/* Seiten Dropdown - admin-created pages (Admin > Seiten), only rendered when at least one exists */}
+                {dynamicPages.length > 0 && (
+                  <div className="relative group h-[40px] flex items-center">
+                    <span className={getNavClass('__seiten__')}>
+                      SEITEN <ChevronDown className="w-3 h-3" />
+                    </span>
+                    <div className="absolute top-[40px] right-0 w-64 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl">
+                      <ul className="flex flex-col">
+                        {dynamicPages.map((page) => (
+                          <li key={page.slug}>
+                            <Link to={`/${page.slug}`} className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">
+                              {page.navLabel || page.title}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                <Link to="/shop" className={getNavClass('/shop')}>
+                  SHOP
+                </Link>
+
+                {user ? (
+                  <div className="relative group h-[40px] flex items-center ml-2">
+                    <span className="cursor-pointer border border-[#394553] text-[#394553] text-[11px] uppercase tracking-[0.15em] font-semibold px-4 py-2 hover:bg-[#394553] hover:text-white transition-all rounded-sm flex items-center gap-1">
+                      {user.name ? user.name.split(' ')[0] : 'KONTO'} <ChevronDown className="w-3 h-3" />
+                    </span>
+                    <div className="absolute top-[40px] right-0 w-48 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl">
+                      <ul className="flex flex-col">
+                        <li><Link to="/profil" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Mein Profil</Link></li>
+                        <li><button onClick={handleLogout} className="block w-full text-left px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Logout</button></li>
+                      </ul>
+                    </div>
+                  </div>
+                ) : (
+                  <Link to="/anmeldung" className={getNavClass('/anmeldung')}>
+                    KONTO
+                  </Link>
+                )}
+
+              </div>
+            ) : (
+              /* Mobile Menu Toggle - shown exactly when the real desktop nav
+                  content (measured above) no longer fits, regardless of
+                  viewport width. */
+              <div className="flex items-center justify-end">
+                <button
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="text-white p-2"
+                >
+                  {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                </button>
+              </div>
+            )}
 
           </nav>
         </div>
