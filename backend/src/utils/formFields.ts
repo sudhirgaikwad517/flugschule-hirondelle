@@ -40,6 +40,10 @@ export interface FormFieldDef {
   frontDisplay?: FrontDisplayMode; // '0' when absent (legacy rows)
   min?: number; // number/date
   max?: number; // number/date
+  // Old Visforms' real per-field "Zusatzinfo" (custominfo) - genuine
+  // customer-facing help text shown next to the field (e.g. a surcharge
+  // warning, packing instructions), separate from the placeholder.
+  helpText?: string;
 }
 
 // Fields with no submitted value of their own - excluded from validation,

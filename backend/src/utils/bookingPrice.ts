@@ -117,9 +117,24 @@ export async function calculateBookingPrice(
   const tieredFee = findApplicableTieredFee(event, isRegisteredUser);
   // Positive = discount (price reduced), negative = surcharge (price
   // increased) - see applyTieredFee's own comment.
+  //
+  // BUG FIX: old's real getDifferentFeeValue() (administrator/components/
+  // com_matukio/helpers/fees.php) is applied PER SEAT - each of the N
+  // booked tickets independently gets its own fees±value adjustment, so a
+  // group's real total scales as N x (fees +/- value) for an ABSOLUTE-value
+  // tiered fee. This previously applied `value` once against the whole
+  // multi-ticket total instead of once per ticket, undercharging/
+  // overcharging by (N-1) x value on any booking with quantity > 1 (e.g. a
+  // real 2-ticket booking with a flat EUR50 discount was short EUR50).
+  // A PERCENTAGE-based fee needs no such scaling: percentage-of-the-total
+  // already equals the sum of percentage-of-each-seat (both linear), so
+  // only the absolute-value branch is multiplied by quantity here.
   let tieredDiscount = 0;
   if (tieredFee) {
-    tieredDiscount = applyTieredFee(runningTotal, Number(tieredFee.value) || 0, !!tieredFee.isPercentage, !!tieredFee.isDiscount);
+    const isPercentage = !!tieredFee.isPercentage;
+    const rawValue = Number(tieredFee.value) || 0;
+    const scaledValue = isPercentage ? rawValue : rawValue * Math.max(1, totalQuantity);
+    tieredDiscount = applyTieredFee(runningTotal, scaledValue, isPercentage, !!tieredFee.isDiscount);
     runningTotal -= tieredDiscount;
   }
 

@@ -138,9 +138,9 @@ router.get('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
 // Create campaign
 router.post('/', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    const { subject, name, previewLine, body, design, status, sentAt, targetList, fromName, fromEmail, replyToName, replyToEmail, attachments, keywords, visible, bcc, bounceEmail, trackingEnabled } = req.body;
+    const { subject, name, previewLine, body, design, status, sentAt, targetList, fromName, fromEmail, replyToName, replyToEmail, attachments, keywords, visible, bcc, bounceEmail, trackingEnabled, customCss } = req.body;
     const campaign = await prisma.newsletterCampaign.create({
-      data: { subject, name, previewLine, body, design, status: status || 'DRAFT', sentAt: sentAt ? new Date(sentAt) : null, targetList: targetList || 'GENERAL', fromName, fromEmail, replyToName, replyToEmail, attachments, keywords, visible: visible ?? true, bcc, bounceEmail, trackingEnabled: trackingEnabled ?? true }
+      data: { subject, name, previewLine, body, design, status: status || 'DRAFT', sentAt: sentAt ? new Date(sentAt) : null, targetList: targetList || 'GENERAL', fromName, fromEmail, replyToName, replyToEmail, attachments, keywords, visible: visible ?? true, bcc, bounceEmail, trackingEnabled: trackingEnabled ?? true, customCss }
     });
     
     if (campaign.status === 'SCHEDULED') {
@@ -156,10 +156,10 @@ router.post('/', authenticateJWT, authorizeAdmin, async (req, res) => {
 // Update campaign
 router.put('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    const { subject, name, previewLine, body, design, status, sentAt, targetList, fromName, fromEmail, replyToName, replyToEmail, attachments, keywords, visible, bcc, bounceEmail, trackingEnabled } = req.body;
+    const { subject, name, previewLine, body, design, status, sentAt, targetList, fromName, fromEmail, replyToName, replyToEmail, attachments, keywords, visible, bcc, bounceEmail, trackingEnabled, customCss } = req.body;
     const campaign = await prisma.newsletterCampaign.update({
       where: { id: (req.params.id as string) },
-      data: { subject, name, previewLine, body, design, status, sentAt: sentAt ? new Date(sentAt) : null, targetList, fromName, fromEmail, replyToName, replyToEmail, attachments, keywords, visible, bcc, bounceEmail, trackingEnabled }
+      data: { subject, name, previewLine, body, design, status, sentAt: sentAt ? new Date(sentAt) : null, targetList, fromName, fromEmail, replyToName, replyToEmail, attachments, keywords, visible, bcc, bounceEmail, trackingEnabled, customCss }
     });
 
     // Refresh the queue only if sending hasn't actually started yet -

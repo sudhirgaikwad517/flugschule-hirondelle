@@ -15,6 +15,7 @@ interface List {
   welcomeBody?: string | null;
   goodbyeSubject?: string | null;
   goodbyeBody?: string | null;
+  tracking?: boolean;
 }
 
 export const AcyLists = () => {
@@ -53,7 +54,8 @@ export const AcyLists = () => {
         description: '',
         color: '#0ea5e9',
         visible: true,
-        active: true
+        active: true,
+        tracking: true
       });
     }
     setIsModalOpen(true);
@@ -220,6 +222,10 @@ export const AcyLists = () => {
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" checked={editingList.active || false} onChange={(e) => setEditingList({...editingList, active: e.target.checked})} className="rounded text-[#0ea5e9] focus:ring-[#0ea5e9]" />
                   <span className="text-sm text-slate-700">Aktiv</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={editingList.tracking ?? true} onChange={(e) => setEditingList({...editingList, tracking: e.target.checked})} className="rounded text-[#0ea5e9] focus:ring-[#0ea5e9]" />
+                  <span className="text-sm text-slate-700">Tracking (Öffnungen/Klicks)</span>
                 </label>
               </div>
 

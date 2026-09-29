@@ -26,6 +26,32 @@ const setVoted = (id: string, direction: 'up' | 'down') => {
   } catch { /* ignore */ }
 };
 
+// Old's real CComment setting date_format="age" - a relative "vor X Jahren"
+// style timestamp, not the absolute calendar date this widget showed before.
+const formatRelativeDate = (isoDate: string): string => {
+  const seconds = Math.max(0, (Date.now() - new Date(isoDate).getTime()) / 1000);
+  // "vor" takes the dative case, e.g. "vor 5 Tagen" (not "Tage") - Tag/
+  // Monat/Jahr's plural dative form adds -n, unlike Sekunde/Minute/Stunde
+  // whose ordinary plural already is the dative form.
+  const units: [number, string, string][] = [
+    [60, 'Sekunde', 'Sekunden'],
+    [60, 'Minute', 'Minuten'],
+    [24, 'Stunde', 'Stunden'],
+    [30, 'Tag', 'Tagen'],
+    [12, 'Monat', 'Monaten'],
+    [Infinity, 'Jahr', 'Jahren'],
+  ];
+  let value = seconds;
+  for (const [divisor, singular, plural] of units) {
+    if (value < divisor) {
+      const rounded = Math.max(1, Math.floor(value));
+      return `vor ${rounded} ${rounded === 1 ? singular : plural}`;
+    }
+    value /= divisor;
+  }
+  return new Date(isoDate).toLocaleDateString('de-DE');
+};
+
 export const EventComments = ({ eventId, pageSlug }: { eventId?: string, pageSlug?: string }) => {
   const [comments, setComments] = useState<CommentType[]>([]);
   const [newComment, setNewComment] = useState('');
@@ -157,7 +183,7 @@ export const EventComments = ({ eventId, pageSlug }: { eventId?: string, pageSlu
         <div className="flex items-baseline gap-2 mb-1">
           <span className="font-bold text-sm text-luxury-dark">{comment.authorName}</span>
           <span className="text-xs text-gray-400">
-            {new Date(comment.createdAt).toLocaleDateString('de-DE')}
+            {formatRelativeDate(comment.createdAt)}
           </span>
         </div>
         <p className="text-sm text-gray-600 font-light leading-relaxed whitespace-pre-wrap">{comment.content}</p>

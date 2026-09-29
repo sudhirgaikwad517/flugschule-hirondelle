@@ -15,9 +15,11 @@ import { isDataField } from './formFields';
 // reason the AEF-gated fields don't render on the real live site: they are
 // not applicable, not "missing". Every field below is one that a) genuinely
 // renders on old's real edit page without a subscription, and b) has a real
-// effect here (with the sole documented exception of the spam-bot/captcha
-// sub-settings, which are intentionally settings-only per explicit user
-// choice - see FormBuilder.tsx's Spamschutz tab).
+// effect here - see visformsSpamCheck.service.ts's own comment for exactly
+// which spam.* sub-settings are actually enforced (blacklist/whitelist,
+// StopForumSpam, SpamCop) vs. still settings-only because they need a paid/
+// keyed account or captcha widget this project doesn't have (Project
+// Honeypot, the regex/generic-email checks, captcha).
 
 export type FrontDisplayMode = '0' | '1' | '2' | '3'; // None / Both / List only / Detail only
 
@@ -239,10 +241,22 @@ export function resolveFormSettings(stored: unknown): FormSettings {
 // URL/email body etc.) let an admin reference a submitted field's value by
 // its id in curly braces, e.g. "Danke, {name}!" - resolved here against the
 // actual submission data at send time.
-export function replaceTokens(template: string, data: Record<string, any>): string {
+export function replaceTokens(
+  template: string,
+  data: Record<string, any>,
+  fields?: { id: string; label: string; type: string }[]
+): string {
   if (!template) return template;
+  const fieldById = new Map((fields || []).map((f) => [f.id, f]));
   return template.replace(/\{([a-zA-Z0-9_]+)\}/g, (match, key) => {
     const value = data[key];
+    // A checkbox field's own value is a boolean here, not text - substitute
+    // its label when checked (matching old Visforms' real checkbox field
+    // value, which IS the field's own label string) and nothing when not,
+    // rather than the literal words "true"/"false".
+    if (fieldById.get(key)?.type === 'checkbox') {
+      return value ? fieldById.get(key)!.label : '';
+    }
     return value === undefined || value === null || value === '' ? '' : String(value);
   });
 }

@@ -197,14 +197,22 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
     }) || null;
   })();
 
+  // BUG FIX: matches the server's own bookingPrice.ts fix - old applies an
+  // ABSOLUTE-value tiered fee PER SEAT (each booked ticket independently
+  // gets its own fees +/- value), so a group's real total scales as
+  // N x value, not a single flat value regardless of ticket count. A
+  // PERCENTAGE-based fee needs no such scaling (already linear against the
+  // total). Without this, the preview shown here would undercharge/
+  // overcharge and disagree with what the server actually bills.
+  const tieredFeeQuantityScale = applicableTieredFee?.isPercentage ? 1 : Math.max(1, totalTickets);
   const priceAfterTieredFee = applicableTieredFee ? Math.max(0,
     applicableTieredFee.isPercentage
       ? (applicableTieredFee.isDiscount
         ? totalPrice * (1 - Number(applicableTieredFee.value) / 100)
         : totalPrice * (1 + Number(applicableTieredFee.value) / 100))
       : (applicableTieredFee.isDiscount
-        ? totalPrice - Number(applicableTieredFee.value)
-        : totalPrice + Number(applicableTieredFee.value))
+        ? totalPrice - Number(applicableTieredFee.value) * tieredFeeQuantityScale
+        : totalPrice + Number(applicableTieredFee.value) * tieredFeeQuantityScale)
   ) : totalPrice;
 
   const extrasTotal = (event.extraFeeOptions || []).reduce((sum: number, opt: any, i: number) => {
@@ -685,7 +693,7 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
                 <div className="text-right w-full">
                   {applicableTieredFee && (
                     <p className={`text-sm mb-1 ${applicableTieredFee.isDiscount ? 'text-green-600' : 'text-gray-600'}`}>
-                      {applicableTieredFee.title || (applicableTieredFee.isDiscount ? 'Rabatt' : 'Zuschlag')}: {applicableTieredFee.isDiscount ? '-' : '+'} {applicableTieredFee.isPercentage ? `${applicableTieredFee.value}%` : `€ ${Number(applicableTieredFee.value).toFixed(2)}`}
+                      {applicableTieredFee.title || (applicableTieredFee.isDiscount ? 'Rabatt' : 'Zuschlag')}: {applicableTieredFee.isDiscount ? '-' : '+'} {applicableTieredFee.isPercentage ? `${applicableTieredFee.value}%` : `€ ${(Number(applicableTieredFee.value) * tieredFeeQuantityScale).toFixed(2)}`}
                     </p>
                   )}
                   {extrasTotal > 0 && (
@@ -776,7 +784,7 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
                     {applicableTieredFee && (
                       <div className="grid grid-cols-[1fr_auto] gap-y-1 text-sm text-green-600 mt-2">
                         <div>{applicableTieredFee.title || 'Rabatt'}</div>
-                        <div className="text-right">- {applicableTieredFee.isPercentage ? `${applicableTieredFee.value}%` : `€ ${Number(applicableTieredFee.value).toFixed(2)}`}</div>
+                        <div className="text-right">- {applicableTieredFee.isPercentage ? `${applicableTieredFee.value}%` : `€ ${(Number(applicableTieredFee.value) * tieredFeeQuantityScale).toFixed(2)}`}</div>
                       </div>
                     )}
                     {extrasTotal > 0 && (

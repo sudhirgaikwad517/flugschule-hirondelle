@@ -770,7 +770,7 @@ class BookingRequestError extends Error {
 // checkbox unchecked (see EventBookingModal.tsx's optional toggle).
 async function subscribeFromBookingCheckbox(customerDetails: any) {
   if (!customerDetails?.newsletterOptIn || !customerDetails?.email) return;
-  await subscribeToNewsletter(customerDetails.email, customerDetails.fullName, 'GENERAL');
+  await subscribeToNewsletter(customerDetails.email, customerDetails.fullName, 'GENERAL', { source: 'booking' });
 }
 
 async function createBookingAtomic(params: {

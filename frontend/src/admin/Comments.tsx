@@ -124,6 +124,7 @@ export const CommentList = () => (
   <List title="Kommentare" filters={<CommentFilter />} actions={<ListActions />} bulkActionButtons={false} sort={{ field: 'createdAt', order: 'DESC' }}>
     <Datagrid rowClick="edit" bulkActionButtons={<></>}>
       <TextField source="authorName" label="Autor" />
+      <TextField source="registeredUser" label="User-ID" emptyText="-" />
       <TextField source="eventTitle" label="Ziel" />
       <TextField source="content" label="Inhalt" />
       <StatusIcon />
@@ -199,6 +200,7 @@ export const CommentEdit = () => (
     <SimpleForm>
       <TextField source="authorName" label="Autor" />
       <TextField source="email" label="E-Mail" emptyText="-" />
+      <TextField source="registeredUser" label="User-ID" emptyText="-" />
       <TextField source="ip" label="IP-Adresse" emptyText="-" />
       <TextField source="eventTitle" label="Ziel" />
       <DateField source="createdAt" label="Datum" showTime />

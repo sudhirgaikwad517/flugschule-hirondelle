@@ -1,6 +1,7 @@
 import imaps from 'imap-simple';
 import { simpleParser } from 'mailparser';
 import { prisma } from '../utils/prisma';
+import { logNewsletterHistory } from './newsletterHistory.service';
 
 // Old AcyMailing's real bounce handling (MailboxHelper.php): a dedicated
 // mailbox that receives bounced-message notifications gets polled
@@ -80,15 +81,17 @@ export async function checkBounces(): Promise<BounceCheckResult> {
       });
 
       for (const sub of matched) {
+        const bounceReason = subject.slice(0, 500) || 'Hard bounce erkannt';
         await prisma.newsletter.update({
           where: { id: sub.id },
           data: {
             isActive: false,
             bounced: true,
-            bounceReason: subject.slice(0, 500) || 'Hard bounce erkannt',
+            bounceReason,
             bouncedAt: new Date(),
           },
         });
+        await logNewsletterHistory(sub.email, 'bounce', { listType: sub.listType, reason: bounceReason });
         suppressed++;
       }
     }

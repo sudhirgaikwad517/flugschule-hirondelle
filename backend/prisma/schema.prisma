@@ -295,6 +295,13 @@ model Newsletter {
   // vocabulary needing referential integrity.
   tags String?
 
+  // Old AcyMailing's real hiron_acym_user.source - where this subscriber
+  // actually came from (e.g. "frontend" for a self-service signup form,
+  // "backend" for an admin manually adding someone, "import" for a CSV
+  // import). Shown on EditSubscriber.tsx instead of a fake hardcoded
+  // "System" placeholder.
+  source String?
+
   // Old AcyMailing's real IMAP-mailbox-polling bounce handling (task: real
   // bounce handling) - a hard-bounced address is suppressed from future
   // sends (see getTargetSubscribers/resolveSegmentRecipients, both already
@@ -342,6 +349,10 @@ model NewsletterList {
   welcomeBody    String? @db.LongText
   goodbyeSubject String?
   goodbyeBody    String? @db.LongText
+  // Old AcyMailing's real per-list "tracking" toggle - opens/clicks are only
+  // recorded for a campaign send if BOTH the campaign itself and the
+  // recipient's list have tracking enabled (see newsletterQueueProcessor.ts).
+  tracking Boolean @default(true)
 }
 
 model AdBanner {
@@ -565,6 +576,11 @@ model NewsletterCampaign {
   // above) vs. a system notification. Purely a label, doesn't change
   // sending behavior on its own.
   type            String    @default("news") // news | autoresponder | notification
+  // Old AcyMailing's real per-campaign custom CSS stylesheet override
+  // (confirmed genuinely used on ~1% of real historical campaigns) -
+  // injected into the sent email's <head> alongside the design's own
+  // generated styles.
+  customCss       String?   @db.Text
 }
 
 model NewsletterTemplate {
@@ -616,6 +632,23 @@ model NewsletterTrackingEvent {
 
   @@index([campaignId, type])
   @@index([subscriberEmail])
+}
+
+// Old AcyMailing's real hiron_acym_history - a real per-subscriber
+// subscribe/confirm/unsubscribe/bounce event log (old's "Aktivitätsverlauf"
+// tab, view Users/tmpl/edit_history.php). Previously had no equivalent at
+// all here - the admin tab was a permanent hardcoded "no data" stub.
+model NewsletterHistory {
+  id        String   @id @default(uuid())
+  email     String
+  action    String // 'subscribe' | 'confirm' | 'unsubscribe' | 'bounce'
+  listType  String?
+  reason    String?  @db.Text
+  ip        String?
+  source    String?
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
 }
 
 model NewsletterConfig {

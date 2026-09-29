@@ -30,7 +30,7 @@ router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
     const [comments, total] = await Promise.all([
       prisma.comment.findMany({
         where, skip, take, orderBy,
-        include: { Event: { select: { title: true } }, user: { select: { name: true } } }
+        include: { Event: { select: { title: true } }, user: { select: { name: true, email: true } } }
       }),
       prisma.comment.count({ where })
     ]);
@@ -39,7 +39,12 @@ router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
     const formattedComments = comments.map((c: any) => ({
       ...c,
       authorName: c.user?.name || c.name || 'Anonym',
-      eventTitle: c.Event?.title || c.pageSlug || 'Unbekannt'
+      eventTitle: c.Event?.title || c.pageSlug || 'Unbekannt',
+      // Old's real "User-ID" column: whether (and which) registered Joomla
+      // user posted this, vs. a plain guest. Shown as the linked account's
+      // email rather than a raw internal id, since that's what actually
+      // identifies the person to an admin here.
+      registeredUser: c.user?.email || null
     }));
 
     res.set('Content-Range', `comments ${skip}-${skip + formattedComments.length}/${total}`);
@@ -111,10 +116,15 @@ router.get('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
     const comment = await prisma.comment.findUnique({
       where: { id: (req.params.id as string) },
-      include: { Event: { select: { title: true } }, user: { select: { name: true } } }
+      include: { Event: { select: { title: true } }, user: { select: { name: true, email: true } } }
     });
     if (!comment) return res.status(404).json({ message: 'Not found' });
-    res.json(comment);
+    res.json({
+      ...comment,
+      authorName: (comment as any).user?.name || comment.name || 'Anonym',
+      eventTitle: (comment as any).Event?.title || comment.pageSlug || 'Unbekannt',
+      registeredUser: (comment as any).user?.email || null
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });

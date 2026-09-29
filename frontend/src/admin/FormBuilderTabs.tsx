@@ -157,8 +157,8 @@ export const SpamschutzTab = ({ value, onChange, showHelp }: { value: any; onCha
             )}
             {sub === 1 && (
                 <Box sx={{ maxWidth: 640 }}>
-                    <Alert severity="warning" sx={{ mb: 2 }}>
-                        Diese Einstellungen werden gespeichert, sind aber noch nicht aktiv - dafür wären externe API-Zugänge (StopForumSpam, Project Honeypot, SpamCop-DNSBL) nötig, die dieses System bisher nicht hat.
+                    <Alert severity="info" sx={{ mb: 2 }}>
+                        E-Mail-/IP-Whitelist &amp; -Blacklist, StopForumSpam.com und SpamCop-DNSBL sind aktiv (keine API-Schlüssel nötig). Project Honeypot, Regex-Prüfung und der Generische-E-Mail-Check werden gespeichert, sind aber noch nicht aktiv - dafür wäre ein eigener Project-Honeypot-API-Key bzw. eine genauere Definition der Regex-/Generisch-Regeln nötig.
                     </Alert>
                     <YesNo label="Spambot-Check aktivieren" value={value.spambotCheckEnabled} onChange={(v) => onChange({ ...value, spambotCheckEnabled: v })} />
                     <YesNo label="IP-Adresse prüfen" value={value.spambotCheckIp} onChange={(v) => onChange({ ...value, spambotCheckIp: v })} />

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { SafeHtml } from './SafeHtml';
 
@@ -30,6 +30,9 @@ interface FormFieldDef {
   defaultValue?: string;
   min?: number;
   max?: number;
+  // Old Visforms' real per-field "Zusatzinfo" (custominfo) - genuine
+  // customer-facing help text shown next to the field.
+  helpText?: string;
 }
 
 interface PublicSettings {
@@ -183,6 +186,20 @@ export const FormRenderer = ({ formId }: { formId: string }) => {
   );
 
   const renderField = (field: FormFieldDef, index: number) => {
+    const inner = renderFieldInner(field, index);
+    if (!field.helpText) return inner;
+    return (
+      <Fragment key={field.id}>
+        {inner}
+        <div className="flex flex-col md:flex-row md:items-start gap-2 md:gap-8 -mt-4">
+          <div className="hidden md:block md:w-1/3"></div>
+          <p className="md:w-2/3 text-xs text-gray-500 leading-relaxed">{field.helpText}</p>
+        </div>
+      </Fragment>
+    );
+  };
+
+  const renderFieldInner = (field: FormFieldDef, index: number) => {
     const isFirst = index === 0;
     const commonLabel = (
       <label htmlFor={field.id} className="md:w-1/3 text-sm text-gray-700 font-medium group-focus-within:text-[#53a8c7] transition-colors">

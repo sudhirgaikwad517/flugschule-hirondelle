@@ -5,6 +5,7 @@ import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware'
 import { getNewsletterTransporter } from '../utils/newsletterTransporter';
 import { verifyUnsubscribeToken } from '../utils/unsubscribeToken';
 import { triggerAutomationsForSubscribe } from '../services/newsletterAutomation.service';
+import { logNewsletterHistory } from '../services/newsletterHistory.service';
 
 const router = Router();
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
@@ -67,7 +68,12 @@ async function sendAutoresponderEmail(
 // checkbox. Mirrors old Matukio's matukioccnewsletter plugin, which
 // subscribed via ccNewsletter's own addSubscriber() on successful booking
 // rather than silently/without going through the real subscribe flow.
-export async function subscribeToNewsletter(email: string, name: string | null | undefined, listType: string = 'GENERAL') {
+export async function subscribeToNewsletter(
+  email: string,
+  name: string | null | undefined,
+  listType: string = 'GENERAL',
+  meta: { ip?: string | null; source?: string | null } = {}
+) {
   const cleanName = typeof name === 'string' && name.trim() ? name.trim() : null;
 
   const config = await prisma.newsletterConfig.findUnique({ where: { id: 'default' } });
@@ -101,6 +107,7 @@ export async function subscribeToNewsletter(email: string, name: string | null |
       }
       await sendAutoresponderEmail(listType, 'welcome', email.toLowerCase(), config);
       await triggerAutomationsForSubscribe(email.toLowerCase(), listType);
+      await logNewsletterHistory(email, 'subscribe', { listType, ip: meta.ip, source: meta.source });
       return { message: 'Successfully resubscribed' };
     }
     return { message: 'Email is already subscribed to this list', alreadySubscribed: true };
@@ -113,17 +120,20 @@ export async function subscribeToNewsletter(email: string, name: string | null |
       listType,
       isActive: true,
       isConfirmed: !requireConfirmation,
-      confirmToken
+      confirmToken,
+      source: meta.source || null
     }
   });
 
   if (requireConfirmation && confirmToken) {
     await sendConfirmationEmail(email.toLowerCase(), confirmToken, config);
+    await logNewsletterHistory(email, 'subscribe', { listType, ip: meta.ip, source: meta.source });
     return { message: 'Bitte bestätigen Sie Ihre E-Mail-Adresse - wir haben Ihnen einen Link geschickt.' };
   }
 
   await sendAutoresponderEmail(listType, 'welcome', email.toLowerCase(), config);
   await triggerAutomationsForSubscribe(email.toLowerCase(), listType);
+  await logNewsletterHistory(email, 'subscribe', { listType, ip: meta.ip, source: meta.source });
   return { message: 'Successfully subscribed' };
 }
 
@@ -136,7 +146,7 @@ router.post('/subscribe', async (req, res) => {
       return res.status(400).json({ message: 'Valid email is required' });
     }
 
-    const result = await subscribeToNewsletter(email, name, listType);
+    const result = await subscribeToNewsletter(email, name, listType, { ip: req.ip, source: 'frontend' });
     res.status(result.alreadySubscribed ? 400 : 201).json(result);
   } catch (error) {
     console.error('Newsletter subscribe error:', error);
@@ -165,6 +175,7 @@ router.post('/public/confirm', async (req, res) => {
     const config = await prisma.newsletterConfig.findUnique({ where: { id: 'default' } });
     await sendAutoresponderEmail(subscriber.listType, 'welcome', subscriber.email, config);
     await triggerAutomationsForSubscribe(subscriber.email, subscriber.listType);
+    await logNewsletterHistory(subscriber.email, 'confirm', { listType: subscriber.listType, ip: req.ip });
 
     res.json({ message: 'E-Mail-Adresse erfolgreich bestätigt' });
   } catch (error) {
@@ -194,12 +205,36 @@ router.get('/email/:email/details', authenticateJWT, authorizeAdmin, async (req,
 
     const base = subs[0];
     
-    // Get list of queue items (Email History)
-    const history = await prisma.newsletterQueue.findMany({
+    // Get list of queue items (Email History) - old's real edit_history.php
+    // shows subject (linked), send date, per-email open count+date, click
+    // count, and bounce info per row, not just a raw queue status.
+    const rawHistory = await prisma.newsletterQueue.findMany({
       where: { subscriberEmail: email },
       orderBy: { scheduledAt: 'desc' },
       take: 50
     });
+    const historyCampaignIds = Array.from(new Set(rawHistory.map(h => h.campaignId)));
+    const [historyCampaigns, historyOpens, historyClicks] = await Promise.all([
+      prisma.newsletterCampaign.findMany({ where: { id: { in: historyCampaignIds } }, select: { id: true, subject: true } }),
+      prisma.newsletterTrackingEvent.findMany({ where: { subscriberEmail: email, type: 'OPEN', campaignId: { in: historyCampaignIds } }, orderBy: { createdAt: 'asc' } }),
+      prisma.newsletterTrackingEvent.findMany({ where: { subscriberEmail: email, type: 'CLICK', campaignId: { in: historyCampaignIds } } })
+    ]);
+    const subjectByCampaign = new Map(historyCampaigns.map(c => [c.id, c.subject]));
+    const firstOpenByCampaign = new Map<string, Date>();
+    for (const ev of historyOpens) {
+      if (!firstOpenByCampaign.has(ev.campaignId)) firstOpenByCampaign.set(ev.campaignId, ev.createdAt);
+    }
+    const clickCountByCampaign = new Map<string, number>();
+    for (const ev of historyClicks) {
+      clickCountByCampaign.set(ev.campaignId, (clickCountByCampaign.get(ev.campaignId) || 0) + 1);
+    }
+    const history = rawHistory.map(h => ({
+      ...h,
+      subject: subjectByCampaign.get(h.campaignId) || '(Kampagne gelöscht)',
+      openedAt: firstOpenByCampaign.get(h.campaignId) || null,
+      clickCount: clickCountByCampaign.get(h.campaignId) || 0,
+      bounced: h.status === 'FAILED',
+    }));
 
     // Build allLists from NewsletterList table
     const dbLists = await prisma.newsletterList.findMany();
@@ -245,10 +280,20 @@ router.get('/email/:email/details', authenticateJWT, authorizeAdmin, async (req,
 
     const fieldDefinitions = await prisma.newsletterFieldDefinition.findMany({ orderBy: { order: 'asc' } });
 
+    // Old's real "Aktivitätsverlauf" tab (hiron_acym_history) - see
+    // NewsletterHistory's own schema comment.
+    const activityHistory = await prisma.newsletterHistory.findMany({
+      where: { email },
+      orderBy: { createdAt: 'desc' },
+      take: 50
+    });
+
     res.json({
       email: base.email,
       name: base.name,
       language: base.language,
+      source: base.source,
+      activityHistory,
       isActive: base.isActive,
       isConfirmed: base.isConfirmed,
       trackStatus: base.trackStatus,
@@ -458,37 +503,20 @@ router.post('/toggle-status', authenticateJWT, authorizeAdmin, async (req, res) 
 });
 
 // Public subscription route
+// No known caller left in this app's own frontend (superseded by /subscribe
+// above), but kept for any external integration already pointed at this
+// URL - now routed through the same real subscribeToNewsletter() logic
+// instead of its own copy that bypassed double opt-in/automations/history
+// entirely.
 router.post('/public/subscribe', async (req, res) => {
   try {
     const { email, name, tandemNewsletter } = req.body;
     if (!email) {
       return res.status(400).json({ message: 'E-Mail ist erforderlich' });
     }
-    
-    // Check if exists
-    let subscriber = await prisma.newsletter.findUnique({ 
-      where: { 
-        email_listType: { email: email.toLowerCase(), listType: tandemNewsletter ? 'TANDEM' : 'GENERAL' } 
-      } 
-    });
-    
-    if (subscriber) {
-      if (!subscriber.isActive) {
-        // Reactivate
-        subscriber = await prisma.newsletter.update({
-          where: { 
-            email_listType: { email: email.toLowerCase(), listType: tandemNewsletter ? 'TANDEM' : 'GENERAL' } 
-          },
-          data: { isActive: true, name }
-        });
-      }
-    } else {
-      subscriber = await prisma.newsletter.create({ 
-        data: { email: email.toLowerCase(), name, listType: tandemNewsletter ? 'TANDEM' : 'GENERAL' } 
-      });
-    }
-    
-    res.status(200).json({ message: 'Erfolgreich abonniert', subscriber });
+
+    const result = await subscribeToNewsletter(email, name, tandemNewsletter ? 'TANDEM' : 'GENERAL', { ip: req.ip, source: 'frontend' });
+    res.status(result.alreadySubscribed ? 400 : 200).json(result);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Ein Fehler ist aufgetreten' });
@@ -532,6 +560,12 @@ router.post('/public/unsubscribe', async (req, res) => {
     if (stillActive.length > 0) {
       const config = await prisma.newsletterConfig.findUnique({ where: { id: 'default' } });
       await Promise.all(stillActive.map((s) => sendAutoresponderEmail(s.listType, 'goodbye', s.email, config)));
+      await Promise.all(stillActive.map((s) => logNewsletterHistory(s.email, 'unsubscribe', { listType: s.listType, reason: cleanReason, ip: req.ip })));
+    } else if (cleanReason) {
+      // Follow-up reason-only call (see this route's own comment above) -
+      // the actual isActive flip already happened and was logged on a
+      // PRIOR call, so this only needs to record the reason itself.
+      await logNewsletterHistory(email, 'unsubscribe', { listType: listType || null, reason: cleanReason, ip: req.ip });
     }
 
     res.json({ message: 'Erfolgreich abgemeldet' });

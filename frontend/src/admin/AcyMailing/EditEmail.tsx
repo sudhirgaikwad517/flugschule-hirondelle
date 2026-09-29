@@ -37,7 +37,8 @@ export const AcyEditEmail = () => {
     attachments: '[]',
     bcc: '',
     bounceEmail: '',
-    trackingEnabled: true
+    trackingEnabled: true,
+    customCss: ''
   });
 
   const formDataRef = useRef(formData);
@@ -446,7 +447,8 @@ export const AcyEditEmail = () => {
           attachments: data.attachments || '[]',
           bcc: data.bcc || '',
           bounceEmail: data.bounceEmail || '',
-          trackingEnabled: data.trackingEnabled ?? true
+          trackingEnabled: data.trackingEnabled ?? true,
+          customCss: data.customCss || ''
         });
         setSendMode(data.sentAt && data.status !== 'SENT' ? 'geplant' : 'jetzt');
       }
@@ -1097,6 +1099,20 @@ export const AcyEditEmail = () => {
                   </label>
                   <input type="email" placeholder="Standardwert" value={formData.bounceEmail} onChange={(e) => handleChange('bounceEmail', e.target.value)} className="w-full px-4 py-2 border border-slate-300 rounded focus:ring-[#0ea5e9] focus:border-[#0ea5e9]" />
                 </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-slate-700 mb-1 flex items-center gap-1.5">
+                  Eigenes CSS
+                  <span className="text-slate-400 text-xs border border-slate-300 rounded-full w-4 h-4 flex items-center justify-center" title="Wird als zusätzliches Stylesheet in jede gesendete E-Mail eingefügt.">i</span>
+                </label>
+                <textarea
+                  placeholder="z.B. .highlight { color: #0ea5e9; }"
+                  value={formData.customCss || ''}
+                  onChange={(e) => handleChange('customCss', e.target.value)}
+                  rows={4}
+                  className="w-full px-4 py-2 border border-slate-300 rounded font-mono text-xs focus:ring-[#0ea5e9] focus:border-[#0ea5e9]"
+                />
               </div>
 
               <div>

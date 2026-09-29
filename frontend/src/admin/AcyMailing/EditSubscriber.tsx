@@ -21,8 +21,13 @@ interface Subscription {
 interface HistoryItem {
   id: string;
   campaignId: string;
+  subject: string;
   status: string;
   scheduledAt: string;
+  sentAt: string | null;
+  openedAt: string | null;
+  clickCount: number;
+  bounced: boolean;
   errorLog: string | null;
 }
 
@@ -34,6 +39,16 @@ interface FieldDefinition {
   required: boolean;
 }
 
+interface ActivityHistoryItem {
+  id: string;
+  action: string;
+  listType: string | null;
+  reason: string | null;
+  ip: string | null;
+  source: string | null;
+  createdAt: string;
+}
+
 interface SubscriberDetails {
   email: string;
   name: string | null;
@@ -42,10 +57,12 @@ interface SubscriberDetails {
   isConfirmed: boolean;
   trackStatus: boolean;
   creationDate: string;
+  source: string | null;
   subscriptions: Subscription[];
   allLists: List[];
   fieldDefinitions: FieldDefinition[];
   history: HistoryItem[];
+  activityHistory: ActivityHistoryItem[];
   stats: {
     sentCount: number;
     openRate: number | null;
@@ -54,6 +71,20 @@ interface SubscriberDetails {
   tags: string | null;
   customFields: Record<string, string> | null;
 }
+
+const SOURCE_LABELS: Record<string, string> = {
+  frontend: 'Frontend (Anmeldeformular)',
+  booking: 'Buchungsformular',
+  form: 'Newsletter-Formular',
+  backend: 'Backend (Admin)',
+};
+
+const ACTION_LABELS: Record<string, string> = {
+  subscribe: 'Angemeldet',
+  confirm: 'Bestätigt',
+  unsubscribe: 'Abgemeldet',
+  bounce: 'Bounce',
+};
 
 export const AcyEditSubscriber = () => {
   const { email } = useParams<{ email: string }>();
@@ -310,7 +341,7 @@ export const AcyEditSubscriber = () => {
             )}
 
             <div className="pt-4 mt-4 border-t border-slate-100 text-xs text-slate-500">
-              Erstellungsdatum: {new Date(data.creationDate).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}, Quelle: System
+              Erstellungsdatum: {new Date(data.creationDate).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}, Quelle: {SOURCE_LABELS[data.source || ''] || 'System (Import)'}
             </div>
           </div>
         </div>
@@ -357,21 +388,71 @@ export const AcyEditSubscriber = () => {
                 Aktivitätsverlauf
               </button>
             </div>
-            <div className="flex-1 p-6 bg-white flex items-center justify-center text-center">
+            <div className="flex-1 p-6 bg-white overflow-x-auto">
               {activeTab === 'email' ? (
                 data.history.length > 0 ? (
-                  <div className="w-full text-left">
-                    {data.history.map(item => (
-                      <div key={item.id} className="text-sm text-slate-600 mb-2 border-b pb-2">
-                        {new Date(item.scheduledAt).toLocaleDateString('de-DE')} - Kampagne {item.campaignId.substring(0,8)} - Status: <span className="font-medium">{item.status}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <table className="w-full text-left text-sm">
+                    <thead className="text-slate-500 border-b border-slate-200">
+                      <tr>
+                        <th className="py-2 pr-3 font-medium">Datum</th>
+                        <th className="py-2 pr-3 font-medium">Betreff</th>
+                        <th className="py-2 pr-3 font-medium">Status</th>
+                        <th className="py-2 pr-3 font-medium">Geöffnet</th>
+                        <th className="py-2 font-medium">Klicks</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {data.history.map(item => (
+                        <tr key={item.id} className="text-slate-600">
+                          <td className="py-2 pr-3 whitespace-nowrap">{new Date(item.scheduledAt).toLocaleDateString('de-DE')}</td>
+                          <td className="py-2 pr-3">{item.subject}</td>
+                          <td className="py-2 pr-3">
+                            <span className={item.bounced ? 'text-red-600 font-medium' : item.status === 'SENT' ? 'text-green-600 font-medium' : 'text-slate-500'}>
+                              {item.bounced ? `Bounce${item.errorLog ? `: ${item.errorLog}` : ''}` : item.status}
+                            </span>
+                          </td>
+                          <td className="py-2 pr-3">{item.openedAt ? new Date(item.openedAt).toLocaleDateString('de-DE') : '-'}</td>
+                          <td className="py-2">{item.clickCount || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 ) : (
-                  <p className="text-slate-700 font-medium">Es wurde noch keine E-Mail an diesen Abonnenten gesendet.</p>
+                  <p className="text-slate-700 font-medium text-center py-6">Es wurde noch keine E-Mail an diesen Abonnenten gesendet.</p>
                 )
               ) : (
-                <p className="text-slate-500">Noch keine Daten verfügbar.</p>
+                data.activityHistory.length > 0 ? (
+                  <table className="w-full text-left text-sm">
+                    <thead className="text-slate-500 border-b border-slate-200">
+                      <tr>
+                        <th className="py-2 pr-3 font-medium">Datum</th>
+                        <th className="py-2 pr-3 font-medium">Aktion</th>
+                        <th className="py-2 pr-3 font-medium">Liste</th>
+                        <th className="py-2 pr-3 font-medium">Quelle</th>
+                        <th className="py-2 pr-3 font-medium">Grund</th>
+                        <th className="py-2 font-medium">IP-Adresse</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {data.activityHistory.map(item => (
+                        <tr key={item.id} className="text-slate-600">
+                          <td className="py-2 pr-3 whitespace-nowrap">{new Date(item.createdAt).toLocaleString('de-DE')}</td>
+                          <td className="py-2 pr-3">
+                            <span className={item.action === 'bounce' || item.action === 'unsubscribe' ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}>
+                              {ACTION_LABELS[item.action] || item.action}
+                            </span>
+                          </td>
+                          <td className="py-2 pr-3">{item.listType || '-'}</td>
+                          <td className="py-2 pr-3">{SOURCE_LABELS[item.source || ''] || item.source || '-'}</td>
+                          <td className="py-2 pr-3">{item.reason || '-'}</td>
+                          <td className="py-2">{item.ip || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p className="text-slate-500 text-center py-6">Noch keine Daten verfügbar.</p>
+                )
               )}
             </div>
           </div>

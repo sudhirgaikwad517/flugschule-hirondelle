@@ -8,6 +8,7 @@ import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware'
 import { JWT_SECRET } from '../utils/config';
 import { resolveFormSettings, replaceTokens } from '../utils/formSettings';
 import { sendFormEmails } from '../services/formMailer.service';
+import { checkVisformsSpam } from '../services/visformsSpamCheck.service';
 
 const router = Router();
 
@@ -83,11 +84,25 @@ router.post('/public', async (req, res) => {
     const settings = resolveFormSettings(formConfig?.settings);
     const fields = ((formConfig?.fields as any[]) || []) as { id: string; label: string; type: string; required?: boolean }[];
 
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || null;
+
     // Old's real honeypot (visform-honeypot fieldset) - a field real users
     // never see or fill; anything in it means a bot filled every input on
     // the page indiscriminately. Responds exactly like a real success (never
     // reveals the form is protected) but skips the save/notification entirely.
     if (settings.spam.honeypot && hp) {
+      return res.status(201).json({ message: 'OK' });
+    }
+
+    // Real spam checks (blacklist/whitelist, StopForumSpam, SpamCop) - see
+    // checkVisformsSpam's own comment for exactly what is/isn't enforced.
+    // Same "respond like success, never reveal the block" behavior as the
+    // honeypot above.
+    const emailFieldId = fields.find((f) => f.type === 'email')?.id;
+    const submittedEmail = emailFieldId ? String(data[emailFieldId] || '') : null;
+    const spamResult = await checkVisformsSpam(settings.spam, { ip, email: submittedEmail });
+    if (spamResult.blocked) {
+      console.warn(`Visforms submission blocked (${formId}): ${spamResult.reason}`, { ip, email: submittedEmail });
       return res.status(201).json({ message: 'OK' });
     }
 
@@ -97,7 +112,6 @@ router.post('/public', async (req, res) => {
       normalized[key] = checkboxFieldIds.has(key) ? (value === 'on' || value === true) : value;
     }
 
-    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || null;
     const userId = tryGetUserId(req);
 
     let recordId = 'n/a';
@@ -132,8 +146,8 @@ router.post('/public', async (req, res) => {
 
     res.status(201).json({
       message: 'OK',
-      textResult: replaceTokens(settings.ergebnis.textResult, normalized),
-      redirectUrl: settings.ergebnis.redirectUrl ? replaceTokens(settings.ergebnis.redirectUrl, normalized) : null,
+      textResult: replaceTokens(settings.ergebnis.textResult, normalized, fields),
+      redirectUrl: settings.ergebnis.redirectUrl ? replaceTokens(settings.ergebnis.redirectUrl, normalized, fields) : null,
     });
   } catch (error) {
     console.error('Error creating service order:', error);

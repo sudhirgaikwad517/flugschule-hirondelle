@@ -58,9 +58,18 @@ export async function processNewsletterQueue(): Promise<{ processed: number }> {
         }
 
         const subscriber = await prisma.newsletter.findFirst({ where: { email: item.subscriberEmail, isActive: true } });
-        const html = subscriber
-          ? renderCampaignHtml(campaign.body, subscriber, campaign.id, campaign.trackingEnabled)
+        // Old AcyMailing's real per-list "tracking" toggle - opens/clicks
+        // are only recorded when BOTH the campaign itself and the
+        // recipient's own list have tracking enabled.
+        const list = subscriber ? await prisma.newsletterList.findUnique({ where: { code: subscriber.listType } }) : null;
+        const trackingEnabled = campaign.trackingEnabled && (list?.tracking ?? true);
+        let html = subscriber
+          ? renderCampaignHtml(campaign.body, subscriber, campaign.id, trackingEnabled)
           : campaign.body;
+        // Old's real per-campaign custom CSS override, injected once per send.
+        if (campaign.customCss) {
+          html = `<style>${campaign.customCss}</style>${html}`;
+        }
 
         await t.sendMail({
           from: campaign.fromEmail ? `"${campaign.fromName || 'Flugschule Hirondelle'}" <${campaign.fromEmail}>` : '"Flugschule Hirondelle" <info@fs-hirondelle.de>',

@@ -105,6 +105,9 @@ interface FieldDef {
     defaultValue?: string;
     min?: number;
     max?: number;
+    // Old Visforms' real per-field "Zusatzinfo" (custominfo) - genuine
+    // customer-facing help text shown next to the field.
+    helpText?: string;
 }
 
 const emptyField = (): FieldDef => ({
@@ -195,6 +198,19 @@ const FieldEditDialog = ({
                     {TEXTLIKE_TYPES.has(draft.type) && (
                         <Grid size={12}>
                             <MuiTextField label="Platzhaltertext (optional)" fullWidth value={draft.placeholder || ''} onChange={(e) => set({ placeholder: e.target.value })} />
+                        </Grid>
+                    )}
+                    {!STRUCTURAL_TYPES.has(draft.type) && (
+                        <Grid size={12}>
+                            <MuiTextField
+                                label="Zusatzinfo (optional)"
+                                helperText="Zusätzlicher Hinweistext, der dem Nutzer neben dem Feld angezeigt wird (z.B. ein Aufpreis-Hinweis oder eine Anleitung)."
+                                fullWidth
+                                multiline
+                                minRows={2}
+                                value={draft.helpText || ''}
+                                onChange={(e) => set({ helpText: e.target.value })}
+                            />
                         </Grid>
                     )}
                     {CHOICE_TYPES.has(draft.type) && (

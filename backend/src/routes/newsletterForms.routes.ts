@@ -41,7 +41,7 @@ router.post('/public/:id/submit', async (req, res) => {
       return res.status(500).json({ message: 'Dieses Formular hat keine Zielliste konfiguriert' });
     }
 
-    const results = await Promise.all(codes.map((code) => subscribeToNewsletter(email, name, code)));
+    const results = await Promise.all(codes.map((code) => subscribeToNewsletter(email, name, code, { ip: req.ip, source: 'form' })));
 
     // Custom field answers apply to every one of this form's target lists'
     // rows for this email - same one-row-per-list-membership shape

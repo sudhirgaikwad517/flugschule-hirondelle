@@ -26,7 +26,7 @@ export async function sendFormEmails(params: {
     : '"Flugschule Hirondelle" <info@fs-hirondelle.de>';
 
   const buildBody = (block: FormSettings['email']['result'] | FormSettings['email']['receipt']) => {
-    const parts: string[] = [replaceTokens(block.bodyHtml || '', data)];
+    const parts: string[] = [replaceTokens(block.bodyHtml || '', data, fields)];
     const meta: string[] = [];
     if (block.includeFormTitle) meta.push(`<p><strong>Formular:</strong> ${formTitle}</p>`);
     if (block.includeCreated) meta.push(`<p><strong>Datum:</strong> ${createdAt.toLocaleString('de-DE')}</p>`);
@@ -49,7 +49,7 @@ export async function sendFormEmails(params: {
         to: settings.email.result.to,
         cc: settings.email.result.cc || undefined,
         bcc: settings.email.result.bcc || undefined,
-        subject: replaceTokens(settings.email.result.subject, data) || `Neue Einsendung: ${formTitle}`,
+        subject: replaceTokens(settings.email.result.subject, data, fields) || `Neue Einsendung: ${formTitle}`,
         html: buildBody(settings.email.result),
       });
       results.result = true;
@@ -71,7 +71,7 @@ export async function sendFormEmails(params: {
           to: submitterEmail,
           cc: settings.email.receipt.cc || undefined,
           bcc: settings.email.receipt.bcc || undefined,
-          subject: replaceTokens(settings.email.receipt.subject, data) || `Bestätigung: ${formTitle}`,
+          subject: replaceTokens(settings.email.receipt.subject, data, fields) || `Bestätigung: ${formTitle}`,
           html: buildBody(settings.email.receipt),
         });
         results.receipt = true;
