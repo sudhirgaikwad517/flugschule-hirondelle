@@ -27,7 +27,6 @@ import ArticleIcon from '@mui/icons-material/Article';
 import CookieIcon from '@mui/icons-material/Cookie';
 import FolderIcon from '@mui/icons-material/Folder';
 import DownloadIcon from '@mui/icons-material/Download';
-import LinkIcon from '@mui/icons-material/Link';
 import ViewCarouselIcon from '@mui/icons-material/ViewCarousel';
 import PermMediaIcon from '@mui/icons-material/PermMedia';
 import AssignmentIcon from '@mui/icons-material/Assignment';
@@ -87,7 +86,8 @@ const BOTTOM_ITEMS: Item[] = [
     // request - route/data untouched, just not linked to from here anymore.
     { label: 'Download Kategorien', to: '/admin/downloadcategories', icon: <FolderIcon fontSize="small" /> },
     { label: 'Link Kategorien', to: '/admin/weblinkcategories', icon: <FolderIcon fontSize="small" /> },
-    { label: 'Links', to: '/admin/links', icon: <LinkIcon fontSize="small" /> },
+    // "Links" (-> /admin/links) hidden from the sidebar on request - route/
+    // data untouched, just not linked to from here anymore.
     { label: 'Werbebanner', to: '/admin/banners', icon: <ViewCarouselIcon fontSize="small" /> },
     { label: 'Seitenmedien (Sicherheitstraining)', to: '/admin/pagemedia', icon: <PermMediaIcon fontSize="small" /> },
     { label: 'Cookie-Hinweis', to: '/admin/cookie-consent', icon: <CookieIcon fontSize="small" /> },
