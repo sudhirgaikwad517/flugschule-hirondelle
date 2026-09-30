@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
 import { SafeHtml } from '../components/common/SafeHtml';
+import { stripDuplicateHeroImage } from '../utils/eventDescription';
 import { useEvents, categoryColors } from '../hooks/useEvents';
 import type { Category } from '../hooks/useEvents';
 export const Events = () => {
@@ -545,10 +546,14 @@ export const Events = () => {
                             notes, even an inline image - not a stripped,
                             2-line plain-text snippet. Falls back to
                             description only for the rare event that has one
-                            but no shortDescription. */}
+                            but no shortDescription. stripDuplicateHeroImage
+                            drops the description's own leading image when
+                            it's the exact same file as the thumbnail shown
+                            to its left, matching EventDetailsView.tsx's own
+                            hero/hero-in-body de-duplication. */}
                         <div className="text-gray-600 text-sm mb-4 prose prose-sm max-w-none [&_ul]:list-disc [&_ul]:pl-5 [&_a]:text-blue-600 [&_a]:underline">
                           {(event.shortDescription || event.description) ? (
-                            <SafeHtml html={event.shortDescription || event.description || ''} />
+                            <SafeHtml html={stripDuplicateHeroImage(event.shortDescription || event.description, event)} />
                           ) : (
                             'Keine Beschreibung verfügbar.'
                           )}

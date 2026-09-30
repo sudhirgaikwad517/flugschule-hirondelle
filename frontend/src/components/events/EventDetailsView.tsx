@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { SafeHtml } from '../common/SafeHtml';
 import { ContactOrganizerModal } from '../common/ContactOrganizerModal';
+import { stripDuplicateHeroImage } from '../../utils/eventDescription';
 
 interface Ticket {
   id: string;
@@ -85,24 +86,13 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
     return requestedQuantity > freiePlaetze;
   }, [ticketQuantities, freiePlaetze]);
 
-  // 373 of 1306 published events carry this exact duplicate: old Matukio's
-  // article body embeds its own leading <img> (migrated as-is into
-  // shortDescription/description) whose file is the SAME one the event's
-  // own imageUrl/detailImageUrl field already points to - so it rendered
-  // once as the dedicated hero image below AND again inline in the
-  // description text. Strip only the specific <img> tag(s) matching the
-  // hero image's own filename; any other, genuinely different image
-  // embedded in the description is left untouched.
-  const descriptionHtml = React.useMemo(() => {
-    const html = event.shortDescription || event.description || '';
-    const heroImg = event.detailImageUrl || event.imageUrl;
-    const heroBasename = heroImg?.split('/').pop();
-    if (!html || !heroBasename) return html;
-    return html.replace(/<img[^>]*>/gi, (tag: string) => {
-      const src = tag.match(/src=["']([^"']+)["']/i)?.[1];
-      return src && src.split('/').pop() === heroBasename ? '' : tag;
-    });
-  }, [event.shortDescription, event.description, event.detailImageUrl, event.imageUrl]);
+  // See stripDuplicateHeroImage's own comment - shared with Events.tsx's
+  // list card, which shows this same shortDescription HTML next to the
+  // event's own thumbnail too.
+  const descriptionHtml = React.useMemo(
+    () => stripDuplicateHeroImage(event.shortDescription || event.description, event),
+    [event.shortDescription, event.description, event.detailImageUrl, event.imageUrl]
+  );
 
   // Initialize first ticket with quantity 1 if available
   React.useEffect(() => {
