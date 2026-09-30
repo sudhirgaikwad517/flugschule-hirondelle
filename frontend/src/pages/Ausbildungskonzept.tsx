@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { Banner } from '../components/common/Banner';
 import { useLightbox } from '../components/common/Lightbox';
@@ -10,6 +11,11 @@ interface TableRow {
   content: string;
   goal: string;
   bgColor: string;
+  // Old's real per-row course-name link on this exact page - present on 5
+  // of the 6 rows there (L-Schein's own row is NOT a link on old's real
+  // page either, just bold+underlined text, unlike the /ausbildung price
+  // table where L-Schein IS linked - kept faithfully inconsistent).
+  link?: string;
 }
 
 interface AusbildungskonzeptData {
@@ -39,12 +45,12 @@ const DEFAULT_CONTENT: AusbildungskonzeptData = {
   graphicImage: '/images/inhalte/ausbildungswege.png',
   graphicCaption: 'hm = ca. Höhenmeter-Differenz zwischen Start- und Landeplatz',
   tableRows: [
-    { name: 'Schnupper-/Einsteigerkurs', duration: '1 – 2 Tage', content: 'Ausrüstung kennen lernen, theoretische Grundlagen, die ersten kleinen Flüge', goal: 'spielerisches Kennenlernen des Sports, selbständiges Groundhandling', bgColor: '#80c533' },
+    { name: 'Schnupper-/Einsteigerkurs', duration: '1 – 2 Tage', content: 'Ausrüstung kennen lernen, theoretische Grundlagen, die ersten kleinen Flüge', goal: 'spielerisches Kennenlernen des Sports, selbständiges Groundhandling', bgColor: '#80c533', link: '/ausbildung/schnupperkurs' },
     { name: 'L-Schein', duration: '3 – 4 Tage\nGrundkurs', content: 'Inhalte Schnupperkurs, Grundlagen in Flugtechnik, 15 Flüge für den L-Schein, Lerninhalte Grundkurs', goal: 'L-Schein, selbständiges Groundhandling, eigenständiges Fliegen in den eingewiesenen Geländen', bgColor: '#34963b' },
-    { name: 'Windenschein', duration: '3 – 4 Tage', content: '20 Flüge an der Winde, Lerninhalte Windenschlepp, Flugschulinterne Theorie- und Praxisprüfung für den Windenschlepp', goal: 'Windenschleppberechtigung, selbständiges Fliegen an der Winde', bgColor: '#fff600' },
-    { name: 'A-Schein', duration: 'Höhenflugschulung', content: '40 Höhenflüge (20 davon können an der Winde absolviert werden) sowie 18.000 Höhenmeter, Lerninhalte A-Schein, Theorie-/Praxisprüfung zum beschränkten Luftfahrerschein vor einem Prüfer des DHV', goal: 'beschränkter Luftfahrerschein (A-Schein), selbständiges Fliegen in fast allen Geländen weltweit, innerhalb des Gleitwinkelbereiches vom Startplatz', bgColor: '#ffd700' },
-    { name: 'B-Schein', duration: 'Integriert in eine Flugreise oder Fortbildung', content: '20 Höhenflüge, Lerninhalte für den unbeschränkten Luftfahrerschein Theorieprüfung zum unbeschränkten Luftfahrerschein vor einem Prüfer des DHV', goal: 'Unbeschränkter Luftfahrerschein (B-Schein), selbständiges Fliegen in allen Fluggeländen Europas, Streckenflugberechtigung', bgColor: '#e58e26' },
-    { name: 'Tandemschein', duration: '', content: '40 Höhenflüge mit einem Passagier, Lerninhalte Passagierflug, Theorie-/Praxisprüfung zur Passagierflugberechtigung vor einem Prüfer des DHV', goal: 'Passagierflugberechtigung, selbständiges Passagierfliegen', bgColor: '#c4c5ca' },
+    { name: 'Windenschein', duration: '3 – 4 Tage', content: '20 Flüge an der Winde, Lerninhalte Windenschlepp, Flugschulinterne Theorie- und Praxisprüfung für den Windenschlepp', goal: 'Windenschleppberechtigung, selbständiges Fliegen an der Winde', bgColor: '#fff600', link: '/ausbildung/windenschein' },
+    { name: 'A-Schein', duration: 'Höhenflugschulung', content: '40 Höhenflüge (20 davon können an der Winde absolviert werden) sowie 18.000 Höhenmeter, Lerninhalte A-Schein, Theorie-/Praxisprüfung zum beschränkten Luftfahrerschein vor einem Prüfer des DHV', goal: 'beschränkter Luftfahrerschein (A-Schein), selbständiges Fliegen in fast allen Geländen weltweit, innerhalb des Gleitwinkelbereiches vom Startplatz', bgColor: '#ffd700', link: '/ausbildung/a-schein' },
+    { name: 'B-Schein', duration: 'Integriert in eine Flugreise oder Fortbildung', content: '20 Höhenflüge, Lerninhalte für den unbeschränkten Luftfahrerschein Theorieprüfung zum unbeschränkten Luftfahrerschein vor einem Prüfer des DHV', goal: 'Unbeschränkter Luftfahrerschein (B-Schein), selbständiges Fliegen in allen Fluggeländen Europas, Streckenflugberechtigung', bgColor: '#e58e26', link: '/ausbildung/b-schein' },
+    { name: 'Tandemschein', duration: '', content: '40 Höhenflüge mit einem Passagier, Lerninhalte Passagierflug, Theorie-/Praxisprüfung zur Passagierflugberechtigung vor einem Prüfer des DHV', goal: 'Passagierflugberechtigung, selbständiges Passagierfliegen', bgColor: '#c4c5ca', link: '/ausbildung/tandemschein' },
   ],
 };
 
@@ -143,7 +149,11 @@ export const Ausbildungskonzept = ({ contentId }: { contentId?: string } = {}) =
                         style={{ backgroundColor: row.bgColor }}
                       >
                         <td className="py-4 px-4 align-top">
-                          {row.name && <div className="font-bold">{row.name}</div>}
+                          {row.name && (
+                            <div className="font-bold">
+                              {row.link ? <Link to={row.link} className="hover:underline">{row.name}</Link> : row.name}
+                            </div>
+                          )}
                           {row.duration && row.duration.split('\n').map((line, lineIdx) => (
                             <div key={lineIdx}>{line}</div>
                           ))}

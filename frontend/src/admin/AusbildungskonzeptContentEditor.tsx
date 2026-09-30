@@ -13,7 +13,7 @@ import { type PrimaryPageSettings, PrimaryPageSettingsFields } from './PrimaryPa
 // the /ausbildung/ausbildungskonzept page (Ausbildungskonzept.tsx). No
 // gallery on this page at all, so nothing is excluded here.
 
-interface TableRow { name: string; duration: string; content: string; goal: string; bgColor: string }
+interface TableRow { name: string; duration: string; content: string; goal: string; bgColor: string; link: string }
 interface AusbildungskonzeptData {
   heading: string;
   subheading: string;
@@ -121,7 +121,7 @@ export const AusbildungskonzeptContentEditor = () => {
     tableRows[i] = { ...tableRows[i], [field]: value };
     setContent({ ...content, tableRows });
   };
-  const addTableRow = () => setContent({ ...content, tableRows: [...content.tableRows, { name: '', duration: '', content: '', goal: '', bgColor: '#ffffff' }] });
+  const addTableRow = () => setContent({ ...content, tableRows: [...content.tableRows, { name: '', duration: '', content: '', goal: '', bgColor: '#ffffff', link: '' }] });
   const removeTableRow = (i: number) => setContent({ ...content, tableRows: content.tableRows.filter((_, idx) => idx !== i) });
 
   return (
@@ -199,6 +199,15 @@ export const AusbildungskonzeptContentEditor = () => {
                 <Grid size={{ xs: 12, sm: 4 }}><TextField label="Hintergrundfarbe" fullWidth value={row.bgColor} onChange={(e) => updateTableRow(i, 'bgColor', e.target.value)} helperText="z.B. #80c533" /></Grid>
                 <Grid size={{ xs: 12, sm: 6 }}><TextField label="Kursinhalt" fullWidth multiline minRows={2} value={row.content} onChange={(e) => updateTableRow(i, 'content', e.target.value)} /></Grid>
                 <Grid size={{ xs: 12, sm: 6 }}><TextField label="Kursziel" fullWidth multiline minRows={2} value={row.goal} onChange={(e) => updateTableRow(i, 'goal', e.target.value)} /></Grid>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    label="Link (Kursname klickbar)"
+                    fullWidth
+                    value={row.link || ''}
+                    onChange={(e) => updateTableRow(i, 'link', e.target.value)}
+                    helperText="Leer lassen, damit der Kursname kein Link ist."
+                  />
+                </Grid>
               </Grid>
             </Box>
           ))}
