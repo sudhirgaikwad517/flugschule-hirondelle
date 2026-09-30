@@ -17,7 +17,7 @@ import { RichTextField } from './RichTextField';
 // the graphic image, and the 6 category sections are all fixed-count fields
 // here - the page's design never changes, only what's plugged into it.
 
-interface PriceRow { name: string; duration: string; content: string; price: string; link: string }
+interface PriceRow { name: string; duration: string; content: string; price: string; link: string; bgColor: string }
 interface Category { heading: string; subheading: string; description: string; image: string; link: string }
 interface AusbildungData {
   heroQuote: string;
@@ -166,7 +166,7 @@ export const AusbildungContentEditor = () => {
   };
 
   const addPriceRow = () => {
-    setContent({ ...content, priceRows: [...content.priceRows, { name: '', duration: '', content: '', price: '', link: '' }] });
+    setContent({ ...content, priceRows: [...content.priceRows, { name: '', duration: '', content: '', price: '', link: '', bgColor: '#ffffff' }] });
   };
 
   const removePriceRow = (i: number) => {
@@ -213,14 +213,23 @@ export const AusbildungContentEditor = () => {
             <Grid container spacing={2} key={i} sx={{ mb: 2, alignItems: 'center' }}>
               <Grid size={{ xs: 12, sm: 3 }}><TextField label="Kurs" fullWidth value={row.name} onChange={(e) => updatePriceRow(i, 'name', e.target.value)} /></Grid>
               <Grid size={{ xs: 12, sm: 2 }}><TextField label="Dauer" fullWidth value={row.duration} onChange={(e) => updatePriceRow(i, 'duration', e.target.value)} /></Grid>
-              <Grid size={{ xs: 12, sm: 4 }}><TextField label="Inhalt" fullWidth value={row.content} onChange={(e) => updatePriceRow(i, 'content', e.target.value)} /></Grid>
+              <Grid size={{ xs: 12, sm: 3 }}><TextField label="Inhalt" fullWidth value={row.content} onChange={(e) => updatePriceRow(i, 'content', e.target.value)} /></Grid>
               <Grid size={{ xs: 10, sm: 2 }}><TextField label="Preis" fullWidth value={row.price} onChange={(e) => updatePriceRow(i, 'price', e.target.value)} /></Grid>
-              <Grid size={{ xs: 2, sm: 1 }}>
+              <Grid size={{ xs: 10, sm: 1.5 }}>
+                <TextField
+                  label="Hintergrundfarbe"
+                  fullWidth
+                  value={row.bgColor || ''}
+                  onChange={(e) => updatePriceRow(i, 'bgColor', e.target.value)}
+                  helperText="z.B. #80c533"
+                />
+              </Grid>
+              <Grid size={{ xs: 2, sm: 0.5 }}>
                 <IconButton onClick={() => removePriceRow(i)} title="Zeile löschen" disabled={content.priceRows.length <= 1}>
                   <DeleteIcon fontSize="small" color="error" />
                 </IconButton>
               </Grid>
-              <Grid size={{ xs: 12, sm: 11 }}>
+              <Grid size={{ xs: 12, sm: 11.5 }}>
                 <TextField
                   label="Link (Kursname klickbar)"
                   fullWidth

@@ -10,9 +10,12 @@ import { SafeHtml } from '../components/common/SafeHtml';
 // (see backend SitePageContent model / sitePageContent.routes.ts). Text,
 // images, and the "WEITERLESEN" links are all admin-editable; only the
 // layout/CSS stays fixed. The price table's rows are the one repeater field
-// here (admin can add/remove rows) - colors cycle through this list by
-// position so any number of rows still matches the page's existing design,
-// and the bottom border always lands on whichever row is actually last.
+// here (admin can add/remove rows). Each row's own `bgColor` field is used
+// when set (admin-editable, like Ausbildungskonzept's table); this array is
+// only the fallback cycle for a row that doesn't have one yet (e.g. a
+// freshly-added row), so any number of rows still matches the page's
+// existing design, and the bottom border always lands on whichever row is
+// actually last.
 const PRICE_ROW_COLORS = ['#80c533', '#34963b', '#fff600', '#ffd700', '#e58e26', '#c4c5ca'];
 
 const DEFAULT_CONTENT = {
@@ -25,12 +28,12 @@ const DEFAULT_CONTENT = {
   // .../ausbildung/l-schein here, since our own route for it is named
   // differently but points at the same real page).
   priceRows: [
-    { name: 'Schnupper-/Einsteigerkurs', duration: '1 – 2 Tage', content: 'Ausrüstung kennen lernen, die ersten Flüge', price: 'ab 149,- €', link: '/ausbildung/schnupperkurs' },
-    { name: 'L-Schein', duration: '3 – 4 Tage', content: '15 Flüge am Grundkurs-Übungshang', price: '620,- €', link: '/ausbildung/l-schein' },
-    { name: 'Windenschein', duration: '3 Tage', content: '20 Flüge an der Winde', price: '450,- €', link: '/ausbildung/windenschein' },
-    { name: 'A-Schein', duration: 'mind. 1 Woche', content: '40 Höhenflüge', price: 'ab 990,- €', link: '/ausbildung/a-schein' },
-    { name: 'B-Schein', duration: 'mind. 1 Woche', content: '20 Höhenflüge', price: 'ab 990,- €', link: '/ausbildung/b-schein' },
-    { name: 'Tandemschein', duration: 'mind. 1 Woche', content: '40 Höhenflüge mit einem Passagier', price: 'ab 790,- €', link: '/ausbildung/tandemschein' },
+    { name: 'Schnupper-/Einsteigerkurs', duration: '1 – 2 Tage', content: 'Ausrüstung kennen lernen, die ersten Flüge', price: 'ab 149,- €', link: '/ausbildung/schnupperkurs', bgColor: '#80c533' },
+    { name: 'L-Schein', duration: '3 – 4 Tage', content: '15 Flüge am Grundkurs-Übungshang', price: '620,- €', link: '/ausbildung/l-schein', bgColor: '#34963b' },
+    { name: 'Windenschein', duration: '3 Tage', content: '20 Flüge an der Winde', price: '450,- €', link: '/ausbildung/windenschein', bgColor: '#fff600' },
+    { name: 'A-Schein', duration: 'mind. 1 Woche', content: '40 Höhenflüge', price: 'ab 990,- €', link: '/ausbildung/a-schein', bgColor: '#ffd700' },
+    { name: 'B-Schein', duration: 'mind. 1 Woche', content: '20 Höhenflüge', price: 'ab 990,- €', link: '/ausbildung/b-schein', bgColor: '#e58e26' },
+    { name: 'Tandemschein', duration: 'mind. 1 Woche', content: '40 Höhenflüge mit einem Passagier', price: 'ab 790,- €', link: '/ausbildung/tandemschein', bgColor: '#c4c5ca' },
   ],
   graphicImage: '/images/inhalte/ausbildungswege.png',
   graphicCaption: 'hm = ca. Höhenmeter-Differenz zwischen Start- und Landeplatz',
@@ -98,7 +101,7 @@ export const Ausbildung = ({ contentId }: { contentId?: string } = {}) => {
                   return (
                     <tr
                       key={i}
-                      style={{ backgroundColor: PRICE_ROW_COLORS[i % PRICE_ROW_COLORS.length] }}
+                      style={{ backgroundColor: row.bgColor || PRICE_ROW_COLORS[i % PRICE_ROW_COLORS.length] }}
                       className={`text-black ${isLast ? 'border-b border-gray-300' : ''}`}
                     >
                       <td className="py-2 px-1 sm:px-2 font-bold break-words pr-2">
