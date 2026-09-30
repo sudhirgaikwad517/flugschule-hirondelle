@@ -35,6 +35,14 @@ export const FixedPageGate = ({
 
   useEffect(() => {
     let cancelled = false;
+    // Reset before fetching, not just on resolve - this component sits at
+    // the same spot in the route tree across a same-Layout navigation (e.g.
+    // clicking a "Weiterlesen" card from /service to /service/2-jahres-check),
+    // so React reuses the same instance and its `settings` state would
+    // otherwise still hold the PREVIOUS page's slug for one render. That
+    // stale slug then gets compared against the NEW page's defaultSlug,
+    // sees a mismatch, and fires a spurious redirect back to the old page.
+    setSettings(undefined);
     fetch(`/api/fixed-page-settings/public/${kind}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => { if (!cancelled) setSettings(data); })
