@@ -29,7 +29,9 @@ const DEFAULT_CONTENT = {
   ],
   graphicImage: '/images/inhalte/ausbildungswege.png',
   graphicCaption: 'hm = ca. Höhenmeter-Differenz zwischen Start- und Landeplatz',
-  graphicButtonLink: '',
+  // Old's real target for this exact button (fs-hirondelle.de/ausbildung ->
+  // Weiterlesen under the graphic -> fs-hirondelle.de/ausbildung/ausbildungskonzept).
+  graphicButtonLink: '/ausbildung/ausbildungskonzept',
   categories: [
     { heading: 'Schnupper-/Einsteigerkurs', subheading: 'Der Anfang einer neuen Leidenschaft....', description: "Am Schnuppertag / Einsteigerkurs lernst du die Grundzüge des Gleitschirmfliegens kennen. Anfängliche Aufzieh- und Laufübungen bereiten dich auf deine ersten Flüge vor: Kappe auslegen, Leinen sortieren, Eintrittsöffnungen kontrollieren, damit der Gleitschirm anschließend richtig über euch steigt. Gurtzeug anlegen, Startcheck und los geht's zum ersten Versuch.", image: '/images/ausbildung-1.jpg', link: '/ausbildung/schnupperkurs' },
     { heading: 'L-Schein', subheading: 'Du legst den Grundstein...', description: 'Aufbauend auf den Schnupperkurs werden im Grundkurs die fehlenden Flüge zur Erlangung des L-Scheins absolviert. Ziel des Kurses ist es, mindestens 15 Flüge am Hang oder an der Winde zu absolvieren, bei denen die Höhendifferenz schon bis zu 200 Meter betragen kann. Kurvenflug und Schirmkontrolle sind einige der Lerninhalte, die in diesem Kurs auf dem Lehrplan stehen.', image: '/images/ausbildung-2.jpg', link: '/ausbildung/l-schein' },
