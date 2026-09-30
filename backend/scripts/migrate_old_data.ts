@@ -113,6 +113,12 @@ async function migrateLookups(conn: mysql.Connection) {
   // Organizers
   const [organizers] = await conn.query<any[]>('SELECT * FROM hiron_matukio_organizers');
   const organizerUserIdMap = new Map<number, string>();
+  // BUG FIX: an event's own organizer DISPLAY STRING was previously always
+  // hardcoded to the generic school name below, even when organizerId
+  // correctly resolved to a real organizer - matches old's real
+  // getOrganizer() helper (hiron_matukio_organizers.userId == event's
+  // publisher), which is a REAL per-teacher name, not the school itself.
+  const organizerNameMap = new Map<number, string>();
   for (const o of organizers as any[]) {
     let org = await prisma.organizer.findFirst({ where: { email: o.email } });
     if (!org) {
@@ -130,10 +136,11 @@ async function migrateLookups(conn: mysql.Connection) {
       });
     }
     organizerUserIdMap.set(o.userId, org.id);
+    organizerNameMap.set(o.userId, org.name);
   }
   console.log(`Organizers: ${(organizers as any[]).length} checked`);
 
-  return { taxIdMap, locationIdMap, organizerUserIdMap };
+  return { taxIdMap, locationIdMap, organizerUserIdMap, organizerNameMap };
 }
 
 async function migrateSubscribers(conn: mysql.Connection) {
@@ -184,7 +191,7 @@ async function migrateSubscribers(conn: mysql.Connection) {
 
 async function migrateEventsAndBookings(
   conn: mysql.Connection,
-  lookups: { taxIdMap: Map<number, string>; locationIdMap: Map<number, string>; organizerUserIdMap: Map<number, string> }
+  lookups: { taxIdMap: Map<number, string>; locationIdMap: Map<number, string>; organizerUserIdMap: Map<number, string>; organizerNameMap: Map<number, string> }
 ) {
   console.log('\n--- Events (2026 only) ---');
 
@@ -217,6 +224,7 @@ async function migrateEventsAndBookings(
     const placeId = row.override_place_id || row.place_id;
     const locationId = placeId ? lookups.locationIdMap.get(placeId) : undefined;
     const organizerId = lookups.organizerUserIdMap.get(row.publisher);
+    const organizerName = lookups.organizerNameMap.get(row.publisher) || 'Flugschule Hirondelle';
     const taxRateTitle = lookups.taxIdMap.get(row.tax_id);
 
     const fee = parseFloat(row.fees) || 0;
@@ -246,7 +254,7 @@ async function migrateEventsAndBookings(
       calendarBgColor: row.calendar_bgcolor || '#3a87ac',
       calendarTextColor: null,
       imageUrl: row.image ? OLD_SITE_BASE_URL + row.image : null,
-      organizer: 'Flugschule Hirondelle',
+      organizer: organizerName,
       organizerId: organizerId || null,
       registrationDeadline: null,
       feePerPerson: fee,

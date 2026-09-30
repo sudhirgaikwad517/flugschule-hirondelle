@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
+import { SafeHtml } from '../components/common/SafeHtml';
 import { useEvents, categoryColors } from '../hooks/useEvents';
 import type { Category } from '../hooks/useEvents';
 export const Events = () => {
@@ -538,14 +539,20 @@ export const Events = () => {
                           </div>
                         </div>
 
-                        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                          {/* Old Matukio's list view always showed shortdesc
-                              here (see modern_eventlist.php), not the full
-                              description - falls back to description only
-                              for the rare event that has one but no
-                              shortDescription. */}
-                          {(event.shortDescription || event.description)?.replace(/<[^>]*>?/gm, '') || 'Keine Beschreibung verfügbar.'}
-                        </p>
+                        {/* Old Matukio's real eventlist card (bootstrap3.php's
+                            mat_event_short_description) shows shortdesc's
+                            real rich HTML in full - bullet lists, bold/italic
+                            notes, even an inline image - not a stripped,
+                            2-line plain-text snippet. Falls back to
+                            description only for the rare event that has one
+                            but no shortDescription. */}
+                        <div className="text-gray-600 text-sm mb-4 prose prose-sm max-w-none [&_ul]:list-disc [&_ul]:pl-5 [&_a]:text-blue-600 [&_a]:underline">
+                          {(event.shortDescription || event.description) ? (
+                            <SafeHtml html={event.shortDescription || event.description || ''} />
+                          ) : (
+                            'Keine Beschreibung verfügbar.'
+                          )}
+                        </div>
                         
                         <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-500 mb-4">
                           <div className="flex items-center gap-1.5">
