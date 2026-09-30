@@ -125,13 +125,14 @@ export const Tandem = () => {
             <form onSubmit={async (e) => {
               e.preventDefault();
               const form = e.target as HTMLFormElement;
+              const name = (form.elements.namedItem('name') as HTMLInputElement).value;
               const email = (form.elements.namedItem('email') as HTMLInputElement).value;
-              
+
               try {
                 const res = await fetch('/api/newsletters/subscribe', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ email, listType: 'TANDEM' })
+                  body: JSON.stringify({ email, name, listType: 'TANDEM' })
                 });
                 
                 const data = await res.json();
@@ -144,15 +145,21 @@ export const Tandem = () => {
               } catch (err) {
                 alert('Netzwerkfehler. Bitte versuchen Sie es später erneut.');
               }
-            }} className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <input 
-                type="email" 
-                name="email"
-                placeholder="Ihre E-Mail Adresse" 
-                required
-                className="w-full sm:w-2/3 px-4 py-3 border border-gray-300 focus:outline-none focus:border-luxury-gold rounded-sm font-light"
+            }} className="flex flex-col sm:flex-row gap-4 justify-center items-center flex-wrap">
+              <input
+                type="text"
+                name="name"
+                placeholder="Vorname & Nachname"
+                className="w-full sm:w-1/3 px-4 py-3 border border-gray-300 focus:outline-none focus:border-luxury-gold rounded-sm font-light"
               />
-              <button 
+              <input
+                type="email"
+                name="email"
+                placeholder="Ihre E-Mail Adresse"
+                required
+                className="w-full sm:w-1/3 px-4 py-3 border border-gray-300 focus:outline-none focus:border-luxury-gold rounded-sm font-light"
+              />
+              <button
                 type="submit" 
                 className="px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm w-full sm:w-auto"
               >
