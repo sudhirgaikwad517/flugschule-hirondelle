@@ -26,6 +26,7 @@ import {
   Toolbar,
   SaveButton,
 } from 'react-admin';
+// @ts-ignore
 import jsonExport from 'jsonexport/dist';
 import { Link as RouterLink, useParams, useNavigate } from 'react-router-dom';
 import {

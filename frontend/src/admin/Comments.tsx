@@ -121,7 +121,7 @@ const StatusIcon = () => (
 );
 
 export const CommentList = () => (
-  <List title="Kommentare" filters={<CommentFilter />} actions={<ListActions />} bulkActionButtons={false} sort={{ field: 'createdAt', order: 'DESC' }}>
+  <List title="Kommentare" filters={<CommentFilter />} actions={<ListActions />} sort={{ field: 'createdAt', order: 'DESC' }}>
     <Datagrid rowClick="edit" bulkActionButtons={<></>}>
       <TextField source="authorName" label="Autor" />
       <TextField source="registeredUser" label="User-ID" emptyText="-" />

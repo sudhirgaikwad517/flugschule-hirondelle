@@ -255,7 +255,7 @@ const GalleryImagesInput = () => {
 
 // Small thumbnail + image count for the list view, so "Galerie" reads like
 // a gallery overview instead of a bare table of slugs.
-const GalleryPreview = () => {
+const GalleryPreview = ({ label }: { label?: string }) => {
   const record = useRecordContext();
   const images: string[] = Array.isArray(record?.images) ? record.images : [];
   if (images.length === 0) {
@@ -277,7 +277,7 @@ const GalleryPreview = () => {
 // refreshes the list so the new row shows up immediately. The admin then
 // clicks "Bearbeiten" on the copy to assign it to whichever page should
 // start with this same set of images.
-const GalleryDuplicateButton = () => {
+const GalleryDuplicateButton = ({ label }: { label?: string }) => {
   const record = useRecordContext();
   const notify = useNotify();
   const refresh = useRefresh();
@@ -327,7 +327,7 @@ const GalleryDuplicateButton = () => {
 // behind a background timer that was crashing this page). This calls
 // pagegallery.routes.ts's DELETE directly and moves straight to
 // Admin > Papierkorb, same one-click behavior as Duplizieren above.
-const GalleryDeleteButton = () => {
+const GalleryDeleteButton = ({ label }: { label?: string }) => {
   const record = useRecordContext();
   const notify = useNotify();
   const refresh = useRefresh();
@@ -591,7 +591,6 @@ const GalleryForm = () => {
         source="slug"
         choices={pageChoices}
         label="Seite auswählen"
-        placeholder="Seite suchen oder neue Seite eingeben..."
         fullWidth
         // Lets an admin type a page name that's in neither PAGE_CHOICES nor
         // the CMS pages list yet and create it on the spot. normalizeSlug
