@@ -18,12 +18,16 @@ const DEFAULT_PROMO_CARDS = [
   // equivalent of that eventlist view (see Events.tsx's ?search= param).
   { title: 'On Tour...', boldLine: '23.1. - 6.2.2027 | Kolumbien', description: 'Fliegen über den grünen Landschaften des Valle del Cauca in den besten Fluggebieten von Cali Richtung Medellin...', image: '/images/bilder/2-tour-kolumbien/Kolumbien_3997_2.jpg', link: '/events?search=Kolumbien' },
 ];
+// slug matches the member's real anchor id on /infos/team (Team.tsx),
+// itself confirmed against old's real per-person anchors
+// (fs-hirondelle.de/team#alex etc.) - lets each home preview photo link
+// straight to that person instead of just the top of the team page.
 const DEFAULT_TEAM_MEMBERS = [
-  { name: 'Alex', image: '/images/team/schlink.jpg' },
-  { name: 'Sarah', image: '/images/team/sarah.jpg' },
-  { name: 'Tobi', image: '/images/team/tobi.jpg' },
-  { name: 'Holger', image: '/images/team/holger.jpg' },
-  { name: 'Markus', image: '/images/team/markus.jpg' },
+  { name: 'Alex', image: '/images/team/schlink.jpg', slug: 'alex' },
+  { name: 'Sarah', image: '/images/team/sarah.jpg', slug: 'sarah' },
+  { name: 'Tobi', image: '/images/team/tobi.jpg', slug: 'tobi' },
+  { name: 'Holger', image: '/images/team/holger.jpg', slug: 'holger' },
+  { name: 'Markus', image: '/images/team/markus.jpg', slug: 'markus' },
 ];
 const DEFAULT_HOCH_HINAUS_HTML =
   '<p>Willkommen bei der Flugschule Hirondelle, der Gleitschirmschule im Rhein-Main-Neckar Dreieck. Fliegen lernen mit dem <a href="/infos/team">Team Hirondelle</a> heißt: Persönliche und individuelle auf den Schüler zugeschnittene Ausbildung. Unser Team besteht aus sehr erfahrenen und ambitionierten Fluglehrern.</p>' +
@@ -482,32 +486,34 @@ export const Home = ({ contentId }: { contentId?: string } = {}) => {
             />
 
             {/* Team Members - top row: Alex & Sarah, bottom row: the rest.
-                Wrapped in a Link to /infos/team (matching the old site and
-                the other Home boxes above that link out to their detail
-                pages) - each member already had cursor-pointer styling with
-                nowhere to go before this. */}
-            <Link to={teamLink} className="flex flex-col gap-y-12">
+                Each member links to their own anchor on /infos/team
+                (matching old's real per-person links, e.g.
+                fs-hirondelle.de/team#alex), not just the page top. Falls
+                back to the plain team page link if a member has no slug
+                (e.g. old admin-edited HomeContent saved before slugs
+                existed). */}
+            <div className="flex flex-col gap-y-12">
               <div className="flex justify-center gap-x-10 sm:gap-x-16">
                 {teamMembers.slice(0, 2).map((member) => (
-                  <div key={member.name} className="flex flex-col items-center group cursor-pointer">
+                  <Link key={member.name} to={(member as any).slug ? `${teamLink}#${(member as any).slug}` : teamLink} className="flex flex-col items-center group cursor-pointer">
                     <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
                       <img src={member.image} className="w-full h-full rounded-full object-cover" alt={member.name} />
                     </div>
                     <span className="font-luxury text-lg text-luxury-dark tracking-wide">{member.name}</span>
-                  </div>
+                  </Link>
                 ))}
               </div>
               <div className="flex flex-wrap justify-center gap-x-6 sm:gap-x-10 gap-y-10">
                 {teamMembers.slice(2).map((member) => (
-                  <div key={member.name} className="flex flex-col items-center group cursor-pointer">
+                  <Link key={member.name} to={(member as any).slug ? `${teamLink}#${(member as any).slug}` : teamLink} className="flex flex-col items-center group cursor-pointer">
                     <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-luxury-gold/30 group-hover:border-luxury-gold transition-colors p-1">
                       <img src={member.image} className="w-full h-full rounded-full object-cover" alt={member.name} />
                     </div>
                     <span className="font-luxury text-lg text-luxury-dark tracking-wide">{member.name}</span>
-                  </div>
+                  </Link>
                 ))}
               </div>
-            </Link>
+            </div>
 
           </div>
         </div>

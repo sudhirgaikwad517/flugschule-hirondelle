@@ -8,6 +8,11 @@ interface TeamMember {
   image: string;
   certificate: string;
   paragraphs: string; // multiple paragraphs joined by "\n\n"
+  // Old's real per-member anchor id (e.g. fs-hirondelle.de/team#alex) -
+  // confirmed against the real migrated article's own <a name="..."> tags.
+  // Lets the home page's team preview (Home.tsx) link straight to this
+  // specific person instead of just the top of the page.
+  slug?: string;
 }
 interface ShopBrand { name: string; img: string; url: string }
 
@@ -42,36 +47,42 @@ const DEFAULT_CONTENT: TeamData = {
   members: [
     {
       name: 'Alexander Schlink',
+      slug: 'alex',
       image: '/images/team/schlink.jpg',
       certificate: '/images/team/certificate-alex.jpg',
       paragraphs: 'Alex ist Fluglehrer, DHV-Performance-Trainer und Inhaber der Flugschule. Er ist stellvertretender Ausbildungsleiter bei Hirondelle sowie als DHV-Prüfer tätig und kann Prüfungen zum A-Schein, B-Schein sowie Winde und Tandem abnehmen.\n\nEr ist euer Ansprechpartner für alle Anliegen: ob Aus- oder Fortbildung, Ausrüstung / Material sowie auch die Organisation und Durchführung der zahlreichen Touren und Reisen innerhalb Deutschlands und weltweit über die Grenzen hinweg.\n\nNach geleistetem Wehrdienst als Fallschirmjäger und diversen exzessiv ausgeführten Hobbys (Fallschirmspringen, Motorradfahren, Tauchen,...) musste während des Studiums eine neue Herausforderung her. So hat er den Vorschlag eines Kommilitonen, es doch mal mit Gleitschirmfliegen zu probieren, zunächst nur belächelt. Und am Ende aber doch zu seiner Leidenschaft gefunden!\n\nSeine fliegerische Karriere hat im Frühjahr 2005 auf dem Übungshang begonnen. Die Prüfung zum A-Schein machte er im März 2005. Alex hat mittlerweile alle Scheine, die man im Gleitschirmbereich besitzen kann... Neben dem B-Schein hat er zusätzlich den Windenfachlehrer, Windenfahrer, die Passagierflugberechtigung, Prüferlizenz und hat auch die "Moschilizenz" (Motorschirmlizenz).\n\nAm Liebsten fliegt Alex in seiner Heimat in der Südpfalz - 7 Berge an der Zahl hat er im Pfälzer Wald quasi direkt vor seiner Haustür und nutzt diese so oft es seine Zeit erlaubt, um in die Luft oder auf Strecke zu gehen.',
     },
     {
       name: 'Sarah Fuhrmann',
+      slug: 'sarah',
       image: '/images/team/sarah.jpg',
       certificate: '',
       paragraphs: 'Sarah ist Fluglehrerin und Ausbildungsleiterin der Flugschule. Sie ist unsere Quotenfrau und das Küken im Team Hirondelle, was die fliegerische Karriere betrifft. Als sie Alex kennen lernte war sofort klar: "Das muss ich auch mal probieren!" Nach dem ersten Tandemflug in Bezau stand die Entscheidung zum Schnupperkurs und dann dem eigenen Schein. Bald wurden die Berge zu Sarah\'s neuer Bühne und die früheren Tanzschuhe endgültig an den Nagel gehängt.\n\nArbeiten, wo andere Urlaub machen, dachte sie sich 2017, hat ihrem früheren Job den Rücken gekehrt, und engagiert sich seitdem Vollzeit in der Flugschule. Nach dem B-Schein kam 2018 die Ausbildung zur Windenführerin. Mit mittlerweile weit über 3.000 durchgeführten Windenschlepps - seit 2022 auf unserer Elektrowinde - und Unterstützung bei Grundkursen, Höhenflugschulungen und den weltweit durchgeführten Reisen hat sie immer mehr Erfahrung in der Gleitschirmausbildung gesammelt. 2022 hat sie daher die Ausbildung zur Fluglehrerin begonnen und diese Ende 2023 erfolgreich abgeschlossen. Seit 2024 ist sie außerdem die Ausbildungsleiterin der Flugschule.\n\nDie Marketing-Frau von der Zeitung kümmert sich außerdem um Text und Bild. Homepage, Flyer und mehr sind ihr Metier. Und auch die Ausschreibungen und Theorieskripte entspringen ihrer Feder.',
     },
     {
       name: 'Mathias „Tobi" Leipner',
+      slug: 'tobi',
       image: '/images/team/tobi.jpg',
       certificate: '',
       paragraphs: 'Schon als Kind hat sich Tobi fürs Fliegen und ferngesteuerte Modellflugzeuge interessiert. 2002 war es dann soweit und er ist beim Schnupperkurs im Allgäu mit dem Gleitschirm selbst das erste Mal abgehoben. Seit dieser Zeit hat ihn diese intensive Erfahrung nicht mehr losgelassen. Das Erlebnis und die Faszination, selbständig nur mit den Kräften der Natur stundenlang über weite Strecken durch die Luft zu segeln, bringen ihm Ruhe und lassen ihn zeitweise alles unter sich vergessen – es ist wie Meditation.\n\nIn den Jahren folgten B-Schein, Tandemausbildung und der Fluglehrer. Seitdem freut er sich immer über die strahlenden Gesichter der Flugschüler, wenn diese ihre ersten Hüpfer am Übungshang gemacht haben.\n\nTobi fliegt sowohl in der Pfalz als auch an der Bergstraße in heimischer Luft, aber er kreist auch unter anderem gerne in Spanien mit den Geiern Auge in Auge im Thermikbart.\n\nWir sehen uns am Berg.',
     },
     {
       name: 'Holger Grimm',
+      slug: 'holger',
       image: '/images/team/holger.jpg',
       certificate: '',
       paragraphs: 'Die Leidenschaft fürs Fliegen wurde Holger wohl in die Wiege gelegt. Anstatt des Traumberufs Luft- und Raumfahrttechniker wurde er dann aber doch Bürohengst. Doch Träume sterben nie und so hat er irgendwann nach dem B-Schein dann doch den Wunsch, Fluglehrer zu werden, in die Tat umgesetzt. Denn es gibt nichts Schöneres, als die Jubelschreie der Flugschüler/innen nach dem ersten Flug am Übungshang oder nach dem ersten "richtigen" Höhenflug zu erleben.\n\nAm Liebsten fliegt Holger in den Alpen oder in der Pfalz. Bei Flugreisen gilt in doppeltem Sinn: je weiter desto besser.',
     },
     {
       name: 'Karl-Peter Armbrust',
+      slug: 'karlpeter',
       image: '/images/team/karlpeter.jpg',
       certificate: '/images/team/certificate-kpa.jpg',
       paragraphs: 'Irgendwann in den 90ern sah er bei einer langen Motorradtour durch Frankreich auf der Spitze des Puy de dome bei Clermont Ferrand eine Horde Kinder mit seltsamen Fluggeräten jauchzend in der Luft rumturnen – die Eltern kreidebleich daneben, die Lehrer auch ;-) Damals kam die Idee, das auch zu tun; Jahre später dann die Realisierung: 2002 A-Schein mit Startart Hang und Winde, 2004 B-Schein und Windenführer, 2005 Passagierberechtigung mit Startart Hang und Winde. Nach vielen Reisen kam die Entscheidung, das Ganze ernsthaft anzugehen und 2014 die Ausbildung zum Fluglehrerassistenten zu absolvieren. Mittlerweile ergänzt Karl-Peter als Fluglehrer, Performance Trainer und Windenfachlehrer das Team.\n\nAch ja, Fliegen tut er auch noch gerne und zwar am Liebsten hier in Rheinland-Pfalz und dem Saarland – auch gerne ganz drüber weg ;-)',
     },
     {
       name: 'Markus Häcker – unser Tandem-Ass',
+      slug: 'markus',
       image: '/images/team/markus.jpg',
       certificate: '',
       paragraphs: 'Markus ist schon immer in luftigen Höhen zu finden. Anfangs über die Modellfliegerei mit 14 Jahren bei den Segelfliegern, zwischendurch im Leistungssport Hoch- und Stabhochsprung. 1986 begann er mit dem Drachenfliegen und ging nahtlos 1989 zu den Pionieren der Gleitschirmfliegerei über. Mit einer über 25-jährigen Gleitschirmerfahrung hat er alle Epochen der Schirmentwicklungen mitgemacht. In den letzten Jahren konzentriert er sich sehr stark auf die Tandemfliegerei.\n\nSeine Passagiere steigen immer mit einem breiten Grinsen im Gesicht aus dem Gurtzeug mit der Aussage: „super geil, das war nicht das letzte Mal"!',
@@ -159,7 +170,7 @@ export const Team = ({ contentId }: { contentId?: string } = {}) => {
 
           <div className="space-y-8">
             {content.members.map((member, idx) => (
-              <div key={idx} className="grid grid-cols-1 lg:grid-cols-12 gap-12 border-b border-gray-100 pb-8 last:border-0 last:pb-0">
+              <div key={idx} id={member.slug || undefined} className="grid grid-cols-1 lg:grid-cols-12 gap-12 border-b border-gray-100 pb-8 last:border-0 last:pb-0 scroll-mt-[100px]">
 
                 {/* Profile Info (Left 8 cols) */}
                 <div className="lg:col-span-8 flex flex-col md:flex-row gap-8 items-start">
