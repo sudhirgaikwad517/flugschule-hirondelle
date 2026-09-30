@@ -19,13 +19,18 @@ const DEFAULT_CONTENT = {
   heroQuote: 'Die Flugschule Hirondelle bietet euch eine qualifizierte, sichere und vielseitige Ausbildung.',
   introQuote: 'Wir begleiten euch von den ersten Hüpfern bis zu euren ersten Strecken- und Thermikflügen hier im Odenwald, in der Pfalz, im Kraichtal, im Nahetal und überall sonst auf der Welt.',
   introHtml: 'Im Nachfolgenden sind die Ausbildungswege in der Flugschule Hirondelle vom <a href="/ausbildung/schnupperkurs">Schnupper-/Einsteigerkurs</a> über den <a href="/ausbildung/l-schein">L-Schein</a> und die <a href="/ausbildung/a-schein">Höhenflugschulung (A-Schein)</a> bis zum <a href="/ausbildung/b-schein">unbeschränkten Luftfahrerschein (B-Schein)</a> aufgelistet, hier gelangt ihr zur <a href="/ausbildung/ausbildungskonzept">Gesamtübersicht</a>.',
+  // `link` matches old's real per-row course-name link on this exact page
+  // (fs-hirondelle.de/ausbildung's price table - each course name links to
+  // its own course page, e.g. "L-Schein" -> .../ausbildung/grundkurs there,
+  // .../ausbildung/l-schein here, since our own route for it is named
+  // differently but points at the same real page).
   priceRows: [
-    { name: 'Schnupper-/Einsteigerkurs', duration: '1 – 2 Tage', content: 'Ausrüstung kennen lernen, die ersten Flüge', price: 'ab 149,- €' },
-    { name: 'L-Schein', duration: '3 – 4 Tage', content: '15 Flüge am Grundkurs-Übungshang', price: '620,- €' },
-    { name: 'Windenschein', duration: '3 Tage', content: '20 Flüge an der Winde', price: '450,- €' },
-    { name: 'A-Schein', duration: 'mind. 1 Woche', content: '40 Höhenflüge', price: 'ab 990,- €' },
-    { name: 'B-Schein', duration: 'mind. 1 Woche', content: '20 Höhenflüge', price: 'ab 990,- €' },
-    { name: 'Tandemschein', duration: 'mind. 1 Woche', content: '40 Höhenflüge mit einem Passagier', price: 'ab 790,- €' },
+    { name: 'Schnupper-/Einsteigerkurs', duration: '1 – 2 Tage', content: 'Ausrüstung kennen lernen, die ersten Flüge', price: 'ab 149,- €', link: '/ausbildung/schnupperkurs' },
+    { name: 'L-Schein', duration: '3 – 4 Tage', content: '15 Flüge am Grundkurs-Übungshang', price: '620,- €', link: '/ausbildung/l-schein' },
+    { name: 'Windenschein', duration: '3 Tage', content: '20 Flüge an der Winde', price: '450,- €', link: '/ausbildung/windenschein' },
+    { name: 'A-Schein', duration: 'mind. 1 Woche', content: '40 Höhenflüge', price: 'ab 990,- €', link: '/ausbildung/a-schein' },
+    { name: 'B-Schein', duration: 'mind. 1 Woche', content: '20 Höhenflüge', price: 'ab 990,- €', link: '/ausbildung/b-schein' },
+    { name: 'Tandemschein', duration: 'mind. 1 Woche', content: '40 Höhenflüge mit einem Passagier', price: 'ab 790,- €', link: '/ausbildung/tandemschein' },
   ],
   graphicImage: '/images/inhalte/ausbildungswege.png',
   graphicCaption: 'hm = ca. Höhenmeter-Differenz zwischen Start- und Landeplatz',
@@ -96,7 +101,9 @@ export const Ausbildung = ({ contentId }: { contentId?: string } = {}) => {
                       style={{ backgroundColor: PRICE_ROW_COLORS[i % PRICE_ROW_COLORS.length] }}
                       className={`text-black ${isLast ? 'border-b border-gray-300' : ''}`}
                     >
-                      <td className="py-2 px-1 sm:px-2 font-bold break-words pr-2">{row.name} <br className="sm:hidden" /><span className="font-normal text-[10px] sm:text-sm">({row.duration})</span></td>
+                      <td className="py-2 px-1 sm:px-2 font-bold break-words pr-2">
+                        {row.link ? <Link to={row.link} className="hover:underline">{row.name}</Link> : row.name} <br className="sm:hidden" /><span className="font-normal text-[10px] sm:text-sm">({row.duration})</span>
+                      </td>
                       <td className="py-2 px-1 sm:px-2 pr-2">{row.content}</td>
                       <td className="py-2 px-1 sm:px-2 text-right font-semibold">{row.price}</td>
                     </tr>

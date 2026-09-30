@@ -17,7 +17,7 @@ import { RichTextField } from './RichTextField';
 // the graphic image, and the 6 category sections are all fixed-count fields
 // here - the page's design never changes, only what's plugged into it.
 
-interface PriceRow { name: string; duration: string; content: string; price: string }
+interface PriceRow { name: string; duration: string; content: string; price: string; link: string }
 interface Category { heading: string; subheading: string; description: string; image: string; link: string }
 interface AusbildungData {
   heroQuote: string;
@@ -166,7 +166,7 @@ export const AusbildungContentEditor = () => {
   };
 
   const addPriceRow = () => {
-    setContent({ ...content, priceRows: [...content.priceRows, { name: '', duration: '', content: '', price: '' }] });
+    setContent({ ...content, priceRows: [...content.priceRows, { name: '', duration: '', content: '', price: '', link: '' }] });
   };
 
   const removePriceRow = (i: number) => {
@@ -219,6 +219,15 @@ export const AusbildungContentEditor = () => {
                 <IconButton onClick={() => removePriceRow(i)} title="Zeile löschen" disabled={content.priceRows.length <= 1}>
                   <DeleteIcon fontSize="small" color="error" />
                 </IconButton>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 11 }}>
+                <TextField
+                  label="Link (Kursname klickbar)"
+                  fullWidth
+                  value={row.link || ''}
+                  onChange={(e) => updatePriceRow(i, 'link', e.target.value)}
+                  helperText="Leer lassen, damit der Kursname kein Link ist."
+                />
               </Grid>
             </Grid>
           ))}
