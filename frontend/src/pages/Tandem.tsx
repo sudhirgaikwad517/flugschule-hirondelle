@@ -117,56 +117,16 @@ export const Tandem = () => {
             <p>Falls jemand noch schneller in die Luft möchte können wir euch alternativ unseren <a href="#" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-semibold">Schnupperkurs</a> wärmstens empfehlen.</p>
           </div>
 
-          {/* Newsletter Form */}
-          <div className="bg-white border border-gray-200 p-8 rounded-sm shadow-sm max-w-2xl text-center">
-            <h3 className="font-luxury text-2xl text-luxury-dark mb-4 uppercase tracking-wide">TANDEM-NEWSLETTER</h3>
-            <p className="text-gray-500 font-light text-[14px] mb-6">Tragen Sie Ihre E-Mail Adresse ein, um über neue Tandem-Termine informiert zu werden.</p>
-            
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              const form = e.target as HTMLFormElement;
-              const name = (form.elements.namedItem('name') as HTMLInputElement).value;
-              const email = (form.elements.namedItem('email') as HTMLInputElement).value;
-
-              try {
-                const res = await fetch('/api/newsletters/subscribe', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ email, name, listType: 'TANDEM' })
-                });
-                
-                const data = await res.json();
-                if (res.ok) {
-                  alert('Erfolgreich zum Tandem-Newsletter angemeldet!');
-                  form.reset();
-                } else {
-                  alert(data.message || 'Ein Fehler ist aufgetreten');
-                }
-              } catch (err) {
-                alert('Netzwerkfehler. Bitte versuchen Sie es später erneut.');
-              }
-            }} className="flex flex-col sm:flex-row gap-4 justify-center items-center flex-wrap">
-              <input
-                type="text"
-                name="name"
-                placeholder="Vorname & Nachname"
-                className="w-full sm:w-1/3 px-4 py-3 border border-gray-300 focus:outline-none focus:border-luxury-gold rounded-sm font-light"
-              />
-              <input
-                type="email"
-                name="email"
-                placeholder="Ihre E-Mail Adresse"
-                required
-                className="w-full sm:w-1/3 px-4 py-3 border border-gray-300 focus:outline-none focus:border-luxury-gold rounded-sm font-light"
-              />
-              <button
-                type="submit" 
-                className="px-8 py-3 bg-transparent border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-white transition-colors duration-300 uppercase tracking-widest text-[10px] font-semibold rounded-sm w-full sm:w-auto"
-              >
-                ANMELDEN
-              </button>
-            </form>
-          </div>
+          {/* No standalone "Tandem-Newsletter" signup box here - old's real
+              site has one in its markup (a locked-to-Tandem-list legacy
+              acymailing module), but it's dead: custom.css hides
+              `.acymailing_module` with an unconditional `display:None`, so
+              it never actually renders on the live site. The body text
+              above ("...auf unserer Homepage unten eingerichtet") is
+              itself pointing at the one signup widget that IS real and
+              visible - the site-wide footer's Newsletter/Tandemflüge
+              Newsletter checkboxes (Footer.tsx), already wired to the same
+              TANDEM list. */}
         </div>
 
         {/* Pilots */}
