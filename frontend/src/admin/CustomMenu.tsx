@@ -83,7 +83,8 @@ const EVENT_ITEMS: Item[] = [
 ];
 
 const BOTTOM_ITEMS: Item[] = [
-    { label: 'Neuigkeiten / Blog', to: '/admin/news', icon: <ArticleIcon fontSize="small" /> },
+    // "Neuigkeiten / Blog" (-> /admin/news) hidden from the sidebar on
+    // request - route/data untouched, just not linked to from here anymore.
     { label: 'Download Kategorien', to: '/admin/downloadcategories', icon: <FolderIcon fontSize="small" /> },
     { label: 'Link Kategorien', to: '/admin/weblinkcategories', icon: <FolderIcon fontSize="small" /> },
     { label: 'Links', to: '/admin/links', icon: <LinkIcon fontSize="small" /> },
