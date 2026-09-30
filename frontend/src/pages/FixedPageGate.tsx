@@ -31,24 +31,31 @@ export const FixedPageGate = ({
   defaultSlug: string | null;
   children: ReactNode;
 }) => {
-  const [settings, setSettings] = useState<PageSettings | null | undefined>(undefined);
+  // Tagged with the `kind` each fetch was actually for, not just the raw
+  // settings - see why below.
+  const [fetched, setFetched] = useState<{ kind: string; settings: PageSettings | null } | undefined>(undefined);
 
   useEffect(() => {
     let cancelled = false;
-    // Reset before fetching, not just on resolve - this component sits at
-    // the same spot in the route tree across a same-Layout navigation (e.g.
-    // clicking a "Weiterlesen" card from /service to /service/2-jahres-check),
-    // so React reuses the same instance and its `settings` state would
-    // otherwise still hold the PREVIOUS page's slug for one render. That
-    // stale slug then gets compared against the NEW page's defaultSlug,
-    // sees a mismatch, and fires a spurious redirect back to the old page.
-    setSettings(undefined);
     fetch(`/api/fixed-page-settings/public/${kind}`)
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => { if (!cancelled) setSettings(data); })
-      .catch(() => { if (!cancelled) setSettings(null); });
+      .then((data) => { if (!cancelled) setFetched({ kind, settings: data }); })
+      .catch(() => { if (!cancelled) setFetched({ kind, settings: null }); });
     return () => { cancelled = true; };
   }, [kind]);
+
+  // This component sits at the same spot in the route tree across a
+  // same-Layout navigation (e.g. clicking a "Weiterlesen" card from
+  // /service to /service/2-jahres-check), so React reuses the same
+  // instance and `fetched` still holds the PREVIOUS page's result for (at
+  // least) the very first render after `kind` changes - useEffect only
+  // resets state AFTER that render has already committed, too late to stop
+  // it. Deriving `settings` here, by checking the fetch's own tagged
+  // `kind` against the CURRENT `kind` during render itself, closes that
+  // window completely: a stale result can never be mistaken for a fresh
+  // one, so the "renamed slug" redirect below can never fire against data
+  // that belongs to a different page.
+  const settings = fetched?.kind === kind ? fetched.settings : undefined;
 
   if (settings === undefined || settings === null) {
     return <BannerPositionContext.Provider value={kind}>{children}</BannerPositionContext.Provider>;
