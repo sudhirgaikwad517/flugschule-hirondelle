@@ -122,7 +122,7 @@ export const Rettungspacken = ({ contentId }: { contentId?: string } = {}) => {
 
             {/* Formular Button */}
             <div className="pt-4">
-              <button className="w-full bg-[#53a8c7] hover:bg-[#4396b5] text-white text-center py-4 rounded-sm text-lg font-semibold transition-colors shadow-md">
+              <button className="w-full bg-[#53a8c7] hover:bg-[#4396b5] text-white text-center py-4 text-lg font-semibold transition-colors shadow-md">
                 {content.formularButtonText}
               </button>
             </div>
@@ -147,7 +147,7 @@ export const Rettungspacken = ({ contentId }: { contentId?: string } = {}) => {
             <div className="bg-[#FAF9F7] p-8 border border-gray-100 shadow-sm relative overflow-hidden group">
               <div className="absolute top-0 left-0 w-full h-1 bg-[#53a8c7] transform origin-left transition-transform duration-500 scale-x-0 group-hover:scale-x-100"></div>
 
-              <button className="w-full bg-[#53a8c7] hover:bg-[#4396b5] text-white text-center py-3 rounded-full text-lg font-semibold transition-colors mb-10 shadow-md">
+              <button className="w-full bg-[#53a8c7] hover:bg-[#4396b5] text-white text-center py-3 text-lg font-semibold transition-colors mb-10 shadow-md">
                 {content.priceButtonText}
               </button>
 

@@ -212,7 +212,7 @@ export const BrasilienTour = ({ contentId }: { contentId?: string } = {}) => {
 
               <Link
                 to={content.bookingButtonLink}
-                className="block w-full bg-[#53a8c7] hover:bg-[#4396b5] text-white text-center py-3 rounded-full text-lg font-semibold transition-colors mb-8 shadow-md flex items-center justify-center gap-2"
+                className="block w-full bg-[#53a8c7] hover:bg-[#4396b5] text-white text-center py-3 text-lg font-semibold transition-colors mb-8 shadow-md flex items-center justify-center gap-2"
               >
                 {content.bookingButtonText}
               </Link>

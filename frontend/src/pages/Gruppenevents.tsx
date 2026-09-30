@@ -103,7 +103,7 @@ export const Gruppenevents = ({ contentId }: { contentId?: string } = {}) => {
               <div className="bg-[#f2f2f2] rounded-md p-6 md:p-8 shadow-sm border border-gray-200">
 
                 {/* Header Button */}
-                <a href={mailto} className="block w-full bg-[#53a8c7] hover:bg-[#4396b5] text-white text-center py-2.5 rounded-full mb-8 shadow-sm transition-colors">
+                <a href={mailto} className="block w-full bg-[#53a8c7] hover:bg-[#4396b5] text-white text-center py-2.5 mb-8 shadow-sm transition-colors">
                   <span className="text-sm md:text-base tracking-wide">{content.contactButtonText}</span>
                 </a>
 
