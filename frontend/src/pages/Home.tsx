@@ -11,7 +11,12 @@ import { useState, useEffect } from 'react';
 const DEFAULT_PROMO_CARDS = [
   { title: 'Fliegen Lernen', boldLine: 'Der Anfang einer neuen Leidenschaft!', description: 'Reinschnuppern beim 1-Tageskurs oder Schnupperwochenende', image: '/images/startbuttons/startbutton_schnuppern.jpg', link: '/ausbildung/schnupperkurs' },
   { title: 'Shop Geöffnet', boldLine: 'Mittwoch, 2.9.26 16-19 Uhr', description: 'Alex und Sarah sind für euch in Weinheim im Laden, bitte unbedingt voranmelden!', image: '/images/startbuttons/gutschein.jpg', link: '/infos' },
-  { title: 'On Tour...', boldLine: '23.1. - 6.2.2027 | Kolumbien', description: 'Fliegen über den grünen Landschaften des Valle del Cauca in den besten Fluggebieten von Cali Richtung Medellin...', image: '/images/bilder/2-tour-kolumbien/Kolumbien_3997_2.jpg', link: '/reisen/kolumbien-tour' },
+  // Old's real "On Tour" home-page box links to a pre-filtered search of
+  // the real event list (veranstaltungen/eventlist/.../Kolumbien/...),
+  // showing the actual bookable upcoming tour (dates/price/waitlist state) -
+  // not a static content page about the tour. /events is this app's real
+  // equivalent of that eventlist view (see Events.tsx's ?search= param).
+  { title: 'On Tour...', boldLine: '23.1. - 6.2.2027 | Kolumbien', description: 'Fliegen über den grünen Landschaften des Valle del Cauca in den besten Fluggebieten von Cali Richtung Medellin...', image: '/images/bilder/2-tour-kolumbien/Kolumbien_3997_2.jpg', link: '/events?search=Kolumbien' },
 ];
 const DEFAULT_TEAM_MEMBERS = [
   { name: 'Alex', image: '/images/team/schlink.jpg' },
@@ -385,9 +390,9 @@ export const Home = ({ contentId }: { contentId?: string } = {}) => {
               </div>
             </Link>
 
-            {/* Box 3: On Tour - old site's box links to the old Kolumbien
-                event listing; our equivalent content lives at
-                /reisen/kolumbien-tour */}
+            {/* Box 3: On Tour - links to the real event list pre-filtered
+                by search term, matching old's real eventlist behavior (see
+                DEFAULT_PROMO_CARDS' own comment above). */}
             <Link to={promoCards[2].link || DEFAULT_PROMO_CARDS[2].link} className="relative h-[400px] group overflow-hidden bg-white shadow-xl cursor-pointer block">
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
