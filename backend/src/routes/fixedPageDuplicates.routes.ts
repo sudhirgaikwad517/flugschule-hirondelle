@@ -34,6 +34,7 @@ const FIXED_KINDS = [
   // /infos/gelaende/* detail sub-pages - same duplicate mechanism.
   'billings', 'erlau', 'gadern', 'lindenfels', 'nonrod-nordost', 'nonrod',
   'stauf', 'winterkasten', 'bad-kreuznach', 'herrenteich',
+  'faq',
 ] as const;
 type FixedKind = (typeof FIXED_KINDS)[number];
 
@@ -85,6 +86,7 @@ const KIND_LABELS: Record<FixedKind, string> = {
   winterkasten: 'Winterkasten',
   'bad-kreuznach': 'Bad Kreuznach',
   herrenteich: 'Herrenteich',
+  faq: 'FAQ',
 };
 
 // Each kind's default (un-renamed) URL, and whether it also has its own
@@ -145,6 +147,7 @@ const FIXED_PAGE_URLS: Record<FixedKind, string> = {
   winterkasten: '/infos/gelaende/winterkasten',
   'bad-kreuznach': '/infos/gelaende/bad-kreuznach',
   herrenteich: '/infos/gelaende/herrenteich',
+  faq: '/faq',
 };
 const KINDS_WITH_SETTINGS = new Set<FixedKind>([
   'home',
@@ -194,6 +197,7 @@ const KINDS_WITH_SETTINGS = new Set<FixedKind>([
   'winterkasten',
   'bad-kreuznach',
   'herrenteich',
+  'faq',
 ]);
 
 const normalizeSlug = (value: string) =>

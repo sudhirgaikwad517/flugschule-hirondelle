@@ -61,6 +61,7 @@ import { MedienContentEditor } from './MedienContentEditor'; // NEW - /infos/med
 import { GruppeneventsContentEditor } from './GruppeneventsContentEditor'; // NEW - /infos/gruppenevents
 import { GutscheineContentEditor } from './GutscheineContentEditor'; // NEW - /infos/gutscheine
 import { VersicherungenContentEditor } from './VersicherungenContentEditor'; // NEW - /infos/versicherungen
+import { FAQContentEditor } from './FAQContentEditor'; // NEW - /faq
 import { SchnupperkursContentEditor } from './SchnupperkursContentEditor'; // NEW - /ausbildung/schnupperkurs
 import { LScheinContentEditor } from './LScheinContentEditor'; // NEW - /ausbildung/l-schein
 import { AScheinContentEditor } from './AScheinContentEditor'; // NEW - /ausbildung/a-schein
@@ -239,6 +240,7 @@ export const AdminApp = () => {
             <Route path="/gruppenevents-content/:contentId?" element={<Authenticated><GruppeneventsContentEditor /></Authenticated>} />
             <Route path="/gutscheine-content/:contentId?" element={<Authenticated><GutscheineContentEditor /></Authenticated>} />
             <Route path="/versicherungen-content/:contentId?" element={<Authenticated><VersicherungenContentEditor /></Authenticated>} />
+            <Route path="/faq-content/:contentId?" element={<Authenticated><FAQContentEditor /></Authenticated>} />
             <Route path="/schnupperkurs-content/:contentId?" element={<Authenticated><SchnupperkursContentEditor /></Authenticated>} />
             <Route path="/l-schein-content/:contentId?" element={<Authenticated><LScheinContentEditor /></Authenticated>} />
             <Route path="/a-schein-content/:contentId?" element={<Authenticated><AScheinContentEditor /></Authenticated>} />

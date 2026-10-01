@@ -59,6 +59,7 @@ const FIXED_KINDS = [
   'winterkasten',
   'bad-kreuznach',
   'herrenteich',
+  'faq',
 ] as const;
 type FixedKind = (typeof FIXED_KINDS)[number];
 
@@ -110,6 +111,7 @@ const KIND_LABELS: Record<FixedKind, string> = {
   winterkasten: 'Winterkasten',
   'bad-kreuznach': 'Bad Kreuznach',
   herrenteich: 'Herrenteich',
+  faq: 'FAQ',
 };
 
 // The hardcoded React route each kind's page lives at today (App.tsx) -
@@ -167,6 +169,7 @@ const DEFAULT_SLUGS: Record<FixedKind, string | null> = {
   winterkasten: 'winterkasten',
   'bad-kreuznach': 'bad-kreuznach',
   herrenteich: 'herrenteich',
+  faq: 'faq',
 };
 
 const normalizeSlug = (value: string) =>

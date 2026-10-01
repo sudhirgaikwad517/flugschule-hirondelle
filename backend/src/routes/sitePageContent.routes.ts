@@ -1755,6 +1755,54 @@ export const DEFAULTS: Record<string, any> = {
       { name: 'Tandemschein', duration: '', content: '40 Höhenflüge mit einem Passagier, Lerninhalte Passagierflug, Theorie-/Praxisprüfung zur Passagierflugberechtigung vor einem Prüfer des DHV', goal: 'Passagierflugberechtigung, selbständiges Passagierfliegen', bgColor: '#c4c5ca', link: '/ausbildung/tandemschein' },
     ],
   },
+  faq: {
+    heading: 'Häufig gestellte Fragen',
+    items: [
+      {
+        question: 'Wann bzw. wie fange ich Gleitschirmfliegen an?',
+        answerHtml: 'Die Ausbildung beginnt mit dem <a href="/ausbildung/l-schein" class="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Grundkurs</a> oder optional davor mit einem <a href="/ausbildung/schnupperkurs" class="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Schnupperkurs</a>. Danach folgt die Höhenflugschulung mit abschließender Prüfung zum <a href="/ausbildung/a-schein" class="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">A-Schein</a>, mit dem du dann selbständig fliegen darfst. Gerne beraten wir dich zum Ausbildungsverlauf in unserer <a href="/infos#kontakt" class="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Flugschule</a> oder auch per Telefon, den Kurs buchen kannst du dann direkt online.',
+      },
+      {
+        question: 'Wie alt muss man mindestens sein, um an einem Kurs teilnehmen zu können?',
+        answerHtml: 'Das Mindestalter für die Teilnahme an Kursen liegt bei 14 Jahren, wobei bei Teilnahme Minderjähriger eine schriftliche Einverständniserklärung beider Erziehungsberechtigten erforderlich ist. Nach oben hin gibt es keine Altersgrenze! Noch unsicher? Unser <a href="/ausbildung/schnupperkurs" class="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Schnupperkurs</a> bietet dir die Möglichkeit, Gleitschirmfliegen unverbindlich zu testen.',
+      },
+      {
+        question: 'Wo finden die Kurse statt?',
+        answerHtml: 'Alle unsere Fluggelände findet ihr <a href="/infos/gelaende" class="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">hier</a>.',
+      },
+      {
+        question: 'Wie lange dauert ein Schnupperkurs?',
+        answerHtml: 'Der <a href="/ausbildung/schnupperkurs" class="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Schnupperkurs</a> findet in der Regel am Wochenende (Samstag & Sonntag) statt. Wir beginnen meist früh um 8.00 Uhr und schulen bis Nachmittags (15.00 bis 17.00 Uhr) – solange es das Wetter zulässt.',
+      },
+      {
+        question: 'Was muss ich zum Schnupperkurs mitbringen?',
+        answerHtml: 'Wichtigste Voraussetzung für den <a href="/ausbildung/schnupperkurs" class="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Schnupperkurs</a> sind <strong>feste, überknöchelhohe (Wander-)Schuhe</strong>, lange Hosen, Sonnencreme, Getränke/Verpflegung und jede Menge gute Laune.',
+      },
+      {
+        question: 'Welche Ausrüstung benötige ich für die Kurse?',
+        answerHtml: 'Zum Gleitschirmfliegen benötigst du zunächst nur feste, überknöchelhohe (Wander-)Schuhe sowie normale (Outdoor-)Kleidung. Alles weitere wie Gleitschirm, Gurtzeug etc. wird beim <a href="/ausbildung/schnupperkurs" class="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Schnupperkurs</a> und <a href="/ausbildung/l-schein" class="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Grundkurs</a> von uns gestellt. Danach fliegt ihr mit eigener Ausrüstung oder alternativ mit Leihausrüstung, hier beraten wir euch gerne bei uns in der <a href="/infos#kontakt" class="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Flugschule</a>.',
+      },
+      {
+        question: 'Was kann ich nach Abschluss des Grundkurses im Gleitschirmfliegen?',
+        answerHtml: 'Der <a href="/ausbildung/l-schein" class="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Grundkurs</a> bildet die Basis für die Teilnahme an der Höhenflugschulung (<a href="/ausbildung/a-schein" class="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">A-Schein</a>). Hauptlernziele sind Starten, Steuern, Landen.',
+      },
+      {
+        question: 'Wie lange dauert der A-Schein (Höhenflugschulung)?',
+        answerHtml: 'Da wir abhängig vom Wetter sind, kann man schwer sagen, wie lange es genau dauert. Geht man davon aus, jeden Tag passendes Wetter und Zeit zu haben, kann man für die <a href="/ausbildung/a-schein" class="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">A-Schein-Ausbildung</a> ca. 1 bis 3 Wochen einplanen. Kann aber auch länger dauern.',
+      },
+      {
+        question: 'Ich bin Pilot/in, aber schon längere Zeit nicht mehr geflogen und möchte wieder anfangen.',
+        answerHtml: 'Für alle, die längere Zeit nicht geflogen sind, bieten wir <a href="/performance/refresher" class="text-[#428bca] hover:text-[#2a6496] hover:underline font-medium">Refresher-Kurse</a> an. So gelingt ein sicherer und erfolgreicher Wiedereinstieg mit Fluglehrerbetreuung.',
+      },
+    ],
+    contactHeading: 'Noch Fragen?!',
+    contactImage: '/images/inhalte/fragen_4.jpg',
+    contactText: 'Wir vom Team Hirondelle stehen euch für alle eure Anliegen gerne zur Verfügung! Sprecht uns an oder besucht uns in der Flugschule!',
+    openingHoursLabel: 'Öffnungszeiten',
+    openingHoursText: 'nach Vereinbarung\n(Wird per Newsletter bekannt gegeben)',
+    addressLines: 'Flugschule Hirondelle\nUntergasse 27\n69469 Weinheim / Germany',
+    contactEmail: 'info@fs-hirondelle.de',
+  },
 };
 
 // `id` isn't limited to the 6 known DEFAULTS keys here: a FixedPageDuplicate

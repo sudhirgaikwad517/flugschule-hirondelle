@@ -47,6 +47,7 @@ import { Stauf } from './Stauf';
 import { Winterkasten } from './Winterkasten';
 import { BadKreuznach } from './BadKreuznach';
 import { Herrenteich } from './Herrenteich';
+import { FAQ } from './FAQ';
 import { DynamicPage } from './DynamicPage';
 import { LegalPageContent } from './LegalPageContent';
 
@@ -98,6 +99,7 @@ const KIND_COMPONENTS: Record<string, ComponentType<{ contentId?: string }>> = {
   winterkasten: Winterkasten,
   'bad-kreuznach': BadKreuznach,
   herrenteich: Herrenteich,
+  faq: FAQ,
 };
 
 interface Resolved {

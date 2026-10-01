@@ -233,6 +233,7 @@ const FIXED_PAGES = [
   { title: 'Winterkasten', editPath: '/admin/winterkasten-content', previewPath: '/infos/gelaende/winterkasten', deletePath: '/api/sitepagecontent/winterkasten', kind: 'winterkasten', hasSettings: true },
   { title: 'Bad Kreuznach', editPath: '/admin/bad-kreuznach-content', previewPath: '/infos/gelaende/bad-kreuznach', deletePath: '/api/sitepagecontent/bad-kreuznach', kind: 'bad-kreuznach', hasSettings: true },
   { title: 'Herrenteich', editPath: '/admin/herrenteich-content', previewPath: '/infos/gelaende/herrenteich', deletePath: '/api/sitepagecontent/herrenteich', kind: 'herrenteich', hasSettings: true },
+  { title: 'FAQ', editPath: '/admin/faq-content', previewPath: '/faq', deletePath: '/api/sitepagecontent/faq', kind: 'faq', hasSettings: true },
 ];
 
 // The fixed pages' titles are fixed German text, so a plain substring
@@ -288,6 +289,7 @@ const FIXED_PAGE_SEARCH_TERMS: Record<string, string[]> = {
   winterkasten: ['winterkasten', 'fluggelände winterkasten'],
   'bad-kreuznach': ['bad kreuznach', 'bad-kreuznach', 'mergesfeld'],
   herrenteich: ['herrenteich', 'fluggelände herrenteich'],
+  faq: ['faq', 'fragen', 'häufig gestellte fragen', 'haeufig gestellte fragen', 'questions'],
 };
 
 const textMatches = (query: string, ...values: Array<string | null | undefined>) => {

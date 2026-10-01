@@ -152,7 +152,7 @@ function App() {
           <Route path="infos/versicherungen" element={<FixedPageGate kind="versicherungen" defaultSlug="versicherungen"><Versicherungen /></FixedPageGate>} />
           <Route path="agb" element={<LegalPage kind="agb" />} />
           <Route path="widerrufsbelehrung" element={<LegalPage kind="widerruf" />} />
-          <Route path="faq" element={<FAQ />} />
+          <Route path="faq" element={<FixedPageGate kind="faq" defaultSlug="faq"><FAQ /></FixedPageGate>} />
           <Route path="datenschutz" element={<LegalPage kind="datenschutz" />} />
           <Route path="impressum" element={<LegalPage kind="impressum" />} />
           <Route path="bewertung/:bookingId" element={<RatingPage />} />
