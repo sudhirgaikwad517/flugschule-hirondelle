@@ -79,6 +79,7 @@ router.get('/', async (req, res) => {
         where: whereClause,
         include: {
           categoryRef: true,
+          Location: { select: { id: true, title: true } },
           tickets: {
             orderBy: { order: 'asc' },
             include: {

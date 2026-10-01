@@ -64,6 +64,12 @@ export interface CalendarEvent {
   shortDescription?: string;
   location?: string;
   locationId?: string;
+  // Real venue name from the Location entity (Veranstaltungsort), not the
+  // free-text `location` field above - old's real "Veranstaltungsorte"
+  // sidebar filter lists real distinct venues (hiron_matukio_locations),
+  // not every unique string ever typed into an event's own location text,
+  // which produced far more "venues" than actually exist.
+  locationName?: string;
   registrationDeadline?: string;
   imageUrl?: string;
   detailImageUrl?: string;
@@ -123,6 +129,7 @@ export const useEvents = () => {
           shortDescription: e.shortDescription,
           location: e.location,
           locationId: e.locationId,
+          locationName: e.Location?.title,
           registrationDeadline: e.registrationDeadline,
           imageUrl: e.imageUrl,
           detailImageUrl: e.detailImageUrl,

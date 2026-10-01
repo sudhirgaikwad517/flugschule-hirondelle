@@ -51,9 +51,18 @@ export const Events = () => {
     return Array.from(cats).sort();
   }, [events]);
 
+  // Old's real "Veranstaltungsorte" sidebar lists actual registered venues
+  // (hiron_matukio_locations, 6 of them) - not every unique free-text
+  // `location` string an event ever had, which includes generic
+  // placeholders like "Ort und genaue Uhrzeit wird am Vortag bekannt
+  // gegeben" for the many training dates with no fixed venue yet. Only
+  // events with a real Location relation count here.
   const uniqueLocations = useMemo(() => {
-    const locs = new Set(events.map(e => e.location || 'Online/Standard').filter(Boolean));
-    return Array.from(locs).sort();
+    const map = new Map<string, string>();
+    for (const e of events) {
+      if (e.locationId && e.locationName) map.set(e.locationId, e.locationName);
+    }
+    return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
   }, [events]);
 
   const uniqueOrganizers = useMemo(() => {
@@ -91,7 +100,7 @@ export const Events = () => {
 
     // Location
     if (selectedLocations.size > 0) {
-      result = result.filter(e => selectedLocations.has(e.location || 'Online/Standard'));
+      result = result.filter(e => !!e.locationId && selectedLocations.has(e.locationId));
     }
 
     // Organizer
@@ -304,15 +313,15 @@ export const Events = () => {
               <div className="mb-6">
                 <h3 className="font-semibold text-gray-700 mb-2">Veranstaltungsorte</h3>
                 <div className="space-y-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
-                  {uniqueLocations.map(loc => (
-                    <label key={loc} className="flex items-center gap-2 cursor-pointer">
-                      <input 
-                        type="checkbox" 
+                  {uniqueLocations.map(([id, name]) => (
+                    <label key={id} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
                         className="rounded text-blue-600 focus:ring-blue-500"
-                        checked={selectedLocations.has(loc)}
-                        onChange={() => toggleSet(selectedLocations, loc, setSelectedLocations)}
+                        checked={selectedLocations.has(id)}
+                        onChange={() => toggleSet(selectedLocations, id, setSelectedLocations)}
                       />
-                      <span className="text-sm text-gray-700">{loc}</span>
+                      <span className="text-sm text-gray-700">{name}</span>
                     </label>
                   ))}
                 </div>
