@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Banner } from '../components/common/Banner';
 import { SafeHtml } from '../components/common/SafeHtml';
 import { stripDuplicateHeroImage } from '../utils/eventDescription';
@@ -500,8 +500,11 @@ export const Events = () => {
                         the height, it's never stretched/cropped to match the
                         text column's height. `self-start` stops this flex
                         row from stretching the image box to the card's full
-                        height the way it did before. */}
-                    <div className="sm:w-1/3 md:w-1/4 flex-shrink-0 self-start relative bg-gray-100">
+                        height the way it did before. Old's real template
+                        wraps this image in an <a> to the event's own detail
+                        page (bootstrap3.php: `<a href="$link">` around the
+                        image, same $link as the title below). */}
+                    <Link to={`/buchungskalender/${event.id}`} className="sm:w-1/3 md:w-1/4 flex-shrink-0 self-start relative bg-gray-100 block">
                       {event.imageUrl ? (
                         <img
                           src={event.imageUrl.startsWith('http') ? event.imageUrl : `${event.imageUrl}`}
@@ -526,8 +529,8 @@ export const Events = () => {
                         <div className="text-xs font-bold text-gray-500 uppercase">{event.start.toLocaleDateString('de-DE', { month: 'short', timeZone: 'UTC' })}</div>
                         <div className="text-2xl font-black text-gray-800">{event.start.getUTCDate()}</div>
                       </div>
-                    </div>
-                    
+                    </Link>
+
                     {/* Content */}
                     <div className="p-5 sm:w-2/3 md:w-3/4 flex flex-col justify-between">
                       <div>
@@ -544,7 +547,9 @@ export const Events = () => {
                                 Storniert
                               </span>
                             )}
-                            <h3 className={`text-xl font-bold text-gray-900 ${event.cancelled ? 'line-through opacity-60' : ''}`}>{event.title}</h3>
+                            <h3 className={`text-xl font-bold text-gray-900 ${event.cancelled ? 'line-through opacity-60' : ''}`}>
+                              <Link to={`/buchungskalender/${event.id}`} className="hover:underline">{event.title}</Link>
+                            </h3>
                           </div>
                           <div className="text-right">
                             <span className="block text-lg font-bold text-gray-900">
