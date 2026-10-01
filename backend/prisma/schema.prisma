@@ -995,6 +995,13 @@ model Page {
 model LegalPage {
   id        String   @id @default(uuid())
   slug      String   @unique
+  // Stable internal identifier (agb/widerruf/datenschutz/impressum),
+  // separate from the admin-editable `slug` (the public URL) - same
+  // "kind vs slug" split used by FixedPageSettings. Lets an admin rename
+  // the URL without breaking the hardcoded App.tsx routes' own lookup or
+  // causing the default-seeding logic to recreate a duplicate row under
+  // the original slug.
+  kind      String?  @unique
   title     String
   content   String   @db.LongText
   createdAt DateTime @default(now())

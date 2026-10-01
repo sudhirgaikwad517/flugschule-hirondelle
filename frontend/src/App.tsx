@@ -150,11 +150,11 @@ function App() {
           <Route path="infos/gruppenevents" element={<FixedPageGate kind="gruppenevents" defaultSlug="gruppenevents"><Gruppenevents /></FixedPageGate>} />
           <Route path="infos/gutscheine" element={<FixedPageGate kind="gutscheine" defaultSlug="gutscheine"><Gutscheine /></FixedPageGate>} />
           <Route path="infos/versicherungen" element={<FixedPageGate kind="versicherungen" defaultSlug="versicherungen"><Versicherungen /></FixedPageGate>} />
-          <Route path="agb" element={<LegalPage slug="agb" />} />
-          <Route path="widerrufsbelehrung" element={<LegalPage slug="widerruf" />} />
+          <Route path="agb" element={<LegalPage kind="agb" />} />
+          <Route path="widerrufsbelehrung" element={<LegalPage kind="widerruf" />} />
           <Route path="faq" element={<FAQ />} />
-          <Route path="datenschutz" element={<LegalPage slug="datenschutz" />} />
-          <Route path="impressum" element={<LegalPage slug="impressum" />} />
+          <Route path="datenschutz" element={<LegalPage kind="datenschutz" />} />
+          <Route path="impressum" element={<LegalPage kind="impressum" />} />
           <Route path="bewertung/:bookingId" element={<RatingPage />} />
           <Route path="veranstaltungsorte" element={<Locations />} />
           <Route path="veranstaltungsort/:id" element={<LocationDetail />} />

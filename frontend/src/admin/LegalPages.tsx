@@ -12,9 +12,15 @@ export const LegalPageList = () => (
 );
 
 export const LegalPageEdit = () => (
-    <Edit title="Rechtliche Seite bearbeiten">
+    <Edit title="Rechtliche Seite bearbeiten" mutationMode="pessimistic">
         <SimpleForm>
-            <TextInput source="slug" disabled fullWidth />
+            <TextInput
+                source="slug"
+                label="Slug (URL)"
+                fullWidth
+                required
+                helperText="Die öffentliche URL dieser Seite, z.B. 'agb' für /agb. Nur Kleinbuchstaben, Zahlen und Bindestriche."
+            />
             <TextInput source="title" label="Titel" fullWidth required />
             <RichTextInput source="content" label="Inhalt" />
         </SimpleForm>

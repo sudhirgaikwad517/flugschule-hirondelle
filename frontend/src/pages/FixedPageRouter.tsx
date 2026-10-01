@@ -48,6 +48,7 @@ import { Winterkasten } from './Winterkasten';
 import { BadKreuznach } from './BadKreuznach';
 import { Herrenteich } from './Herrenteich';
 import { DynamicPage } from './DynamicPage';
+import { LegalPageContent } from './LegalPageContent';
 
 const KIND_COMPONENTS: Record<string, ComponentType<{ contentId?: string }>> = {
   home: Home,
@@ -102,11 +103,12 @@ const KIND_COMPONENTS: Record<string, ComponentType<{ contentId?: string }>> = {
 interface Resolved {
   kind: string;
   contentId?: string;
+  legalPage?: { title: string; content: string };
 }
 
-// Every catch-all ":slug" request goes through here first, checking two
-// things a fixed page's slug can mean before falling back to DynamicPage
-// (the Seiten/Unlayer CMS flow):
+// Every catch-all ":slug" request goes through here first, checking three
+// things a slug can mean before falling back to DynamicPage (the Seiten/
+// Unlayer CMS flow):
 // 1. A true same-design duplicate (Admin > Seiten > "Duplizieren" on
 //    Startseite/Ausbildung/Performance/Reisen/Service/Infos - see
 //    FixedPageDuplicate model / fixedPageDuplicates.routes.ts) - renders the
@@ -117,27 +119,46 @@ interface Resolved {
 //    fixedPageSettings.routes.ts / FixedPageGate.tsx, which redirects the
 //    old hardcoded route here) - renders the same component with no
 //    contentId, so it reads the page's own real content, not a copy.
+// 3. A RENAMED legal page (Admin > Rechtliche Seiten - LegalPage.tsx
+//    redirects its own hardcoded route here the same way) - rendered
+//    directly via LegalPageContent, no further redirect check needed since
+//    this request's own slug already IS the current one.
 export const FixedPageRouter = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [resolved, setResolved] = useState<Resolved | null | undefined>(undefined);
+  // Tagged with the `slug` each fetch was actually for - this component
+  // sits at the same spot in the route tree across a same-Layout
+  // navigation between two different catch-all-resolved pages, so React
+  // reuses the same instance. Deriving `resolved` below (by checking the
+  // fetch's own tagged slug against the CURRENT slug, during render) means
+  // a stale result from the PREVIOUS page can never be mistaken for this
+  // one's - see FixedPageGate.tsx for the exact same race and fix.
+  const [fetched, setFetched] = useState<{ slug: string; resolved: Resolved | null } | undefined>(undefined);
 
   useEffect(() => {
-    setResolved(undefined);
+    let cancelled = false;
     Promise.all([
       fetch(`/api/fixed-page-duplicates/public/${slug}`).then((res) => (res.ok ? res.json() : null)),
       fetch(`/api/fixed-page-settings/public/by-slug/${slug}`).then((res) => (res.ok ? res.json() : null)),
+      fetch(`/api/legalPages/public/by-slug/${slug}`).then((res) => (res.ok ? res.json() : null)),
     ])
-      .then(([dup, primary]) => {
-        if (dup) setResolved({ kind: dup.kind, contentId: dup.contentId });
-        else if (primary) setResolved({ kind: primary.kind });
-        else setResolved(null);
+      .then(([dup, primary, legal]) => {
+        if (cancelled) return;
+        let resolved: Resolved | null = null;
+        if (dup) resolved = { kind: dup.kind, contentId: dup.contentId };
+        else if (primary) resolved = { kind: primary.kind };
+        else if (legal) resolved = { kind: '__legal__', legalPage: { title: legal.title, content: legal.content } };
+        setFetched({ slug: slug as string, resolved });
       })
-      .catch(() => setResolved(null));
+      .catch(() => { if (!cancelled) setFetched({ slug: slug as string, resolved: null }); });
+    return () => { cancelled = true; };
   }, [slug]);
+
+  const resolved = fetched?.slug === slug ? fetched.resolved : undefined;
 
   if (resolved === undefined) return null;
 
   if (resolved) {
+    if (resolved.legalPage) return <LegalPageContent title={resolved.legalPage.title} content={resolved.legalPage.content} />;
     const Component = KIND_COMPONENTS[resolved.kind];
     if (Component) return <Component contentId={resolved.contentId} />;
   }
