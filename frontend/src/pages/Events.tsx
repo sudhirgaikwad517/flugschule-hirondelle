@@ -51,19 +51,26 @@ export const Events = () => {
     return Array.from(cats).sort();
   }, [events]);
 
-  // Old's real "Veranstaltungsorte" sidebar lists actual registered venues
-  // (hiron_matukio_locations, 6 of them) - not every unique free-text
-  // `location` string an event ever had, which includes generic
-  // placeholders like "Ort und genaue Uhrzeit wird am Vortag bekannt
-  // gegeben" for the many training dates with no fixed venue yet. Only
-  // events with a real Location relation count here.
+  // Old's real "Veranstaltungsorte" sidebar lists every registered venue
+  // (hiron_matukio_locations, 6 of them) unconditionally - including ones
+  // with no currently-scheduled event (e.g. "Bassano-Tour", "Südafrika-Tour"
+  // between trips) - not just whichever venues happen to have a published
+  // event right now, and definitely not every unique free-text `location`
+  // string an event ever had (generic placeholders like "Ort und genaue
+  // Uhrzeit wird am Vortag bekannt gegeben" for dates with no fixed venue
+  // yet). Fetched independently of the event list for exactly that reason.
+  const [allLocations, setAllLocations] = useState<{ id: string; title: string }[]>([]);
+  useEffect(() => {
+    fetch('/api/locations/public')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setAllLocations(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
   const uniqueLocations = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const e of events) {
-      if (e.locationId && e.locationName) map.set(e.locationId, e.locationName);
-    }
-    return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
-  }, [events]);
+    return allLocations
+      .map((l): [string, string] => [l.id, l.title])
+      .sort((a, b) => a[1].localeCompare(b[1]));
+  }, [allLocations]);
 
   const uniqueOrganizers = useMemo(() => {
     const orgs = new Set(events.map(e => e.organizer || 'Flugschule Hirondelle').filter(Boolean));
