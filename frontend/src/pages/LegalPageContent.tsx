@@ -10,17 +10,14 @@ export const LegalPageContent = ({ title, content }: { title: string; content: s
   <div className="w-full bg-white font-luxurysans pb-20">
     <Banner />
     <section className="pt-16 md:pt-24 pb-12">
-      <div className="container mx-auto px-4 lg:px-8 max-w-[900px]">
+      <div className="container mx-auto px-4 lg:px-8 max-w-[1200px]">
         <div className="mb-12">
           <h1 className="font-luxury text-3xl md:text-4xl lg:text-5xl text-luxury-dark uppercase mb-6 tracking-wide">
             {title}
           </h1>
           <div className="w-full h-px bg-[#53a8c7] opacity-40"></div>
         </div>
-        <SafeHtml
-          className="prose prose-sm md:prose-base max-w-none text-gray-600 font-light leading-relaxed [&_a]:text-[#53a8c7] [&_a]:font-medium"
-          html={content}
-        />
+        <SafeHtml className="legal-page-content" html={content} />
       </div>
     </section>
   </div>

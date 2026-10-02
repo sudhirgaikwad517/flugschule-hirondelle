@@ -528,6 +528,39 @@ body.admin-root .RaBulkActionsToolbar-root {
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
 }
 
+/* Legal pages (AGB/Datenschutz/Widerruf/Impressum, LegalPageContent.tsx)
+   are plain consecutive <h3>/<p>/<a> tags with no inline spacing of their
+   own - Tailwind's preflight zeroes out every element's default browser
+   margin, so without explicit rules here paragraphs run straight into each
+   other with no visual separation at all. */
+.legal-page-content h3 {
+  font-family: var(--font-luxury);
+  color: var(--color-luxury-dark);
+  font-size: 1.375rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-top: 2.75rem;
+  margin-bottom: 1.25rem;
+}
+.legal-page-content h3:first-child {
+  margin-top: 0;
+}
+.legal-page-content p {
+  font-family: var(--font-luxurysans);
+  color: #6b7280;
+  line-height: 1.8;
+  margin-bottom: 1.35rem;
+}
+.legal-page-content a {
+  color: #53a8c7;
+  font-weight: 500;
+  text-decoration: none;
+}
+.legal-page-content a:hover {
+  color: #2a6496;
+  text-decoration: underline;
+}
+
 /* Gelände detail articles (/infos/gelaende/:slug) carry verbatim raw HTML
    transcribed from the old Joomla site, which used Bootstrap 2's
    `.col-md-N` grid classes to sit the Google Maps embed BESIDE the article
