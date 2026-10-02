@@ -54,23 +54,39 @@ export const Tandem = () => {
 
           {/* Right Column (Pricing & Impressions) */}
           <div className="w-full lg:w-2/5">
-            {/* Pricing Box */}
-            <div className="mb-8 border border-gray-200 rounded-sm overflow-hidden shadow-sm">
-              <div className="bg-[#53a8c7] text-white text-center py-4 uppercase tracking-widest font-semibold text-[11px]">
-                TANDEMFLÜGE
-              </div>
-              <div className="bg-white p-6 flex justify-between items-center text-gray-800 border-b border-luxury-gold">
-                <span className="text-[14px] font-light text-gray-500">Tandemflug - Barzahlung vor Ort</span>
-                <span className="font-luxury text-2xl text-luxury-dark">150,- €</span>
-              </div>
-            </div>
+            {/* Pricing & Info Card - same card treatment as the booking
+                boxes on Ausbildung/Performance pages (e.g.
+                Sicherheitstraining.tsx): soft card background, hover
+                accent bar, bold price row, full-bleed footer bar. Tandem
+                has no bookable event to link to (payment is cash on site,
+                arranged via the Tandem-Newsletter described below), so the
+                footer bar carries the "Achtung" notice instead of a
+                "Termin siehe Kalender" link. */}
+            <div className="mb-12 bg-[#FAF9F7] border border-gray-100 shadow-sm relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-1 bg-[#53a8c7] transform origin-left transition-transform duration-500 scale-x-0 group-hover:scale-x-100"></div>
 
-            {/* Warning Text */}
-            <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-12 rounded-sm shadow-sm">
-              <p className="text-red-800 text-[13px] leading-relaxed font-light">
-                <span className="font-bold uppercase tracking-widest block mb-1">Achtung:</span> 
-                Wir verkaufen keine Gutscheine für Tandemflüge - es können nur bereits erworbene Gutscheine eingelöst werden. Wer ohne Gutschein mitfliegen will, einfach unten in den Tandemnewsletter eintragen und dann beim Termin bar zahlen.
-              </p>
+              <div className="p-8">
+                <div className="bg-[#53a8c7] text-white text-center py-3 uppercase tracking-widest font-semibold text-[13px] mb-8 shadow-md">
+                  Tandemflüge
+                </div>
+
+                <div className="border-b border-gray-200 pb-6">
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="text-gray-600 font-light text-[13px]">
+                      <p className="font-bold text-luxury-dark mb-1">Tandemflug</p>
+                      <p>Barzahlung vor Ort</p>
+                    </div>
+                    <p className="font-bold text-luxury-dark text-lg whitespace-nowrap mt-0.5">150,- €</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-red-50 border-t border-red-100 px-8 py-6">
+                <p className="text-red-800 text-[13px] leading-relaxed font-light">
+                  <span className="font-bold uppercase tracking-widest block mb-1">Achtung:</span>
+                  Wir verkaufen keine Gutscheine für Tandemflüge - es können nur bereits erworbene Gutscheine eingelöst werden. Wer ohne Gutschein mitfliegen will, einfach unten in den Tandemnewsletter eintragen und dann beim Termin bar zahlen.
+                </p>
+              </div>
             </div>
 
             {/* Impressions */}
