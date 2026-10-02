@@ -550,6 +550,8 @@ body.admin-root .RaBulkActionsToolbar-root {
   color: #6b7280;
   line-height: 1.8;
   margin-bottom: 1.35rem;
+  text-align: justify;
+  text-justify: inter-word;
 }
 .legal-page-content a {
   color: #53a8c7;
