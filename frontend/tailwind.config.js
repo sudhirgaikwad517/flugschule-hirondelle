@@ -15,7 +15,7 @@ export default {
           blue: '#5ba4c7', // The blue from the screenshots
         },
         luxury: {
-          gold: '#C19B76',
+          gold: '#53a8c7',
           dark: '#1A1F24',
           light: '#FAF9F7',
           slate: '#394553',

@@ -410,7 +410,7 @@ export const FormRenderer = ({ formId }: { formId: string }) => {
       <div className="w-full">
         {result ? (
           <div className="bg-white p-8 md:p-12 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-xl border border-gray-100 relative overflow-hidden text-center">
-            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#53a8c7] to-[#C19B76]"></div>
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#53a8c7] to-[#3a85a4]"></div>
             <SafeHtml html={result.textResult} className="text-gray-700 leading-relaxed [&_p]:mb-3" />
             <button
               type="button"
@@ -425,7 +425,7 @@ export const FormRenderer = ({ formId }: { formId: string }) => {
             onSubmit={handleSubmit}
             className={`bg-white p-8 md:p-12 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-xl border border-gray-100 relative overflow-hidden ${publicSettings.cssClass}`}
           >
-            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#53a8c7] to-[#C19B76]"></div>
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#53a8c7] to-[#3a85a4]"></div>
 
             {publicSettings.honeypotEnabled && (
               <div style={{ position: 'absolute', left: '-9999px', top: 'auto', width: '1px', height: '1px', overflow: 'hidden' }} aria-hidden="true">
