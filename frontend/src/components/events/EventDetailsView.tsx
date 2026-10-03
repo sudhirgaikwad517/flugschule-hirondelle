@@ -224,7 +224,7 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
                                   which old Matukio never had either. */}
                               <span className="text-xs text-gray-500">
                                 {ticket.bookedCount || 0} gebucht
-                                {isFullyBooked && <span className="ml-2 text-orange-500 font-semibold">(Ausgebucht - Warteliste)</span>}
+                                {isFullyBooked && <span className="ml-2 text-[#53a8c7] font-semibold">(Ausgebucht - Warteliste)</span>}
                               </span>
                             </div>
                           </div>
@@ -320,7 +320,7 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
                   <tr className="border-b border-gray-100">
                     <td className="py-3 px-5 font-semibold text-gray-500 w-1/3">Status</td>
                     <td className="py-3 px-5 text-gray-700">
-                      {event.cancelled ? <span className="text-red-700 font-semibold">Storniert</span> : isPastEvent ? 'Bereits stattgefunden' : isPastDeadline ? 'Anmeldeschluss vorbei' : isBookingClosed ? <span className="text-red-700 font-semibold">Ausgebucht</span> : isFullyBooked ? <span className="text-orange-600 font-semibold">Ausgebucht (Warteliste)</span> : 'Anmeldung offen'}
+                      {event.cancelled ? <span className="text-red-700 font-semibold">Storniert</span> : isPastEvent ? 'Bereits stattgefunden' : isPastDeadline ? 'Anmeldeschluss vorbei' : isBookingClosed ? <span className="text-red-700 font-semibold">Ausgebucht</span> : isFullyBooked ? <span className="text-[#53a8c7] font-semibold">Ausgebucht (Warteliste)</span> : 'Anmeldung offen'}
                     </td>
                   </tr>
                   {freiePlaetze !== null && (
@@ -329,7 +329,7 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
                       <td className="py-3 px-5 text-gray-700">
                         {freiePlaetze}
                         {freiePlaetze === 0 && !event.cancelled && !isPastEvent && !isBookingClosed && (
-                          <span className="text-orange-600"> *Ihre Buchung wird auf der Warteliste durchgeführt.</span>
+                          <span className="text-[#53a8c7]"> *Ihre Buchung wird auf der Warteliste durchgeführt.</span>
                         )}
                       </td>
                     </tr>
