@@ -225,7 +225,7 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
                           <div className="flex items-center gap-2">
                             <svg className="w-4 h-4 text-luxury-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
                             <div className="flex flex-col">
-                              <span className="text-gray-700">{ticket.name}: € {ticket.price.toFixed(2)} pro Person</span>
+                              <span className="text-gray-700">{ticket.name}: € {ticket.price.toFixed(2)}</span>
                               {/* Capacity is event-wide/pooled (see freiePlaetze above), not
                                   per ticket type, so this only shows this ticket type's own
                                   booking count - not a "x of y" against its own capacity,
