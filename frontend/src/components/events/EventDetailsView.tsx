@@ -50,11 +50,6 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
   // explicit deadline.
   const isPastEvent = new Date() > new Date(event.end || event.endDate || event.start || event.startDate);
   const isPastDeadline = isPastEvent || (event.registrationDeadline && new Date() > new Date(event.registrationDeadline));
-  const paidPrices = event.tickets?.map((t: Ticket) => t.price).filter((p: number) => p > 0) || [];
-  const minPrice = paidPrices.length > 0 ? Math.min(...paidPrices) : 0;
-  const maxPrice = event.tickets?.length > 0 ? Math.max(...event.tickets.map((t: Ticket) => t.price)) : 0;
-  const hasMultiplePrices = event.tickets?.length > 1 && minPrice !== maxPrice;
-
   // Old site's "Freie Plätze": event-wide capacity minus the sum of only
   // ACTIVE (our CONFIRMED, via ticket.bookedCount) bookings across every
   // ticket - matches MatukioHelperUtilsEvents::getEventBookableArray()
@@ -354,12 +349,6 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
                       </td>
                     </tr>
                   )}
-                  <tr>
-                    <td className="py-3 px-5 font-semibold text-gray-500">Gebühren</td>
-                    <td className="py-3 px-5 font-bold text-luxury-gold">
-                      {hasMultiplePrices && minPrice > 0 ? 'ab ' : ''}€ {minPrice.toFixed(2)}
-                    </td>
-                  </tr>
                 </tbody>
               </table>
               <div className="p-4 bg-gray-50 text-[10px] text-gray-400 italic">
