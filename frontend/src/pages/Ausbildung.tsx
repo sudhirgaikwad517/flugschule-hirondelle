@@ -157,7 +157,9 @@ export const Ausbildung = ({ contentId }: { contentId?: string } = {}) => {
           {/* Schnupperkurs (Image Right) */}
           <div id="schnupper" className="flex flex-col md:flex-row gap-12 items-center scroll-mt-[100px]">
             <div className="w-full md:w-1/2 flex flex-col items-start">
-              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">{c0.heading}</h2>
+              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">
+                <Link to={c0.link} className="hover:text-[#53a8c7] transition-colors">{c0.heading}</Link>
+              </h2>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
               <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">{c0.subheading}</h3>
               <p className="text-gray-500 mb-8 leading-relaxed font-light text-justify">
@@ -178,7 +180,9 @@ export const Ausbildung = ({ contentId }: { contentId?: string } = {}) => {
           {/* L-Schein (Image Left) */}
           <div id="l-schein" className="flex flex-col md:flex-row-reverse gap-12 items-center scroll-mt-[100px]">
             <div className="w-full md:w-1/2 flex flex-col items-start">
-              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">{c1.heading}</h2>
+              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">
+                <Link to={c1.link} className="hover:text-[#53a8c7] transition-colors">{c1.heading}</Link>
+              </h2>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
               <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">{c1.subheading}</h3>
               <p className="text-gray-500 mb-8 leading-relaxed font-light text-justify">
@@ -199,7 +203,9 @@ export const Ausbildung = ({ contentId }: { contentId?: string } = {}) => {
           {/* A-Schein (Image Right) */}
           <div id="a-schein" className="flex flex-col md:flex-row gap-12 items-center scroll-mt-[100px]">
             <div className="w-full md:w-1/2 flex flex-col items-start">
-              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">{c2.heading}</h2>
+              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">
+                <Link to={c2.link} className="hover:text-[#53a8c7] transition-colors">{c2.heading}</Link>
+              </h2>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
               <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">{c2.subheading}</h3>
               <p className="text-gray-500 mb-8 leading-relaxed font-light text-justify">
@@ -220,7 +226,9 @@ export const Ausbildung = ({ contentId }: { contentId?: string } = {}) => {
           {/* B-Schein (Image Left) */}
           <div id="b-schein" className="flex flex-col md:flex-row-reverse gap-12 items-center scroll-mt-[100px]">
             <div className="w-full md:w-1/2 flex flex-col items-start">
-              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">{c3.heading}</h2>
+              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">
+                <Link to={c3.link} className="hover:text-[#53a8c7] transition-colors">{c3.heading}</Link>
+              </h2>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
               <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">{c3.subheading}</h3>
               <p className="text-gray-500 mb-8 leading-relaxed font-light text-justify">
@@ -241,7 +249,9 @@ export const Ausbildung = ({ contentId }: { contentId?: string } = {}) => {
           {/* Windenschein (Image Right) */}
           <div id="winde" className="flex flex-col md:flex-row gap-12 items-center scroll-mt-[100px]">
             <div className="w-full md:w-1/2 flex flex-col items-start">
-              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">{c4.heading}</h2>
+              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">
+                <Link to={c4.link} className="hover:text-[#53a8c7] transition-colors">{c4.heading}</Link>
+              </h2>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
               <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">{c4.subheading}</h3>
               <p className="text-gray-500 mb-8 leading-relaxed font-light text-justify">
@@ -262,7 +272,9 @@ export const Ausbildung = ({ contentId }: { contentId?: string } = {}) => {
           {/* Tandemschein (Image Left) */}
           <div id="tandem" className="flex flex-col md:flex-row-reverse gap-12 items-center scroll-mt-[100px]">
             <div className="w-full md:w-1/2 flex flex-col items-start">
-              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">{c5.heading}</h2>
+              <h2 className="font-luxury text-3xl md:text-4xl text-luxury-dark mb-4">
+                <Link to={c5.link} className="hover:text-[#53a8c7] transition-colors">{c5.heading}</Link>
+              </h2>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
               <h3 className="text-xl italic text-luxury-heading font-luxury mb-6">{c5.subheading}</h3>
               <p className="text-gray-500 mb-8 leading-relaxed font-light text-justify">
