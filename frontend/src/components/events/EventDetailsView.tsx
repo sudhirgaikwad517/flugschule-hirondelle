@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { SafeHtml } from '../common/SafeHtml';
-import { ContactOrganizerModal } from '../common/ContactOrganizerModal';
 import { stripDuplicateHeroImage } from '../../utils/eventDescription';
 
 interface Ticket {
@@ -23,7 +22,6 @@ interface EventDetailsViewProps {
 export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, additionalDates = [], onSelectAdditionalDate, onBack, onBook }) => {
   const [ticketQuantities, setTicketQuantities] = React.useState<Record<string, number>>({});
   const [participants, setParticipants] = React.useState<{ name: string }[] | null>(null);
-  const [contactOpen, setContactOpen] = React.useState(false);
 
   // Only visible to a logged-in user who is themselves booked on this event -
   // the backend enforces this too, this fetch just silently does nothing if
@@ -383,25 +381,8 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
               ) : (
                 <span className="text-gray-700 font-semibold">{event.organizer || 'Flugschule Hirondelle'}</span>
               )}
-              {event.organizerId && (
-                <button
-                  onClick={() => setContactOpen(true)}
-                  className="print:hidden self-start text-sm text-[#5bc0de] hover:text-[#46b8da] hover:underline font-semibold"
-                >
-                  Frage zu diesem Termin stellen
-                </button>
-              )}
             </div>
           </div>
-
-          {contactOpen && event.organizerId && (
-            <ContactOrganizerModal
-              organizerId={event.organizerId}
-              organizerName={event.organizer || 'Flugschule Hirondelle'}
-              eventTitle={event.title}
-              onClose={() => setContactOpen(false)}
-            />
-          )}
 
           {/* Additional Dates Sidebar - other upcoming occurrences of the same course */}
           {additionalDates.length > 0 && (
