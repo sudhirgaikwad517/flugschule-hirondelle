@@ -87,12 +87,11 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
     [event.shortDescription, event.description, event.detailImageUrl, event.imageUrl]
   );
 
-  // Initialize first ticket with quantity 1 if available
+  // Every ticket quantity selector defaults to 0 - no ticket is silently
+  // pre-added to the booking just by opening the page.
   React.useEffect(() => {
-    if (event.tickets && event.tickets.length > 0 && !isPastDeadline) {
-      setTicketQuantities({ [event.tickets[0].id]: 1 });
-    }
-  }, [event, isPastDeadline]);
+    setTicketQuantities({});
+  }, [event]);
 
   const handleQuantityChange = (ticketId: string, qty: number) => {
     setTicketQuantities(prev => ({ ...prev, [ticketId]: qty }));
@@ -251,7 +250,7 @@ export const EventDetailsView: React.FC<EventDetailsViewProps> = ({ event, addit
                   <div className="flex justify-end mt-2">
                     <button 
                       onClick={handleBookClick}
-                      className={`px-8 py-2.5 text-white transition-colors text-[14px] rounded-sm shadow-sm ${isWaitlistBooking ? 'bg-orange-500 hover:bg-orange-600' : 'bg-[#5bc0de] hover:bg-[#46b8da]'}`}
+                      className={`px-8 py-2.5 text-white transition-colors text-[14px] rounded-sm shadow-sm ${isWaitlistBooking ? 'bg-[#53a8c7] hover:bg-[#4396b5]' : 'bg-[#5bc0de] hover:bg-[#46b8da]'}`}
                     >
                       {isWaitlistBooking ? 'Auf Warteliste eintragen' : 'Jetzt buchen'}
                     </button>
