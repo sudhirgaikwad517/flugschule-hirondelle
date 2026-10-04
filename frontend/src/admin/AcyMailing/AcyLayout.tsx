@@ -88,9 +88,6 @@ export const AcyLayout = ({ children, title }: AcyLayoutProps) => {
               {title || NAV_ITEMS.find(n => location.pathname.startsWith(n.path))?.label || 'AcyMailing'}
             </h1>
           </div>
-          <div className="flex items-center gap-4 text-sm text-slate-500">
-            <span>AcyMailing Starter 11.0.4 Clone</span>
-          </div>
         </header>
 
         {/* Content Body */}
