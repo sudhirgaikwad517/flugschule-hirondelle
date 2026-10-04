@@ -14,7 +14,8 @@ import {
   Filter,
   Zap,
   MailWarning,
-  FileEdit
+  FileEdit,
+  Home
 } from 'lucide-react';
 
 interface AcyLayoutProps {
@@ -83,6 +84,9 @@ export const AcyLayout = ({ children, title }: AcyLayoutProps) => {
           <div className="flex items-center gap-4">
             <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500 hover:text-slate-800" title="Zurück">
               <ArrowLeft size={20} />
+            </button>
+            <button onClick={() => navigate('/admin')} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500 hover:text-slate-800" title="Zum Admin-Dashboard">
+              <Home size={20} />
             </button>
             <h1 className="text-2xl font-semibold text-slate-800">
               {title || NAV_ITEMS.find(n => location.pathname.startsWith(n.path))?.label || 'Flugschule Mailing'}
