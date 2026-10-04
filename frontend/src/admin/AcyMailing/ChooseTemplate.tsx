@@ -49,7 +49,6 @@ export const AcyChooseTemplate = () => {
             <span className="text-slate-900">New newsletter</span>
           </div>
           <div className="flex items-center gap-4 text-slate-500">
-            <span className="text-sm font-medium">AcyMailing Starter<span className="text-emerald-500">11.0.4</span></span>
             <RotateCw size={18} className="cursor-pointer hover:text-slate-800" />
             <BookOpen size={18} className="cursor-pointer hover:text-slate-800" />
             <div className="text-red-400 bg-red-50 p-1 rounded-full cursor-pointer hover:bg-red-100">
