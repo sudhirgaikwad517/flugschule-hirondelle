@@ -7,22 +7,36 @@ const AGB_HTML = fs.readFileSync(path.join(__dirname, 'legal/agb.html'), 'utf8')
 const DATENSCHUTZ_HTML = fs.readFileSync(path.join(__dirname, 'legal/datenschutz.html'), 'utf8');
 
 const IMPRESSUM_HTML = `
-<p>Angaben gemäß § 5 TMG</p>
-<p>Flugschule Hirondelle<br/>
-Inhaber: Alexander Schlink<br/>
-Untergasse 27<br/>
-D-69469 Weinheim</p>
-<h3>Kontakt</h3>
-<p>Telefon: +49 (0)151 18836000<br/>
-E-Mail: info@fs-hirondelle.de</p>
-<h3>Umsatzsteuer-ID</h3>
-<p>Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz: DE 272394912</p>
-<h3>Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV</h3>
-<p>Alexander Schlink<br/>
-Untergasse 27<br/>
-D-69469 Weinheim</p>
-<h3>EU-Streitschlichtung</h3>
-<p>Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: <a href="https://ec.europa.eu/consumers/odr/" target="_blank" rel="noopener noreferrer">https://ec.europa.eu/consumers/odr/</a>. Unsere E-Mail-Adresse finden Sie oben im Impressum. Wir sind nicht verpflichtet und nicht bereit, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+<p><strong>Anbieter i.S.d. TMG/ Autor i.S.d. § 55 Abs. 2 RStV</strong></p>
+<p>Unternehmen: Flugschule Hirondelle<br/>
+Anschrift: Untergasse 27, D-69469 Weinheim</p>
+<p>Rechtsform: Inhabergeführtes Einzelunternehmen<br/>
+Inhaber: Alexander Schlink</p>
+<p>Ust.Ident.Nr. DE 272394912</p>
+<p>E-Mail: info@fs-hirondelle.de<br/>
+Telefon: +49 (0)6201 8452097</p>
+<h3>Berufsbezeichnung</h3>
+<p>Fluglehrer<br/>
+Verliehen in der Bundesrepublik von dem Deutschen Hängegleiterverband e.V. im DAeC (DHV) als Beauftragter des Bundesministeriums für Verkehr (BMVI).</p>
+<h3>Berufsaufsicht</h3>
+<p>Deutschen Hängegleiterverband e.V. im DAeC vom (DHV) als Beauftragter des Bundesministeriums für Verkehr (BMVI).</p>
+<p>Am Hoffeld 4, 83703 Gmund am Tegernsee<br/>
+Die Website des DHV finden Sie unter <a href="http://www.dhv.de" target="_blank" rel="noopener noreferrer">www.dhv.de</a>.</p>
+<p>Weitere Informationen zu den Ausbildungsbestimmungen und den Berufsrechtlichen Regelungen für Fluglehrer im Bereich Gleitschirm- und Drachenfliegen finden Sie unter dem nachfolgenden Link: <a href="https://www.dhv.de/web/piloteninfos/ausbildung/luftrecht/" target="_blank" rel="noopener noreferrer">https://www.dhv.de/web/piloteninfos/ausbildung/luftrecht/</a></p>
+<h3>Lizenznummer</h3>
+<p>41016</p>
+<h3>Informationen zur Online-Streitbeilegung</h3>
+<p>Online-Streitbeilegung gemäß Art. 14 Abs. 1 ODR-VO: Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit, die Sie unter <a href="https://ec.europa.eu/consumers/odr/" target="_blank" rel="noopener noreferrer">https://ec.europa.eu/consumers/odr/</a> finden. Zur Teilnahme an einem Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle sind wir nicht verpflichtet und nicht bereit.</p>
+<h3>Bankverbindung</h3>
+<p>Kontoinhaber: Alexander Schlink<br/>
+Sparkasse Südpfalz<br/>
+IBAN: DE32 5485 0010 1700 1976 41<br/>
+BIC: SOLADES1SUW</p>
+<p>Kontonummer: 1700197641<br/>
+Bankleitzahl: 54850010</p>
+<h3>Siehe auch</h3>
+<p><a href="/agb">Allgemeine Geschäftsbedingungen</a><br/>
+<a href="/datenschutz">Datenschutzerklärung</a></p>
 `;
 
 const WIDERRUF_HTML = `
