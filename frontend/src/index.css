@@ -567,11 +567,20 @@ body.admin-root .RaBulkActionsToolbar-root {
    HomeContentEditor.tsx/Home.tsx) - same reasoning as .dynamic-page-content:
    Tailwind's preflight zeroes every element's default margin, so plain
    <h2>/<p>/<img> tags need real spacing rules here or they run together. */
-.home-body-content h2,
-.home-body-content h3 {
+.home-body-content h2 {
   font-family: var(--font-luxury);
   color: var(--color-luxury-dark);
   letter-spacing: 0.02em;
+  font-size: 2.25rem;
+  text-transform: uppercase;
+  margin-top: 3rem;
+  margin-bottom: 1.25rem;
+}
+.home-body-content h3 {
+  font-family: var(--font-luxury);
+  color: var(--color-luxury-heading, #339aca);
+  font-style: italic;
+  font-size: 1.5rem;
   margin-top: 2rem;
   margin-bottom: 1rem;
 }
@@ -582,8 +591,13 @@ body.admin-root .RaBulkActionsToolbar-root {
 .home-body-content p {
   font-family: var(--font-luxurysans);
   color: #6b7280;
+  font-weight: 300;
   line-height: 1.8;
   margin-bottom: 1.25rem;
+}
+.home-body-content p strong {
+  color: var(--color-luxury-dark);
+  font-weight: 600;
 }
 .home-body-content a {
   color: #53a8c7;
@@ -594,9 +608,31 @@ body.admin-root .RaBulkActionsToolbar-root {
   color: #2a6496;
   text-decoration: underline;
 }
-.home-body-content img {
-  border-radius: 2px;
+.home-body-content ul,
+.home-body-content ol {
   margin-bottom: 1.25rem;
+  padding-left: 1.5rem;
+  color: #6b7280;
+}
+.home-body-content li {
+  margin-bottom: 0.5rem;
+}
+.home-body-content blockquote {
+  border-left: 3px solid #53a8c7;
+  padding-left: 1.5rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+  color: #6b7280;
+}
+.home-body-content hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 2.5rem 0;
+}
+.home-body-content img {
+  width: 100%;
+  border-radius: 2px;
+  margin-bottom: 1.5rem;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
 }
 
