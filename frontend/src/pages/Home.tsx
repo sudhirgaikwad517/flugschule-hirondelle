@@ -364,9 +364,7 @@ export const Home = ({ contentId }: { contentId?: string } = {}) => {
 
               <div className="absolute bottom-8 left-8 right-8 z-20">
                 <p className="text-white font-bold text-sm mb-2">{promoCards[0].boldLine}</p>
-                <p className="text-white/80 text-sm font-light leading-relaxed">
-                  {promoCards[0].description}
-                </p>
+                <SafeHtml html={promoCards[0].description} className="text-white/80 text-sm font-light leading-relaxed" />
               </div>
             </Link>
 
@@ -388,9 +386,7 @@ export const Home = ({ contentId }: { contentId?: string } = {}) => {
 
               <div className="absolute bottom-8 left-8 right-8 z-20">
                 <p className="text-white font-bold text-sm mb-2">{promoCards[1].boldLine}</p>
-                <p className="text-white/80 text-sm font-light leading-relaxed">
-                  {promoCards[1].description}
-                </p>
+                <SafeHtml html={promoCards[1].description} className="text-white/80 text-sm font-light leading-relaxed" />
               </div>
             </Link>
 
@@ -414,9 +410,7 @@ export const Home = ({ contentId }: { contentId?: string } = {}) => {
 
               <div className="absolute bottom-8 left-8 right-8 z-20">
                 <p className="text-white font-bold text-sm mb-2">{promoCards[2].boldLine}</p>
-                <p className="text-white/80 text-sm font-light leading-relaxed">
-                  {promoCards[2].description}
-                </p>
+                <SafeHtml html={promoCards[2].description} className="text-white/80 text-sm font-light leading-relaxed" />
               </div>
             </Link>
 

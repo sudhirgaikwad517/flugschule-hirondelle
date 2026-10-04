@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useNotify } from 'react-admin';
 import { type FixedDuplicateMeta, FixedDuplicateMetaFields } from './FixedDuplicateMetaFields';
 import { type PrimaryPageSettings, PrimaryPageSettingsFields } from './PrimaryPageSettingsFields';
+import { RichHtmlInput } from './RichHtmlInput';
 import {
   Box,
   Card,
@@ -285,15 +286,25 @@ export const HomeContentEditor = () => {
                   onChange={(e) => updatePromoCard(i, 'boldLine', e.target.value)}
                   sx={{ mb: 2 }}
                 />
-                <TextField
-                  label="Beschreibung"
-                  fullWidth
-                  multiline
-                  minRows={2}
-                  value={card.description}
-                  onChange={(e) => updatePromoCard(i, 'description', e.target.value)}
-                  sx={{ mb: 2 }}
-                />
+                {contentId ? (
+                  <RichHtmlInput
+                    label="Beschreibung"
+                    value={card.description}
+                    onChange={(html) => updatePromoCard(i, 'description', html)}
+                    minRows={2}
+                    helperText="HTML/CSS erlaubt (Testfunktion auf dieser Kopie)."
+                  />
+                ) : (
+                  <TextField
+                    label="Beschreibung"
+                    fullWidth
+                    multiline
+                    minRows={2}
+                    value={card.description}
+                    onChange={(e) => updatePromoCard(i, 'description', e.target.value)}
+                    sx={{ mb: 2 }}
+                  />
+                )}
                 <TextField
                   label="Link (Ziel beim Klick)"
                   fullWidth
@@ -335,15 +346,25 @@ export const HomeContentEditor = () => {
               <TextField label="Überschrift" fullWidth value={content.hochHinausTitle} onChange={(e) => setContent({ ...content, hochHinausTitle: e.target.value })} helperText='z.B. "HOCH HINAUS"' />
             </Grid>
           </Grid>
-          <TextField
-            fullWidth
-            multiline
-            minRows={5}
-            label="Text"
-            value={content.hochHinausHtml}
-            onChange={(e) => setContent({ ...content, hochHinausHtml: e.target.value })}
-            helperText='HTML wird unterstützt, z.B. <a href="/infos/team">Team Hirondelle</a> für einen Link.'
-          />
+          {contentId ? (
+            <RichHtmlInput
+              label="Text"
+              value={content.hochHinausHtml}
+              onChange={(html) => setContent({ ...content, hochHinausHtml: html })}
+              minRows={5}
+              helperText="HTML/CSS erlaubt (Testfunktion auf dieser Kopie) - Formatierung, Links, eigene Stile."
+            />
+          ) : (
+            <TextField
+              fullWidth
+              multiline
+              minRows={5}
+              label="Text"
+              value={content.hochHinausHtml}
+              onChange={(e) => setContent({ ...content, hochHinausHtml: e.target.value })}
+              helperText='HTML wird unterstützt, z.B. <a href="/infos/team">Team Hirondelle</a> für einen Link.'
+            />
+          )}
         </CardContent>
       </Card>
 
