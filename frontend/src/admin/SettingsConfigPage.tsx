@@ -13,6 +13,7 @@ import {
     Divider,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import { isSessionExpiredError } from './sessionExpiry';
 
 // Consolidated admin control for the subset of old Matukio's real
 // "Settings" page (JComponentHelper::getParams('com_matukio'), 165 keys)
@@ -26,6 +27,7 @@ export const SettingsConfigPage = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [loadError, setLoadError] = useState(false);
+    const [sessionExpired, setSessionExpired] = useState(false);
     const [form, setForm] = useState<any>({});
 
     const load = () => {
@@ -44,7 +46,7 @@ export const SettingsConfigPage = () => {
             .catch((err) => {
                 console.error(err);
                 notify('Fehler beim Laden der Einstellungen', { type: 'error' });
-                setLoadError(true);
+                setSessionExpired(isSessionExpiredError(err)); setLoadError(true);
                 setLoading(false);
             });
     };
@@ -84,9 +86,15 @@ export const SettingsConfigPage = () => {
     if (loadError) {
         return (
             <Box sx={{ p: 3 }}>
-                <Alert severity="error" action={<Button color="inherit" size="small" onClick={load}>Erneut versuchen</Button>}>
+                {sessionExpired ? (
+          <Alert severity="warning" action={<Button color="inherit" size="small" href="/admin/login">Erneut einloggen</Button>}>
+            Ihre Sitzung ist abgelaufen. Bitte loggen Sie sich erneut ein.
+          </Alert>
+        ) : (
+          <Alert severity="error" action={<Button color="inherit" size="small" onClick={load}>Erneut versuchen</Button>}>
                     Einstellungen konnten nicht geladen werden.
                 </Alert>
+        )}
             </Box>
         );
     }

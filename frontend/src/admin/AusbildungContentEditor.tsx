@@ -11,6 +11,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { type FixedDuplicateMeta, FixedDuplicateMetaFields } from './FixedDuplicateMetaFields';
 import { type PrimaryPageSettings, PrimaryPageSettingsFields } from './PrimaryPageSettingsFields';
 import { RichTextField } from './RichTextField';
+import { isSessionExpiredError } from './sessionExpiry';
 
 // Same "data only, layout stays" idea as HomeContentEditor.tsx, for the
 // /ausbildung page (Ausbildung.tsx): the intro text, the 6-row price table,
@@ -90,6 +91,7 @@ export const AusbildungContentEditor = () => {
   const [dupMeta, setDupMeta] = useState<FixedDuplicateMeta | null>(null);
   const [primaryMeta, setPrimaryMeta] = useState<PrimaryPageSettings | null>(null);
   const [loadError, setLoadError] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
   const previewPath = `/${(!contentId && primaryMeta?.slug) || id}`;
 
   const load = () => {
@@ -106,7 +108,7 @@ export const AusbildungContentEditor = () => {
         setPrimaryMeta(primaryRes && primaryRes.ok ? await primaryRes.json() : null);
         setLoading(false);
       })
-      .catch((err) => { console.error(err); notify('Fehler beim Laden', { type: 'error' }); setLoadError(true); setLoading(false); });
+      .catch((err) => { console.error(err); notify('Fehler beim Laden', { type: 'error' }); setSessionExpired(isSessionExpiredError(err)); setLoadError(true); setLoading(false); });
   };
 
   useEffect(load, [id]);
@@ -152,9 +154,15 @@ export const AusbildungContentEditor = () => {
   if (loadError || !content) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error" action={<Button color="inherit" size="small" onClick={load}>Erneut versuchen</Button>}>
+        {sessionExpired ? (
+          <Alert severity="warning" action={<Button color="inherit" size="small" href="/admin/login">Erneut einloggen</Button>}>
+            Ihre Sitzung ist abgelaufen. Bitte loggen Sie sich erneut ein.
+          </Alert>
+        ) : (
+          <Alert severity="error" action={<Button color="inherit" size="small" onClick={load}>Erneut versuchen</Button>}>
           Inhalte konnten nicht geladen werden. Bitte laden Sie die Seite neu, bevor Sie speichern.
         </Alert>
+        )}
       </Box>
     );
   }

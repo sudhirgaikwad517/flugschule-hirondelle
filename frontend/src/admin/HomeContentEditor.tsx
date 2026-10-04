@@ -20,6 +20,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import UploadIcon from '@mui/icons-material/Upload';
 import CloseIcon from '@mui/icons-material/Close';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { isSessionExpiredError } from './sessionExpiry';
 
 // Makes the DATA on the (already fully designed, Tailwind-styled) home page
 // editable - promo card text, the "Hoch Hinaus" copy, team member
@@ -148,6 +149,7 @@ export const HomeContentEditor = () => {
   const [primaryMeta, setPrimaryMeta] = useState<PrimaryPageSettings | null>(null);
   const [loadError, setLoadError] = useState(false);
 
+  const [sessionExpired, setSessionExpired] = useState(false);
   const load = () => {
     setLoadError(false);
     const url = contentId ? `/api/sitepagecontent/${contentId}` : '/api/homecontent/default';
@@ -167,7 +169,7 @@ export const HomeContentEditor = () => {
       .catch((err) => {
         console.error(err);
         notify('Fehler beim Laden der Startseiten-Inhalte', { type: 'error' });
-        setLoadError(true);
+        setSessionExpired(isSessionExpiredError(err)); setLoadError(true);
         setLoading(false);
       });
   };
@@ -235,9 +237,15 @@ export const HomeContentEditor = () => {
   if (loadError) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error" action={<Button color="inherit" size="small" onClick={load}>Erneut versuchen</Button>}>
+        {sessionExpired ? (
+          <Alert severity="warning" action={<Button color="inherit" size="small" href="/admin/login">Erneut einloggen</Button>}>
+            Ihre Sitzung ist abgelaufen. Bitte loggen Sie sich erneut ein.
+          </Alert>
+        ) : (
+          <Alert severity="error" action={<Button color="inherit" size="small" onClick={load}>Erneut versuchen</Button>}>
           Startseiten-Inhalte konnten nicht geladen werden. Bitte laden Sie die Seite neu, bevor Sie speichern.
         </Alert>
+        )}
       </Box>
     );
   }

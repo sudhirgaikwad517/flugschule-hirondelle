@@ -13,6 +13,7 @@ import {
     Alert,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import { isSessionExpiredError } from './sessionExpiry';
 
 const DEFAULTS = {
     enabled: true,
@@ -33,6 +34,7 @@ export const CookieConsentConfigPage = () => {
     const [config, setConfig] = useState(DEFAULTS);
     const [loadError, setLoadError] = useState(false);
 
+    const [sessionExpired, setSessionExpired] = useState(false);
     const load = () => {
         setLoadError(false);
         fetch('/api/cookie-consent-config', {
@@ -53,7 +55,7 @@ export const CookieConsentConfigPage = () => {
                 // (e.g. an expired token) - it would otherwise silently show
                 // the default cookie-banner copy in place of the real saved
                 // config, and a save from there would overwrite it.
-                setLoadError(true);
+                setSessionExpired(isSessionExpiredError(err)); setLoadError(true);
                 setLoading(false);
             });
     };
@@ -90,9 +92,15 @@ export const CookieConsentConfigPage = () => {
     if (loadError) {
         return (
             <Box sx={{ p: 3 }}>
-                <Alert severity="error" action={<Button color="inherit" size="small" onClick={load}>Erneut versuchen</Button>}>
+                {sessionExpired ? (
+          <Alert severity="warning" action={<Button color="inherit" size="small" href="/admin/login">Erneut einloggen</Button>}>
+            Ihre Sitzung ist abgelaufen. Bitte loggen Sie sich erneut ein.
+          </Alert>
+        ) : (
+          <Alert severity="error" action={<Button color="inherit" size="small" onClick={load}>Erneut versuchen</Button>}>
                     Cookie-Einstellungen konnten nicht geladen werden. Bitte laden Sie die Seite neu, bevor Sie speichern.
                 </Alert>
+        )}
             </Box>
         );
     }

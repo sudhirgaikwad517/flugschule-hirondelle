@@ -12,6 +12,7 @@ import {
     Alert,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import { isSessionExpiredError } from './sessionExpiry';
 
 export const PaymentConfigPage = () => {
     const notify = useNotify();
@@ -23,6 +24,7 @@ export const PaymentConfigPage = () => {
     const [hasSecret, setHasSecret] = useState(false);
     const [loadError, setLoadError] = useState(false);
 
+    const [sessionExpired, setSessionExpired] = useState(false);
     const load = () => {
         setLoadError(false);
         fetch('/api/payment-config', {
@@ -47,7 +49,7 @@ export const PaymentConfigPage = () => {
                 // no visible error, so an admin who didn't notice and hit
                 // "Speichern" would overwrite the real, live PayPal
                 // credentials with sandbox/blank ones.
-                setLoadError(true);
+                setSessionExpired(isSessionExpiredError(err)); setLoadError(true);
                 setLoading(false);
             });
     };
@@ -86,9 +88,15 @@ export const PaymentConfigPage = () => {
     if (loadError) {
         return (
             <Box sx={{ p: 3 }}>
-                <Alert severity="error" action={<Button color="inherit" size="small" onClick={load}>Erneut versuchen</Button>}>
+                {sessionExpired ? (
+          <Alert severity="warning" action={<Button color="inherit" size="small" href="/admin/login">Erneut einloggen</Button>}>
+            Ihre Sitzung ist abgelaufen. Bitte loggen Sie sich erneut ein.
+          </Alert>
+        ) : (
+          <Alert severity="error" action={<Button color="inherit" size="small" onClick={load}>Erneut versuchen</Button>}>
                     PayPal-Einstellungen konnten nicht geladen werden. Bitte laden Sie die Seite neu, bevor Sie speichern - sonst könnten die echten, gespeicherten Zugangsdaten überschrieben werden.
                 </Alert>
+        )}
             </Box>
         );
     }

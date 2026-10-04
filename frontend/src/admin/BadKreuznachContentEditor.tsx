@@ -10,6 +10,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
 import { type FixedDuplicateMeta, FixedDuplicateMetaFields } from './FixedDuplicateMetaFields';
 import { type PrimaryPageSettings, PrimaryPageSettingsFields } from './PrimaryPageSettingsFields';
+import { isSessionExpiredError } from './sessionExpiry';
 
 // /infos/gelaende/bad-kreuznach's admin editor - rebuilt from a single raw
 // HTML textarea into real fields, same "one field per line, Card per
@@ -87,6 +88,7 @@ export const BadKreuznachContentEditor = () => {
   const [dupMeta, setDupMeta] = useState<FixedDuplicateMeta | null>(null);
   const [primaryMeta, setPrimaryMeta] = useState<PrimaryPageSettings | null>(null);
   const [loadError, setLoadError] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
   const previewPath = `/${(!contentId && primaryMeta?.slug) || (id === 'bad-kreuznach' ? 'infos/gelaende/bad-kreuznach' : id)}`;
 
   const load = () => {
@@ -103,7 +105,7 @@ export const BadKreuznachContentEditor = () => {
         setPrimaryMeta(primaryRes && primaryRes.ok ? await primaryRes.json() : null);
         setLoading(false);
       })
-      .catch((err) => { console.error(err); notify('Fehler beim Laden', { type: 'error' }); setLoadError(true); setLoading(false); });
+      .catch((err) => { console.error(err); notify('Fehler beim Laden', { type: 'error' }); setSessionExpired(isSessionExpiredError(err)); setLoadError(true); setLoading(false); });
   };
 
   useEffect(load, [id]);
@@ -149,9 +151,15 @@ export const BadKreuznachContentEditor = () => {
   if (loadError || !content) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error" action={<Button color="inherit" size="small" onClick={load}>Erneut versuchen</Button>}>
+        {sessionExpired ? (
+          <Alert severity="warning" action={<Button color="inherit" size="small" href="/admin/login">Erneut einloggen</Button>}>
+            Ihre Sitzung ist abgelaufen. Bitte loggen Sie sich erneut ein.
+          </Alert>
+        ) : (
+          <Alert severity="error" action={<Button color="inherit" size="small" onClick={load}>Erneut versuchen</Button>}>
           Inhalte konnten nicht geladen werden. Bitte laden Sie die Seite neu, bevor Sie speichern.
         </Alert>
+        )}
       </Box>
     );
   }
