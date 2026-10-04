@@ -45,7 +45,7 @@ export const AcyChooseTemplate = () => {
         <div className="flex justify-between items-center mb-8 pb-4 border-b border-slate-100">
           <div className="text-xl font-medium text-slate-800 flex items-center gap-2">
             <span className="text-[#0ea5e9]">M</span>
-            <span className="text-slate-700">AcyMailing <ChevronRight className="inline" size={16} /> Emails <ChevronRight className="inline" size={16} /></span>
+            <span className="text-slate-700">Flugschule Mailing <ChevronRight className="inline" size={16} /> Emails <ChevronRight className="inline" size={16} /></span>
             <span className="text-slate-900">New newsletter</span>
           </div>
           <div className="flex items-center gap-4 text-slate-500">
@@ -124,9 +124,9 @@ export const AcyChooseTemplate = () => {
               <>
                 <div onClick={handleStartBlank} className="cursor-pointer group">
                   <div className="bg-slate-100 h-64 flex flex-col mb-4 border-b-4 border-[#0ea5e9] overflow-hidden justify-center items-center relative">
-                    <div className="text-slate-300 font-bold text-4xl">AcyMailing</div>
+                    <div className="text-slate-300 font-bold text-4xl">Flugschule Mailing</div>
                   </div>
-                  <div className="text-center font-medium text-slate-800">AcyMailing first email</div>
+                  <div className="text-center font-medium text-slate-800">Flugschule Mailing first email</div>
                   <div className="text-center text-sm text-slate-500">August 10, 2021</div>
                 </div>
                 

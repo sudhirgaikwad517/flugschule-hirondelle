@@ -120,7 +120,7 @@ export const AcySegments = () => {
   };
 
   return (
-    <AcyLayout title="AcyMailing > Segmente">
+    <AcyLayout title="Flugschule Mailing > Segmente">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-xl font-medium text-slate-800">Segmente</h2>

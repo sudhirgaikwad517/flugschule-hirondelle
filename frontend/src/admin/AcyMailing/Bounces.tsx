@@ -100,7 +100,7 @@ export const AcyBounces = () => {
   if (loading) return <AcyLayout><div className="p-8 text-slate-500">Lädt...</div></AcyLayout>;
 
   return (
-    <AcyLayout title="AcyMailing > Bounces">
+    <AcyLayout title="Flugschule Mailing > Bounces">
       <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-6">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-medium text-slate-800">Bounce-Mailbox</h3>

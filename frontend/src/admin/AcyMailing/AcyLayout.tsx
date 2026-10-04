@@ -51,7 +51,7 @@ export const AcyLayout = ({ children, title }: AcyLayoutProps) => {
             <span className="text-[#0ea5e9]">
               <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="css-i6dzq1"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
             </span>
-            AcyMailing
+            Flugschule Mailing
           </h2>
         </div>
         
@@ -85,7 +85,7 @@ export const AcyLayout = ({ children, title }: AcyLayoutProps) => {
               <ArrowLeft size={20} />
             </button>
             <h1 className="text-2xl font-semibold text-slate-800">
-              {title || NAV_ITEMS.find(n => location.pathname.startsWith(n.path))?.label || 'AcyMailing'}
+              {title || NAV_ITEMS.find(n => location.pathname.startsWith(n.path))?.label || 'Flugschule Mailing'}
             </h1>
           </div>
         </header>

@@ -882,7 +882,7 @@ export const PagesManager = () => {
               <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}><CircularProgress size={28} /></Box>
             ) : availableNewsletterForms.length === 0 ? (
               <Typography variant="body2" color="text.secondary">
-                Keine Newsletter-Formulare vorhanden. Unter AcyMailing &gt; Formulare kann eines angelegt werden.
+                Keine Newsletter-Formulare vorhanden. Unter Flugschule Mailing &gt; Formulare kann eines angelegt werden.
               </Typography>
             ) : (
               <TextField

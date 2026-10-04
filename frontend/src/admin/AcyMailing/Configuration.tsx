@@ -219,7 +219,7 @@ export const AcyConfiguration = () => {
   ];
 
   return (
-    <AcyLayout title="AcyMailing > Konfiguration">
+    <AcyLayout title="Flugschule Mailing > Konfiguration">
       <div className="flex justify-between items-center mb-6">
         <div className="flex gap-2 flex-wrap">
           {tabs.map(tab => (

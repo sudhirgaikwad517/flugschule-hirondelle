@@ -194,14 +194,14 @@ export const AcyEditSubscriber = () => {
 
   if (loading || !data) {
     return (
-      <AcyLayout title="AcyMailing > Subscribers">
+      <AcyLayout title="Flugschule Mailing > Subscribers">
         <div className="flex items-center justify-center h-64 text-slate-500">Lade Abonnent...</div>
       </AcyLayout>
     );
   }
 
   return (
-    <AcyLayout title={`AcyMailing > Abonnenten > ${data.email}`}>
+    <AcyLayout title={`Flugschule Mailing > Abonnenten > ${data.email}`}>
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/admin/acymailing/subscribers')} className="text-slate-400 hover:text-slate-600 transition-colors">

@@ -123,7 +123,7 @@ export const AcyEditEmail = () => {
   const insertSocialIcons = () => {
     const entries = Object.entries(socialLinks).filter(([, url]) => url && url.trim());
     if (entries.length === 0) {
-      alert('Keine Social-Media-Links konfiguriert. Bitte zuerst unter AcyMailing > Konfiguration > Social Media eintragen.');
+      alert('Keine Social-Media-Links konfiguriert. Bitte zuerst unter Flugschule Mailing > Konfiguration > Social Media eintragen.');
       return;
     }
     if (!window.unlayer) return;
@@ -567,7 +567,7 @@ export const AcyEditEmail = () => {
         if (data.isTestMode && data.previewUrls?.length > 0) {
           alert(
             'Test-E-Mail wurde verarbeitet, aber es ist noch kein echter Mailserver konfiguriert ' +
-            '(AcyMailing > Konfiguration). Vorschau ansehen:\n\n' + data.previewUrls.join('\n')
+            '(Flugschule Mailing > Konfiguration). Vorschau ansehen:\n\n' + data.previewUrls.join('\n')
           );
         } else {
           alert('Test-E-Mail erfolgreich gesendet!');
@@ -602,7 +602,7 @@ export const AcyEditEmail = () => {
         <div className="flex justify-between items-center mb-8 pb-4 border-b border-slate-100">
           <div className="text-xl font-medium text-slate-800 flex items-center gap-2">
             <span className="text-[#0ea5e9]">M</span>
-            <span className="text-slate-700 cursor-pointer" onClick={() => navigate('/admin/acymailing/dashboard')}>AcyMailing</span>
+            <span className="text-slate-700 cursor-pointer" onClick={() => navigate('/admin/acymailing/dashboard')}>Flugschule Mailing</span>
             <ChevronRight className="inline" size={16} />
             <span className="text-slate-700 cursor-pointer" onClick={() => navigate('/admin/acymailing/emails')}>E-Mails</span>
             <ChevronRight className="inline" size={16} />
@@ -934,7 +934,7 @@ export const AcyEditEmail = () => {
                   </select>
                   {availableSegments.length === 0 && (
                     <p className="text-sm text-amber-600 mt-3">
-                      Noch keine Segmente angelegt. Unter AcyMailing &gt; Segmente können Sie eines erstellen.
+                      Noch keine Segmente angelegt. Unter Flugschule Mailing &gt; Segmente können Sie eines erstellen.
                     </p>
                   )}
                 </div>
@@ -1137,7 +1137,7 @@ export const AcyEditEmail = () => {
                   <button
                     type="button"
                     disabled
-                    title="Um diese Funktion zu nutzen, aktualisieren Sie bitte auf AcyMailing Enterprise"
+                    title="Um diese Funktion zu nutzen, aktualisieren Sie bitte auf Flugschule Mailing Enterprise"
                     className="py-2.5 rounded font-medium border-2 border-slate-100 text-slate-300 cursor-not-allowed"
                   >
                     Automatisch

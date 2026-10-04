@@ -125,7 +125,7 @@ export const AcyTemplates = () => {
 
   if (isEditorOpen) {
     return (
-      <AcyLayout title={`AcyMailing > Vorlagen > ${editingTemplate ? 'Bearbeiten' : 'Neu'}`}>
+      <AcyLayout title={`Flugschule Mailing > Vorlagen > ${editingTemplate ? 'Bearbeiten' : 'Neu'}`}>
         <div className="flex flex-col h-[800px] bg-white rounded-lg shadow-sm border border-slate-200">
           <div className="flex justify-between items-center p-4 border-b border-slate-200">
             <div className="flex items-center gap-3">
@@ -166,7 +166,7 @@ export const AcyTemplates = () => {
   }
 
   return (
-    <AcyLayout title="AcyMailing > Vorlagen">
+    <AcyLayout title="Flugschule Mailing > Vorlagen">
       <div className="mb-6 flex justify-between items-center">
         <div></div>
         <button onClick={() => openEditor()} className="flex items-center gap-2 bg-[#0ea5e9] hover:bg-[#0284c7] text-white px-4 py-2 rounded-md font-medium transition-colors">

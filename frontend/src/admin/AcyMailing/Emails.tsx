@@ -164,7 +164,7 @@ export const AcyEmails = () => {
   };
 
   return (
-    <AcyLayout title="AcyMailing > E-Mails">
+    <AcyLayout title="Flugschule Mailing > E-Mails">
       <div className="flex justify-between items-center mb-6 border-b border-slate-200">
         <div className="flex gap-8">
           <button className="pb-3 text-[#0ea5e9] border-b-2 border-[#0ea5e9] font-medium px-2">Newsletter</button>

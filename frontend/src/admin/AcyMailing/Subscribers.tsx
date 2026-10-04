@@ -371,7 +371,7 @@ export const AcySubscribers = () => {
   };
 
   return (
-    <AcyLayout title="AcyMailing > Abonnenten">
+    <AcyLayout title="Flugschule Mailing > Abonnenten">
       {/* Top Action Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6 bg-white p-4 rounded-lg shadow-sm">
         <div className="flex items-center gap-4 flex-1 min-w-[300px]">

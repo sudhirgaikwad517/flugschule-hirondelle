@@ -103,7 +103,7 @@ export const AcyLists = () => {
   };
 
   return (
-    <AcyLayout title="AcyMailing > Listen">
+    <AcyLayout title="Flugschule Mailing > Listen">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-xl font-medium text-slate-800">Mailing Listen</h2>

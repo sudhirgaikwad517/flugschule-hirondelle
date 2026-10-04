@@ -38,9 +38,9 @@ export const AcyDashboard = () => {
   };
 
   return (
-    <AcyLayout title="AcyMailing > Dashboard">
+    <AcyLayout title="Flugschule Mailing > Dashboard">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-[#1e293b] mb-2">Willkommen bei AcyMailing</h2>
+        <h2 className="text-2xl font-bold text-[#1e293b] mb-2">Willkommen bei Flugschule Mailing</h2>
         <p className="text-slate-500">Ihre E-Mail-Marketing-Zentrale.</p>
       </div>
 

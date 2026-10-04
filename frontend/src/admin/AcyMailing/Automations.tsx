@@ -97,7 +97,7 @@ export const AcyAutomations = () => {
   };
 
   return (
-    <AcyLayout title="AcyMailing > Automatisierungen">
+    <AcyLayout title="Flugschule Mailing > Automatisierungen">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-xl font-medium text-slate-800">Automatisierungen</h2>

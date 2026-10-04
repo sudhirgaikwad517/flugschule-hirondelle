@@ -69,7 +69,7 @@ export const AcyQueue = () => {
   };
 
   return (
-    <AcyLayout title="AcyMailing > Warteschlange">
+    <AcyLayout title="Flugschule Mailing > Warteschlange">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-xl font-medium text-slate-800">E-Mail-Warteschlange</h2>

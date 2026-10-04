@@ -51,7 +51,7 @@ export const AcyStatistics = () => {
 
   if (loading || !data) {
     return (
-      <AcyLayout title="AcyMailing > Statistiken">
+      <AcyLayout title="Flugschule Mailing > Statistiken">
         <div className="flex items-center justify-center h-64 text-slate-500">
           <RefreshCcw className="animate-spin mr-2" size={20} />
           Lade Statistiken...
@@ -61,10 +61,10 @@ export const AcyStatistics = () => {
   }
 
   return (
-    <AcyLayout title="AcyMailing > Statistiken">
+    <AcyLayout title="Flugschule Mailing > Statistiken">
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-[#1e293b] mb-2">Globale Statistiken</h2>
-        <p className="text-slate-500">Ihre AcyMailing Performance Übersicht</p>
+        <p className="text-slate-500">Ihre Flugschule Mailing Performance Übersicht</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

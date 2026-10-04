@@ -105,7 +105,7 @@ export const AcyForms = () => {
   };
 
   return (
-    <AcyLayout title="AcyMailing > Formulare">
+    <AcyLayout title="Flugschule Mailing > Formulare">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-xl font-medium text-slate-800">Anmeldeformulare</h2>

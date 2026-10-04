@@ -82,7 +82,7 @@ export const AcyFields = () => {
   };
 
   return (
-    <AcyLayout title="AcyMailing > Benutzerdefinierte Felder">
+    <AcyLayout title="Flugschule Mailing > Benutzerdefinierte Felder">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-xl font-medium text-slate-800">Benutzerdefinierte Felder</h2>
