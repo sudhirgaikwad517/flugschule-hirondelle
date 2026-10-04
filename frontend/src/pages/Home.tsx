@@ -50,6 +50,11 @@ interface HomeContentData {
   hochHinausEyebrowPrefix: string;
   hochHinausEyebrowLinkText: string;
   hochHinausTitle: string;
+  // Only ever set on a page duplicate (see HomeContentEditor.tsx's own
+  // comment on this same field) - a single free-form admin-authored HTML
+  // blob that replaces the promo-cards/news/hoch-hinaus/team sections below
+  // entirely when present, instead of sitting alongside them.
+  bodyHtml?: string;
 }
 
 // contentId is set only when this component is rendered as a fixed-page
@@ -77,6 +82,7 @@ export const Home = ({ contentId }: { contentId?: string } = {}) => {
   const hochHinausEyebrowLinkText = homeContent?.hochHinausEyebrowLinkText || DEFAULT_SECTION_TITLES.hochHinausEyebrowLinkText;
   const hochHinausTitle = homeContent?.hochHinausTitle || DEFAULT_SECTION_TITLES.hochHinausTitle;
   const teamLink = homeContent?.teamLink || '/infos/team';
+  const customBodyHtml = contentId ? homeContent?.bodyHtml : undefined;
   // Only ever promotes an admin-uploaded URL once the browser has actually
   // confirmed it loads - otherwise a stale/deleted upload would flash the
   // correct local fallback in, then silently swap to a broken image once
@@ -331,6 +337,14 @@ export const Home = ({ contentId }: { contentId?: string } = {}) => {
       </section>
       */}
 
+      {customBodyHtml ? (
+        <section className="pt-8 pb-24 bg-white">
+          <div className="container mx-auto px-4 lg:px-8 max-w-[1200px]">
+            <SafeHtml html={customBodyHtml} className="home-body-content" />
+          </div>
+        </section>
+      ) : (
+      <>
       {/* 5. PROMO CARDS (From Old Website) / UNSERE HIGHLIGHTS - KEPT, just the
           tagline+heading text above the cards was removed per request
           (commented out below, not deleted, in case it's wanted back later)
@@ -512,6 +526,8 @@ export const Home = ({ contentId }: { contentId?: string } = {}) => {
           </div>
         </div>
       </section>
+      </>
+      )}
 
       {/* 7. THE ESSENTIALS (SERVICES) / UNSER ANGEBOT - temporarily disabled, kept for future re-enable
       <section className="pt-8 pb-24 bg-white px-4">

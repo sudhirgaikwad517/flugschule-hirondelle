@@ -54,6 +54,15 @@ interface HomeContentData {
   hochHinausEyebrowPrefix: string;
   hochHinausEyebrowLinkText: string;
   hochHinausTitle: string;
+  // Only used on a page DUPLICATE (contentId set) - a client asked for a
+  // Joomla-article-style "one big editor for the whole page" instead of a
+  // field per data point, which the real Startseite's fixed card-grid/team-
+  // grid layout can't represent as free text without giving up that layout
+  // entirely. So a duplicate's promoCards/teamMembers/hochHinaus* fields
+  // above go unused once bodyHtml is non-empty - Home.tsx renders bodyHtml
+  // in their place for a duplicate, same as this page's own "Seiten"/
+  // DynamicPage.tsx CMS flow already does for an admin-authored page body.
+  bodyHtml: string;
 }
 
 const DEFAULTS: HomeContentData = {
@@ -76,6 +85,7 @@ const DEFAULTS: HomeContentData = {
   hochHinausEyebrowPrefix: '',
   hochHinausEyebrowLinkText: '',
   hochHinausTitle: '',
+  bodyHtml: '',
 };
 
 const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem('auth')}` });
@@ -267,145 +277,149 @@ export const HomeContentEditor = () => {
       {dupMeta && <FixedDuplicateMetaFields meta={dupMeta} onChange={setDupMeta} />}
       {primaryMeta && <PrimaryPageSettingsFields settings={primaryMeta} onChange={setPrimaryMeta} />}
 
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" sx={{ mb: 2 }}>Die 3 Highlight-Kacheln</Typography>
-          <Grid container spacing={3}>
-            {content.promoCards.map((card, i) => (
-              <Grid key={i} size={{ xs: 12, md: 4 }}>
-                <Typography variant="subtitle2" sx={{ mb: 1, color: '#666' }}>Kachel {i + 1}</Typography>
-                <ImageSlot
-                  shape="rect"
-                  url={card.image}
-                  onUploaded={(url) => updatePromoCard(i, 'image', url)}
-                  label={card.image ? 'Bild ersetzen' : 'Bild hochladen'}
-                />
-                <TextField
-                  label="Titel"
-                  fullWidth
-                  value={card.title}
-                  onChange={(e) => updatePromoCard(i, 'title', e.target.value)}
-                  sx={{ mb: 2 }}
-                />
-                <TextField
-                  label="Fettgedruckte Zeile"
-                  fullWidth
-                  value={card.boldLine}
-                  onChange={(e) => updatePromoCard(i, 'boldLine', e.target.value)}
-                  sx={{ mb: 2 }}
-                />
-                {contentId ? (
-                  <RichHtmlInput
-                    label="Beschreibung"
-                    value={card.description}
-                    onChange={(html) => updatePromoCard(i, 'description', html)}
-                    minRows={2}
-                    helperText="HTML/CSS erlaubt (Testfunktion auf dieser Kopie)."
-                  />
-                ) : (
-                  <TextField
-                    label="Beschreibung"
-                    fullWidth
-                    multiline
-                    minRows={2}
-                    value={card.description}
-                    onChange={(e) => updatePromoCard(i, 'description', e.target.value)}
-                    sx={{ mb: 2 }}
-                  />
-                )}
-                <TextField
-                  label="Link (Ziel beim Klick)"
-                  fullWidth
-                  value={card.link}
-                  onChange={(e) => updatePromoCard(i, 'link', e.target.value)}
-                  helperText="z.B. /ausbildung/schnupperkurs"
-                />
-              </Grid>
-            ))}
-          </Grid>
-        </CardContent>
-      </Card>
-
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" sx={{ mb: 2 }}>Abschnitt "News"</Typography>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField label="Kleiner Titel (oben)" fullWidth value={content.newsEyebrow} onChange={(e) => setContent({ ...content, newsEyebrow: e.target.value })} helperText='z.B. "AKTUELLES"' />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField label="Überschrift" fullWidth value={content.newsTitle} onChange={(e) => setContent({ ...content, newsTitle: e.target.value })} helperText='z.B. "NEWS"' />
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
-
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" sx={{ mb: 2 }}>Abschnitt "Hoch Hinaus"</Typography>
-          <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid size={{ xs: 12, sm: 4 }}>
-              <TextField label="Kleiner Titel - Text davor" fullWidth value={content.hochHinausEyebrowPrefix} onChange={(e) => setContent({ ...content, hochHinausEyebrowPrefix: e.target.value })} helperText='z.B. "...mit dem"' />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 4 }}>
-              <TextField label="Kleiner Titel - Link-Text" fullWidth value={content.hochHinausEyebrowLinkText} onChange={(e) => setContent({ ...content, hochHinausEyebrowLinkText: e.target.value })} helperText='z.B. "Team Hirondelle" (verlinkt zu /infos/team)' />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 4 }}>
-              <TextField label="Überschrift" fullWidth value={content.hochHinausTitle} onChange={(e) => setContent({ ...content, hochHinausTitle: e.target.value })} helperText='z.B. "HOCH HINAUS"' />
-            </Grid>
-          </Grid>
-          {contentId ? (
+      {contentId ? (
+        // A duplicate: one single free-form editor for the whole page body,
+        // Joomla-article style - see the HomeContentData.bodyHtml comment
+        // above for why this replaces every structured field below instead
+        // of sitting alongside them.
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Typography variant="h6" sx={{ mb: 2 }}>Seiteninhalt</Typography>
+            <Typography variant="body2" sx={{ color: '#666', mb: 2 }}>
+              Alles auf dieser Seite (Kacheln, Hoch-Hinaus-Text, Team) wird hier als ein einziger, frei gestaltbarer Inhalt bearbeitet - wie ein Artikel in Joomla. Bilder über das Bild-Symbol einfügen.
+            </Typography>
             <RichHtmlInput
-              label="Text"
-              value={content.hochHinausHtml}
-              onChange={(html) => setContent({ ...content, hochHinausHtml: html })}
-              minRows={5}
-              helperText="HTML/CSS erlaubt (Testfunktion auf dieser Kopie) - Formatierung, Links, eigene Stile."
+              label=""
+              value={content.bodyHtml}
+              onChange={(html) => setContent({ ...content, bodyHtml: html })}
+              minRows={16}
+              helperText="HTML/CSS erlaubt (Testfunktion auf dieser Kopie)."
             />
-          ) : (
-            <TextField
-              fullWidth
-              multiline
-              minRows={5}
-              label="Text"
-              value={content.hochHinausHtml}
-              onChange={(e) => setContent({ ...content, hochHinausHtml: e.target.value })}
-              helperText='HTML wird unterstützt, z.B. <a href="/infos/team">Team Hirondelle</a> für einen Link.'
-            />
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent>
-          <Typography variant="h6" sx={{ mb: 2 }}>Team-Mitglieder</Typography>
-          <TextField
-            label="Link (Ziel beim Klick auf ein Foto)"
-            fullWidth
-            value={content.teamLink}
-            onChange={(e) => setContent({ ...content, teamLink: e.target.value })}
-            helperText="z.B. /infos/team"
-            sx={{ mb: 3 }}
-          />
-          <Grid container spacing={3}>
-            {content.teamMembers.map((member, i) => (
-              <Grid key={i} size={{ xs: 12, sm: 6, md: 4 }}>
-                <ImageSlot
-                  url={member.image}
-                  onUploaded={(url) => updateTeamMember(i, 'image', url)}
-                  label={member.image ? 'Foto ersetzen' : 'Foto hochladen'}
-                />
-                <TextField
-                  label="Name"
-                  fullWidth
-                  value={member.name}
-                  onChange={(e) => updateTeamMember(i, 'name', e.target.value)}
-                />
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <Card sx={{ mb: 3 }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 2 }}>Die 3 Highlight-Kacheln</Typography>
+              <Grid container spacing={3}>
+                {content.promoCards.map((card, i) => (
+                  <Grid key={i} size={{ xs: 12, md: 4 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1, color: '#666' }}>Kachel {i + 1}</Typography>
+                    <ImageSlot
+                      shape="rect"
+                      url={card.image}
+                      onUploaded={(url) => updatePromoCard(i, 'image', url)}
+                      label={card.image ? 'Bild ersetzen' : 'Bild hochladen'}
+                    />
+                    <TextField
+                      label="Titel"
+                      fullWidth
+                      value={card.title}
+                      onChange={(e) => updatePromoCard(i, 'title', e.target.value)}
+                      sx={{ mb: 2 }}
+                    />
+                    <TextField
+                      label="Fettgedruckte Zeile"
+                      fullWidth
+                      value={card.boldLine}
+                      onChange={(e) => updatePromoCard(i, 'boldLine', e.target.value)}
+                      sx={{ mb: 2 }}
+                    />
+                    <TextField
+                      label="Beschreibung"
+                      fullWidth
+                      multiline
+                      minRows={2}
+                      value={card.description}
+                      onChange={(e) => updatePromoCard(i, 'description', e.target.value)}
+                      sx={{ mb: 2 }}
+                    />
+                    <TextField
+                      label="Link (Ziel beim Klick)"
+                      fullWidth
+                      value={card.link}
+                      onChange={(e) => updatePromoCard(i, 'link', e.target.value)}
+                      helperText="z.B. /ausbildung/schnupperkurs"
+                    />
+                  </Grid>
+                ))}
               </Grid>
-            ))}
-          </Grid>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+
+          <Card sx={{ mb: 3 }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 2 }}>Abschnitt "News"</Typography>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField label="Kleiner Titel (oben)" fullWidth value={content.newsEyebrow} onChange={(e) => setContent({ ...content, newsEyebrow: e.target.value })} helperText='z.B. "AKTUELLES"' />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField label="Überschrift" fullWidth value={content.newsTitle} onChange={(e) => setContent({ ...content, newsTitle: e.target.value })} helperText='z.B. "NEWS"' />
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+
+          <Card sx={{ mb: 3 }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 2 }}>Abschnitt "Hoch Hinaus"</Typography>
+              <Grid container spacing={2} sx={{ mb: 2 }}>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <TextField label="Kleiner Titel - Text davor" fullWidth value={content.hochHinausEyebrowPrefix} onChange={(e) => setContent({ ...content, hochHinausEyebrowPrefix: e.target.value })} helperText='z.B. "...mit dem"' />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <TextField label="Kleiner Titel - Link-Text" fullWidth value={content.hochHinausEyebrowLinkText} onChange={(e) => setContent({ ...content, hochHinausEyebrowLinkText: e.target.value })} helperText='z.B. "Team Hirondelle" (verlinkt zu /infos/team)' />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <TextField label="Überschrift" fullWidth value={content.hochHinausTitle} onChange={(e) => setContent({ ...content, hochHinausTitle: e.target.value })} helperText='z.B. "HOCH HINAUS"' />
+                </Grid>
+              </Grid>
+              <TextField
+                fullWidth
+                multiline
+                minRows={5}
+                label="Text"
+                value={content.hochHinausHtml}
+                onChange={(e) => setContent({ ...content, hochHinausHtml: e.target.value })}
+                helperText='HTML wird unterstützt, z.B. <a href="/infos/team">Team Hirondelle</a> für einen Link.'
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 2 }}>Team-Mitglieder</Typography>
+              <TextField
+                label="Link (Ziel beim Klick auf ein Foto)"
+                fullWidth
+                value={content.teamLink}
+                onChange={(e) => setContent({ ...content, teamLink: e.target.value })}
+                helperText="z.B. /infos/team"
+                sx={{ mb: 3 }}
+              />
+              <Grid container spacing={3}>
+                {content.teamMembers.map((member, i) => (
+                  <Grid key={i} size={{ xs: 12, sm: 6, md: 4 }}>
+                    <ImageSlot
+                      url={member.image}
+                      onUploaded={(url) => updateTeamMember(i, 'image', url)}
+                      label={member.image ? 'Foto ersetzen' : 'Foto hochladen'}
+                    />
+                    <TextField
+                      label="Name"
+                      fullWidth
+                      value={member.name}
+                      onChange={(e) => updateTeamMember(i, 'name', e.target.value)}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 1 }}>
         <Button component="a" href={previewPath} target="_blank" rel="noopener noreferrer" variant="outlined" startIcon={<OpenInNewIcon />}>

@@ -1,17 +1,21 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
-import { Box, IconButton, TextField, Typography, Tooltip } from '@mui/material';
+import Image from '@tiptap/extension-image';
+import { Box, IconButton, TextField, Typography, Tooltip, CircularProgress, Select, MenuItem } from '@mui/material';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatItalicIcon from '@mui/icons-material/FormatItalic';
 import FormatUnderlinedIcon from '@mui/icons-material/FormatUnderlined';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import LinkIcon from '@mui/icons-material/Link';
+import ImageIcon from '@mui/icons-material/Image';
 import FormatClearIcon from '@mui/icons-material/FormatClear';
 import CodeIcon from '@mui/icons-material/Code';
 import EditIcon from '@mui/icons-material/Edit';
+
+const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem('auth')}` });
 
 // Standalone WYSIWYG + raw-HTML-source editor, built directly on the same
 // TipTap packages ra-input-rich-text itself uses (StarterKit/Underline/Link)
@@ -62,9 +66,11 @@ const ToolbarButton = ({
 
 export const RichHtmlInput = ({ label, value, onChange, helperText, minRows = 6 }: RichHtmlInputProps) => {
   const [htmlMode, setHtmlMode] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
-    extensions: [StarterKit, Underline, Link.configure({ openOnClick: false, autolink: false })],
+    extensions: [StarterKit, Underline, Link.configure({ openOnClick: false, autolink: false }), Image],
     content: value,
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
   });
@@ -89,6 +95,30 @@ export const RichHtmlInput = ({ label, value, onChange, helperText, minRows = 6 
       return;
     }
     editor?.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  };
+
+  // Images are inserted directly into the document at the cursor (matching
+  // Joomla's own article editor's image button), not managed as a separate
+  // upload slot outside the text - fits the "one big free-form page" model
+  // this is for, where there's no fixed layout left to hang dedicated image
+  // fields off of.
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file || !editor) return;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch('/api/upload', { method: 'POST', headers: authHeaders(), body: formData });
+      const data = await res.json();
+      if (res.ok) editor.chain().focus().setImage({ src: data.url }).run();
+      else window.alert(data.message || 'Fehler beim Bild-Upload');
+    } catch {
+      window.alert('Netzwerkfehler beim Bild-Upload');
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -116,7 +146,21 @@ export const RichHtmlInput = ({ label, value, onChange, helperText, minRows = 6 
         />
       ) : (
         <Box sx={{ border: '1px solid #c4c4c4', borderRadius: 1 }}>
-          <Box sx={{ display: 'flex', gap: 0.25, p: 0.5, borderBottom: '1px solid #eee', flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, p: 0.5, borderBottom: '1px solid #eee', flexWrap: 'wrap' }}>
+            <Select
+              size="small"
+              value={editor?.isActive('heading', { level: 2 }) ? 'h2' : editor?.isActive('heading', { level: 3 }) ? 'h3' : 'p'}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === 'p') editor?.chain().focus().setParagraph().run();
+                else editor?.chain().focus().toggleHeading({ level: v === 'h2' ? 2 : 3 }).run();
+              }}
+              sx={{ fontSize: 13, mr: 0.5, '.MuiSelect-select': { py: 0.5 } }}
+            >
+              <MenuItem value="p">Absatz</MenuItem>
+              <MenuItem value="h2">Überschrift</MenuItem>
+              <MenuItem value="h3">Unterüberschrift</MenuItem>
+            </Select>
             <ToolbarButton title="Fett" active={editor?.isActive('bold')} onClick={() => editor?.chain().focus().toggleBold().run()}>
               <FormatBoldIcon fontSize="small" />
             </ToolbarButton>
@@ -132,6 +176,10 @@ export const RichHtmlInput = ({ label, value, onChange, helperText, minRows = 6 
             <ToolbarButton title="Link" active={editor?.isActive('link')} onClick={setLink}>
               <LinkIcon fontSize="small" />
             </ToolbarButton>
+            <ToolbarButton title="Bild einfügen" onClick={() => fileInputRef.current?.click()}>
+              {uploading ? <CircularProgress size={16} /> : <ImageIcon fontSize="small" />}
+            </ToolbarButton>
+            <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={handleImageUpload} />
             <ToolbarButton title="Formatierung entfernen" onClick={() => editor?.chain().focus().clearNodes().unsetAllMarks().run()}>
               <FormatClearIcon fontSize="small" />
             </ToolbarButton>
@@ -143,6 +191,7 @@ export const RichHtmlInput = ({ label, value, onChange, helperText, minRows = 6 
               cursor: 'text',
               '& .ProseMirror': { outline: 'none' },
               '& a': { color: '#428bca' },
+              '& img': { maxWidth: '100%', borderRadius: 1 },
             }}
             onClick={() => editor?.commands.focus()}
           >

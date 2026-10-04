@@ -563,6 +563,43 @@ body.admin-root .RaBulkActionsToolbar-root {
   text-decoration: underline;
 }
 
+/* A Startseite duplicate's free-form "one big editor" body (bodyHtml, see
+   HomeContentEditor.tsx/Home.tsx) - same reasoning as .dynamic-page-content:
+   Tailwind's preflight zeroes every element's default margin, so plain
+   <h2>/<p>/<img> tags need real spacing rules here or they run together. */
+.home-body-content h2,
+.home-body-content h3 {
+  font-family: var(--font-luxury);
+  color: var(--color-luxury-dark);
+  letter-spacing: 0.02em;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+.home-body-content h2:first-child,
+.home-body-content h3:first-child {
+  margin-top: 0;
+}
+.home-body-content p {
+  font-family: var(--font-luxurysans);
+  color: #6b7280;
+  line-height: 1.8;
+  margin-bottom: 1.25rem;
+}
+.home-body-content a {
+  color: #53a8c7;
+  font-weight: 500;
+  text-decoration: none;
+}
+.home-body-content a:hover {
+  color: #2a6496;
+  text-decoration: underline;
+}
+.home-body-content img {
+  border-radius: 2px;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
 /* Gelände detail articles (/infos/gelaende/:slug) carry verbatim raw HTML
    transcribed from the old Joomla site, which used Bootstrap 2's
    `.col-md-N` grid classes to sit the Google Maps embed BESIDE the article
