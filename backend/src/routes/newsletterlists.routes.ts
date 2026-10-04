@@ -4,6 +4,30 @@ import { authenticateJWT, authorizeAdmin } from '../middlewares/auth.middleware'
 
 const router = Router();
 
+// The admin "Neue Liste" form (Lists.tsx) never asks for a `code` - it only
+// collects name/description/color/etc - so without this, every list created
+// through the UI ends up with code=null. That's silently fatal: toggle-list
+// below looks a subscription up by the email+listType compound key, and a
+// list with no code can never actually gain or lose a subscriber (the
+// Abonnieren/abmelden buttons just do nothing, with no error shown either -
+// exactly what was reported as "not possible to add abonnents"). Generate a
+// stable, unique code from the name automatically so a list is usable the
+// moment it's created, the same way the original 3 seeded lists already are.
+async function generateUniqueListCode(name: string): Promise<string> {
+  const base = name
+    .normalize('NFKD').replace(/[̀-ͯ]/g, '') // strip accents (ä -> a, etc.)
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '') || 'LIST';
+  let candidate = base;
+  let suffix = 1;
+  while (await prisma.newsletterList.findUnique({ where: { code: candidate } })) {
+    suffix++;
+    candidate = `${base}_${suffix}`;
+  }
+  return candidate;
+}
+
 router.get('/', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
     const lists = await prisma.newsletterList.findMany({
@@ -54,7 +78,8 @@ router.get('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {
 
 router.post('/', authenticateJWT, authorizeAdmin, async (req, res) => {
   try {
-    const list = await prisma.newsletterList.create({ data: req.body });
+    const code = req.body.code || await generateUniqueListCode(req.body.name || 'Liste');
+    const list = await prisma.newsletterList.create({ data: { ...req.body, code } });
     res.status(201).json(list);
   } catch (error) {
     res.status(500).json({ message: 'Internal server error' });

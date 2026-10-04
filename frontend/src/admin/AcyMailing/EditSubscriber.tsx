@@ -138,9 +138,12 @@ export const AcyEditSubscriber = () => {
       });
       if (res.ok) {
         fetchData();
+      } else {
+        alert('Änderung der Listen-Anmeldung fehlgeschlagen.');
       }
     } catch (error) {
       console.error(error);
+      alert('Änderung der Listen-Anmeldung fehlgeschlagen.');
     }
   };
 
