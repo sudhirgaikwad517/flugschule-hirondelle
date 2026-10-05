@@ -504,12 +504,36 @@ export const PagesManager = () => {
   };
 
   const onEditorLoad = () => {
+    const editor = emailEditorRef.current?.editor;
     if (editing?.design) {
       try {
-        emailEditorRef.current?.editor?.loadDesign(JSON.parse(editing.design));
+        editor?.loadDesign(JSON.parse(editing.design));
       } catch (e) {
         console.error('Failed to parse page design JSON', e);
       }
+    } else if (editing?.body) {
+      // This page has real HTML (body) but no Unlayer design JSON of its
+      // own yet - e.g. a page migrated in by a script, never actually
+      // authored through this editor. NEVER hand-build a design object
+      // from scratch here (confirmed the hard way: a hand-crafted design
+      // missing Unlayer's own internal bookkeeping fields - counters, node
+      // ids, etc. - loads "successfully" with no thrown error, but leaves
+      // the editor in a broken state that crashes the whole admin app the
+      // moment anything (export, a later edit) touches it). Instead, ask
+      // Unlayer for ITS OWN freshly-initialized empty design via
+      // exportHtml() first, then push body in as a single content block -
+      // the exact same proven-safe row-append pattern insertGallery/
+      // insertForm/insertNewsletterForm already use elsewhere in this file,
+      // just automatic instead of a manual button click.
+      editor?.exportHtml((data: any) => {
+        const design = data.design;
+        design.body.rows.push({
+          cells: [1],
+          columns: [{ contents: [{ type: 'text', values: { text: editing.body, padding: '0px' } }], values: {} }],
+          values: {},
+        });
+        editor.loadDesign(design);
+      });
     }
     // Unlayer defaults every row's content width to 500px (an email-template
     // default, since the same editor is also used for AcyMailing newsletters
