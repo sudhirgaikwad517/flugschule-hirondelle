@@ -361,7 +361,13 @@ export const PagesManager = () => {
   const refreshPreview = () => {
     const editor = emailEditorRef.current?.editor;
     if (!editor) return;
-    editor.exportHtml((data: { html: string }) => {
+    editor.exportHtml((data: { html?: string }) => {
+      // data.html can come back undefined if the export races the iframe's
+      // own readiness - inlineUnlayerLayoutCss would otherwise coerce that
+      // to the literal string "undefined" via DOMParser (confirmed: this
+      // is exactly what showed up in the live preview once). Guard instead
+      // of trusting the payload.
+      if (!data?.html) return;
       setPreviewHtml(inlineUnlayerLayoutCss(data.html));
     });
   };
@@ -505,50 +511,12 @@ export const PagesManager = () => {
   };
 
   const onEditorLoad = () => {
-    const editor = emailEditorRef.current?.editor;
     if (editing?.design) {
       try {
-        editor?.loadDesign(JSON.parse(editing.design));
+        emailEditorRef.current?.editor?.loadDesign(JSON.parse(editing.design));
       } catch (e) {
         console.error('Failed to parse page design JSON', e);
       }
-    } else if (editing?.body) {
-      // This page has real HTML (body) but no Unlayer design JSON of its
-      // own yet - e.g. a page migrated in by a script, never actually
-      // authored through this editor. NEVER hand-build a design object
-      // from scratch here (confirmed the hard way: a hand-crafted design
-      // missing Unlayer's own internal bookkeeping fields - counters, node
-      // ids, etc. - loads "successfully" with no thrown error, but leaves
-      // the editor in a broken state that crashes the whole admin app the
-      // moment anything (export, a later edit) touches it). Instead, ask
-      // Unlayer for ITS OWN freshly-initialized empty design via
-      // exportHtml() first, then push body in as a single content block -
-      // the exact same proven-safe row-append pattern insertGallery/
-      // insertForm/insertNewsletterForm already use elsewhere in this file.
-      // Those are only ever called from a later button click, well after
-      // the editor's iframe bridge has settled - calling exportHtml this
-      // early, synchronously inside onLoad itself, got back a `data` with
-      // no `design` yet (confirmed via a real crash: "Cannot read
-      // properties of undefined (reading 'body')" from `design.body.rows.
-      // push`), so this waits a beat and defensively checks the shape
-      // before touching it instead of trusting it blindly.
-      const bodyToInsert = editing.body;
-      setTimeout(() => {
-        const liveEditor = emailEditorRef.current?.editor;
-        liveEditor?.exportHtml((data: any) => {
-          const design = data?.design;
-          if (!design?.body?.rows) {
-            console.error('exportHtml returned no usable design yet, skipping body import', data);
-            return;
-          }
-          design.body.rows.push({
-            cells: [1],
-            columns: [{ contents: [{ type: 'text', values: { text: bodyToInsert, padding: '0px' } }], values: {} }],
-            values: {},
-          });
-          liveEditor.loadDesign(design);
-        });
-      }, 500);
     }
     // Unlayer defaults every row's content width to 500px (an email-template
     // default, since the same editor is also used for AcyMailing newsletters
@@ -562,7 +530,55 @@ export const PagesManager = () => {
     // rows are additionally corrected at export time, see
     // inlineUnlayerLayoutCss below.
     emailEditorRef.current?.editor?.setBodyValues({ contentWidth: '1200px' });
-    setTimeout(refreshPreview, 300);
+  };
+
+  // onLoad fires as soon as the editor INSTANCE exists - early enough for
+  // loadDesign (which just posts a message into the iframe) but confirmed
+  // too early for exportHtml: calling it from onLoad kept getting back a
+  // `data` with no usable `design.body` (crashed once with "Cannot read
+  // properties of undefined (reading 'body')", then after a 500ms guess-
+  // delay just silently produced an empty/undefined export instead - the
+  // canvas stayed on "No content here" and the live-preview panel rendered
+  // the literal string "undefined"). onReady is the SDK's own signal that
+  // the iframe bridge has actually finished initializing and operations
+  // like exportHtml are safe to call - using it instead of a fixed delay
+  // fixes the race at its root rather than guessing a bigger number.
+  const onEditorReady = () => {
+    const editor = emailEditorRef.current?.editor;
+    if (!editor) return;
+
+    if (!editing?.design && editing?.body) {
+      // This page has real HTML (body) but no Unlayer design JSON of its
+      // own yet - e.g. a page migrated in by a script, never actually
+      // authored through this editor. NEVER hand-build a design object
+      // from scratch here (confirmed the hard way: a hand-crafted design
+      // missing Unlayer's own internal bookkeeping fields - counters, node
+      // ids, etc. - "loads" with no thrown error, but leaves the editor in
+      // a broken state that crashes the whole admin app the moment
+      // anything touches it afterward). Instead, ask Unlayer for ITS OWN
+      // freshly-initialized design via exportHtml() first, then push body
+      // in as a single content block - the exact same proven-safe
+      // row-append pattern insertGallery/insertForm/insertNewsletterForm
+      // already use elsewhere in this file.
+      const bodyToInsert = editing.body;
+      editor.exportHtml((data: any) => {
+        const design = data?.design;
+        if (!design?.body?.rows) {
+          console.error('exportHtml returned no usable design on ready, skipping body import', data);
+          refreshPreview();
+          return;
+        }
+        design.body.rows.push({
+          cells: [1],
+          columns: [{ contents: [{ type: 'text', values: { text: bodyToInsert, padding: '0px' } }], values: {} }],
+          values: {},
+        });
+        editor.loadDesign(design);
+        refreshPreview();
+      });
+    } else {
+      refreshPreview();
+    }
   };
 
   // Lets a Seiten page embed the same admin-managed gallery (Admin >
@@ -928,6 +944,7 @@ export const PagesManager = () => {
           <EmailEditor
             ref={emailEditorRef}
             onLoad={onEditorLoad}
+            onReady={onEditorReady}
             onDesignUpdated={handleDesignUpdated}
             style={{ minHeight: '100%' }}
             options={{ locale: 'de-DE', displayMode: 'web' }}
