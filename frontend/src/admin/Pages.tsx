@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import EmailEditor from 'react-email-editor';
 import { useNotify } from 'react-admin';
 import { SafeHtml } from '../components/common/SafeHtml';
+import { isSessionExpiredError } from './sessionExpiry';
 import {
+  Alert,
   Box,
   Button,
   CircularProgress,
@@ -375,6 +377,14 @@ export const PagesManager = () => {
   const [menuLoading, setMenuLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'flat' | 'menu'>('flat');
   const [loading, setLoading] = useState(true);
+  // fetchPages()/fetchFixedDuplicates() below used to swallow a 401/403
+  // (expired login - tokens last 1 day) into a silent empty array: a custom
+  // Page (like a "Seiten"-converted duplicate) would just vanish from the
+  // list with zero indication why, indistinguishable from "never created".
+  // Same root cause already fixed across the ~50 ...ContentEditor.tsx pages
+  // (see sessionExpiry.ts) - PagesManager was missed there since it's a
+  // list/editor hybrid, not that same boilerplate shape.
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
@@ -403,17 +413,29 @@ export const PagesManager = () => {
   const fetchPages = () => {
     setLoading(true);
     fetch('/api/pages?_start=0&_end=200', { headers: authHeaders() })
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) => setPages(Array.isArray(data) ? data : []))
-      .catch(() => notify('Fehler beim Laden der Seiten', { type: 'error' }))
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data) => { setSessionExpired(false); setPages(Array.isArray(data) ? data : []); })
+      .catch((err) => {
+        if (isSessionExpiredError(err)) setSessionExpired(true);
+        else notify('Fehler beim Laden der Seiten', { type: 'error' });
+      })
       .finally(() => setLoading(false));
   };
 
   const fetchFixedDuplicates = () => {
     fetch('/api/fixed-page-duplicates', { headers: authHeaders() })
-      .then((res) => (res.ok ? res.json() : []))
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then((data) => setFixedDuplicates(Array.isArray(data) ? data : []))
-      .catch(() => notify('Fehler beim Laden der Seiten-Duplikate', { type: 'error' }));
+      .catch((err) => {
+        if (isSessionExpiredError(err)) setSessionExpired(true);
+        else notify('Fehler beim Laden der Seiten-Duplikate', { type: 'error' });
+      });
   };
 
   // Live title/URL/status for the 6 fixed pages THEMSELVES (editable via
@@ -1207,6 +1229,15 @@ export const PagesManager = () => {
           <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>Neue Seite</Button>
         </Box>
       </Box>
+      {sessionExpired && (
+        <Alert
+          severity="warning"
+          sx={{ mb: 2 }}
+          action={<Button color="inherit" size="small" href="/admin/login">Erneut einloggen</Button>}
+        >
+          Ihre Sitzung ist abgelaufen - nur die fest einprogrammierten Seiten (z.B. "Startseite") werden angezeigt. Bitte neu einloggen, um auch selbst erstellte Seiten zu sehen.
+        </Alert>
+      )}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
         <TextField
           placeholder="Suchen (Titel oder URL - auf Deutsch oder Englisch)"
