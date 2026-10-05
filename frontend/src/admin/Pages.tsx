@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import EmailEditor from 'react-email-editor';
 import { useNotify } from 'react-admin';
 import { SafeHtml } from '../components/common/SafeHtml';
+import { LightboxProvider } from '../components/common/Lightbox';
 import { isSessionExpiredError } from './sessionExpiry';
 import {
   Alert,
@@ -523,17 +524,31 @@ export const PagesManager = () => {
       // Unlayer for ITS OWN freshly-initialized empty design via
       // exportHtml() first, then push body in as a single content block -
       // the exact same proven-safe row-append pattern insertGallery/
-      // insertForm/insertNewsletterForm already use elsewhere in this file,
-      // just automatic instead of a manual button click.
-      editor?.exportHtml((data: any) => {
-        const design = data.design;
-        design.body.rows.push({
-          cells: [1],
-          columns: [{ contents: [{ type: 'text', values: { text: editing.body, padding: '0px' } }], values: {} }],
-          values: {},
+      // insertForm/insertNewsletterForm already use elsewhere in this file.
+      // Those are only ever called from a later button click, well after
+      // the editor's iframe bridge has settled - calling exportHtml this
+      // early, synchronously inside onLoad itself, got back a `data` with
+      // no `design` yet (confirmed via a real crash: "Cannot read
+      // properties of undefined (reading 'body')" from `design.body.rows.
+      // push`), so this waits a beat and defensively checks the shape
+      // before touching it instead of trusting it blindly.
+      const bodyToInsert = editing.body;
+      setTimeout(() => {
+        const liveEditor = emailEditorRef.current?.editor;
+        liveEditor?.exportHtml((data: any) => {
+          const design = data?.design;
+          if (!design?.body?.rows) {
+            console.error('exportHtml returned no usable design yet, skipping body import', data);
+            return;
+          }
+          design.body.rows.push({
+            cells: [1],
+            columns: [{ contents: [{ type: 'text', values: { text: bodyToInsert, padding: '0px' } }], values: {} }],
+            values: {},
+          });
+          liveEditor.loadDesign(design);
         });
-        editor.loadDesign(design);
-      });
+      }, 500);
     }
     // Unlayer defaults every row's content width to 500px (an email-template
     // default, since the same editor is also used for AcyMailing newsletters
@@ -929,7 +944,15 @@ export const PagesManager = () => {
           </Box>
           <Box sx={{ bgcolor: '#fff', maxWidth: '1200px', mx: 'auto', px: 4, py: 4 }}>
             {previewHtml ? (
-              <SafeHtml html={previewHtml} className="dynamic-page-content" />
+              // SafeHtml calls useLightbox() unconditionally (for click-to-
+              // zoom on content images) - the admin app has no
+              // LightboxProvider anywhere in its tree (only the public site
+              // does), so without this wrapper it throws "useLightbox must
+              // be used within a LightboxProvider" the instant any preview
+              // with an image renders, crashing the whole admin app.
+              <LightboxProvider>
+                <SafeHtml html={previewHtml} className="dynamic-page-content" />
+              </LightboxProvider>
             ) : (
               <Typography variant="body2" sx={{ color: '#999', textAlign: 'center', py: 4 }}>Vorschau wird geladen...</Typography>
             )}
