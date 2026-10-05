@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import EmailEditor from 'react-email-editor';
 import { useNotify } from 'react-admin';
+import { SafeHtml } from '../components/common/SafeHtml';
 import {
   Box,
   Button,
@@ -342,6 +343,30 @@ export const PagesManager = () => {
   const notify = useNotify();
   const navigate = useNavigate();
   const emailEditorRef = useRef<any>(null);
+  const previewDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // A live preview rendered BELOW the Unlayer canvas, using the real site's
+  // own CSS (SafeHtml + .dynamic-page-content, same as DynamicPage.tsx) -
+  // Unlayer's own editing canvas runs inside an isolated iframe that never
+  // loads this site's Tailwind stylesheet, so anything beyond Unlayer's own
+  // built-in block styling (a custom HTML block with Tailwind classes, for
+  // instance) looks broken/unstyled while editing even though it renders
+  // correctly once actually published - this closes that gap without
+  // leaving the drag-and-drop editor at all.
+  const [previewHtml, setPreviewHtml] = useState('');
+
+  const refreshPreview = () => {
+    const editor = emailEditorRef.current?.editor;
+    if (!editor) return;
+    editor.exportHtml((data: { html: string }) => {
+      setPreviewHtml(inlineUnlayerLayoutCss(data.html));
+    });
+  };
+
+  const handleDesignUpdated = () => {
+    if (previewDebounceRef.current) clearTimeout(previewDebounceRef.current);
+    previewDebounceRef.current = setTimeout(refreshPreview, 600);
+  };
 
   const [pages, setPages] = useState<PageRow[]>([]);
   const [fixedDuplicates, setFixedDuplicates] = useState<FixedDuplicateRow[]>([]);
@@ -453,6 +478,7 @@ export const PagesManager = () => {
   const closeEditor = () => {
     setIsEditorOpen(false);
     setEditing(null);
+    setPreviewHtml('');
   };
 
   const onEditorLoad = () => {
@@ -475,6 +501,7 @@ export const PagesManager = () => {
     // rows are additionally corrected at export time, see
     // inlineUnlayerLayoutCss below.
     emailEditorRef.current?.editor?.setBodyValues({ contentWidth: '1200px' });
+    setTimeout(refreshPreview, 300);
   };
 
   // Lets a Seiten page embed the same admin-managed gallery (Admin >
@@ -840,9 +867,27 @@ export const PagesManager = () => {
           <EmailEditor
             ref={emailEditorRef}
             onLoad={onEditorLoad}
+            onDesignUpdated={handleDesignUpdated}
             style={{ minHeight: '100%' }}
             options={{ locale: 'de-DE', displayMode: 'web' }}
           />
+        </Box>
+
+        {/* Live-Vorschau: renders the same exported HTML with the real site's
+            CSS (SafeHtml, .dynamic-page-content) instead of Unlayer's own
+            isolated iframe styling - updates automatically a moment after
+            any block is added/moved/edited above. */}
+        <Box sx={{ borderTop: '1px solid #e0e0e0', bgcolor: '#f4f6f8' }}>
+          <Box sx={{ px: 2, py: 1, borderBottom: '1px solid #e0e0e0', bgcolor: '#fff' }}>
+            <Typography variant="subtitle2" sx={{ color: '#666' }}>Live-Vorschau (so sieht die Seite live aus)</Typography>
+          </Box>
+          <Box sx={{ bgcolor: '#fff', maxWidth: '1200px', mx: 'auto', px: 4, py: 4 }}>
+            {previewHtml ? (
+              <SafeHtml html={previewHtml} className="dynamic-page-content" />
+            ) : (
+              <Typography variant="body2" sx={{ color: '#999', textAlign: 'center', py: 4 }}>Vorschau wird geladen...</Typography>
+            )}
+          </Box>
         </Box>
 
         <Dialog open={formPickerOpen} onClose={() => setFormPickerOpen(false)} maxWidth="xs" fullWidth>
