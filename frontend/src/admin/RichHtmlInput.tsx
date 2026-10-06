@@ -31,6 +31,7 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  Alert,
 } from '@mui/material';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatItalicIcon from '@mui/icons-material/FormatItalic';
@@ -99,6 +100,19 @@ interface RichHtmlInputProps {
   onChange: (html: string) => void;
   helperText?: string;
   minRows?: number;
+  // ProseMirror (the engine under every TipTap/rich-text editor, Joomla's
+  // TinyMCE included) only ever round-trips its OWN recognized node types
+  // (paragraph/heading/list/image/table/...) - any custom <div> structure
+  // outside that schema (absolute-positioned cards, a flex/grid layout,
+  // inline background-image styles) gets silently unwrapped/stripped the
+  // moment the WYSIWYG canvas parses it, even though the raw HTML stored in
+  // the database is untouched. Confirmed directly: a real card-grid layout
+  // came out as stacked plain images once rendered through the canvas.
+  // Defaulting a field known to hold that kind of markup to the HTML-code
+  // view keeps it 100% intact - the WYSIWYG view stays one click away for
+  // simple text tweaks, but should never be trusted with structural edits
+  // on content like this.
+  defaultHtmlMode?: boolean;
 }
 
 const ToolbarButton = ({
@@ -126,8 +140,8 @@ const ToolbarButton = ({
 
 const ToolbarDivider = () => <Divider orientation="vertical" flexItem sx={{ mx: 0.5, my: 0.5 }} />;
 
-export const RichHtmlInput = ({ label, value, onChange, helperText, minRows = 6 }: RichHtmlInputProps) => {
-  const [htmlMode, setHtmlMode] = useState(false);
+export const RichHtmlInput = ({ label, value, onChange, helperText, minRows = 6, defaultHtmlMode = false }: RichHtmlInputProps) => {
+  const [htmlMode, setHtmlMode] = useState(defaultHtmlMode);
   const [uploading, setUploading] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [tableMenuAnchor, setTableMenuAnchor] = useState<HTMLElement | null>(null);
@@ -286,7 +300,13 @@ export const RichHtmlInput = ({ label, value, onChange, helperText, minRows = 6 
           helperText={helperText || 'Rohes HTML/CSS - z.B. <p style="color:#c00; font-size:18px" class="meine-klasse">Text</p>'}
         />
       ) : (
-        <Box sx={{ border: '1px solid #c4c4c4', borderRadius: 1, display: 'flex', flexDirection: 'column', height: fullscreen ? 'calc(100% - 50px)' : 'auto' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: fullscreen ? 'calc(100% - 50px)' : 'auto' }}>
+          {defaultHtmlMode && (
+            <Alert severity="warning" sx={{ mb: 1 }}>
+              Dieser Inhalt enthält ein komplexes Layout (eigene CSS-Klassen, Hintergrundbilder). Der visuelle Editor kann solche Strukturen verändern oder entfernen - für Layout-Änderungen bitte den HTML-Code benutzen, nur für einfache Text-Korrekturen hier wechseln.
+            </Alert>
+          )}
+          <Box sx={{ border: '1px solid #c4c4c4', borderRadius: 1, display: 'flex', flexDirection: 'column', flex: fullscreen ? 1 : undefined, overflow: fullscreen ? 'hidden' : undefined }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, p: 0.5, borderBottom: '1px solid #eee', flexWrap: 'wrap' }}>
             <ToolbarButton title="Rückgängig" onClick={() => editor?.chain().focus().undo().run()}>
               <UndoIcon fontSize="small" />
@@ -449,6 +469,7 @@ export const RichHtmlInput = ({ label, value, onChange, helperText, minRows = 6 
           >
             <EditorContent editor={editor} />
           </Box>
+        </Box>
         </Box>
       )}
       {!htmlMode && helperText && (

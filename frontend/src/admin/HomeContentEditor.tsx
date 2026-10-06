@@ -294,6 +294,7 @@ export const HomeContentEditor = () => {
               onChange={(html) => setContent({ ...content, bodyHtml: html })}
               minRows={16}
               helperText="HTML/CSS erlaubt (Testfunktion auf dieser Kopie)."
+              defaultHtmlMode
             />
           </CardContent>
         </Card>
