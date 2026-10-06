@@ -8,11 +8,36 @@ import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
 import { Highlight } from '@tiptap/extension-highlight';
 import { TextAlign } from '@tiptap/extension-text-align';
-import { Box, IconButton, TextField, Typography, Tooltip, CircularProgress, Select, MenuItem, Divider } from '@mui/material';
+import { Subscript } from '@tiptap/extension-subscript';
+import { Superscript } from '@tiptap/extension-superscript';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableHeader } from '@tiptap/extension-table-header';
+import { TableCell } from '@tiptap/extension-table-cell';
+import {
+  Box,
+  IconButton,
+  TextField,
+  Typography,
+  Tooltip,
+  CircularProgress,
+  Select,
+  MenuItem,
+  Divider,
+  Menu,
+  Popover,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+} from '@mui/material';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatItalicIcon from '@mui/icons-material/FormatItalic';
 import FormatUnderlinedIcon from '@mui/icons-material/FormatUnderlined';
 import StrikethroughSIcon from '@mui/icons-material/StrikethroughS';
+import SubscriptIcon from '@mui/icons-material/Subscript';
+import SuperscriptIcon from '@mui/icons-material/Superscript';
 import FormatColorTextIcon from '@mui/icons-material/FormatColorText';
 import FormatColorFillIcon from '@mui/icons-material/FormatColorFill';
 import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
@@ -25,28 +50,49 @@ import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import HorizontalRuleIcon from '@mui/icons-material/HorizontalRule';
 import LinkIcon from '@mui/icons-material/Link';
 import ImageIcon from '@mui/icons-material/Image';
+import TableChartIcon from '@mui/icons-material/TableChart';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
 import FormatClearIcon from '@mui/icons-material/FormatClear';
 import CodeIcon from '@mui/icons-material/Code';
 import EditIcon from '@mui/icons-material/Edit';
+import FunctionsIcon from '@mui/icons-material/Functions';
+import FullscreenIcon from '@mui/icons-material/Fullscreen';
+import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
+import FindReplaceIcon from '@mui/icons-material/FindReplace';
+import PrintIcon from '@mui/icons-material/Print';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 
 const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem('auth')}` });
 
-// Standalone WYSIWYG + raw-HTML-source editor, built directly on the same
-// TipTap packages ra-input-rich-text itself uses (StarterKit/Underline/Link/
-// TextStyle/Color/Highlight/TextAlign/Image) rather than importing
-// RichTextInput from ra-input-rich-text, since that component's useInput()
-// hook requires a react-admin <Form> context - HomeContentEditor.tsx (and
-// its siblings) are plain useState/fetch pages, not react-admin
-// <SimpleForm> pages, so there's no such context here.
+// Special characters a Joomla/TinyMCE "Sonderzeichen" picker typically
+// offers - common typographic/currency/math symbols, not a full Unicode
+// table.
+const SPECIAL_CHARS = [
+  '©', '®', '™', '€', '£', '¥', '¢', '§', '¶', '†', '‡', '•', '…', '‰',
+  '′', '″', '‹', '›', '«', '»', '–', '—', '¡', '¿', '×', '÷', '±', '≠',
+  '≤', '≥', '∞', '√', '∑', '∏', 'α', 'β', 'γ', 'δ', 'Ω', 'π', '¼', '½', '¾',
+];
+
+// Standalone WYSIWYG + raw-HTML-source editor, built directly on TipTap
+// (the same packages ra-input-rich-text itself uses, plus Table/Subscript/
+// Superscript) rather than importing RichTextInput from ra-input-rich-text,
+// since that component's useInput() hook requires a react-admin <Form>
+// context - HomeContentEditor.tsx (and its siblings) are plain useState/
+// fetch pages, not react-admin <SimpleForm> pages, so there's no such
+// context here.
 //
-// The "HTML-Code" toggle is the one thing ra-input-rich-text has no
-// equivalent for out of the box - it's the Joomla "Editor an/aus" button a
-// client specifically asked to be able to reproduce, swapping the canvas
-// for a plain textarea bound to the exact same HTML string, so arbitrary
-// style="..."/class="..." can be typed directly. SafeHtml (which renders
-// every field this feeds) already allows both attributes through DOMPurify.
+// This replaced an attempt at using the Unlayer drag-and-drop "Seiten"
+// editor for free-form page bodies: Unlayer's canvas runs in an isolated
+// iframe that never loads this site's own CSS (so anything beyond
+// Unlayer's own built-in blocks looked broken while editing even though it
+// rendered fine once published), and hand-building its internal design
+// JSON for a migrated page crashed the whole admin app the moment anything
+// touched it (missing internal bookkeeping fields Unlayer expects - see
+// Pages.tsx's own history for the exact failure). A single full-featured
+// text editor matching Joomla's real TinyMCE toolbar - including a raw
+// HTML/CSS source view - sidesteps both problems entirely: everything
+// renders through this app's own CSS because it never leaves this app.
 interface RichHtmlInputProps {
   label: string;
   value: string;
@@ -62,7 +108,7 @@ const ToolbarButton = ({
   children,
 }: {
   active?: boolean;
-  onClick: () => void;
+  onClick: (e: React.MouseEvent<HTMLElement>) => void;
   title: string;
   children: React.ReactNode;
 }) => (
@@ -83,6 +129,12 @@ const ToolbarDivider = () => <Divider orientation="vertical" flexItem sx={{ mx: 
 export const RichHtmlInput = ({ label, value, onChange, helperText, minRows = 6 }: RichHtmlInputProps) => {
   const [htmlMode, setHtmlMode] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [tableMenuAnchor, setTableMenuAnchor] = useState<HTMLElement | null>(null);
+  const [charsAnchor, setCharsAnchor] = useState<HTMLElement | null>(null);
+  const [findReplaceOpen, setFindReplaceOpen] = useState(false);
+  const [findText, setFindText] = useState('');
+  const [replaceText, setReplaceText] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const colorInputRef = useRef<HTMLInputElement>(null);
   const highlightInputRef = useRef<HTMLInputElement>(null);
@@ -97,6 +149,12 @@ export const RichHtmlInput = ({ label, value, onChange, helperText, minRows = 6 
       Color,
       Highlight.configure({ multicolor: true }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      Subscript,
+      Superscript,
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content: value,
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
@@ -104,7 +162,8 @@ export const RichHtmlInput = ({ label, value, onChange, helperText, minRows = 6 
 
   // Keeps the canvas in sync whenever `value` changes from outside the
   // editor's own typing - loading fresh data, or coming back from HTML
-  // mode after the admin edited the raw source directly.
+  // mode / Suchen & Ersetzen after the admin edited the raw source/text
+  // directly.
   useEffect(() => {
     if (!editor) return;
     if (editor.getHTML() !== value) {
@@ -148,31 +207,86 @@ export const RichHtmlInput = ({ label, value, onChange, helperText, minRows = 6 
     }
   };
 
+  const insertDateTime = () => {
+    const text = new Date().toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' });
+    editor?.chain().focus().insertContent(text).run();
+  };
+
+  // Opens a new window with just this field's current HTML (plus the
+  // site's own luxury-page typography, so headings/paragraphs/images don't
+  // print as unstyled text) and triggers the browser's print dialog -
+  // closest equivalent to Joomla's toolbar "Drucken" button for a single
+  // field rather than the whole admin page.
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
+    if (!printWindow) return;
+    printWindow.document.write(`<!DOCTYPE html><html><head><title>${label || 'Inhalt'}</title>
+      <style>body{font-family:sans-serif;max-width:800px;margin:2rem auto;padding:0 1rem;line-height:1.6;}
+      img{max-width:100%;} table{border-collapse:collapse;width:100%;} td,th{border:1px solid #ccc;padding:6px;}</style>
+      </head><body>${editor?.getHTML() || ''}</body></html>`);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  };
+
+  // Simple whole-field text replace, not a navigable find/highlight like a
+  // full ProseMirror search plugin would give - operates on the raw HTML
+  // string directly (so formatting outside the matched text is untouched)
+  // rather than through editor commands, since ProseMirror has no built-in
+  // "replace this substring" API. Good enough for "fix a typo everywhere on
+  // this page" without pulling in a dedicated search extension.
+  const handleReplaceAll = () => {
+    if (!findText) return;
+    const occurrences = value.split(findText).length - 1;
+    const updated = value.split(findText).join(replaceText);
+    onChange(updated);
+    setFindReplaceOpen(false);
+    window.alert(occurrences > 0 ? `${occurrences} Stelle(n) ersetzt.` : 'Kein Treffer gefunden.');
+  };
+
+  const insertTable = () => {
+    editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+    setTableMenuAnchor(null);
+  };
+
   return (
-    <Box sx={{ mb: 2 }}>
+    <Box
+      sx={
+        fullscreen
+          ? { position: 'fixed', inset: 0, zIndex: 1300, bgcolor: 'white', p: 2, overflow: 'auto' }
+          : { mb: 2 }
+      }
+    >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
         <Typography variant="subtitle2" sx={{ color: '#666' }}>{label}</Typography>
-        <IconButton
-          size="small"
-          onClick={() => setHtmlMode((m) => !m)}
-          title={htmlMode ? 'Zurück zum Editor' : 'HTML-Code bearbeiten'}
-        >
-          {htmlMode ? <EditIcon fontSize="small" /> : <CodeIcon fontSize="small" />}
-        </IconButton>
+        <Box sx={{ display: 'flex', gap: 0.5 }}>
+          <Tooltip title={fullscreen ? 'Vollbild verlassen' : 'Vollbild'}>
+            <IconButton size="small" onClick={() => setFullscreen((f) => !f)}>
+              {fullscreen ? <FullscreenExitIcon fontSize="small" /> : <FullscreenIcon fontSize="small" />}
+            </IconButton>
+          </Tooltip>
+          <IconButton
+            size="small"
+            onClick={() => setHtmlMode((m) => !m)}
+            title={htmlMode ? 'Zurück zum Editor' : 'HTML-Code bearbeiten (Editor an/aus)'}
+          >
+            {htmlMode ? <EditIcon fontSize="small" /> : <CodeIcon fontSize="small" />}
+          </IconButton>
+        </Box>
       </Box>
 
       {htmlMode ? (
         <TextField
           fullWidth
           multiline
-          minRows={minRows}
+          minRows={fullscreen ? 30 : minRows}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           sx={{ fontFamily: 'monospace', '& textarea': { fontFamily: 'monospace', fontSize: 13 } }}
-          helperText={helperText || 'Rohes HTML - z.B. <p style="color:#c00; font-size:18px" class="meine-klasse">Text</p>'}
+          helperText={helperText || 'Rohes HTML/CSS - z.B. <p style="color:#c00; font-size:18px" class="meine-klasse">Text</p>'}
         />
       ) : (
-        <Box sx={{ border: '1px solid #c4c4c4', borderRadius: 1 }}>
+        <Box sx={{ border: '1px solid #c4c4c4', borderRadius: 1, display: 'flex', flexDirection: 'column', height: fullscreen ? 'calc(100% - 50px)' : 'auto' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, p: 0.5, borderBottom: '1px solid #eee', flexWrap: 'wrap' }}>
             <ToolbarButton title="Rückgängig" onClick={() => editor?.chain().focus().undo().run()}>
               <UndoIcon fontSize="small" />
@@ -207,6 +321,12 @@ export const RichHtmlInput = ({ label, value, onChange, helperText, minRows = 6 
             </ToolbarButton>
             <ToolbarButton title="Durchgestrichen" active={editor?.isActive('strike')} onClick={() => editor?.chain().focus().toggleStrike().run()}>
               <StrikethroughSIcon fontSize="small" />
+            </ToolbarButton>
+            <ToolbarButton title="Tiefgestellt" active={editor?.isActive('subscript')} onClick={() => editor?.chain().focus().toggleSubscript().run()}>
+              <SubscriptIcon fontSize="small" />
+            </ToolbarButton>
+            <ToolbarButton title="Hochgestellt" active={editor?.isActive('superscript')} onClick={() => editor?.chain().focus().toggleSuperscript().run()}>
+              <SuperscriptIcon fontSize="small" />
             </ToolbarButton>
             <ToolbarButton title="Textfarbe" onClick={() => colorInputRef.current?.click()}>
               <FormatColorTextIcon fontSize="small" />
@@ -262,6 +382,47 @@ export const RichHtmlInput = ({ label, value, onChange, helperText, minRows = 6 
               {uploading ? <CircularProgress size={16} /> : <ImageIcon fontSize="small" />}
             </ToolbarButton>
             <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={handleImageUpload} />
+            <ToolbarButton title="Tabelle" onClick={(e) => setTableMenuAnchor(e.currentTarget)}>
+              <TableChartIcon fontSize="small" />
+            </ToolbarButton>
+            <Menu anchorEl={tableMenuAnchor} open={!!tableMenuAnchor} onClose={() => setTableMenuAnchor(null)}>
+              <MenuItem onClick={insertTable}>Tabelle einfügen (3×3)</MenuItem>
+              <Divider />
+              <MenuItem onClick={() => { editor?.chain().focus().addColumnAfter().run(); setTableMenuAnchor(null); }}>Spalte danach einfügen</MenuItem>
+              <MenuItem onClick={() => { editor?.chain().focus().deleteColumn().run(); setTableMenuAnchor(null); }}>Spalte löschen</MenuItem>
+              <MenuItem onClick={() => { editor?.chain().focus().addRowAfter().run(); setTableMenuAnchor(null); }}>Zeile danach einfügen</MenuItem>
+              <MenuItem onClick={() => { editor?.chain().focus().deleteRow().run(); setTableMenuAnchor(null); }}>Zeile löschen</MenuItem>
+              <Divider />
+              <MenuItem onClick={() => { editor?.chain().focus().deleteTable().run(); setTableMenuAnchor(null); }}>Tabelle löschen</MenuItem>
+            </Menu>
+            <ToolbarButton title="Sonderzeichen" onClick={(e) => setCharsAnchor(e.currentTarget)}>
+              <FunctionsIcon fontSize="small" />
+            </ToolbarButton>
+            <Popover anchorEl={charsAnchor} open={!!charsAnchor} onClose={() => setCharsAnchor(null)}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(9, 1fr)', gap: 0.5, p: 1, maxWidth: 320 }}>
+                {SPECIAL_CHARS.map((ch) => (
+                  <Button
+                    key={ch}
+                    size="small"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => { editor?.chain().focus().insertContent(ch).run(); setCharsAnchor(null); }}
+                    sx={{ minWidth: 0, p: 0.5, fontSize: 16 }}
+                  >
+                    {ch}
+                  </Button>
+                ))}
+              </Box>
+            </Popover>
+            <ToolbarDivider />
+            <ToolbarButton title="Suchen & Ersetzen" onClick={() => setFindReplaceOpen(true)}>
+              <FindReplaceIcon fontSize="small" />
+            </ToolbarButton>
+            <ToolbarButton title="Datum/Uhrzeit einfügen" onClick={insertDateTime}>
+              <AccessTimeIcon fontSize="small" />
+            </ToolbarButton>
+            <ToolbarButton title="Drucken" onClick={handlePrint}>
+              <PrintIcon fontSize="small" />
+            </ToolbarButton>
             <ToolbarDivider />
             <ToolbarButton title="Formatierung entfernen" onClick={() => editor?.chain().focus().clearNodes().unsetAllMarks().run()}>
               <FormatClearIcon fontSize="small" />
@@ -271,6 +432,8 @@ export const RichHtmlInput = ({ label, value, onChange, helperText, minRows = 6 
             sx={{
               p: 1.5,
               minHeight: 80,
+              flex: fullscreen ? 1 : undefined,
+              overflow: fullscreen ? 'auto' : undefined,
               cursor: 'text',
               '& .ProseMirror': { outline: 'none' },
               '& a': { color: '#428bca' },
@@ -278,6 +441,9 @@ export const RichHtmlInput = ({ label, value, onChange, helperText, minRows = 6 
               '& blockquote': { borderLeft: '3px solid #ccc', pl: 2, ml: 0, color: '#666', fontStyle: 'italic' },
               '& hr': { border: 'none', borderTop: '1px solid #ddd', my: 2 },
               '& mark': { borderRadius: '2px', px: '2px' },
+              '& table': { borderCollapse: 'collapse', width: '100%', my: 1 },
+              '& td, & th': { border: '1px solid #ccc', padding: '6px 8px', position: 'relative' },
+              '& th': { bgcolor: '#f5f5f5', fontWeight: 600 },
             }}
             onClick={() => editor?.commands.focus()}
           >
@@ -290,6 +456,21 @@ export const RichHtmlInput = ({ label, value, onChange, helperText, minRows = 6 
           {helperText}
         </Typography>
       )}
+
+      <Dialog open={findReplaceOpen} onClose={() => setFindReplaceOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Suchen & Ersetzen</DialogTitle>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+          <TextField label="Suchen" value={findText} onChange={(e) => setFindText(e.target.value)} fullWidth autoFocus />
+          <TextField label="Ersetzen durch" value={replaceText} onChange={(e) => setReplaceText(e.target.value)} fullWidth />
+          <Typography variant="caption" color="text.secondary">
+            Ersetzt alle Vorkommen im HTML-Text (keine einzelne Navigation wie "weitersuchen").
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setFindReplaceOpen(false)}>Abbrechen</Button>
+          <Button variant="contained" onClick={handleReplaceAll} disabled={!findText}>Alle ersetzen</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

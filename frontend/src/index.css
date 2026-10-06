@@ -635,6 +635,22 @@ body.admin-root .RaBulkActionsToolbar-root {
   margin-bottom: 1.5rem;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
 }
+.home-body-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+.home-body-content td,
+.home-body-content th {
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem 0.75rem;
+  color: #6b7280;
+}
+.home-body-content th {
+  background: #f9fafb;
+  font-weight: 600;
+  color: var(--color-luxury-dark);
+}
 
 /* Gelände detail articles (/infos/gelaende/:slug) carry verbatim raw HTML
    transcribed from the old Joomla site, which used Bootstrap 2's
