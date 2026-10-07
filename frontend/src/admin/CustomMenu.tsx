@@ -33,7 +33,6 @@ import DynamicFormIcon from '@mui/icons-material/DynamicForm';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import TableChartIcon from '@mui/icons-material/TableChart';
-import PaymentIcon from '@mui/icons-material/Payment';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ExtensionIcon from '@mui/icons-material/Extension'; // NEW - "Komponenten" section icon
 import WebIcon from '@mui/icons-material/Web'; // NEW - "Seiten" link icon
@@ -76,7 +75,6 @@ const EVENT_ITEMS: Item[] = [
     { label: 'Veranstalter', to: '/admin/organizers', icon: <BadgeIcon fontSize="small" /> },
     { label: 'Kategorien', to: '/admin/categories', icon: <CategoryIcon fontSize="small" /> },
     { label: 'Buchungen', to: '/admin/bookings', icon: <BookOnlineIcon fontSize="small" /> },
-    { label: 'PayPal-Einstellungen', to: '/admin/payment-config', icon: <PaymentIcon fontSize="small" /> },
     { label: 'Einstellungen', to: '/admin/settings-config', icon: <SettingsIcon fontSize="small" /> },
 ];
 

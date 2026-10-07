@@ -340,26 +340,6 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
 
       if (res.ok) {
         const data = await res.json();
-        
-        if (formData.paymentMethod === 'PayPal') {
-          try {
-            const paymentRes = await fetch('/api/payments/create-session', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ bookingId: data.id, paymentMethod: formData.paymentMethod })
-            });
-            const paymentData = await paymentRes.json();
-            if (paymentData.url) {
-              window.location.href = paymentData.url;
-              return; // Halt further execution, as we are redirecting
-            } else {
-              alert('Fehler bei der Zahlungseinleitung: ' + paymentData.message);
-            }
-          } catch (err) {
-            console.error(err);
-            alert('Netzwerkfehler bei der Zahlungseinleitung.');
-          }
-        }
 
         setBookingId(data.id.split('-')[0].toUpperCase()); // Shortened display ID
         setBookingStatus(data.status);
@@ -615,7 +595,6 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
                     ) : (
                       <>
                         <option value="Bitte auswählen">Bitte auswählen</option>
-                        <option value="PayPal">PayPal</option>
                         <option value="Gutschein">Gutschein</option>
                         <option value="Überweisung">Überweisung</option>
                         <option value="Barzahlung">Barzahlung vor Ort</option>

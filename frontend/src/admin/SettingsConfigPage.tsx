@@ -21,7 +21,7 @@ import { isSessionExpiredError } from './sessionExpiry';
 // this site and no equivalent anywhere in the new app yet. The rest of
 // old's settings were confirmed either dead (cron jobs all disabled on the
 // real site), already-correct-and-hardcoded (CSV export charset/separator),
-// or covered by an existing dedicated page (PayPal, AGB legal text).
+// or covered by an existing dedicated page (AGB legal text).
 export const SettingsConfigPage = () => {
     const notify = useNotify();
     const [loading, setLoading] = useState(true);

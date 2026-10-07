@@ -106,7 +106,6 @@ import { EventStatistics } from './EventStatistics';
 import { Import } from './Import';
 import { EcwidConfigPage } from './EcwidConfigPage';
 import { CookieConsentConfigPage } from './CookieConsentConfigPage';
-import { PaymentConfigPage } from './PaymentConfigPage';
 import { SettingsConfigPage } from './SettingsConfigPage';
 import { LegalPageList, LegalPageEdit } from './LegalPages';
 import { UserList, UserEdit, UserCreate } from './Users';
@@ -303,7 +302,6 @@ export const AdminApp = () => {
             <Route path="/ecwid-config" element={<Authenticated><EcwidConfigPage /></Authenticated>} />
             <Route path="/pagemedia" element={<Authenticated><PageMediaConfigPage /></Authenticated>} />
             <Route path="/cookie-consent" element={<Authenticated><CookieConsentConfigPage /></Authenticated>} />
-            <Route path="/payment-config" element={<Authenticated><PaymentConfigPage /></Authenticated>} />
             <Route path="/settings-config" element={<Authenticated><SettingsConfigPage /></Authenticated>} />
             <Route path="/comment-settings" element={<Authenticated><CommentSettingsPage /></Authenticated>} />
             {/* Redirect old newsletter routes */}

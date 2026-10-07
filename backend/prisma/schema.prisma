@@ -226,10 +226,9 @@ model Booking {
   // already reads it from there; this is the authoritative copy.
   voucherCode          String?
   // Old Matukio's matukio_bookings.payment_plugin_data - the raw gateway
-  // response, kept for dispute/refund troubleshooting (e.g. "PayPal says X
-  // was captured, what did they actually send us back?"). Populated from
-  // PayPal's OrdersCaptureRequest result in payments.routes.ts; stays null
-  // for bookings paid by any other method.
+  // response, kept for dispute/refund troubleshooting on bookings paid
+  // while PayPal was still integrated. PayPal has since been removed, so
+  // this is historical-only now and never populated for new bookings.
   paymentGatewayResponse Json?
   event           Event         @relation(fields: [eventId], references: [id])
   user            User?         @relation(fields: [userId], references: [id])
@@ -1008,8 +1007,6 @@ model LegalPage {
   updatedAt DateTime @updatedAt
 }
 
-// PayPal credentials - clientSecret is stored encrypted at rest (see
-// utils/crypto.ts) and is never sent back to the browser in plaintext.
 model OtpCode {
   id        String    @id @default(uuid())
   email     String
@@ -1020,14 +1017,6 @@ model OtpCode {
   createdAt DateTime  @default(now())
 
   @@index([email, purpose])
-}
-
-model PaymentConfig {
-  id                 String   @id @default("default")
-  environment        String   @default("sandbox") // "sandbox" or "live"
-  paypalClientId     String?
-  paypalClientSecret String?  @db.Text
-  updatedAt          DateTime @updatedAt
 }
 
 // Old Matukio's real, live "Settings" admin page (JComponentHelper::

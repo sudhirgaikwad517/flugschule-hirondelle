@@ -914,7 +914,6 @@ const AdminActions = () => {
                     <InputLabel>Zahlungsmethode</InputLabel>
                     <Select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} label="Zahlungsmethode">
                         <MenuItem value="Bitte auswählen">Bitte auswählen</MenuItem>
-                        <MenuItem value="PayPal">PayPal</MenuItem>
                         <MenuItem value="Gutschein">Gutschein</MenuItem>
                         <MenuItem value="Überweisung">Überweisung</MenuItem>
                         <MenuItem value="Barzahlung">Barzahlung vor Ort</MenuItem>

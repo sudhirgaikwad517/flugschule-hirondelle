@@ -11,7 +11,7 @@ router.use((req, res, next) => {
 });
 
 // Never send the SMTP/IMAP passwords back to the client - only whether one
-// is set, same convention as PaymentConfigPage's PayPal secret handling.
+// is set.
 function maskSmtpPass<T extends { smtpPass?: string | null; bounceImapPass?: string | null }>(config: T) {
   const { smtpPass, bounceImapPass, ...rest } = config;
   return { ...rest, hasSmtpPass: !!smtpPass, hasBounceImapPass: !!bounceImapPass };
