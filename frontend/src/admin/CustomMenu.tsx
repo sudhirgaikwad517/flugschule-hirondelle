@@ -85,7 +85,9 @@ const BOTTOM_ITEMS: Item[] = [
     // "Neuigkeiten / Blog" (-> /admin/news) hidden from the sidebar on
     // request - route/data untouched, just not linked to from here anymore.
     { label: 'Download Kategorien', to: '/admin/downloadcategories', icon: <FolderIcon fontSize="small" /> },
-    { label: 'Link Kategorien', to: '/admin/weblinkcategories', icon: <FolderIcon fontSize="small" /> },
+    // "Link Kategorien" (-> /admin/weblinkcategories) hidden from the
+    // sidebar on request - route/data untouched, just not linked to from
+    // here anymore.
     // "Links" (-> /admin/links) hidden from the sidebar on request - route/
     // data untouched, just not linked to from here anymore.
     { label: 'Werbebanner', to: '/admin/banners', icon: <ViewCarouselIcon fontSize="small" /> },

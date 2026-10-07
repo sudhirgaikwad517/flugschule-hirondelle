@@ -155,7 +155,7 @@ export const FixedPageRouter = () => {
     return () => { cancelled = true; };
   }, [slug]);
 
-  const resolved = fetched?.slug === slug ? fetched.resolved : undefined;
+  const resolved = fetched && fetched.slug === slug ? fetched.resolved : undefined;
 
   if (resolved === undefined) return null;
 
