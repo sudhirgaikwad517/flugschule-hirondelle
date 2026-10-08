@@ -502,34 +502,6 @@ export const Header = () => {
 
               </div>
 
-              {/* Bottom Contact (Matches reference exactly) */}
-              <div className="mt-16 pt-8 text-gray-800 font-light">
-                <p className="font-luxury text-[20px] text-gray-800 mb-3">Flugschule Hirondelle</p>
-                <p className="text-[14px] leading-relaxed mb-4 text-gray-600">
-                  Weinheim, 69469,<br />
-                  Deutschland
-                </p>
-                <Link to="/infos#kontakt" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-bold text-gray-800 hover:text-hirondelle-blue transition-colors border-b border-gray-300 hover:border-hirondelle-blue pb-1 mb-10 inline-block uppercase tracking-wider">
-                  ROUTE BERECHNEN
-                </Link>
-
-                <p className="text-[15px] font-medium leading-relaxed mb-1">
-                  +49 6201 12345
-                </p>
-                <p className="text-[15px] leading-relaxed mb-8 text-gray-600">
-                  info@flugschule-hirondelle.de
-                </p>
-
-                <div className="flex gap-4 mb-8">
-                  <a href="https://www.facebook.com/fshirondelle" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="text-gray-500 hover:text-hirondelle-blue transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg></a>
-                  <a href="https://www.youtube.com/channel/UCOwo0Wh2zoX_7nyArBdk_IQ/videos" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="text-gray-500 hover:text-hirondelle-blue transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17" /><path d="m10 15 5-3-5-3z" /></svg></a>
-                </div>
-
-                <p className="text-[13px] text-gray-500 font-medium">
-                  &copy; Copyright Flugschule Hirondelle.
-                </p>
-              </div>
-
             </div>
           </div>
         </div>
