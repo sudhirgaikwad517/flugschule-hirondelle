@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Menu, X, ChevronDown, ChevronRight } from 'lucide-react';
 
 // Shape returned by GET /api/menu/public (MenuItem + published MenuSubItem[]).
@@ -14,6 +14,75 @@ interface MenuNavItem extends MenuSubNavItem {
   subItems: MenuSubNavItem[];
 }
 
+// A dropdown's :hover reveal (used below) never fires on a touch device -
+// there's no cursor to hover with, so tapping a dropdown trigger on an iPad
+// either did nothing (SEITEN/KONTO, no href at all) or just navigated
+// straight to the item's own link with the submenu never shown
+// (NavDropdown). This tracks an explicit tap-opened state per dropdown
+// instance on top of the existing hover behaviour (which keeps working
+// unchanged for a real mouse) - closed again by tapping its own trigger a
+// second time, tapping anywhere outside it, or navigating to a new route.
+function useTapToggleDropdown() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handlePointerDown = (e: PointerEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [open]);
+
+  return { open, setOpen, ref };
+}
+
+// The chevron is a separate tap target from the label (a sibling <button>,
+// not nested inside the <Link>) specifically so a touch device can tap it
+// to open the submenu without triggering the label's own navigation - see
+// useTapToggleDropdown above. Visually identical to before: the wrapping
+// div carries the exact same classes getNavClass used to put directly on
+// the <Link>, so the label and chevron still render as one pill with one
+// shared hover background.
+const DropdownTrigger = ({
+  item,
+  getNavClass,
+  linkProps,
+  open,
+  onToggle,
+}: {
+  item: MenuNavItem;
+  getNavClass: (path: string) => string;
+  linkProps: { target?: string; rel?: string };
+  open: boolean;
+  onToggle: () => void;
+}) => (
+  <div className={getNavClass(item.url)}>
+    <Link to={item.url} {...linkProps}>
+      {item.label.toUpperCase()}
+    </Link>
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onToggle();
+      }}
+      aria-label={`${item.label} Untermenü ${open ? 'schließen' : 'öffnen'}`}
+      aria-expanded={open}
+      className="flex items-center"
+    >
+      <ChevronDown className={`w-2.5 h-2.5 lg:w-3 lg:h-3 transition-transform ${open ? 'rotate-180' : ''}`} />
+    </button>
+  </div>
+);
+
 // One admin-managed top-level nav entry: a hover dropdown when it has
 // sub-items, otherwise a plain link - replaces what used to be individually
 // hardcoded Ausbildung/Performance/Reisen/Service/Infos blocks below. When
@@ -24,6 +93,7 @@ interface MenuNavItem extends MenuSubNavItem {
 // dropdown is centered under the item (not left/right-pinned like the old
 // per-item markup) so it never depends on where admin-managed items land.
 const NavDropdown = ({ item, getNavClass }: { item: MenuNavItem; getNavClass: (path: string) => string }) => {
+  const { open, setOpen, ref } = useTapToggleDropdown();
   const linkProps = item.target === '_blank' ? { target: '_blank', rel: 'noopener noreferrer' } : {};
   if (item.subItems.length === 0) {
     return (
@@ -34,14 +104,13 @@ const NavDropdown = ({ item, getNavClass }: { item: MenuNavItem; getNavClass: (p
   }
 
   const isImageMenu = item.subItems.length > 0 && item.subItems.every((sub) => !!sub.imageUrl);
+  const toggle = () => setOpen((o) => !o);
 
   if (isImageMenu) {
     return (
-      <div className="group h-[40px] flex items-center">
-        <Link to={item.url} className={getNavClass(item.url)} {...linkProps}>
-          {item.label.toUpperCase()} <ChevronDown className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
-        </Link>
-        <div className="absolute top-[40px] left-0 w-full bg-luxury-gold border-t border-black/10 hidden group-hover:block transition-all shadow-2xl z-50">
+      <div ref={ref} className="group h-[40px] flex items-center">
+        <DropdownTrigger item={item} getNavClass={getNavClass} linkProps={linkProps} open={open} onToggle={toggle} />
+        <div className={`absolute top-[40px] left-0 w-full bg-luxury-gold border-t border-black/10 transition-all shadow-2xl z-50 ${open ? 'block' : 'hidden group-hover:block'}`}>
           <div className="container mx-auto max-w-[1600px] px-8 py-8">
             <div className="flex gap-3">
               {item.subItems.map((sub) => {
@@ -50,6 +119,7 @@ const NavDropdown = ({ item, getNavClass }: { item: MenuNavItem; getNavClass: (p
                   <Link
                     to={sub.url}
                     key={sub.id}
+                    onClick={() => setOpen(false)}
                     className="block flex-1 min-w-0 text-center group/tour cursor-pointer"
                     {...subLinkProps}
                   >
@@ -68,17 +138,15 @@ const NavDropdown = ({ item, getNavClass }: { item: MenuNavItem; getNavClass: (p
   }
 
   return (
-    <div className="relative group h-[40px] flex items-center">
-      <Link to={item.url} className={getNavClass(item.url)} {...linkProps}>
-        {item.label.toUpperCase()} <ChevronDown className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
-      </Link>
-      <div className="absolute top-[40px] left-1/2 -translate-x-1/2 w-64 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl z-50">
+    <div ref={ref} className="relative group h-[40px] flex items-center">
+      <DropdownTrigger item={item} getNavClass={getNavClass} linkProps={linkProps} open={open} onToggle={toggle} />
+      <div className={`absolute top-[40px] left-1/2 -translate-x-1/2 w-64 bg-luxury-gold border-t border-black/10 px-0 py-4 shadow-2xl z-50 ${open ? 'block' : 'hidden group-hover:block'}`}>
         <ul className="flex flex-col">
           {item.subItems.map((sub) => {
             const subLinkProps = sub.target === '_blank' ? { target: '_blank', rel: 'noopener noreferrer' } : {};
             return (
               <li key={sub.id}>
-                <Link to={sub.url} className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10" {...subLinkProps}>
+                <Link to={sub.url} onClick={() => setOpen(false)} className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10" {...subLinkProps}>
                   {sub.label}
                 </Link>
               </li>
@@ -113,6 +181,12 @@ export const Header = () => {
   };
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // SEITEN and the logged-in KONTO pill have no navigable link of their own
+  // (unlike NavDropdown's items) - the whole trigger just toggles, same
+  // tap-to-open behaviour as useTapToggleDropdown above.
+  const seitenDropdown = useTapToggleDropdown();
+  const kontoDropdown = useTapToggleDropdown();
 
   // Toggle menu only below `md` (768px, phones) - iPad portrait and up
   // always shows the full desktop-style nav, per explicit request. A prior
@@ -249,15 +323,20 @@ export const Header = () => {
 
                 {/* Seiten Dropdown - admin-created pages (Admin > Seiten), only rendered when at least one exists */}
                 {dynamicPages.length > 0 && (
-                  <div className="relative group h-[40px] flex items-center">
-                    <span className={getNavClass('__seiten__')}>
-                      SEITEN <ChevronDown className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
-                    </span>
-                    <div className="absolute top-[40px] right-0 w-64 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl z-50">
+                  <div ref={seitenDropdown.ref} className="relative group h-[40px] flex items-center">
+                    <button
+                      type="button"
+                      onClick={() => seitenDropdown.setOpen((o) => !o)}
+                      aria-expanded={seitenDropdown.open}
+                      className={getNavClass('__seiten__')}
+                    >
+                      SEITEN <ChevronDown className={`w-2.5 h-2.5 lg:w-3 lg:h-3 transition-transform ${seitenDropdown.open ? 'rotate-180' : ''}`} />
+                    </button>
+                    <div className={`absolute top-[40px] right-0 w-64 bg-luxury-gold border-t border-black/10 px-0 py-4 shadow-2xl z-50 ${seitenDropdown.open ? 'block' : 'hidden group-hover:block'}`}>
                       <ul className="flex flex-col">
                         {dynamicPages.map((page) => (
                           <li key={page.slug}>
-                            <Link to={`/${page.slug}`} className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">
+                            <Link to={`/${page.slug}`} onClick={() => seitenDropdown.setOpen(false)} className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">
                               {page.navLabel || page.title}
                             </Link>
                           </li>
@@ -272,14 +351,19 @@ export const Header = () => {
                 </Link>
 
                 {user ? (
-                  <div className="relative group h-[40px] flex items-center ml-2">
-                    <span className="cursor-pointer border border-[#394553] text-[#394553] text-[9px] lg:text-[11px] uppercase tracking-[0.1em] lg:tracking-[0.15em] font-semibold px-2.5 py-1 lg:px-4 lg:py-2 hover:bg-[#394553] hover:text-white transition-all rounded-sm flex items-center gap-1">
-                      {user.name ? user.name.split(' ')[0] : 'KONTO'} <ChevronDown className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
-                    </span>
-                    <div className="absolute top-[40px] right-0 w-48 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl z-50">
+                  <div ref={kontoDropdown.ref} className="relative group h-[40px] flex items-center ml-2">
+                    <button
+                      type="button"
+                      onClick={() => kontoDropdown.setOpen((o) => !o)}
+                      aria-expanded={kontoDropdown.open}
+                      className="cursor-pointer border border-[#394553] text-[#394553] text-[9px] lg:text-[11px] uppercase tracking-[0.1em] lg:tracking-[0.15em] font-semibold px-2.5 py-1 lg:px-4 lg:py-2 hover:bg-[#394553] hover:text-white transition-all rounded-sm flex items-center gap-1"
+                    >
+                      {user.name ? user.name.split(' ')[0] : 'KONTO'} <ChevronDown className={`w-2.5 h-2.5 lg:w-3 lg:h-3 transition-transform ${kontoDropdown.open ? 'rotate-180' : ''}`} />
+                    </button>
+                    <div className={`absolute top-[40px] right-0 w-48 bg-luxury-gold border-t border-black/10 px-0 py-4 shadow-2xl z-50 ${kontoDropdown.open ? 'block' : 'hidden group-hover:block'}`}>
                       <ul className="flex flex-col">
-                        <li><Link to="/profil" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Mein Profil</Link></li>
-                        <li><button onClick={handleLogout} className="block w-full text-left px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Logout</button></li>
+                        <li><Link to="/profil" onClick={() => kontoDropdown.setOpen(false)} className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Mein Profil</Link></li>
+                        <li><button onClick={() => { handleLogout(); kontoDropdown.setOpen(false); }} className="block w-full text-left px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Logout</button></li>
                       </ul>
                     </div>
                   </div>
