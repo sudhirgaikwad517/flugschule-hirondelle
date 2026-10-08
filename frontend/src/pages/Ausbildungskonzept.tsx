@@ -131,46 +131,50 @@ export const Ausbildungskonzept = ({ contentId }: { contentId?: string } = {}) =
                 </p>
               </div>
 
-              {/* Table */}
-              <div className="w-full overflow-hidden mt-4 shadow-sm border border-gray-100">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-200">
-                      <th className="py-3 px-4 text-[#53a8c7] font-semibold text-sm w-[25%]">Kurse/Zeiten</th>
-                      <th className="py-3 px-4 text-[#53a8c7] font-semibold text-sm w-[45%]">Kursinhalt</th>
-                      <th className="py-3 px-4 text-[#53a8c7] font-semibold text-sm w-[30%]">Kursziel</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-sm">
-                    {content.tableRows.map((row, idx) => (
-                      <tr
-                        key={idx}
-                        className={`text-black ${idx < content.tableRows.length - 1 ? 'border-b border-white/20' : ''}`}
-                        style={{ backgroundColor: row.bgColor }}
-                      >
-                        <td className="py-4 px-4 align-top">
-                          {row.name && (
-                            <div className="font-bold">
-                              {row.link ? <Link to={row.link} className="hover:underline">{row.name}</Link> : row.name}
-                            </div>
-                          )}
-                          {row.duration && row.duration.split('\n').map((line, lineIdx) => (
-                            <div key={lineIdx}>{line}</div>
-                          ))}
-                        </td>
-                        <td className="py-4 px-4 align-top">
-                          {row.content}
-                        </td>
-                        <td className="py-4 px-4 align-top">
-                          {row.goal}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
             </div>
+          </div>
+
+          {/* Table - deliberately NOT inside the lg:col-span-7 column above
+              (which only spans ~58% of the page next to the text column) -
+              it fills the full content width on its own row below, matching
+              the old site's real layout instead of being squeezed next to
+              the graphic. */}
+          <div className="w-full overflow-hidden mt-8 shadow-sm border border-gray-100">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="py-3 px-4 text-[#53a8c7] font-semibold text-sm w-[25%]">Kurse/Zeiten</th>
+                  <th className="py-3 px-4 text-[#53a8c7] font-semibold text-sm w-[45%]">Kursinhalt</th>
+                  <th className="py-3 px-4 text-[#53a8c7] font-semibold text-sm w-[30%]">Kursziel</th>
+                </tr>
+              </thead>
+              <tbody className="text-sm">
+                {content.tableRows.map((row, idx) => (
+                  <tr
+                    key={idx}
+                    className={`text-black ${idx < content.tableRows.length - 1 ? 'border-b border-white/20' : ''}`}
+                    style={{ backgroundColor: row.bgColor }}
+                  >
+                    <td className="py-4 px-4 align-top">
+                      {row.name && (
+                        <div className="font-bold">
+                          {row.link ? <Link to={row.link} className="hover:underline">{row.name}</Link> : row.name}
+                        </div>
+                      )}
+                      {row.duration && row.duration.split('\n').map((line, lineIdx) => (
+                        <div key={lineIdx}>{line}</div>
+                      ))}
+                    </td>
+                    <td className="py-4 px-4 align-top">
+                      {row.content}
+                    </td>
+                    <td className="py-4 px-4 align-top">
+                      {row.goal}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
