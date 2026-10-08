@@ -39,7 +39,7 @@ const NavDropdown = ({ item, getNavClass }: { item: MenuNavItem; getNavClass: (p
     return (
       <div className="group h-[40px] flex items-center">
         <Link to={item.url} className={getNavClass(item.url)} {...linkProps}>
-          {item.label.toUpperCase()} <ChevronDown className="w-3 h-3" />
+          {item.label.toUpperCase()} <ChevronDown className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
         </Link>
         <div className="absolute top-[40px] left-0 w-full bg-luxury-gold border-t border-black/10 hidden group-hover:block transition-all shadow-2xl z-50">
           <div className="container mx-auto max-w-[1600px] px-8 py-8">
@@ -70,9 +70,9 @@ const NavDropdown = ({ item, getNavClass }: { item: MenuNavItem; getNavClass: (p
   return (
     <div className="relative group h-[40px] flex items-center">
       <Link to={item.url} className={getNavClass(item.url)} {...linkProps}>
-        {item.label.toUpperCase()} <ChevronDown className="w-3 h-3" />
+        {item.label.toUpperCase()} <ChevronDown className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
       </Link>
-      <div className="absolute top-[40px] left-1/2 -translate-x-1/2 w-64 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl">
+      <div className="absolute top-[40px] left-1/2 -translate-x-1/2 w-64 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl z-50">
         <ul className="flex flex-col">
           {item.subItems.map((sub) => {
             const subLinkProps = sub.target === '_blank' ? { target: '_blank', rel: 'noopener noreferrer' } : {};
@@ -102,7 +102,12 @@ export const Header = () => {
   // so hover still shows the same overlay on every item, active or not.
   const getNavClass = (path: string) => {
     const isActive = path === '/' ? pathname === '/' : pathname.startsWith(path);
-    return `text-[14px] uppercase tracking-widest flex items-center gap-1 text-white pl-2.5 pr-[14px] py-1.5 rounded-md hover:bg-white/20 ${
+    // Tablet/narrow-desktop (md: 768px up to just under lg: 1024px) shrinks
+    // font size, tracking and padding instead of letting items overflow off
+    // the visible edge (what happened before this) or hiding any of them -
+    // widens back out to the original size from lg: up, where there's
+    // always been enough room.
+    return `whitespace-nowrap text-[10px] lg:text-[14px] uppercase tracking-normal lg:tracking-widest flex items-center gap-0.5 lg:gap-1 text-white pl-1.5 pr-2 lg:pl-2.5 lg:pr-[14px] py-1 lg:py-1.5 rounded-md hover:bg-white/20 ${
       isActive ? 'font-bold' : 'font-normal'
     }`;
   };
@@ -224,7 +229,7 @@ export const Header = () => {
                         container) standing in for the "O", sized clearly
                         larger than the surrounding letters and sitting close
                         to them, matching the live site. */}
-                    <span className="w-7 h-7 flex items-center justify-center shrink-0">
+                    <span className="w-5 h-5 lg:w-7 lg:h-7 flex items-center justify-center shrink-0">
                       <img src="/icotitleslide.png" alt="O" className="w-full h-full object-contain" />
                     </span>
                     ME
@@ -246,9 +251,9 @@ export const Header = () => {
                 {dynamicPages.length > 0 && (
                   <div className="relative group h-[40px] flex items-center">
                     <span className={getNavClass('__seiten__')}>
-                      SEITEN <ChevronDown className="w-3 h-3" />
+                      SEITEN <ChevronDown className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
                     </span>
-                    <div className="absolute top-[40px] right-0 w-64 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl">
+                    <div className="absolute top-[40px] right-0 w-64 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl z-50">
                       <ul className="flex flex-col">
                         {dynamicPages.map((page) => (
                           <li key={page.slug}>
@@ -268,10 +273,10 @@ export const Header = () => {
 
                 {user ? (
                   <div className="relative group h-[40px] flex items-center ml-2">
-                    <span className="cursor-pointer border border-[#394553] text-[#394553] text-[11px] uppercase tracking-[0.15em] font-semibold px-4 py-2 hover:bg-[#394553] hover:text-white transition-all rounded-sm flex items-center gap-1">
-                      {user.name ? user.name.split(' ')[0] : 'KONTO'} <ChevronDown className="w-3 h-3" />
+                    <span className="cursor-pointer border border-[#394553] text-[#394553] text-[9px] lg:text-[11px] uppercase tracking-[0.1em] lg:tracking-[0.15em] font-semibold px-2.5 py-1 lg:px-4 lg:py-2 hover:bg-[#394553] hover:text-white transition-all rounded-sm flex items-center gap-1">
+                      {user.name ? user.name.split(' ')[0] : 'KONTO'} <ChevronDown className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
                     </span>
-                    <div className="absolute top-[40px] right-0 w-48 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl">
+                    <div className="absolute top-[40px] right-0 w-48 bg-luxury-gold border-t border-black/10 hidden group-hover:block px-0 py-4 shadow-2xl z-50">
                       <ul className="flex flex-col">
                         <li><Link to="/profil" className="block px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Mein Profil</Link></li>
                         <li><button onClick={handleLogout} className="block w-full text-left px-8 py-3 text-black/70 hover:text-black text-sm transition-colors border-b border-black/10">Logout</button></li>
