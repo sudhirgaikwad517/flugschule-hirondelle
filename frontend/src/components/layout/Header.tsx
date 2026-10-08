@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Menu, X, ChevronDown, ChevronRight } from 'lucide-react';
 
 // Shape returned by GET /api/menu/public (MenuItem + published MenuSubItem[]).
@@ -109,18 +109,11 @@ export const Header = () => {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // The desktop nav's real width depends on admin-managed content (Admin >
-  // Menü item count/label length, whether any Seiten exist, logged-in vs.
-  // guest) - a fixed Tailwind breakpoint (e.g. `xl:`) either switches to the
-  // mobile hamburger too early on a wide-enough window, or too late once an
-  // admin adds a longer label, letting the desktop row visibly overflow/
-  // overlap instead. This measures the nav's own real, tightly-packed
-  // natural width against the space actually available and switches to the
-  // mobile toggle at exactly the point it would otherwise break - see the
-  // measurement clone in the render below.
-  const navContainerRef = useRef<HTMLElement>(null);
-  const navMeasureRef = useRef<HTMLDivElement>(null);
-  const [navFits, setNavFits] = useState(true);
+  // Toggle menu only below `md` (768px, phones) - iPad portrait and up
+  // always shows the full desktop-style nav, per explicit request. A prior
+  // version of this switched based on whether the nav's real admin-managed
+  // content actually fit (regardless of device), which could trigger the
+  // toggle menu on a tablet too; this is a plain breakpoint now.
   const [expandedMobileMenu, setExpandedMobileMenu] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -187,33 +180,6 @@ export const Header = () => {
     };
   }, []);
 
-  // Real-overflow detection for the desktop nav (see navFits' own comment
-  // above) - re-checked on window resize, on real layout changes to the nav
-  // itself (ResizeObserver, e.g. a webfont finishing load and reflowing
-  // text), and whenever the nav's actual content changes.
-  useEffect(() => {
-    const checkFit = () => {
-      const measure = navMeasureRef.current;
-      const container = navContainerRef.current;
-      if (!measure || !container) return;
-      setNavFits(measure.scrollWidth <= container.clientWidth);
-    };
-
-    checkFit();
-    window.addEventListener('resize', checkFit);
-
-    let ro: ResizeObserver | null = null;
-    if (navMeasureRef.current && typeof ResizeObserver !== 'undefined') {
-      ro = new ResizeObserver(checkFit);
-      ro.observe(navMeasureRef.current);
-    }
-
-    return () => {
-      window.removeEventListener('resize', checkFit);
-      ro?.disconnect();
-    };
-  }, [menuItems, dynamicPages, user, pathname]);
-
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -237,57 +203,15 @@ export const Header = () => {
         className={`transition-colors duration-300 h-[40px] flex items-center`}
       >
         <div className="container mx-auto max-w-[1200px] px-4 md:px-8">
-          <nav ref={navContainerRef} className="relative flex items-center justify-end w-full">
+          <nav className="relative flex items-center justify-end w-full">
 
-            {/* Hidden measurement clone - rendered at its own natural,
-                tightly-packed width (never wrapped, never spread out via
-                justify-between) purely so navFits can detect the real
-                minimum width this content needs. Must stay in exact sync
-                with the visible nav below. */}
-            <div
-              ref={navMeasureRef}
-              aria-hidden="true"
-              className="absolute invisible flex items-center pointer-events-none"
-              style={{ width: 'max-content', top: 0, left: 0, whiteSpace: 'nowrap' }}
-            >
-              <Link to="/" className={getNavClass('/')} tabIndex={-1}>
-                <span className="flex items-center justify-center">
-                  H
-                  <span className="w-7 h-7 flex items-center justify-center shrink-0">
-                    <img src="/icotitleslide.png" alt="" className="w-full h-full object-contain" />
-                  </span>
-                  ME
-                </span>
-              </Link>
-              {menuItems.map((item) => (
-                <NavDropdown key={item.id} item={item} getNavClass={getNavClass} />
-              ))}
-              {dynamicPages.length > 0 && (
-                <span className={getNavClass('__seiten__')}>
-                  SEITEN <ChevronDown className="w-3 h-3" />
-                </span>
-              )}
-              <Link to="/shop" className={getNavClass('/shop')} tabIndex={-1}>
-                SHOP
-              </Link>
-              {user ? (
-                <span className="cursor-pointer border border-[#394553] text-[#394553] text-[11px] uppercase tracking-[0.15em] font-semibold px-4 py-2 rounded-sm flex items-center gap-1 ml-2">
-                  {user.name ? user.name.split(' ')[0] : 'KONTO'} <ChevronDown className="w-3 h-3" />
-                </span>
-              ) : (
-                <Link to="/anmeldung" className={getNavClass('/anmeldung')} tabIndex={-1}>
-                  KONTO
-                </Link>
-              )}
-            </div>
-
-            {navFits ? (
-              /* Old site's nav sits inside the same centered max-w-[1200px]
-                  container as the logo and page content below it, with items
-                  spread from that container's left edge to its right edge
-                  (not bunched at one side) - so HOME lines up with the logo
-                  and content edge, matching the old site exactly. */
-              <div className="flex items-center justify-between w-full">
+            {/* Full desktop-style nav - md (768px, iPad portrait) and up.
+                Old site's nav sits inside the same centered max-w-[1200px]
+                container as the logo and page content below it, with items
+                spread from that container's left edge to its right edge
+                (not bunched at one side) - so HOME lines up with the logo
+                and content edge, matching the old site exactly. */}
+            <div className="hidden md:flex items-center justify-between w-full">
 
                 <Link to="/" className={getNavClass('/')}>
                   <span className="flex items-center justify-center">
@@ -361,19 +285,16 @@ export const Header = () => {
                 )}
 
               </div>
-            ) : (
-              /* Mobile Menu Toggle - shown exactly when the real desktop nav
-                  content (measured above) no longer fits, regardless of
-                  viewport width. */
-              <div className="flex items-center justify-end">
-                <button
-                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  className="text-white p-2"
-                >
-                  {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                </button>
-              </div>
-            )}
+
+            {/* Mobile Menu Toggle - below md (phones) only. */}
+            <div className="flex md:hidden items-center justify-end">
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="text-white p-2"
+              >
+                {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
 
           </nav>
         </div>
