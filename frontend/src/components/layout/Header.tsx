@@ -175,7 +175,7 @@ export const Header = () => {
     // the visible edge (what happened before this) or hiding any of them -
     // widens back out to the original size from lg: up, where there's
     // always been enough room.
-    return `whitespace-nowrap text-[11px] lg:text-[14px] uppercase tracking-normal lg:tracking-widest flex items-center gap-0.5 lg:gap-1 text-white pl-1 pr-1.5 lg:pl-2.5 lg:pr-[14px] py-1 lg:py-1.5 rounded-md hover:bg-white/20 ${
+    return `whitespace-nowrap text-[11px] lg:text-[14px] uppercase tracking-normal lg:tracking-widest flex items-center gap-0.5 lg:gap-1 text-white pl-0.5 pr-1 lg:pl-2.5 lg:pr-[14px] py-1 lg:py-1.5 rounded-md hover:bg-white/20 ${
       isActive ? 'font-bold' : 'font-normal'
     }`;
   };
