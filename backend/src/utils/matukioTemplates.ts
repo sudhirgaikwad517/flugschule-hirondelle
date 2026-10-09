@@ -132,8 +132,24 @@ const FRIENDLY_NAMES: Record<string, string> = {
 
 // Splits a semicolon-separated CSV row template into its individual MAT_*
 // tokens (in order), for deriving both the header row and each data row.
+//
+// The seeded default template (templatesConfig.routes.ts) carries old
+// Matukio's own literal single-quoted token syntax verbatim, e.g.
+// "'MAT_BOOKING_NUMBER';'MAT_EVENT_TITLE'" - old's own renderer stripped
+// those quotes before substitution, but this parser didn't, so every
+// token was looked up as e.g. "'MAT_BOOKING_NUMBER'" (quotes included)
+// against buildBookingPlaceholders()'s plain MAT_BOOKING_NUMBER keys,
+// never matched, and silently fell back to printing the raw (quoted)
+// token text in every row instead of the real value - exactly what it
+// looks like when the export is opened and every cell just repeats its
+// own column's placeholder name. Stripping a wrapping quote (and the
+// dangling lone quote old's template also leaves as its final ";'") fixes
+// the lookup and drops that empty trailing column.
 export function parseCsvTemplateTokens(template: string): string[] {
-  return template.split(';').map((t) => t.trim()).filter(Boolean);
+  return template
+    .split(';')
+    .map((t) => t.trim().replace(/^['"]+|['"]+$/g, '').trim())
+    .filter(Boolean);
 }
 
 export function friendlyColumnName(token: string): string {

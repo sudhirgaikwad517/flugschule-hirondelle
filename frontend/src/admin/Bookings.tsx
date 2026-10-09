@@ -188,8 +188,19 @@ const BookingListActions = () => {
 
     const isTrashView = filterValues?.status === 'deleted';
 
+    // Exports (CSV/Excel/participant list/signature list) scope to whichever
+    // rows are checked, same as every other action in this toolbar - the
+    // backend already supports an `ids` filter (buildBookingWhereClause in
+    // bookings.routes.ts), this just never sent it, so an export always
+    // silently ignored the selection and ran against the current list
+    // filter instead. Falls back to that filter only when nothing's
+    // selected, matching "export everything currently shown".
     const buildExportQs = () => {
         const qs = new URLSearchParams();
+        if (selectedIds && selectedIds.length > 0) {
+            qs.set('ids', selectedIds.join(','));
+            return qs;
+        }
         if (filterValues?.eventId) qs.set('eventId', filterValues.eventId);
         if (filterValues?.status) qs.set('status', filterValues.status);
         if (filterValues?.q) qs.set('q', filterValues.q);
