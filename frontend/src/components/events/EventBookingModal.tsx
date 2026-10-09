@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { formatBirthDateDisplay } from '../../utils/birthDate';
 
 interface Ticket {
   id: string;
@@ -116,6 +117,34 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
       setVoucherCode('');
       setVoucherDiscount(null);
       setVoucherMessage(null);
+
+      // Pre-fill the booker's own contact fields from their saved profile
+      // (Mein Profil / /api/auth/me) when logged in, so a returning
+      // customer doesn't have to retype name/address/phone/etc. every
+      // booking - salutation and sizeWeight aren't collected on the
+      // profile page, so those stay blank regardless. Runs after the
+      // blank reset above, not instead of it, so each fresh open still
+      // starts clean before layering in profile data once the fetch
+      // resolves (no flash of a PREVIOUS booking's leftover values).
+      const token = localStorage.getItem('token');
+      if (token) {
+        fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
+          .then(res => (res.ok ? res.json() : null))
+          .then(user => {
+            if (!user) return;
+            setFormData(prev => ({
+              ...prev,
+              fullName: user.name || prev.fullName,
+              birthDate: user.birthDate ? formatBirthDateDisplay(user.birthDate) : prev.birthDate,
+              phone: user.phone || prev.phone,
+              email: user.email || prev.email,
+              street: user.address1 || prev.street,
+              zip: user.postalCode || prev.zip,
+              city: user.location || prev.city,
+            }));
+          })
+          .catch(() => {});
+      }
 
       // Fetch custom fields
       fetch('/api/customFields/public')
