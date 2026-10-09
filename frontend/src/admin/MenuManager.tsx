@@ -123,6 +123,34 @@ export const MenuManager = () => {
   const [publishedAt, setPublishedAt] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
 
+  // --- Mobile-Menü Kontaktangaben (Header.tsx's mobile drawer footer) ---
+  const [contactInfo, setContactInfo] = useState({ siteName: '', addressLine1: '', addressLine2: '', phone: '', email: '' });
+  const [contactLoading, setContactLoading] = useState(true);
+  const [contactSaving, setContactSaving] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/header-contact', { headers: authHeaders() })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setContactInfo({ siteName: data.siteName, addressLine1: data.addressLine1, addressLine2: data.addressLine2, phone: data.phone, email: data.email });
+      })
+      .catch(() => notify('Fehler beim Laden der Kontaktangaben', { type: 'error' }))
+      .finally(() => setContactLoading(false));
+  }, []);
+
+  const saveContactInfo = async () => {
+    setContactSaving(true);
+    try {
+      const res = await fetch('/api/header-contact', { method: 'PUT', headers: authHeaders(), body: JSON.stringify(contactInfo) });
+      if (!res.ok) throw new Error(describeApiError(res, 'Fehler beim Speichern'));
+      notify('Kontaktangaben gespeichert', { type: 'success' });
+    } catch (e: any) {
+      notify(e.message || 'Fehler beim Speichern', { type: 'error' });
+    } finally {
+      setContactSaving(false);
+    }
+  };
+
   const [dragItemIndex, setDragItemIndex] = useState<number | null>(null);
   const [dragSubItem, setDragSubItem] = useState<{ parentId: string; index: number } | null>(null);
   // Feedback for what dropping onto a top-level item's row will do: reorder
@@ -639,6 +667,56 @@ export const MenuManager = () => {
           {publishing ? 'Wird veröffentlicht...' : (location === 'header' ? 'Menü veröffentlichen' : 'Footer veröffentlichen')}
         </Button>
       </Paper>
+
+      {/* Kontaktangaben am Ende des mobilen Menüs (Header.tsx's Sidebar-Menü,
+          unter der Navigation) - Name/Adresse/Telefon/E-Mail waren bisher
+          fest im Code hinterlegt. Speichert sofort (kein Entwurf/
+          Veröffentlichen-Mechanismus wie bei der Menüstruktur oben), da es
+          nur dieses eine Feld-Set ist. */}
+      {location === 'header' && (
+        <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>Kontaktangaben im mobilen Menü</Typography>
+          <Typography variant="body2" sx={{ color: '#666', mb: 2 }}>
+            Wird unten im aufklappbaren Menü auf dem Handy angezeigt (unter den Menüpunkten, über den Social-Icons).
+          </Typography>
+          {contactLoading ? (
+            <Typography variant="body2" sx={{ color: '#999' }}>Lädt...</Typography>
+          ) : (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 480 }}>
+              <TextField
+                label="Name" size="small" fullWidth
+                value={contactInfo.siteName}
+                onChange={(e) => setContactInfo({ ...contactInfo, siteName: e.target.value })}
+              />
+              <TextField
+                label="Adresse Zeile 1" size="small" fullWidth placeholder="Weinheim, 69469,"
+                value={contactInfo.addressLine1}
+                onChange={(e) => setContactInfo({ ...contactInfo, addressLine1: e.target.value })}
+              />
+              <TextField
+                label="Adresse Zeile 2" size="small" fullWidth placeholder="Deutschland"
+                value={contactInfo.addressLine2}
+                onChange={(e) => setContactInfo({ ...contactInfo, addressLine2: e.target.value })}
+              />
+              <TextField
+                label="Telefon" size="small" fullWidth
+                value={contactInfo.phone}
+                onChange={(e) => setContactInfo({ ...contactInfo, phone: e.target.value })}
+              />
+              <TextField
+                label="E-Mail" size="small" fullWidth
+                value={contactInfo.email}
+                onChange={(e) => setContactInfo({ ...contactInfo, email: e.target.value })}
+              />
+              <Box>
+                <Button variant="contained" size="small" onClick={saveContactInfo} disabled={contactSaving}>
+                  {contactSaving ? 'Wird gespeichert...' : 'Speichern'}
+                </Button>
+              </Box>
+            </Box>
+          )}
+        </Paper>
+      )}
 
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', flexDirection: { xs: 'column', md: 'row' } }}>
 

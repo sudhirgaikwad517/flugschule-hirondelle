@@ -1225,3 +1225,16 @@ model ServiceOrder {
   updatedAt DateTime @updatedAt
 }
 
+// The small "name / address / phone / email" block at the bottom of the
+// mobile header drawer (Header.tsx) - used to be hardcoded there; now
+// admin-editable from Admin > Menü (header tab), see headerContact.routes.ts.
+model HeaderContactInfo {
+  id           String   @id @default("default")
+  siteName     String   @default("Flugschule Hirondelle")
+  addressLine1 String   @default("Weinheim, 69469,")
+  addressLine2 String   @default("Deutschland")
+  phone        String   @default("+49 6201 12345")
+  email        String   @default("info@flugschule-hirondelle.de")
+  updatedAt    DateTime @updatedAt
+}
+

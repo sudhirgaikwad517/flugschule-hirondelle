@@ -224,6 +224,25 @@ export const Header = () => {
       .catch(() => {});
   }, []);
 
+  // Name/address/phone/email at the bottom of the mobile drawer - admin-
+  // editable from Admin > Menü (Header tab) now, see headerContact.routes.ts.
+  // These defaults match what was hardcoded here before, so nothing changes
+  // visually until an admin actually edits them.
+  const [contactInfo, setContactInfo] = useState({
+    siteName: 'Flugschule Hirondelle',
+    addressLine1: 'Weinheim, 69469,',
+    addressLine2: 'Deutschland',
+    phone: '+49 6201 12345',
+    email: 'info@flugschule-hirondelle.de',
+  });
+
+  useEffect(() => {
+    fetch('/api/header-contact/public')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data) setContactInfo(data); })
+      .catch(() => {});
+  }, []);
+
   const toggleMobileMenu = (menu: string) => {
     if (expandedMobileMenu === menu) setExpandedMobileMenu(null);
     else setExpandedMobileMenu(menu);
@@ -502,10 +521,25 @@ export const Header = () => {
 
               </div>
 
-              {/* Social + copyright only - name/address/ROUTE BERECHNEN/
-                  phone/email removed from this drawer per request, this
-                  part stays. */}
+              {/* Bottom Contact - name/address/phone/email editable from
+                  Admin > Menü (Header tab), see contactInfo above. */}
               <div className="mt-16 pt-8 text-gray-800 font-light">
+                <p className="font-luxury text-[20px] text-gray-800 mb-3">{contactInfo.siteName}</p>
+                <p className="text-[14px] leading-relaxed mb-4 text-gray-600">
+                  {contactInfo.addressLine1}<br />
+                  {contactInfo.addressLine2}
+                </p>
+                <Link to="/infos#kontakt" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-bold text-gray-800 hover:text-hirondelle-blue transition-colors border-b border-gray-300 hover:border-hirondelle-blue pb-1 mb-10 inline-block uppercase tracking-wider">
+                  ROUTE BERECHNEN
+                </Link>
+
+                <p className="text-[15px] font-medium leading-relaxed mb-1">
+                  {contactInfo.phone}
+                </p>
+                <p className="text-[15px] leading-relaxed mb-8 text-gray-600">
+                  {contactInfo.email}
+                </p>
+
                 <div className="flex gap-4 mb-8">
                   <a href="https://www.facebook.com/fshirondelle" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="text-gray-500 hover:text-hirondelle-blue transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg></a>
                   <a href="https://www.youtube.com/channel/UCOwo0Wh2zoX_7nyArBdk_IQ/videos" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="text-gray-500 hover:text-hirondelle-blue transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17" /><path d="m10 15 5-3-5-3z" /></svg></a>
