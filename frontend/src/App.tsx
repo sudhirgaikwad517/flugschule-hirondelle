@@ -122,7 +122,7 @@ function App() {
           <Route path="reisen/pfalz-tour" element={<FixedPageGate kind="pfalz-tour" defaultSlug="pfalz-tour"><PfalzTour /></FixedPageGate>} />
           <Route path="buchungskalender" element={<Buchungskalender />} />
           <Route path="buchungskalender/:eventId" element={<Buchungskalender />} />
-          <Route path="tandem" element={<Tandem />} />
+          <Route path="tandem" element={<FixedPageGate kind="tandem" defaultSlug="tandem"><Tandem /></FixedPageGate>} />
           <Route path="service" element={<FixedPageGate kind="service" defaultSlug="service"><Service /></FixedPageGate>} />
           <Route path="service/2-jahres-check" element={<FixedPageGate kind="2-jahres-check" defaultSlug="2-jahres-check"><ZweiJahresCheck /></FixedPageGate>} />
           <Route path="service/rettungspacken" element={<FixedPageGate kind="rettungspacken" defaultSlug="rettungspacken"><Rettungspacken /></FixedPageGate>} />

@@ -1803,6 +1803,44 @@ export const DEFAULTS: Record<string, any> = {
     addressLines: 'Flugschule Hirondelle\nUntergasse 27\n69469 Weinheim / Germany',
     contactEmail: 'info@fs-hirondelle.de',
   },
+  tandem: {
+    heading: 'EIN TANDEMFLUG MIT DEM GLEITSCHIRM?',
+    videoUrl: 'https://www.youtube-nocookie.com/embed/o1MzMmYM_ls?rel=0',
+    quote: 'Der erste Schritt, um sicher in die Luft zu kommen!',
+    introHtml:
+      '<p>Ein ganz besonderes Erlebnis erwartet euch bei einem Tandemflug mit einem unserer Piloten hier in der Region Rhein/Main/Neckar, Odenwald oder Pfalz.</p>' +
+      '<p>Da wir fürs Tandemfliegen spezielle Wind- und Wetterbedingungen brauchen und nur ganz bestimmte Gelände hier in der Region dafür nutzen können, kann es schon mal sein, dass man etwas auf einen passenden Termin warten muss. Aber es lohnt sich - versprochen :-)</p>' +
+      '<p>Wir fliegen im Moment mainly in Heidelberg, Schriesheim und in Erlau (Odenwald). Ab und zu auch in der Pfalz bei Annweiler, an der Madenburg oder auch an der Winde bei Speyer bzw. in Offenbach bei Landau.</p>' +
+      '<p>Je nach Wetterbedingungen und welcher unserer Piloten gerade Zeit hat, wählen wir den Flugort aus - das ist leider nicht wählbar. Die Termine sind ganzwöchig von Montag bis Sonntag und auch ganzjährig, also nicht nur im Sommer. Im Winter sind auch ab und an schöne Flüge möglich. Einziges Manko - man muss sich etwas dicker anziehen...</p>' +
+      '<p>Da wir mit der Flugschule sehr oft im Ausland unterwegs sind und die Tandemflüge oft von unterwegs abwickeln, haben wir ein spezielles System für die Abwicklung der Termine.</p>',
+    priceLabel: 'Tandemflug',
+    priceNote: 'Barzahlung vor Ort',
+    price: '150,- €',
+    warningText: 'Wir verkaufen keine Gutscheine für Tandemflüge - es können nur bereits erworbene Gutscheine eingelöst werden. Wer ohne Gutschein mitfliegen will, einfach unten in den Tandemnewsletter eintragen und dann beim Termin bar zahlen.',
+    terminHeading: "TERMIN VEREINBAREN - SO FUNKTIONIERT'S...",
+    terminHtml:
+      '<p>Gleitschirmfliegen ist wetterabhängig. Wir brauchen Wind in richtiger Stärke und aus der geeigneten Richtung. Weil es selbst den besten Wetterfröschen kaum möglich ist, das Wetter auf längere Sicht abzuschätzen, bieten wir euch ein eigenes System zur Terminvereinbarung an, um die vereinbarten Tandemflüge sicher durchzuführen.</p>' +
+      '<p>Wir haben daher zur Terminvereinbarung einen Tandem-Newsletter auf unserer Homepage unten eingerichtet. In diesen Tandemnewsletter (wichtig - nicht in den allgemeinen Newsletter eintragen!!!) tragt ihr euch ein.</p>' +
+      '<p>Wenn wir passendes Wetter (nur Sonne reicht nicht) zum Tandemfliegen sehen und auch Zeit haben, die Flüge durchzuführen, schicken wir eine E-Mail an alle, die sich im Tandemnewsletter angemeldet haben. An so einem Termin bieten wir in der Regel zwischen 3-5 Flüge pro Tag an. Wenn ihr zu diesem Termin Lust und Zeit habt, meldet ihr euch schnellstmöglich mit den in unserer Mail gefragten Details zurück und bekommt dann von uns nochmal Rückantwort via E-Mail mit dem genauen Treffpunkt und der Uhrzeit. Ganz wichtig: es bekommen nur die Schnellsten eine Rückantwort die auch den Zuschlag für den Flug bekommen.</p>' +
+      '<p>Falls ihr jemanden mit einem Tandemflug beschenken wollt, könnt ihr gerne selbst einen Gutschein basteln und diesen verschenken. Bezahlt wird allerdings bar vor Ort beim Tandempiloten. Wir haben in der Vergangenheit oft Gutscheine ausgestellt, die die Beschenkten dann mitunter nicht einlösen konnten, da deren Freizeit nicht zu unseren Terminen gepasst haben.</p>' +
+      '<p>Wir haben über die Jahre schon viel ausprobiert wie wir die Abwicklung organisieren können und dies ist der beste und einzige Weg. Da es für uns nur wie oben beschrieben funktioniert, vereinbaren wir auch keine Wunschtermine und vergeben auch auf telefonische Nachfrage keine Tandemtermine.</p>' +
+      '<p>Falls jemand noch schneller in die Luft möchte können wir euch alternativ unseren <a href="/ausbildung/schnupperkurs" class="text-[#428bca] hover:text-[#2a6496] hover:underline font-semibold">Schnupperkurs</a> wärmstens empfehlen.</p>',
+    pilots: [
+      { name: 'Alex', img: '/images/team/schlink.jpg' },
+      { name: 'Markus', img: '/images/team/markus.jpg' },
+      { name: 'Karl-Peter', img: '/images/team/karlpeter.jpg' },
+      { name: 'Tobi', img: '/images/team/tobi.jpg' },
+    ],
+    services: [
+      'Tandemflug hier in der Region (kurze Anfahrtswege)',
+      'Erfahrene Tandempiloten',
+      'Aktuelle Tandemausrüstung',
+    ],
+    requirements: [
+      'Passagiere ab 50 kg bis 100 kg',
+      'Keine Altersbeschränkung aber gut zu Fuß - man muss 10-20 m rennen können ;-)!',
+    ],
+  },
 };
 
 // `id` isn't limited to the 6 known DEFAULTS keys here: a FixedPageDuplicate
@@ -1913,6 +1951,7 @@ const PAGE_LABELS: Record<string, string> = {
   winterkasten: 'Winterkasten',
   'bad-kreuznach': 'Bad Kreuznach',
   herrenteich: 'Herrenteich',
+  tandem: 'Tandem',
 };
 
 router.delete('/:id', authenticateJWT, authorizeAdmin, async (req, res) => {

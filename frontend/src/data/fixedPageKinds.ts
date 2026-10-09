@@ -53,4 +53,5 @@ export const FIXED_PAGE_KINDS: { kind: string; title: string }[] = [
   { kind: 'winterkasten', title: 'Winterkasten' },
   { kind: 'bad-kreuznach', title: 'Bad Kreuznach' },
   { kind: 'herrenteich', title: 'Herrenteich' },
+  { kind: 'tandem', title: 'Tandem' },
 ];

@@ -1,15 +1,84 @@
+import { useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
 import { Banner } from '../components/common/Banner';
 import { useLightbox } from '../components/common/Lightbox';
+import { SafeHtml } from '../components/common/SafeHtml';
 
 // Old site's actual "Simple Image Gallery" filenames for this page
-// (/images/bilder/1-passagier/*), in their real order.
+// (/images/bilder/1-passagier/*), in their real order. Not admin-editable -
+// same as most other fixed pages' decorative image galleries.
 const GALLERY_FILES = [
   '1PLatzhalterbildTandem.png', 'bild.jpg', 'tandem1.jpg', 'tandem2.jpg', 'tandem3.jpg',
 ];
 
-export const Tandem = () => {
+interface Pilot { name: string; img: string }
+
+interface TandemData {
+  heading: string;
+  videoUrl: string;
+  quote: string;
+  introHtml: string;
+  priceLabel: string;
+  priceNote: string;
+  price: string;
+  warningText: string;
+  terminHeading: string;
+  terminHtml: string;
+  pilots: Pilot[];
+  services: string[];
+  requirements: string[];
+}
+
+const DEFAULT_CONTENT: TandemData = {
+  heading: 'EIN TANDEMFLUG MIT DEM GLEITSCHIRM?',
+  videoUrl: 'https://www.youtube-nocookie.com/embed/o1MzMmYM_ls?rel=0',
+  quote: 'Der erste Schritt, um sicher in die Luft zu kommen!',
+  introHtml:
+    '<p>Ein ganz besonderes Erlebnis erwartet euch bei einem Tandemflug mit einem unserer Piloten hier in der Region Rhein/Main/Neckar, Odenwald oder Pfalz.</p>' +
+    '<p>Da wir fürs Tandemfliegen spezielle Wind- und Wetterbedingungen brauchen und nur ganz bestimmte Gelände hier in der Region dafür nutzen können, kann es schon mal sein, dass man etwas auf einen passenden Termin warten muss. Aber es lohnt sich - versprochen :-)</p>' +
+    '<p>Wir fliegen im Moment mainly in Heidelberg, Schriesheim und in Erlau (Odenwald). Ab und zu auch in der Pfalz bei Annweiler, an der Madenburg oder auch an der Winde bei Speyer bzw. in Offenbach bei Landau.</p>' +
+    '<p>Je nach Wetterbedingungen und welcher unserer Piloten gerade Zeit hat, wählen wir den Flugort aus - das ist leider nicht wählbar. Die Termine sind ganzwöchig von Montag bis Sonntag und auch ganzjährig, also nicht nur im Sommer. Im Winter sind auch ab und an schöne Flüge möglich. Einziges Manko - man muss sich etwas dicker anziehen...</p>' +
+    '<p>Da wir mit der Flugschule sehr oft im Ausland unterwegs sind und die Tandemflüge oft von unterwegs abwickeln, haben wir ein spezielles System für die Abwicklung der Termine.</p>',
+  priceLabel: 'Tandemflug',
+  priceNote: 'Barzahlung vor Ort',
+  price: '150,- €',
+  warningText: 'Wir verkaufen keine Gutscheine für Tandemflüge - es können nur bereits erworbene Gutscheine eingelöst werden. Wer ohne Gutschein mitfliegen will, einfach unten in den Tandemnewsletter eintragen und dann beim Termin bar zahlen.',
+  terminHeading: "TERMIN VEREINBAREN - SO FUNKTIONIERT'S...",
+  terminHtml:
+    '<p>Gleitschirmfliegen ist wetterabhängig. Wir brauchen Wind in richtiger Stärke und aus der geeigneten Richtung. Weil es selbst den besten Wetterfröschen kaum möglich ist, das Wetter auf längere Sicht abzuschätzen, bieten wir euch ein eigenes System zur Terminvereinbarung an, um die vereinbarten Tandemflüge sicher durchzuführen.</p>' +
+    '<p>Wir haben daher zur Terminvereinbarung einen Tandem-Newsletter auf unserer Homepage unten eingerichtet. In diesen Tandemnewsletter (wichtig - nicht in den allgemeinen Newsletter eintragen!!!) tragt ihr euch ein.</p>' +
+    '<p>Wenn wir passendes Wetter (nur Sonne reicht nicht) zum Tandemfliegen sehen und auch Zeit haben, die Flüge durchzuführen, schicken wir eine E-Mail an alle, die sich im Tandemnewsletter angemeldet haben. An so einem Termin bieten wir in der Regel zwischen 3-5 Flüge pro Tag an. Wenn ihr zu diesem Termin Lust und Zeit habt, meldet ihr euch schnellstmöglich mit den in unserer Mail gefragten Details zurück und bekommt dann von uns nochmal Rückantwort via E-Mail mit dem genauen Treffpunkt und der Uhrzeit. Ganz wichtig: es bekommen nur die Schnellsten eine Rückantwort die auch den Zuschlag für den Flug bekommen.</p>' +
+    '<p>Falls ihr jemanden mit einem Tandemflug beschenken wollt, könnt ihr gerne selbst einen Gutschein basteln und diesen verschenken. Bezahlt wird allerdings bar vor Ort beim Tandempiloten. Wir haben in der Vergangenheit oft Gutscheine ausgestellt, die die Beschenkten dann mitunter nicht einlösen konnten, da deren Freizeit nicht zu unseren Terminen gepasst haben.</p>' +
+    '<p>Wir haben über die Jahre schon viel ausprobiert wie wir die Abwicklung organisieren können und dies ist der beste und einzige Weg. Da es für uns nur wie oben beschrieben funktioniert, vereinbaren wir auch keine Wunschtermine und vergeben auch auf telefonische Nachfrage keine Tandemtermine.</p>' +
+    '<p>Falls jemand noch schneller in die Luft möchte können wir euch alternativ unseren <a href="/ausbildung/schnupperkurs" class="text-[#428bca] hover:text-[#2a6496] hover:underline font-semibold">Schnupperkurs</a> wärmstens empfehlen.</p>',
+  pilots: [
+    { name: 'Alex', img: '/images/team/schlink.jpg' },
+    { name: 'Markus', img: '/images/team/markus.jpg' },
+    { name: 'Karl-Peter', img: '/images/team/karlpeter.jpg' },
+    { name: 'Tobi', img: '/images/team/tobi.jpg' },
+  ],
+  services: [
+    'Tandemflug hier in der Region (kurze Anfahrtswege)',
+    'Erfahrene Tandempiloten',
+    'Aktuelle Tandemausrüstung',
+  ],
+  requirements: [
+    'Passagiere ab 50 kg bis 100 kg',
+    'Keine Altersbeschränkung aber gut zu Fuß - man muss 10-20 m rennen können ;-)!',
+  ],
+};
+
+export const Tandem = ({ contentId }: { contentId?: string } = {}) => {
   const { openGallery } = useLightbox();
+  const [content, setContent] = useState<TandemData>(DEFAULT_CONTENT);
+
+  useEffect(() => {
+    fetch(`/api/sitepagecontent/public/${contentId || 'tandem'}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data) setContent(data); })
+      .catch((err) => console.error('Error fetching Tandem content:', err));
+  }, [contentId]);
+
   return (
     <div className="w-full bg-white pb-20">
       <Banner />
@@ -18,7 +87,7 @@ export const Tandem = () => {
         {/* Main Title */}
         <div className="text-center mb-16 mt-8">
           <h1 className="font-luxury text-4xl md:text-5xl lg:text-6xl text-luxury-dark mb-6 tracking-wide break-words hyphens-auto uppercase">
-            EIN TANDEMFLUG MIT DEM GLEITSCHIRM?
+            {content.heading}
           </h1>
           <div className="w-24 h-px bg-luxury-gold mx-auto mb-8"></div>
         </div>
@@ -32,7 +101,7 @@ export const Tandem = () => {
             <div className="w-full aspect-video overflow-hidden rounded-sm shadow-xl mb-12">
               <iframe
                 className="w-full h-full"
-                src="https://www.youtube-nocookie.com/embed/o1MzMmYM_ls?rel=0"
+                src={content.videoUrl}
                 title="Tandemflug in der Pfalz - Flugschule Hirondelle"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -40,15 +109,11 @@ export const Tandem = () => {
             </div>
 
             <h3 className="text-xl md:text-2xl italic text-luxury-heading font-luxury mb-6 leading-relaxed max-w-4xl">
-              "Der erste Schritt, um sicher in die Luft zu kommen!"
+              "{content.quote}"
             </h3>
-            
+
             <div className="space-y-6 text-[15px] font-light text-gray-500 leading-relaxed text-justify">
-              <p>Ein ganz besonderes Erlebnis erwartet euch bei einem Tandemflug mit einem unserer Piloten hier in der Region Rhein/Main/Neckar, Odenwald oder Pfalz.</p>
-              <p>Da wir fürs Tandemfliegen spezielle Wind- und Wetterbedingungen brauchen und nur ganz bestimmte Gelände hier in der Region dafür nutzen können, kann es schon mal sein, dass man etwas auf einen passenden Termin warten muss. Aber es lohnt sich - versprochen :-)</p>
-              <p>Wir fliegen im Moment mainly in Heidelberg, Schriesheim und in Erlau (Odenwald). Ab und zu auch in der Pfalz bei Annweiler, an der Madenburg oder auch an der Winde bei Speyer bzw. in Offenbach bei Landau.</p>
-              <p>Je nach Wetterbedingungen und welcher unserer Piloten gerade Zeit hat, wählen wir den Flugort aus - das ist leider nicht wählbar. Die Termine sind ganzwöchig von Montag bis Sonntag und auch ganzjährig, also nicht nur im Sommer. Im Winter sind auch ab und an schöne Flüge möglich. Einziges Manko - man muss sich etwas dicker anziehen...</p>
-              <p>Da wir mit der Flugschule sehr oft im Ausland unterwegs sind und die Tandemflüge oft von unterwegs abwickeln, haben wir ein spezielles System für die Abwicklung der Termine.</p>
+              <SafeHtml html={content.introHtml} />
             </div>
           </div>
 
@@ -73,10 +138,10 @@ export const Tandem = () => {
                 <div className="border-b border-gray-200 pb-6">
                   <div className="flex justify-between items-start gap-4">
                     <div className="text-gray-600 font-light text-[13px]">
-                      <p className="font-bold text-luxury-dark mb-1">Tandemflug</p>
-                      <p>Barzahlung vor Ort</p>
+                      <p className="font-bold text-luxury-dark mb-1">{content.priceLabel}</p>
+                      <p>{content.priceNote}</p>
                     </div>
-                    <p className="font-bold text-luxury-dark text-lg whitespace-nowrap mt-0.5">150,- €</p>
+                    <p className="font-bold text-luxury-dark text-lg whitespace-nowrap mt-0.5">{content.price}</p>
                   </div>
                 </div>
               </div>
@@ -84,7 +149,7 @@ export const Tandem = () => {
               <div className="bg-red-50 border-t border-red-100 px-8 py-6">
                 <p className="text-red-800 text-[13px] leading-relaxed font-light">
                   <span className="font-bold uppercase tracking-widest block mb-1">Achtung:</span>
-                  Wir verkaufen keine Gutscheine für Tandemflüge - es können nur bereits erworbene Gutscheine eingelöst werden. Wer ohne Gutschein mitfliegen will, einfach unten in den Tandemnewsletter eintragen und dann beim Termin bar zahlen.
+                  {content.warningText}
                 </p>
               </div>
             </div>
@@ -93,7 +158,7 @@ export const Tandem = () => {
             <div className="mb-8">
               <h3 className="font-luxury text-2xl text-luxury-dark mb-4 uppercase tracking-wide">IMPRESSIONEN</h3>
               <div className="w-12 h-px bg-luxury-gold mb-6"></div>
-              
+
               <div className="grid grid-cols-3 gap-2">
                 {GALLERY_FILES.map((file, index) => (
                   <div
@@ -121,16 +186,11 @@ export const Tandem = () => {
 
         {/* Bottom Section */}
         <div className="mt-20">
-          <h2 className="font-luxury text-3xl text-luxury-dark mb-4 uppercase tracking-wide">TERMIN VEREINBAREN - SO FUNKTIONIERT'S...</h2>
+          <h2 className="font-luxury text-3xl text-luxury-dark mb-4 uppercase tracking-wide">{content.terminHeading}</h2>
           <div className="w-12 h-px bg-luxury-gold mb-8"></div>
 
           <div className="space-y-6 text-[15px] font-light text-gray-500 leading-relaxed mb-10 max-w-4xl text-justify">
-            <p>Gleitschirmfliegen ist wetterabhängig. Wir brauchen Wind in richtiger Stärke und aus der geeigneten Richtung. Weil es selbst den besten Wetterfröschen kaum möglich ist, das Wetter auf längere Sicht abzuschätzen, bieten wir euch ein eigenes System zur Terminvereinbarung an, um die vereinbarten Tandemflüge sicher durchzuführen.</p>
-            <p>Wir haben daher zur Terminvereinbarung einen Tandem-Newsletter auf unserer Homepage unten eingerichtet. In diesen Tandemnewsletter (wichtig - nicht in den allgemeinen Newsletter eintragen!!!) tragt ihr euch ein.</p>
-            <p>Wenn wir passendes Wetter (nur Sonne reicht nicht) zum Tandemfliegen sehen und auch Zeit haben, die Flüge durchzuführen, schicken wir eine E-Mail an alle, die sich im Tandemnewsletter angemeldet haben. An so einem Termin bieten wir in der Regel zwischen 3-5 Flüge pro Tag an. Wenn ihr zu diesem Termin Lust und Zeit habt, meldet ihr euch schnellstmöglich mit den in unserer Mail gefragten Details zurück und bekommt dann von uns nochmal Rückantwort via E-Mail mit dem genauen Treffpunkt und der Uhrzeit. Ganz wichtig: es bekommen nur die Schnellsten eine Rückantwort die auch den Zuschlag für den Flug bekommen.</p>
-            <p>Falls ihr jemanden mit einem Tandemflug beschenken wollt, könnt ihr gerne selbst einen Gutschein basteln und diesen verschenken. Bezahlt wird allerdings bar vor Ort beim Tandempiloten. Wir haben in der Vergangenheit oft Gutscheine ausgestellt, die die Beschenkten dann mitunter nicht einlösen konnten, da deren Freizeit nicht zu unseren Terminen gepasst haben.</p>
-            <p>Wir haben über die Jahre schon viel ausprobiert wie wir die Abwicklung organisieren können und dies ist der beste und einzige Weg. Da es für uns nur wie oben beschrieben funktioniert, vereinbaren wir auch keine Wunschtermine und vergeben auch auf telefonische Nachfrage keine Tandemtermine.</p>
-            <p>Falls jemand noch schneller in die Luft möchte können wir euch alternativ unseren <a href="#" className="text-[#428bca] hover:text-[#2a6496] hover:underline font-semibold">Schnupperkurs</a> wärmstens empfehlen.</p>
+            <SafeHtml html={content.terminHtml} />
           </div>
 
           {/* No standalone "Tandem-Newsletter" signup box here - old's real
@@ -148,14 +208,9 @@ export const Tandem = () => {
         {/* Pilots */}
         <h3 className="font-luxury text-2xl text-luxury-dark mb-4 uppercase tracking-wide">UNSERE TANDEMPILOTEN</h3>
         <div className="w-12 h-px bg-luxury-gold mb-10"></div>
-        
+
         <div className="flex flex-wrap gap-12 md:gap-16 mb-20">
-          {[
-            { name: 'Alex', img: '/images/team/schlink.jpg' },
-            { name: 'Markus', img: '/images/team/markus.jpg' },
-            { name: 'Karl-Peter', img: '/images/team/karlpeter.jpg' },
-            { name: 'Tobi', img: '/images/team/tobi.jpg' }
-          ].map((pilot) => (
+          {content.pilots.map((pilot) => (
             <div key={pilot.name} className="flex flex-col items-center gap-4 group cursor-pointer">
               <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-[4px] border-white shadow-lg group-hover:border-luxury-gold transition-colors duration-500 relative">
                 <img src={pilot.img} alt={pilot.name} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
@@ -172,9 +227,7 @@ export const Tandem = () => {
             <h2 className="font-luxury text-2xl text-luxury-dark mb-4 uppercase tracking-wide">UNSERE LEISTUNGEN</h2>
             <div className="w-12 h-px bg-luxury-gold mb-6"></div>
             <ul className="list-disc list-outside ml-5 space-y-3 text-[15px] font-light text-gray-500">
-              <li>Tandemflug hier in der Region (kurze Anfahrtswege)</li>
-              <li>Erfahrene Tandempiloten</li>
-              <li>Aktuelle Tandemausrüstung</li>
+              {content.services.map((service, i) => <li key={i}>{service}</li>)}
             </ul>
           </div>
 
@@ -182,8 +235,7 @@ export const Tandem = () => {
             <h2 className="font-luxury text-2xl text-luxury-dark mb-4 uppercase tracking-wide">VORAUSSETZUNG</h2>
             <div className="w-12 h-px bg-luxury-gold mb-6"></div>
             <ul className="list-disc list-outside ml-5 space-y-3 text-[15px] font-light text-gray-500">
-              <li>Passagiere ab 50 kg bis 100 kg</li>
-              <li>Keine Altersbeschränkung aber gut zu Fuß - man muss 10-20 m rennen können ;-)!</li>
+              {content.requirements.map((req, i) => <li key={i}>{req}</li>)}
             </ul>
           </div>
         </div>

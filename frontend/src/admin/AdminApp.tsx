@@ -53,6 +53,7 @@ import { AusbildungContentEditor } from './AusbildungContentEditor';
 import { PerformanceContentEditor } from './PerformanceContentEditor';
 import { ReisenContentEditor } from './ReisenContentEditor';
 import { ServiceContentEditor } from './ServiceContentEditor';
+import { TandemContentEditor } from './TandemContentEditor'; // NEW - /tandem
 import { InfosContentEditor } from './InfosContentEditor';
 import { TeamContentEditor } from './TeamContentEditor'; // NEW - /infos/team
 import { GelaendeContentEditor } from './GelaendeContentEditor'; // NEW - /infos/gelaende + its 10 detail pages
@@ -231,6 +232,7 @@ export const AdminApp = () => {
             <Route path="/performance-content/:contentId?" element={<Authenticated><PerformanceContentEditor /></Authenticated>} />
             <Route path="/reisen-content/:contentId?" element={<Authenticated><ReisenContentEditor /></Authenticated>} />
             <Route path="/service-content/:contentId?" element={<Authenticated><ServiceContentEditor /></Authenticated>} />
+            <Route path="/tandem-content/:contentId?" element={<Authenticated><TandemContentEditor /></Authenticated>} />
             <Route path="/infos-content/:contentId?" element={<Authenticated><InfosContentEditor /></Authenticated>} />
             <Route path="/team-content/:contentId?" element={<Authenticated><TeamContentEditor /></Authenticated>} />
             <Route path="/gelaende-content/:contentId?" element={<Authenticated><GelaendeContentEditor /></Authenticated>} />
