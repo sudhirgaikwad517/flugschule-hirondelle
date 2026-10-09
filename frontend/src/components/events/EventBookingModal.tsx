@@ -676,7 +676,7 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
                       {event.extraFeeOptions.map((opt: any, i: number) => (
                         <label key={i} className="flex items-center gap-2 text-sm text-gray-700">
                           <input type="checkbox" checked={selectedExtras.has(i)} onChange={() => toggleExtra(i)} />
-                          {opt.title} (+ € {Number(opt.value).toFixed(2)}{opt.perPlace ? ' pro Person' : ''})
+                          {opt.title} ({Number(opt.value) < 0 ? '-' : '+'} € {Math.abs(Number(opt.value)).toFixed(2)}{opt.perPlace ? ' pro Person' : ''})
                         </label>
                       ))}
                     </div>
@@ -704,9 +704,9 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
                       {applicableTieredFee.title || (applicableTieredFee.isDiscount ? 'Rabatt' : 'Zuschlag')}: {applicableTieredFee.isDiscount ? '-' : '+'} {applicableTieredFee.isPercentage ? `${applicableTieredFee.value}%` : `€ ${(Number(applicableTieredFee.value) * tieredFeeQuantityScale).toFixed(2)}`}
                     </p>
                   )}
-                  {extrasTotal > 0 && (
+                  {extrasTotal !== 0 && (
                     <p className="text-sm text-gray-600 mb-1">
-                      Zusätzliche Optionen: + € {extrasTotal.toFixed(2)}
+                      Zusätzliche Optionen: {extrasTotal < 0 ? '-' : '+'} € {Math.abs(extrasTotal).toFixed(2)}
                     </p>
                   )}
                   {voucherDiscount && (
@@ -795,10 +795,10 @@ export const EventBookingModal: React.FC<EventBookingModalProps> = ({ isOpen, on
                         <div className="text-right">- {applicableTieredFee.isPercentage ? `${applicableTieredFee.value}%` : `€ ${(Number(applicableTieredFee.value) * tieredFeeQuantityScale).toFixed(2)}`}</div>
                       </div>
                     )}
-                    {extrasTotal > 0 && (
-                      <div className="grid grid-cols-[1fr_auto] gap-y-1 text-sm text-gray-600 mt-2">
+                    {extrasTotal !== 0 && (
+                      <div className={`grid grid-cols-[1fr_auto] gap-y-1 text-sm mt-2 ${extrasTotal < 0 ? 'text-green-600' : 'text-gray-600'}`}>
                         <div>Zusätzliche Optionen</div>
-                        <div className="text-right">+ € {extrasTotal.toFixed(2)}</div>
+                        <div className="text-right">{extrasTotal < 0 ? '-' : '+'} € {Math.abs(extrasTotal).toFixed(2)}</div>
                       </div>
                     )}
                     {voucherDiscount && (
