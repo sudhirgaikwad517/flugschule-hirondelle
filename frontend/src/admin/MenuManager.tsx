@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, type DragEvent } from 'react';
 import { useNotify } from 'react-admin';
 import {
+  Alert,
   Box,
   Button,
   Checkbox,
@@ -123,14 +124,33 @@ export const MenuManager = () => {
   const [publishedAt, setPublishedAt] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
 
+  // None of this page's many fetches used to distinguish a 401/403 (expired
+  // login, tokens last 1 day) from "there's genuinely nothing here yet" -
+  // they all just fell back to an empty array/list on any non-ok response,
+  // so an expired session silently showed "No menu items/pages available"
+  // instead of a clear "please log back in", indistinguishable from actual
+  // data loss. Set by any of the fetches below hitting 401/403.
+  const [sessionExpired, setSessionExpired] = useState(false);
+
   // --- Mobile-Menü Kontaktangaben (Header.tsx's mobile drawer footer) ---
   const [contactInfo, setContactInfo] = useState({ siteName: '', addressLine1: '', addressLine2: '', phone: '', email: '' });
   const [contactLoading, setContactLoading] = useState(true);
   const [contactSaving, setContactSaving] = useState(false);
 
+  // Flags sessionExpired instead of just falling through to the caller's
+  // own empty-state fallback, for a 401/403 specifically - any other
+  // non-ok response still just falls back silently, same as before.
+  const flagIfSessionExpired = (res: Response) => {
+    if (res.status === 401 || res.status === 403) setSessionExpired(true);
+  };
+
   useEffect(() => {
     fetch('/api/header-contact', { headers: authHeaders() })
-      .then((res) => (res.ok ? res.json() : null))
+      .then((res) => {
+        if (res.ok) return res.json();
+        flagIfSessionExpired(res);
+        return null;
+      })
       .then((data) => {
         if (data) setContactInfo({ siteName: data.siteName, addressLine1: data.addressLine1, addressLine2: data.addressLine2, phone: data.phone, email: data.email });
       })
@@ -175,7 +195,7 @@ export const MenuManager = () => {
   // newly-added fixed page needs no change in this file.
   useEffect(() => {
     fetch('/api/fixed-page-duplicates/kinds', { headers: authHeaders() })
-      .then((res) => (res.ok ? res.json() : []))
+      .then((res) => { if (res.ok) return res.json(); flagIfSessionExpired(res); return []; })
       .then((data: FixedPageKindInfo[]) => setFixedPageKinds(Array.isArray(data) ? data : []))
       .catch(() => {});
   }, []);
@@ -187,7 +207,7 @@ export const MenuManager = () => {
   // of the default.
   useEffect(() => {
     fetch('/api/fixed-page-settings', { headers: authHeaders() })
-      .then((res) => (res.ok ? res.json() : []))
+      .then((res) => { if (res.ok) return res.json(); flagIfSessionExpired(res); return []; })
       .then((data: { kind: string; slug: string | null; title: string }[]) => {
         const byKind: Record<string, { slug: string | null; title: string }> = {};
         (Array.isArray(data) ? data : []).forEach((row) => { byKind[row.kind] = row; });
@@ -203,7 +223,7 @@ export const MenuManager = () => {
   // since it's covered by the Startseite fixed-page entry above.
   useEffect(() => {
     fetch('/api/pages?_start=0&_end=200', { headers: authHeaders() })
-      .then((res) => (res.ok ? res.json() : []))
+      .then((res) => { if (res.ok) return res.json(); flagIfSessionExpired(res); return []; })
       .then((data: { slug: string; title: string; navLabel?: string | null }[]) => {
         setCustomPages(
           (Array.isArray(data) ? data : [])
@@ -221,7 +241,7 @@ export const MenuManager = () => {
   // "testtttt") would silently be missing from it.
   useEffect(() => {
     fetch('/api/fixed-page-duplicates', { headers: authHeaders() })
-      .then((res) => (res.ok ? res.json() : []))
+      .then((res) => { if (res.ok) return res.json(); flagIfSessionExpired(res); return []; })
       .then((data: { slug: string; title: string; navLabel?: string | null }[]) => {
         setDuplicatePages(
           (Array.isArray(data) ? data : []).map((d) => ({ key: `dup:${d.slug}`, label: d.navLabel || d.title, url: `/${d.slug}` }))
@@ -300,7 +320,7 @@ export const MenuManager = () => {
   const fetchItems = () => {
     setLoading(true);
     fetch(`/api/menuitems?location=${location}`, { headers: authHeaders() })
-      .then((res) => (res.ok ? res.json() : []))
+      .then((res) => { if (res.ok) return res.json(); flagIfSessionExpired(res); return []; })
       .then((data) => setItems(Array.isArray(data) ? data : []))
       .catch(() => notify('Fehler beim Laden des Menüs', { type: 'error' }))
       .finally(() => setLoading(false));
@@ -316,7 +336,7 @@ export const MenuManager = () => {
 
   const fetchPublishStatus = () => {
     fetch(`/api/menu/publish-status?location=${location}`, { headers: authHeaders() })
-      .then((res) => (res.ok ? res.json() : null))
+      .then((res) => { if (res.ok) return res.json(); flagIfSessionExpired(res); return null; })
       .then((data) => {
         if (!data) return;
         setDirty(!!data.dirty);
@@ -632,6 +652,12 @@ export const MenuManager = () => {
             : 'Verwaltet die Link-Liste im Footer der Webseite.'}
         </Typography>
       </Box>
+
+      {sessionExpired && (
+        <Alert severity="warning" sx={{ mb: 2 }} action={<Button color="inherit" size="small" href="/admin/login">Erneut einloggen</Button>}>
+          Ihre Sitzung ist abgelaufen. Die leeren Listen unten bedeuten nicht, dass Menüpunkte/Seiten gelöscht wurden - bitte loggen Sie sich erneut ein und laden Sie die Seite neu.
+        </Alert>
+      )}
 
       <Tabs value={location} onChange={(_, v) => { setLocation(v); setExpanded({}); }} sx={{ mb: 2, borderBottom: '1px solid #e0e0e0' }}>
         <Tab label="Header" value="header" />
